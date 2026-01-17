@@ -37,9 +37,9 @@ export function VoteButtons({
           old?.map((item) => {
             if (item.id !== submission.id) return item;
             const currentVote = item.has_voted || 0;
-            let delta = vote;
+            let delta: number = vote;
             if (currentVote === vote) {
-              delta = -vote;
+              delta = (-vote) as 1 | -1;
               item.has_voted = 0;
             } else {
               if (currentVote !== 0) {
