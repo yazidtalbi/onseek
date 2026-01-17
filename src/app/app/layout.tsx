@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { AppNavbar } from "@/components/layout/app-navbar";
+import { AppSidebar, SidebarProvider } from "@/components/layout/app-sidebar";
+import { AppFooter } from "@/components/layout/app-footer";
 import { BottomNav } from "@/components/layout/bottom-nav";
 import { AuthProvider } from "@/components/layout/auth-provider";
 
@@ -43,11 +45,20 @@ export default async function AppLayout({
 
   return (
     <AuthProvider user={user} profile={resolvedProfile ?? null}>
-      <div className="min-h-screen bg-background pb-24">
-        <AppNavbar />
-        <main className="mx-auto w-full max-w-6xl px-6 py-8">{children}</main>
-        <BottomNav />
-      </div>
+      <SidebarProvider>
+        <div className="flex flex-col min-h-screen bg-background pb-24">
+          <AppNavbar />
+          <div className="flex flex-1">
+            <AppSidebar>
+              <main className="flex-1 w-full px-4 py-6 md:px-6">
+                <div className="mx-auto max-w-5xl w-full">{children}</div>
+              </main>
+            </AppSidebar>
+          </div>
+          <AppFooter />
+          <BottomNav />
+        </div>
+      </SidebarProvider>
     </AuthProvider>
   );
 }

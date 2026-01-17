@@ -46,7 +46,7 @@ export function SignInForm() {
     } catch (err) {
       // redirect() throws NEXT_REDIRECT - catch it and redirect manually
       if (err && typeof err === "object" && "digest" in err) {
-        const digest = String((err as any).digest);
+        const digest = String((err as { digest?: unknown }).digest);
         if (digest.includes("NEXT_REDIRECT")) {
           router.push("/app");
           router.refresh();

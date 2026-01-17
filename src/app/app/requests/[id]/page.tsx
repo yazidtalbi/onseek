@@ -4,6 +4,7 @@ import type { Submission } from "@/lib/types";
 import { SubmissionList } from "@/components/submissions/submission-list";
 import { SubmissionForm } from "@/components/submissions/submission-form";
 import { RequestActions } from "@/components/requests/request-actions";
+import { RequestCardGrid } from "@/components/requests/request-card-grid";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { ReportDialog } from "@/components/reports/report-dialog";
@@ -34,8 +35,9 @@ function computeScore(
 export default async function RequestDetailPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
+  const { id } = await params;
   const supabase = await createServerSupabaseClient();
   const {
     data: { user },
@@ -44,7 +46,7 @@ export default async function RequestDetailPage({
   const { data: request } = await supabase
     .from("requests")
     .select("*, profiles(username, display_name)")
-    .eq("id", params.id)
+    .eq("id", id)
     .single();
 
   if (!request) {
@@ -54,16 +56,25 @@ export default async function RequestDetailPage({
   const { data: links } = await supabase
     .from("request_links")
     .select("*")
-    .eq("request_id", params.id);
+    .eq("request_id", id);
 
   const { data: submissions } = await supabase
     .from("submissions")
     .select("*, votes(vote, user_id), profiles(reputation)")
-    .eq("request_id", params.id)
+    .eq("request_id", id)
     .order("created_at", { ascending: false });
 
   const initialSubmissions =
     submissions?.map((item) => computeScore(item as Submission, user?.id)) ?? [];
+
+  // Fetch similar requests (same category, exclude current request)
+  const { data: similarRequests } = await supabase
+    .from("requests")
+    .select("*")
+    .eq("category", request.category)
+    .neq("id", id)
+    .order("created_at", { ascending: false })
+    .limit(6);
 
   const isOwner = user?.id === request.user_id;
   const canSubmit = request.status === "open" && !isOwner;
@@ -141,6 +152,17 @@ export default async function RequestDetailPage({
           requestStatus={request.status}
         />
       </div>
+
+      {similarRequests && similarRequests.length > 0 ? (
+        <div className="space-y-4 pt-6 border-t border-border">
+          <h2 className="text-xl font-semibold">Similar requests</h2>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {similarRequests.map((similarRequest) => (
+              <RequestCardGrid key={similarRequest.id} request={similarRequest} />
+            ))}
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

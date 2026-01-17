@@ -5,8 +5,6 @@ import { VoteButtons } from "@/components/submissions/vote-buttons";
 import { WinnerButton } from "@/components/submissions/winner-button";
 import { ReportDialog } from "@/components/reports/report-dialog";
 
-const allowlist = ["amazon.com", "aliexpress.com", "ebay.com", "etsy.com"];
-
 function getHost(url: string) {
   try {
     return new URL(url).hostname.replace("www.", "");
@@ -31,10 +29,9 @@ export function SubmissionCard({
   disableWinnerAction?: boolean;
 }) {
   const host = getHost(submission.url);
-  const isTrusted = host && allowlist.some((item) => host.includes(item));
 
   return (
-    <Card className="border-border bg-white/80">
+    <Card className="border-border bg-card">
       <CardContent className="space-y-4 p-6">
         <div className="flex items-center justify-between gap-4">
           <div className="space-y-1">
@@ -42,7 +39,7 @@ export function SubmissionCard({
               href={submission.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-lg font-semibold"
+              className="text-lg font-semibold hover:text-primary transition-colors"
             >
               {submission.store_name || host || "Submission link"}
             </a>
@@ -50,9 +47,6 @@ export function SubmissionCard({
           </div>
           <div className="flex flex-col items-end gap-2">
             {isWinner ? <Badge>Winner</Badge> : null}
-            {!isTrusted ? (
-              <Badge variant="outline">Unknown domain</Badge>
-            ) : null}
           </div>
         </div>
         <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">

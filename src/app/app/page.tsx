@@ -47,28 +47,30 @@ export default async function AppFeedPage({
   const { data: requests } = await query.limit(20);
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col gap-4 rounded-3xl border border-border bg-white/80 p-6 md:flex-row md:items-center md:justify-between">
-        <div className="space-y-2">
-          <h1 className="text-3xl font-semibold">Latest requests</h1>
-          <p className="text-sm text-muted-foreground">
-            Discover what the community needs and help find the best links.
-          </p>
+    <div className="space-y-6">
+      <div className="bg-card border border-border rounded-lg p-4">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="space-y-1">
+            <h1 className="text-2xl font-semibold">Latest requests</h1>
+            <p className="text-sm text-muted-foreground">
+              Discover what the community needs and help find the best links.
+            </p>
+          </div>
+          <Button asChild variant="accent" size="sm">
+            <Link href="/app/new">+ New request</Link>
+          </Button>
         </div>
-        <Button asChild variant="accent">
-          <Link href="/app/new">New request</Link>
-        </Button>
       </div>
 
-      <div className="grid gap-6">
-        <form className="flex w-full flex-col gap-3 sm:flex-row sm:items-center">
+      <div className="space-y-4">
+        <form className="flex w-full gap-2">
           <Input
             name="q"
-            placeholder="Search requests"
+            placeholder="Search requests..."
             defaultValue={queryText}
-            className="bg-white/70"
+            className="bg-card"
           />
-          <Button type="submit" variant="outline">
+          <Button type="submit" variant="outline" size="default">
             Search
           </Button>
         </form>

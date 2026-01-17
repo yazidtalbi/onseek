@@ -1,6 +1,8 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { z } from "zod";
@@ -14,6 +16,8 @@ import { Label } from "@/components/ui/label";
 type Values = z.infer<typeof submissionSchema>;
 
 export function SubmissionForm({ requestId }: { requestId: string }) {
+  const router = useRouter();
+  const queryClient = useQueryClient();
   const [error, setError] = React.useState<string | null>(null);
   const [isPending, startTransition] = React.useTransition();
   const form = useForm<Values>({
@@ -46,6 +50,10 @@ export function SubmissionForm({ requestId }: { requestId: string }) {
       setError(res?.error || null);
       if (!res?.error) {
         form.reset();
+        // Invalidate React Query cache for submissions
+        queryClient.invalidateQueries({ queryKey: ["submissions", requestId] });
+        // Refresh server components to get updated data
+        router.refresh();
       }
     });
   };

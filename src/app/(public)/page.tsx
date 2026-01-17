@@ -69,8 +69,8 @@ export default function LandingPage() {
                   Top submission
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  "Keychron K3 Pro - Brown switches. Compact, quiet, and ships
-                  to EU."
+                  &quot;Keychron K3 Pro - Brown switches. Compact, quiet, and ships
+                  to EU.&quot;
                 </p>
                 <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
                   <span>Score +12</span>
