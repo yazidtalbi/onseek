@@ -1,0 +1,46 @@
+export type Profile = {
+  id: string;
+  username: string;
+  display_name: string | null;
+  avatar_url: string | null;
+  bio: string | null;
+  created_at: string;
+  reputation: number | null;
+};
+
+export type RequestStatus = "open" | "closed" | "solved";
+
+export type RequestItem = {
+  id: string;
+  user_id: string;
+  title: string;
+  description: string;
+  category: string;
+  budget_min: number | null;
+  budget_max: number | null;
+  country: string | null;
+  condition: string | null;
+  urgency: string | null;
+  status: RequestStatus;
+  winner_submission_id: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type Submission = {
+  id: string;
+  request_id: string;
+  user_id: string;
+  url: string;
+  store_name: string | null;
+  price: number | null;
+  shipping_cost: number | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+  score?: number | null;
+  upvotes?: number | null;
+  downvotes?: number | null;
+  has_voted?: number | null;
+};
+
