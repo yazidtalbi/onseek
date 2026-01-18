@@ -15,14 +15,14 @@ const buttonVariants = ({
   className,
 }: Pick<ButtonProps, "variant" | "size" | "className">) =>
   cn(
-    "inline-flex items-center justify-center gap-2 rounded-2xl font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-60",
+    "inline-flex items-center justify-center gap-2 rounded-full font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-60",
     variant === "default" &&
-      "bg-foreground text-primary-foreground hover:bg-foreground/90",
+      "bg-[rgb(34,40,52)] text-primary-foreground hover:bg-[rgb(34,40,52)]/90",
     variant === "accent" &&
-      "bg-foreground text-accent-foreground hover:bg-foreground/90",
+      "bg-[rgb(34,40,52)] text-accent-foreground hover:bg-[rgb(34,40,52)]/90",
     variant === "outline" &&
-      "border border-border bg-transparent text-foreground hover:bg-muted/30",
-    variant === "ghost" && "bg-transparent hover:bg-muted/25",
+      "border border-[#e5e7eb] bg-transparent text-foreground hover:bg-gray-100",
+    variant === "ghost" && "bg-transparent hover:bg-gray-100",
     size === "default" && "h-11 px-5 text-sm",
     size === "sm" && "h-9 px-4 text-sm",
     size === "lg" && "h-12 px-6 text-base",

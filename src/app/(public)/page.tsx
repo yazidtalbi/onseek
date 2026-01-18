@@ -138,7 +138,7 @@ export default async function LandingPage() {
               ))}
             </div>
           </div>
-          <Card className="border-border bg-white/80 shadow-lg">
+          <Card className="border-[#e5e7eb] bg-white/80 shadow-lg">
             <CardContent className="space-y-6 p-6">
               <div className="space-y-2">
                 <p className="text-sm font-semibold text-muted-foreground">

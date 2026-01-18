@@ -1,6 +1,6 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { RequestFilters } from "@/components/requests/request-filters";
-import { RequestFeed } from "@/components/requests/request-feed";
+import { RequestRail } from "@/components/requests/request-rail";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { AppNavbar } from "@/components/layout/app-navbar";
@@ -56,86 +56,112 @@ export default async function HomePage({
     }
   }
 
-  const status = searchParams.status ?? "open";
-  const sort = searchParams.sort ?? "newest";
-  const category = searchParams.category ?? "All";
   const queryText = searchParams.q?.trim() ?? "";
-  const priceMin = searchParams.priceMin;
-  const priceMax = searchParams.priceMax;
-  const country = searchParams.country;
 
-  let query = supabase.from("requests").select("*");
-  if (status) {
-    query = query.eq("status", status);
-  }
-  if (category && category !== "All") {
-    query = query.eq("category", category);
-  }
-  // Price filtering: show requests where the budget range overlaps with the filter range
-  if (priceMin || priceMax) {
-    const min = priceMin ? parseFloat(priceMin) : null;
-    const max = priceMax ? parseFloat(priceMax) : null;
+  // Helper function to fetch images for requests
+  async function fetchImagesForRequests(requests: any[]) {
+    if (!requests || requests.length === 0) return [];
     
-    if (min !== null && !isNaN(min)) {
-      // Request budget_max should be >= filter min (or no max limit)
-      query = query.or(`budget_max.gte.${min},budget_max.is.null`);
-    }
-    if (max !== null && !isNaN(max)) {
-      // Request budget_min should be <= filter max (or no min limit)
-      query = query.or(`budget_min.lte.${max},budget_min.is.null`);
-    }
-  }
-  if (country) {
-    query = query.ilike("country", `%${country}%`);
-  }
-  if (queryText) {
-    const safeQuery = queryText.replace(/[%_]/g, "\\$&");
-    query = query.or(
-      `title.ilike.%${safeQuery}%,description.ilike.%${safeQuery}%`
-    );
-  }
-  if (sort === "active") {
-    query = query.order("updated_at", { ascending: false });
-  } else {
-    query = query.order("created_at", { ascending: false });
+    const requestIds = requests.map((r) => r.id);
+    const { data: images } = await supabase
+      .from("request_images")
+      .select("request_id, image_url, image_order")
+      .in("request_id", requestIds)
+      .order("image_order", { ascending: true });
+    
+    const imageMap = new Map<string, string[]>();
+    images?.forEach((img) => {
+      const existing = imageMap.get(img.request_id) || [];
+      if (existing.length < 3) {
+        existing.push(img.image_url);
+        imageMap.set(img.request_id, existing);
+      }
+    });
+    
+    return requests.map((req) => ({
+      ...req,
+      images: imageMap.get(req.id) || [],
+    }));
   }
 
-  // Pagination
-  const page = parseInt(searchParams.page || "1");
-  const limit = 20;
-  const offset = (page - 1) * limit;
+  // Fetch different rails of requests
+  // 1. Recently Posted (newest requests)
+  const { data: recentRequests } = await supabase
+    .from("requests")
+    .select("*")
+    .eq("status", "open")
+    .order("created_at", { ascending: false })
+    .limit(8);
+  const recentWithImages = await fetchImagesForRequests(recentRequests || []);
 
-  // Get count separately
-  const countQuery = supabase.from("requests").select("*", { count: "exact", head: true });
-  if (status) {
-    countQuery.eq("status", status);
-  }
-  if (category && category !== "All") {
-    countQuery.eq("category", category);
-  }
-  if (priceMin || priceMax) {
-    const min = priceMin ? parseFloat(priceMin) : null;
-    const max = priceMax ? parseFloat(priceMax) : null;
-    if (min !== null && !isNaN(min)) {
-      countQuery.or(`budget_max.gte.${min},budget_max.is.null`);
-    }
-    if (max !== null && !isNaN(max)) {
-      countQuery.or(`budget_min.lte.${max},budget_min.is.null`);
-    }
-  }
-  if (country) {
-    countQuery.ilike("country", `%${country}%`);
-  }
-  if (queryText) {
-    const safeQuery = queryText.replace(/[%_]/g, "\\$&");
-    countQuery.or(
-      `title.ilike.%${safeQuery}%,description.ilike.%${safeQuery}%`
-    );
-  }
+  // 2. Most Active (requests with most submissions, ordered by updated_at)
+  const { data: activeRequests } = await supabase
+    .from("requests")
+    .select("*")
+    .eq("status", "open")
+    .order("updated_at", { ascending: false })
+    .limit(8);
+  const activeWithImages = await fetchImagesForRequests(activeRequests || []);
 
-  const { count } = await countQuery;
-  const { data: requests } = await query.range(offset, offset + limit - 1);
-  const totalPages = count ? Math.ceil(count / limit) : 1;
+  // 3. Tech Category
+  const { data: techRequests } = await supabase
+    .from("requests")
+    .select("*")
+    .eq("status", "open")
+    .eq("category", "Tech")
+    .order("created_at", { ascending: false })
+    .limit(8);
+  const techWithImages = await fetchImagesForRequests(techRequests || []);
+
+  // 4. Gaming Category
+  const { data: gamingRequests } = await supabase
+    .from("requests")
+    .select("*")
+    .eq("status", "open")
+    .eq("category", "Gaming")
+    .order("created_at", { ascending: false })
+    .limit(8);
+  const gamingWithImages = await fetchImagesForRequests(gamingRequests || []);
+
+  // 5. Fashion Category
+  const { data: fashionRequests } = await supabase
+    .from("requests")
+    .select("*")
+    .eq("status", "open")
+    .eq("category", "Fashion")
+    .order("created_at", { ascending: false })
+    .limit(8);
+  const fashionWithImages = await fetchImagesForRequests(fashionRequests || []);
+
+  // 6. Home & Living Category
+  const { data: homeRequests } = await supabase
+    .from("requests")
+    .select("*")
+    .eq("status", "open")
+    .eq("category", "Home & Living")
+    .order("created_at", { ascending: false })
+    .limit(8);
+  const homeWithImages = await fetchImagesForRequests(homeRequests || []);
+
+  // 7. High Budget Requests (budget_max >= 500)
+  const { data: highBudgetRequests } = await supabase
+    .from("requests")
+    .select("*")
+    .eq("status", "open")
+    .gte("budget_max", 500)
+    .order("budget_max", { ascending: false })
+    .limit(8);
+  const highBudgetWithImages = await fetchImagesForRequests(highBudgetRequests || []);
+
+  // 8. Auto Category
+  const { data: autoRequests } = await supabase
+    .from("requests")
+    .select("*")
+    .eq("status", "open")
+    .eq("category", "Auto")
+    .order("created_at", { ascending: false })
+    .limit(8);
+  const autoWithImages = await fetchImagesForRequests(autoRequests || []);
 
   return (
     <AuthProvider user={user ?? null} profile={resolvedProfile ?? null}>
@@ -151,7 +177,7 @@ export default async function HomePage({
                   <span className="text-foreground">requests</span>
                 </h1>
                 <p className="text-lg text-muted-foreground">
-                  Find the best products, links, and solutions shared by the community
+                  Post what you're looking for and get quality submissions from the community
                 </p>
               </div>
               <form action="/search" method="get" className="w-full max-w-2xl">
@@ -160,7 +186,7 @@ export default async function HomePage({
                   <Input
                     name="q"
                     placeholder='Search for requests like "mechanical keyboard"'
-                    className="pl-12 h-14 text-base bg-white border-border rounded-full"
+                    className="pl-12 h-14 text-base bg-white border-[#e5e7eb] rounded-full"
                     defaultValue={queryText}
                   />
                 </div>
@@ -169,20 +195,75 @@ export default async function HomePage({
 
             <RequestFilters />
 
-            <RequestFeed
-              initialRequests={requests ?? []}
-              filters={{
-                category,
-                status,
-                sort,
-                query: queryText || null,
-                priceMin: priceMin || null,
-                priceMax: priceMax || null,
-                country: country || null,
-              }}
-              page={page}
-              totalPages={totalPages}
-            />
+            {/* Multiple Request Rails */}
+            <div className="space-y-12">
+              {/* Recently Posted */}
+              <RequestRail
+                title="Recently Posted"
+                requests={recentWithImages}
+                viewAllHref="/?sort=newest"
+              />
+
+              {/* Most Active */}
+              <RequestRail
+                title="Most Active"
+                requests={activeWithImages}
+                viewAllHref="/?sort=active"
+              />
+
+              {/* Tech Category */}
+              {techWithImages.length > 0 && (
+                <RequestRail
+                  title="Tech"
+                  requests={techWithImages}
+                  viewAllHref="/app/category/tech"
+                />
+              )}
+
+              {/* Gaming Category */}
+              {gamingWithImages.length > 0 && (
+                <RequestRail
+                  title="Gaming"
+                  requests={gamingWithImages}
+                  viewAllHref="/app/category/gaming"
+                />
+              )}
+
+              {/* Fashion Category */}
+              {fashionWithImages.length > 0 && (
+                <RequestRail
+                  title="Fashion"
+                  requests={fashionWithImages}
+                  viewAllHref="/app/category/fashion"
+                />
+              )}
+
+              {/* Home & Living Category */}
+              {homeWithImages.length > 0 && (
+                <RequestRail
+                  title="Home & Living"
+                  requests={homeWithImages}
+                  viewAllHref="/app/category/home-living"
+                />
+              )}
+
+              {/* Auto Category */}
+              {autoWithImages.length > 0 && (
+                <RequestRail
+                  title="Auto"
+                  requests={autoWithImages}
+                  viewAllHref="/app/category/auto"
+                />
+              )}
+
+              {/* High Budget */}
+              {highBudgetWithImages.length > 0 && (
+                <RequestRail
+                  title="High Budget Requests"
+                  requests={highBudgetWithImages}
+                />
+              )}
+            </div>
 
             {/* About Onseek Section */}
             <div className="space-y-8 pt-12 border-t border-border">

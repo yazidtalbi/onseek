@@ -20,7 +20,7 @@ import { useAuth } from "@/components/layout/auth-provider";
 
 type Values = z.infer<typeof submissionSchema>;
 
-export function SubmissionForm({ requestId }: { requestId: string }) {
+export function SubmissionForm({ requestId, requestBudgetMax, requestDescription }: { requestId: string; requestBudgetMax?: number | null; requestDescription?: string }) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -202,7 +202,7 @@ export function SubmissionForm({ requestId }: { requestId: string }) {
 
   return (
     <>
-    <Card className="border-border bg-white/80">
+    <Card className="border-[#e5e7eb] bg-white/80">
       <CardContent className="p-6">
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" noValidate>
           {/* Submission Type Selection */}

@@ -48,7 +48,7 @@ export default async function MyRequestsPage({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 rounded-3xl border border-border bg-white/80 p-6 md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col gap-4 rounded-3xl border border-[#e5e7eb] bg-white/80 p-6 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-3xl font-semibold">My requests</h1>
           <p className="text-sm text-muted-foreground">
@@ -61,19 +61,19 @@ export default async function MyRequestsPage({
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
-        <Card className="border-border bg-white/80">
+        <Card className="border-[#e5e7eb] bg-white/80">
           <CardContent className="p-5">
             <p className="text-xs text-muted-foreground">Total</p>
             <p className="text-2xl font-semibold">{totalCount ?? 0}</p>
           </CardContent>
         </Card>
-        <Card className="border-border bg-white/80">
+        <Card className="border-[#e5e7eb] bg-white/80">
           <CardContent className="p-5">
             <p className="text-xs text-muted-foreground">Open</p>
             <p className="text-2xl font-semibold">{openCount ?? 0}</p>
           </CardContent>
         </Card>
-        <Card className="border-border bg-white/80">
+        <Card className="border-[#e5e7eb] bg-white/80">
           <CardContent className="p-5">
             <p className="text-xs text-muted-foreground">Solved</p>
             <p className="text-2xl font-semibold">{solvedCount ?? 0}</p>

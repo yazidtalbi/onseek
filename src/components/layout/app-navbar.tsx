@@ -5,7 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Bell, Plus, ChevronDown, TrendingUp, Sparkles, Moon, Sun, LogOut } from "lucide-react";
+import { Search, Bell, Plus, ChevronDown, TrendingUp, Sparkles, Moon, Sun, LogOut, Heart } from "lucide-react";
 import { useAuth } from "@/components/layout/auth-provider";
 import { useTheme } from "@/components/layout/theme-provider";
 import { signOutAction } from "@/actions/auth.actions";
@@ -17,15 +17,9 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import { MAIN_CATEGORIES } from "@/lib/categories";
 
-const categories = [
-  "Tech",
-  "Home",
-  "Fashion",
-  "Auto",
-  "Collectibles",
-  "Local",
-];
+const categories = MAIN_CATEGORIES;
 
 export function AppNavbar() {
   const pathname = usePathname();
@@ -56,7 +50,20 @@ export function AppNavbar() {
     if (category === "All") {
       router.push("/");
     } else {
-      router.push(`/app/category/${category.toLowerCase()}`);
+      // Map category names to URL slugs
+      const slugMap: Record<string, string> = {
+        "Tech": "tech",
+        "Gaming": "gaming",
+        "Fashion": "fashion",
+        "Health & Cosmetics": "health-cosmetics",
+        "Family & Children": "family-children",
+        "Home & Living": "home-living",
+        "Garden & DIY": "garden-diy",
+        "Auto": "auto",
+        "Grocery": "grocery",
+      };
+      const slug = slugMap[category] || category.toLowerCase();
+      router.push(`/app/category/${slug}`);
     }
   };
 
@@ -92,8 +99,8 @@ export function AppNavbar() {
   }, [isHomePage]);
 
   return (
-    <header className="sticky top-0 z-20 border-b border-border bg-card/95 backdrop-blur-sm">
-      <div className="flex w-full items-center gap-4 px-4 py-3 md:px-6">
+    <header className="sticky top-0 z-20 bg-[#fbfcfd] backdrop-blur-sm">
+      <div className="flex w-full items-center gap-4 px-4 py-3 md:px-8">
         {/* Brand */}
         <Link href="/" className="text-xl font-semibold text-foreground shrink-0">
           Onseek
@@ -180,7 +187,7 @@ export function AppNavbar() {
         <div className="flex items-center gap-2 shrink-0 ml-auto">
           {user ? (
             <>
-              <Button asChild variant="accent" size="sm" className="hidden sm:flex">
+              <Button asChild variant="accent" size="sm" className="hidden sm:flex rounded-full">
                 <Link href="/app/new">
                   <Plus className="h-4 w-4 mr-1" />
                   New
@@ -197,6 +204,17 @@ export function AppNavbar() {
                 ) : (
                   <Moon className="h-5 w-5" />
                 )}
+              </Button>
+              <Button variant="ghost" size="icon" asChild className={cn(
+                "relative",
+                pathname === "/app/saved" && "text-foreground"
+              )}>
+                <Link href="/app/saved">
+                  <Heart className={cn(
+                    "h-5 w-5",
+                    pathname === "/app/saved" && "fill-current"
+                  )} />
+                </Link>
               </Button>
               <Button variant="ghost" size="icon" className="relative">
                 <Bell className="h-5 w-5" />

@@ -1,8 +1,8 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { RequestFilters } from "@/components/requests/request-filters";
 import { RequestFeed } from "@/components/requests/request-feed";
-import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import { RequestInputSection } from "@/components/requests/request-input-section";
+import { PromotionalSidebar } from "@/components/requests/promotional-sidebar";
 
 export const dynamic = "force-dynamic";
 
@@ -104,85 +104,75 @@ export default async function AppFeedPage({
   const { data: requests } = await query.range(offset, offset + limit - 1);
   const totalPages = count ? Math.ceil(count / limit) : 1;
 
+  // Fetch submission counts for requests
+  let requestsWithCounts = requests ?? [];
+  if (requests && requests.length > 0) {
+    const requestIds = requests.map((r) => r.id);
+    const { data: submissionCounts } = await supabase
+      .from("submissions")
+      .select("request_id")
+      .in("request_id", requestIds);
+    
+    // Create a map of request_id -> submission count
+    const countMap = new Map<string, number>();
+    submissionCounts?.forEach((sub) => {
+      const current = countMap.get(sub.request_id) || 0;
+      countMap.set(sub.request_id, current + 1);
+    });
+    
+    // Attach submission count to each request
+    requestsWithCounts = requests.map((req) => ({
+      ...req,
+      submissionCount: countMap.get(req.id) || 0,
+    }));
+  }
+
   return (
-    <div className="space-y-12">
-      {/* Hero Section */}
-      <div id="hero-search-section" className="flex flex-col items-center justify-center text-center space-y-6 py-12">
-        <div className="space-y-2">
-          <h1 className="text-4xl md:text-5xl font-semibold">
-            Discover community-made{" "}
-            <span className="text-foreground">requests</span>
-          </h1>
-          <p className="text-lg text-muted-foreground">
-            Find the best products, links, and solutions shared by the community
-          </p>
-        </div>
-        <form action="/" method="get" className="w-full max-w-2xl">
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              name="q"
-              placeholder='Search for requests like "mechanical keyboard"'
-              className="pl-12 h-14 text-base bg-white border-border rounded-full"
-              defaultValue={queryText}
-            />
-          </div>
-        </form>
-      </div>
-
-      <RequestFilters />
-
-      <RequestFeed
-        initialRequests={requests ?? []}
-        filters={{
-          category,
-          status,
-          sort,
-          query: queryText || null,
-          priceMin: priceMin || null,
-          priceMax: priceMax || null,
-          country: country || null,
-        }}
-        page={page}
-        totalPages={totalPages}
-      />
-
-      {/* About Onseek Section */}
-      <div className="space-y-8 pt-12 border-t border-border">
-        <div className="space-y-4">
-          <h2 className="text-3xl font-semibold">What is Onseek?</h2>
-          <div className="grid gap-6 md:grid-cols-2">
-            <div className="space-y-3">
-              <h3 className="text-xl font-semibold">Post Your Request</h3>
-              <p className="text-muted-foreground">
-                Describe what you're looking for, set your budget, and specify any requirements. 
-                The community will help you find the best options available.
+    <div className="space-y-8">
+      {/* Main Content: Requests on Left, Sidebar on Right */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* Left Column: Requests Feed (8/12 width) */}
+        <div className="lg:col-span-8 space-y-4">
+          {/* Hero Section */}
+          <div id="hero-search-section" className="space-y-6 pb-8 max-w-4xl">
+            <div className="space-y-2">
+              <h1 className="text-4xl md:text-5xl font-semibold text-left">
+                Discover community-made{" "}
+                <span className="text-foreground">requests</span>
+              </h1>
+              <p className="text-lg text-gray-600 text-left">
+                Post what you're looking for and get quality submissions from the community
               </p>
             </div>
-            <div className="space-y-3">
-              <h3 className="text-xl font-semibold">Get Quality Submissions</h3>
-              <p className="text-muted-foreground">
-                Members submit verified product links with detailed notes and pricing. 
-                Each submission is reviewed and upvoted by the community for quality.
-              </p>
-            </div>
-            <div className="space-y-3">
-              <h3 className="text-xl font-semibold">Choose the Winner</h3>
-              <p className="text-muted-foreground">
-                Review all submissions, compare prices and features, then select the winner. 
-                The contributor earns points and reputation for helping you find what you need.
-              </p>
-            </div>
-            <div className="space-y-3">
-              <h3 className="text-xl font-semibold">Build Your Reputation</h3>
-              <p className="text-muted-foreground">
-                Earn points by posting requests, submitting helpful links, getting upvotes, 
-                and having your submissions selected as winners. Climb the leaderboard!
-              </p>
+            {/* Request Input Section */}
+            <div className="w-full">
+              <RequestInputSection />
             </div>
           </div>
+          <RequestFilters />
+          <RequestFeed
+            initialRequests={requestsWithCounts}
+            filters={{
+              category,
+              status,
+              sort,
+              query: queryText || null,
+              priceMin: priceMin || null,
+              priceMax: priceMax || null,
+              country: country || null,
+            }}
+            page={page}
+            totalPages={totalPages}
+            forceListView={true}
+          />
+        </div>
+
+        {/* Right Column: Promotional Sidebar (4/12 width) */}
+        <div className="lg:col-span-4">
+          <PromotionalSidebar />
         </div>
       </div>
+
     </div>
   );
 }

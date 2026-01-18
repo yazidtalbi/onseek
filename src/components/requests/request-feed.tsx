@@ -26,18 +26,21 @@ export function RequestFeed({
   filters,
   page = 1,
   totalPages = 1,
+  forceListView = false,
 }: {
   initialRequests: RequestItem[];
   filters: Filters;
   page?: number;
   totalPages?: number;
+  forceListView?: boolean;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const currentPage = page;
   
-  // Persist view mode to localStorage - default to grid
+  // Persist view mode to localStorage - default to grid (unless forced to list)
   const [viewMode, setViewMode] = useState<"list" | "grid">(() => {
+    if (forceListView) return "list";
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("requestViewMode");
       return (saved === "list" || saved === "grid" ? saved : "grid") as "list" | "grid";
@@ -108,6 +111,71 @@ export function RequestFeed({
         console.error("Error fetching requests:", error);
         return [];
       }
+      
+      // Fetch up to 3 images and submission counts for each request
+      if (requests && requests.length > 0) {
+        const requestIds = requests.map((r) => r.id);
+        const { data: images } = await supabase
+          .from("request_images")
+          .select("request_id, image_url, image_order")
+          .in("request_id", requestIds)
+          .order("image_order", { ascending: true });
+        
+        // Fetch submission counts
+        const { data: submissionCounts } = await supabase
+          .from("submissions")
+          .select("request_id")
+          .in("request_id", requestIds);
+        
+        // Create a map of request_id -> submission count
+        const submissionCountMap = new Map<string, number>();
+        submissionCounts?.forEach((sub) => {
+          const current = submissionCountMap.get(sub.request_id) || 0;
+          submissionCountMap.set(sub.request_id, current + 1);
+        });
+        
+        // Create a map of request_id -> array of images (max 3)
+        const imageMap = new Map<string, string[]>();
+        images?.forEach((img) => {
+          const existing = imageMap.get(img.request_id) || [];
+          if (existing.length < 3) {
+            existing.push(img.image_url);
+            imageMap.set(img.request_id, existing);
+          }
+        });
+        
+        // Attach images array and submission count to each request
+        const requestsWithImages = requests.map((req) => ({
+          ...req,
+          images: imageMap.get(req.id) || [],
+          submissionCount: submissionCountMap.get(req.id) || 0,
+        }));
+        
+        // Filter out hidden requests
+        if (typeof window !== "undefined") {
+          try {
+            const hidden = JSON.parse(localStorage.getItem("hiddenRequests") || "[]");
+            return requestsWithImages.filter((req) => !hidden.includes(req.id));
+          } catch (error) {
+            console.error("Error reading hidden requests:", error);
+            return requestsWithImages;
+          }
+        }
+        
+        return requestsWithImages;
+      }
+      
+      // Filter out hidden requests from initial data too
+      if (typeof window !== "undefined") {
+        try {
+          const hidden = JSON.parse(localStorage.getItem("hiddenRequests") || "[]");
+          return (requests ?? []).filter((req: any) => !hidden.includes(req.id));
+        } catch (error) {
+          console.error("Error reading hidden requests:", error);
+          return requests ?? [];
+        }
+      }
+      
       return requests ?? [];
     },
     initialData: initialRequests, // Use initialRequests as initial data
@@ -120,7 +188,7 @@ export function RequestFeed({
 
   if (!data?.length) {
     return (
-      <div className="rounded-lg border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
+      <div className="rounded-lg border border-dashed border-[#e5e7eb] bg-white p-8 text-center text-sm text-gray-600">
         No requests yet. Be the first to post!
       </div>
     );
@@ -128,39 +196,41 @@ export function RequestFeed({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-end gap-2">
-        <div className="flex gap-1 p-1 bg-muted rounded-full">
-          <Button
-            variant={viewMode === "list" ? "default" : "ghost"}
-            size="sm"
-            onClick={() => setViewMode("list")}
-            className="h-8 w-8 p-0 rounded-full"
-            title="List view"
-          >
-            <LayoutList className="h-4 w-4" />
-          </Button>
-          <Button
-            variant={viewMode === "grid" ? "default" : "ghost"}
-            size="sm"
-            onClick={() => setViewMode("grid")}
-            className="h-8 w-8 p-0 rounded-full"
-            title="Grid view"
-          >
-            <Grid3x3 className="h-4 w-4" />
-          </Button>
+      {!forceListView && (
+        <div className="flex items-center justify-end gap-2">
+          <div className="flex gap-1 p-1 bg-gray-100 rounded-full">
+            <Button
+              variant={viewMode === "list" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setViewMode("list")}
+              className="h-8 w-8 p-0 rounded-full"
+              title="List view"
+            >
+              <LayoutList className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={viewMode === "grid" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setViewMode("grid")}
+              className="h-8 w-8 p-0 rounded-full"
+              title="Grid view"
+            >
+              <Grid3x3 className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
-      </div>
+      )}
 
       {viewMode === "list" ? (
         <div className="space-y-3">
-          {data.map((request) => (
-            <RequestCard key={request.id} request={request} />
+          {data.map((request: any) => (
+            <RequestCard key={request.id} request={request} firstImage={request.images?.[0] || null} images={request.images || []} />
           ))}
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {data.map((request) => (
-            <RequestCardGrid key={request.id} request={request} />
+          {data.map((request: any) => (
+            <RequestCardGrid key={request.id} request={request} images={request.images || []} />
           ))}
         </div>
       )}

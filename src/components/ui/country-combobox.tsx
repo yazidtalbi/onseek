@@ -72,7 +72,7 @@ export function CountryCombobox({
           onChange={handleInputChange}
           onFocus={() => setOpen(true)}
           placeholder={placeholder}
-          className="pr-20"
+          className="pr-20 pl-0"
         />
         {selectedCountry && (
           <Button
@@ -102,7 +102,7 @@ export function CountryCombobox({
             className="fixed inset-0 z-40"
             onClick={() => setOpen(false)}
           />
-          <div className="absolute z-50 w-full mt-1 max-h-60 overflow-auto rounded-lg border border-border bg-card shadow-lg">
+          <div className="absolute z-50 w-full mt-1 max-h-60 overflow-auto rounded-lg border border-[#e5e7eb] bg-white shadow-lg">
             {filteredCountries.length > 0 ? (
               <div className="p-1">
                 {filteredCountries.map((country: string) => (
@@ -112,8 +112,8 @@ export function CountryCombobox({
                     onClick={() => handleSelect(country)}
                     className={cn(
                       "w-full flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-colors",
-                      "hover:bg-muted/50 cursor-pointer",
-                      selectedCountry === country && "bg-muted"
+                      "hover:bg-gray-100 cursor-pointer",
+                      selectedCountry === country && "bg-gray-100"
                     )}
                   >
                     <Check

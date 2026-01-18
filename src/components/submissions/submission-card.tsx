@@ -53,14 +53,14 @@ export function SubmissionCard({
   }, [submission.url]);
 
   return (
-    <Card className="border-border bg-card">
+    <Card className="border-[#e5e7eb] bg-white">
       <CardContent className="space-y-4 p-6">
         <div className="flex gap-4">
           {thumbnailUrl && !imageError ? (
-            <div className="relative w-32 h-32 flex-shrink-0 rounded-lg overflow-hidden border border-border bg-muted flex items-center justify-center">
+            <div className="relative w-32 h-32 flex-shrink-0 rounded-lg overflow-hidden border border-[#e5e7eb] bg-gray-100 flex items-center justify-center">
               <Image
                 src={thumbnailUrl}
-                alt={submission.store_name || host || "Product preview"}
+                alt={submission.article_name || host || "Product preview"}
                 fill
                 className="object-contain"
                 unoptimized
@@ -70,7 +70,7 @@ export function SubmissionCard({
               />
             </div>
           ) : submission.url !== "personal-item" ? (
-            <div className="w-32 h-32 flex-shrink-0 rounded-lg border border-border bg-muted flex items-center justify-center">
+            <div className="w-32 h-32 flex-shrink-0 rounded-lg border border-[#e5e7eb] bg-gray-100 flex items-center justify-center">
               <span className="text-xs text-muted-foreground text-center px-2">No preview</span>
             </div>
           ) : null}
@@ -83,7 +83,7 @@ export function SubmissionCard({
                   rel="noopener noreferrer"
                   className="text-lg font-semibold hover:text-foreground transition-colors block truncate"
                 >
-                  {submission.store_name || host || "Submission link"}
+                  {submission.article_name || host || "Submission link"}
                 </a>
                 <p className="text-xs text-muted-foreground truncate">{submission.url}</p>
               </div>

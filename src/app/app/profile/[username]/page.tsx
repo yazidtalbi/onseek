@@ -106,7 +106,7 @@ export default async function ProfilePage({
           id: `vote-${submission.id}-${i}`,
           type: "vote",
           points: 1,
-          description: `Received upvote on ${(submission as any).article_name || (submission as any).store_name || "submission"}`,
+          description: `Received upvote on ${(submission as any).article_name || "submission"}`,
           link: `/app/requests/${submission.request_id}`,
           timestamp: submission.created_at,
         });

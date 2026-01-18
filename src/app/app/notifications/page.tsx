@@ -23,7 +23,7 @@ export default async function NotificationsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-3xl border border-border bg-white/80 p-6">
+      <div className="rounded-3xl border border-[#e5e7eb] bg-white/80 p-6">
         <h1 className="text-3xl font-semibold">Notifications</h1>
         <p className="text-sm text-muted-foreground">
           Stay updated on wins, votes, and new activity.
@@ -33,7 +33,7 @@ export default async function NotificationsPage() {
       <div className="space-y-4">
         {notifications?.length ? (
           notifications.map((item) => (
-            <Card key={item.id} className="border-border bg-white/80">
+            <Card key={item.id} className="border-[#e5e7eb] bg-white/80">
               <CardContent className="flex items-center justify-between p-5">
                 <div>
                   <p className="text-sm font-semibold">{item.type}</p>
@@ -48,7 +48,7 @@ export default async function NotificationsPage() {
             </Card>
           ))
         ) : (
-          <div className="rounded-2xl border border-dashed border-border bg-white/50 p-6 text-center text-sm text-muted-foreground">
+          <div className="rounded-2xl border border-dashed border-[#e5e7eb] bg-white/50 p-6 text-center text-sm text-gray-600">
             No notifications yet.
           </div>
         )}

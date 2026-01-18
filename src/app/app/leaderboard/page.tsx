@@ -15,7 +15,7 @@ export default async function LeaderboardPage() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-3xl border border-border bg-white/80 p-6">
+      <div className="rounded-3xl border border-[#e5e7eb] bg-white/80 p-6">
         <h1 className="text-3xl font-semibold">Top hunters</h1>
         <p className="text-sm text-muted-foreground">
           Recognize the community members with the most accepted links.
@@ -23,7 +23,7 @@ export default async function LeaderboardPage() {
       </div>
       <div className="grid gap-4">
         {profiles?.map((profile, index) => (
-          <Card key={profile.id} className="border-border bg-white/80">
+          <Card key={profile.id} className="border-[#e5e7eb] bg-white/80">
             <CardContent className="flex items-center justify-between p-5">
               <div>
                 <p className="text-sm text-muted-foreground">#{index + 1}</p>

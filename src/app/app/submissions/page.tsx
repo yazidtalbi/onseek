@@ -23,7 +23,7 @@ export default async function MySubmissionsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-3xl border border-border bg-white/80 p-6">
+      <div className="rounded-3xl border border-[#e5e7eb] bg-white/80 p-6">
         <h1 className="text-3xl font-semibold">My submissions</h1>
         <p className="text-sm text-muted-foreground">
           Track every link you have shared with the community.
@@ -41,7 +41,7 @@ export default async function MySubmissionsPage() {
             };
             const isWinner = request?.winner_submission_id === submission.id;
             return (
-              <Card key={submission.id} className="border-border bg-white/80">
+              <Card key={submission.id} className="border-[#e5e7eb] bg-white/80">
                 <CardContent className="space-y-3 p-6">
                   <div className="flex items-center justify-between gap-2">
                     <div>
@@ -59,8 +59,8 @@ export default async function MySubmissionsPage() {
                     </div>
                   </div>
                   <div className="text-sm text-muted-foreground">
-                    {submission.store_name ? (
-                      <span>{submission.store_name}</span>
+                    {submission.article_name ? (
+                      <span>{submission.article_name}</span>
                     ) : null}
                     {submission.price ? (
                       <span> · ${Number(submission.price).toFixed(2)}</span>
@@ -71,7 +71,7 @@ export default async function MySubmissionsPage() {
             );
           })
         ) : (
-          <div className="rounded-2xl border border-dashed border-border bg-white/50 p-6 text-center text-sm text-muted-foreground">
+          <div className="rounded-2xl border border-dashed border-[#e5e7eb] bg-white/50 p-6 text-center text-sm text-gray-600">
             No submissions yet. Explore requests and help find links.
           </div>
         )}

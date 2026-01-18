@@ -16,11 +16,17 @@ type Values = z.infer<typeof reportSchema>;
 export function ReportDialog({
   type,
   targetId,
+  open: controlledOpen,
+  onOpenChange,
 }: {
   type: "request" | "submission";
   targetId: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) {
-  const [open, setOpen] = React.useState(false);
+  const [internalOpen, setInternalOpen] = React.useState(false);
+  const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
+  const setOpen = onOpenChange || setInternalOpen;
   const [status, setStatus] = React.useState<string | null>(null);
   const [isPending, startTransition] = React.useTransition();
   const form = useForm<Values>({
@@ -46,11 +52,16 @@ export function ReportDialog({
     });
   };
 
+  // Only render the button if the component is uncontrolled (no open/onOpenChange props)
+  const isControlled = controlledOpen !== undefined || onOpenChange !== undefined;
+
   return (
     <>
-      <Button type="button" variant="outline" size="sm" onClick={() => setOpen(true)}>
-        Report
-      </Button>
+      {!isControlled && (
+        <Button type="button" variant="outline" size="sm" onClick={() => setOpen(true)}>
+          Report
+        </Button>
+      )}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader>

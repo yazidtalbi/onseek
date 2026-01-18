@@ -86,7 +86,7 @@ export function VoteButtons({
           "flex items-center gap-1 rounded-full border border-border px-3 py-1 text-xs font-semibold",
           submission.has_voted === 1
             ? "bg-foreground text-primary-foreground"
-            : "bg-white/70 text-muted-foreground"
+            : "bg-white/70 text-gray-600"
         )}
       >
         <ThumbsUp className="h-3 w-3" />
@@ -100,7 +100,7 @@ export function VoteButtons({
           "flex items-center gap-1 rounded-full border border-border px-3 py-1 text-xs font-semibold",
           submission.has_voted === -1
             ? "bg-accent text-accent-foreground"
-            : "bg-white/70 text-muted-foreground"
+            : "bg-white/70 text-gray-600"
         )}
       >
         <ThumbsDown className="h-3 w-3" />

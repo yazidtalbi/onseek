@@ -7,6 +7,9 @@ const interDisplay = Inter({
   variable: "--font-inter-display",
   subsets: ["latin"],
   display: "swap",
+  // Use Inter Display variant by adjusting optical sizing
+  // Inter Display is optimized for larger sizes (36px+)
+  // We'll use CSS to load the actual Inter Display font
 });
 
 const geistMono = Geist_Mono({

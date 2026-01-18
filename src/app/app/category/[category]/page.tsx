@@ -2,26 +2,24 @@ import { notFound } from "next/navigation";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { RequestFeed } from "@/components/requests/request-feed";
 import { RequestFilters } from "@/components/requests/request-filters";
+import { MAIN_CATEGORIES } from "@/lib/categories";
 
 export const dynamic = "force-dynamic";
 
-const validCategories = [
-  "tech",
-  "home",
-  "fashion",
-  "auto",
-  "collectibles",
-  "local",
-];
-
-const categoryDisplayNames: Record<string, string> = {
+// Create mapping from URL slug to category name
+const categorySlugMap: Record<string, string> = {
   tech: "Tech",
-  home: "Home",
+  gaming: "Gaming",
   fashion: "Fashion",
+  "health-cosmetics": "Health & Cosmetics",
+  "family-children": "Family & Children",
+  "home-living": "Home & Living",
+  "garden-diy": "Garden & DIY",
   auto: "Auto",
-  collectibles: "Collectibles",
-  local: "Local",
+  grocery: "Grocery",
 };
+
+const validCategories = Object.keys(categorySlugMap);
 
 export default async function CategoryPage({
   params,
@@ -42,7 +40,7 @@ export default async function CategoryPage({
   const sort = searchParams.sort ?? "newest";
   const queryText = searchParams.q?.trim() ?? "";
 
-  const categoryName = categoryDisplayNames[normalizedCategory];
+  const categoryName = categorySlugMap[normalizedCategory];
   const dbCategory = categoryName; // Use the display name for database query
 
   let query = supabase.from("requests").select("*").eq("category", dbCategory);

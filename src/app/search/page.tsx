@@ -161,7 +161,7 @@ export default async function SearchPage({
                   <Input
                     name="q"
                     placeholder='Search for requests like "mechanical keyboard"'
-                    className="pl-12 h-14 text-base bg-white border-border rounded-full"
+                    className="pl-12 h-14 text-base bg-white border-[#e5e7eb] rounded-full"
                     defaultValue={queryText}
                   />
                 </div>

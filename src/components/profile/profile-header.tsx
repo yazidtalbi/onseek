@@ -9,7 +9,7 @@ export function ProfileHeader({
   solvedCount: number;
 }) {
   return (
-    <div className="rounded-2xl border border-border bg-white/80 p-6">
+    <div className="rounded-2xl border border-[#e5e7eb] bg-white/80 p-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold">

@@ -100,7 +100,7 @@ export async function createSubmissionAction(formData: FormData) {
       request_id: requestId,
       user_id: user.id,
       url: url || "personal-item",
-      store_name: storeName,
+      article_name: storeName,
       price: parsed.data.price ?? null,
       shipping_cost: null,
       notes: notes.trim() || null,

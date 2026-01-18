@@ -97,9 +97,22 @@ export async function createRequestAction(formData: FormData) {
     );
   }
 
+  // Handle image URLs
+  const imageUrls = formData.getAll("imageUrls") as string[];
+  if (imageUrls.length > 0) {
+    await supabase.from("request_images").insert(
+      imageUrls.map((url, index) => ({
+        request_id: request.id,
+        image_url: url,
+        image_order: index,
+      }))
+    );
+  }
+
   revalidatePath("/app");
   revalidatePath("/app/requests");
   revalidatePath("/app/submissions");
+  revalidatePath("/");
   redirect(`/app/requests/${request.id}`);
 }
 

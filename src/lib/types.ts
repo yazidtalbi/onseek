@@ -25,6 +25,7 @@ export type RequestItem = {
   winner_submission_id: string | null;
   created_at: string;
   updated_at: string;
+  submissionCount?: number;
 };
 
 export type Submission = {
@@ -32,7 +33,7 @@ export type Submission = {
   request_id: string;
   user_id: string;
   url: string;
-  store_name: string | null;
+  article_name: string | null;
   price: number | null;
   shipping_cost: number | null;
   notes: string | null;

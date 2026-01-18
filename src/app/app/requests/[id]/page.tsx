@@ -6,16 +6,19 @@ import { SubmissionList } from "@/components/submissions/submission-list";
 import { SubmissionForm } from "@/components/submissions/submission-form";
 import { RequestActions } from "@/components/requests/request-actions";
 import { RequestCardGrid } from "@/components/requests/request-card-grid";
+import { RequestMenu } from "@/components/requests/request-menu";
+import { FavoriteButton } from "@/components/requests/favorite-button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { ReportDialog } from "@/components/reports/report-dialog";
-import { ChevronRight, Home, Lock, Package, Settings, DollarSign } from "lucide-react";
+import { ChevronRight, Lock, Package, Settings, DollarSign, MapPin } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { ImageCarousel } from "@/components/requests/image-carousel";
 
 export const dynamic = "force-dynamic";
 
@@ -64,6 +67,12 @@ export default async function RequestDetailPage({
     .select("*")
     .eq("request_id", id);
 
+  const { data: images } = await supabase
+    .from("request_images")
+    .select("*")
+    .eq("request_id", id)
+    .order("image_order", { ascending: true });
+
   const { data: submissions } = await supabase
     .from("submissions")
     .select("*, votes(vote, user_id)")
@@ -82,9 +91,60 @@ export default async function RequestDetailPage({
     .order("created_at", { ascending: false })
     .limit(6);
 
+  // Fetch images for similar requests
+  let similarRequestImages: Record<string, string[]> = {};
+  if (similarRequests && similarRequests.length > 0) {
+    const similarRequestIds = similarRequests.map((r) => r.id);
+    const { data: similarImages } = await supabase
+      .from("request_images")
+      .select("request_id, image_url, image_order")
+      .in("request_id", similarRequestIds)
+      .order("image_order", { ascending: true });
+
+    if (similarImages) {
+      similarImages.forEach((img) => {
+        if (!similarRequestImages[img.request_id]) {
+          similarRequestImages[img.request_id] = [];
+        }
+        if (similarRequestImages[img.request_id].length < 3) {
+          similarRequestImages[img.request_id].push(img.image_url);
+        }
+      });
+    }
+  }
+
+  // Fetch favorite status for similar requests
+  let similarRequestFavorites: Set<string> = new Set();
+  if (user && similarRequests && similarRequests.length > 0) {
+    const similarRequestIds = similarRequests.map((r) => r.id);
+    const { data: favorites } = await supabase
+      .from("favorites")
+      .select("request_id")
+      .eq("user_id", user.id)
+      .in("request_id", similarRequestIds);
+
+    if (favorites) {
+      favorites.forEach((fav) => {
+        similarRequestFavorites.add(fav.request_id);
+      });
+    }
+  }
+
   const isOwner = user?.id === request.user_id;
   // Allow guests to see submission form (they'll be redirected to login on click)
-  const canSubmit = request.status === "open" && !isOwner;
+  const showSubmissionForm = request.status === "open";
+
+  // Check if request is favorited
+  let isFavorite = false;
+  if (user) {
+    const { data: favorite } = await supabase
+      .from("favorites")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("request_id", id)
+      .single();
+    isFavorite = !!favorite;
+  }
 
   // Parse request preferences from description
   function parseRequestPreferences(description: string) {
@@ -114,9 +174,11 @@ export default async function RequestDetailPage({
   return (
     <div className="space-y-6">
       {/* Breadcrumbs */}
-      <nav className="flex items-center gap-2 text-sm text-muted-foreground">
-        <Link href="/app" className="hover:text-foreground transition-colors flex items-center gap-1">
-          <Home className="h-4 w-4" />
+      <nav className="flex items-center gap-2 text-sm text-gray-600">
+        <Link 
+          href="/"
+          className="hover:text-foreground transition-colors"
+        >
           Home
         </Link>
         <ChevronRight className="h-4 w-4" />
@@ -130,151 +192,177 @@ export default async function RequestDetailPage({
         <span className="text-foreground">{request.title}</span>
       </nav>
 
-      <Card className="border-border bg-white/80">
-        <CardContent className="space-y-4 p-6">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div className="space-y-2">
-              <Badge variant="muted">{request.status.toUpperCase()}</Badge>
-              <h1 className="text-3xl font-semibold">{request.title}</h1>
-              <p className="text-sm text-muted-foreground">
-                Posted by @{request.profiles?.username || "member"}
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              {isOwner ? (
-                <RequestActions requestId={request.id} status={request.status} />
-              ) : null}
-              <ReportDialog type="request" targetId={request.id} />
-            </div>
-          </div>
-          <p className="text-sm text-muted-foreground">{cleanDesc}</p>
-          
-          {/* Request Details - Organized in sections */}
-          <div className="space-y-3 pt-2">
-            {/* Basic Info */}
-            <div className="flex flex-wrap gap-2">
-              {request.country ? <Badge variant="muted">{request.country}</Badge> : null}
-              {request.condition ? <Badge variant="muted">{request.condition}</Badge> : null}
-              {request.urgency ? <Badge variant="muted">{request.urgency}</Badge> : null}
-            </div>
-            
-            {/* Budget */}
-            {(request.budget_min || request.budget_max) && (
-              <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
-                {request.budget_min && request.budget_max ? (
-                  <span>Budget: ${request.budget_min} - ${request.budget_max}</span>
-                ) : request.budget_min ? (
-                  <span>Budget: From ${request.budget_min}</span>
-                ) : (
-                  <span>Budget: Up to ${request.budget_max}</span>
+      {/* Two Column Layout: Request on Left, Submissions on Right */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left Column: Request Details */}
+        <div className="lg:col-span-1 space-y-6">
+          <Card className="border-[#e5e7eb] bg-white relative">
+            <CardContent className="space-y-4 p-6">
+              {/* Heart and Ellipsis - Top Right */}
+              <div className="absolute top-4 right-4 flex items-center gap-2">
+                <FavoriteButton requestId={request.id} isFavorite={isFavorite} />
+                <RequestMenu
+                  requestId={request.id}
+                  requestUserId={request.user_id}
+                  status={request.status}
+                />
+              </div>
+              
+              <div className="space-y-2 pr-16">
+                <Badge variant="muted">{request.status.toUpperCase()}</Badge>
+                <h1 className="text-3xl font-semibold">{request.title}</h1>
+                <p className="text-base text-gray-600">
+                  Posted by @{request.profiles?.username || "member"}
+                </p>
+              </div>
+              <p className="text-base text-gray-600">{cleanDesc}</p>
+              
+              {/* Request Images - Small thumbnails */}
+              {images && images.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-base font-semibold">Images</p>
+                  <ImageCarousel images={images} />
+                </div>
+              )}
+              
+              {/* Request Details - Organized in sections */}
+              <div className="space-y-3 pt-2">
+                {/* Basic Info */}
+                <div className="flex flex-wrap gap-2">
+                  {request.country ? (
+                    <Badge variant="muted" className="flex items-center gap-1.5">
+                      <MapPin className="h-4 w-4" />
+                      {request.country}
+                    </Badge>
+                  ) : null}
+                  {request.condition ? <Badge variant="muted">{request.condition}</Badge> : null}
+                  {request.urgency ? <Badge variant="muted">{request.urgency}</Badge> : null}
+                </div>
+                
+                {/* Budget */}
+                {(request.budget_min || request.budget_max) && (
+                  <div className="flex flex-wrap gap-2 text-base text-gray-600">
+                    {request.budget_min && request.budget_max ? (
+                      <span>Budget: ${request.budget_min} - ${request.budget_max}</span>
+                    ) : request.budget_min ? (
+                      <span>Budget: From ${request.budget_min}</span>
+                    ) : (
+                      <span>Budget: Up to ${request.budget_max}</span>
+                    )}
+                  </div>
+                )}
+                
+                {/* Request Options - Only show if any are set */}
+                {(preferences.priceLock === "locked" || preferences.exactItem || preferences.exactSpecification || preferences.exactPrice) && (
+                  <TooltipProvider>
+                    <div className="flex flex-wrap gap-2 pt-1">
+                      {preferences.priceLock === "locked" && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Badge variant="muted" className="flex items-center gap-1.5 cursor-help">
+                              <Lock className="h-3.5 w-3.5" />
+                              Price locked
+                            </Badge>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>No price greater than the specified budget will be accepted</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
+                      {preferences.exactItem && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Badge variant="muted" className="flex items-center gap-1.5 cursor-help">
+                              <Package className="h-3.5 w-3.5" />
+                              Exact item
+                            </Badge>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Only the exact requested item is acceptable, no alternatives</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
+                      {preferences.exactSpecification && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Badge variant="muted" className="flex items-center gap-1.5 cursor-help">
+                              <Settings className="h-3.5 w-3.5" />
+                              Exact specification
+                            </Badge>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Item must match all specified requirements exactly</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
+                      {preferences.exactPrice && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Badge variant="muted" className="flex items-center gap-1.5 cursor-help">
+                              <DollarSign className="h-3.5 w-3.5" />
+                              Exact price
+                            </Badge>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Price must match the specified budget exactly</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
+                    </div>
+                  </TooltipProvider>
                 )}
               </div>
-            )}
-            
-            {/* Request Options - Only show if any are set */}
-            {(preferences.priceLock === "locked" || preferences.exactItem || preferences.exactSpecification || preferences.exactPrice) && (
-              <TooltipProvider>
-                <div className="flex flex-wrap gap-2 pt-1">
-                  {preferences.priceLock === "locked" && (
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Badge variant="muted" className="flex items-center gap-1.5 cursor-help">
-                          <Lock className="h-3.5 w-3.5" />
-                          Price locked
-                        </Badge>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>No price greater than the specified budget will be accepted</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  )}
-                  {preferences.exactItem && (
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Badge variant="muted" className="flex items-center gap-1.5 cursor-help">
-                          <Package className="h-3.5 w-3.5" />
-                          Exact item
-                        </Badge>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Only the exact requested item is acceptable, no alternatives</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  )}
-                  {preferences.exactSpecification && (
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Badge variant="muted" className="flex items-center gap-1.5 cursor-help">
-                          <Settings className="h-3.5 w-3.5" />
-                          Exact specification
-                        </Badge>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Item must match all specified requirements exactly</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  )}
-                  {preferences.exactPrice && (
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Badge variant="muted" className="flex items-center gap-1.5 cursor-help">
-                          <DollarSign className="h-3.5 w-3.5" />
-                          Exact price
-                        </Badge>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Price must match the specified budget exactly</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  )}
+              {links?.length ? (
+                <div className="space-y-2">
+                  <p className="text-base font-semibold">Reference links</p>
+                  <div className="space-y-1 text-base text-gray-600">
+                    {links.map((link) => (
+                      <a
+                        key={link.id}
+                        href={link.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block underline"
+                      >
+                        {link.url}
+                      </a>
+                    ))}
+                  </div>
                 </div>
-              </TooltipProvider>
-            )}
-          </div>
-          {links?.length ? (
-            <div className="space-y-2">
-              <p className="text-sm font-semibold">Reference links</p>
-              <div className="space-y-1 text-sm text-muted-foreground">
-                {links.map((link) => (
-                  <a
-                    key={link.id}
-                    href={link.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block underline"
-                  >
-                    {link.url}
-                  </a>
-                ))}
-              </div>
+              ) : null}
+            </CardContent>
+          </Card>
+
+          {showSubmissionForm ? (
+            <div>
+              <SubmissionForm requestId={request.id} requestBudgetMax={request.budget_max} requestDescription={request.description} />
             </div>
           ) : null}
-        </CardContent>
-      </Card>
-
-      {canSubmit ? (
-        <div>
-          <SubmissionForm requestId={request.id} />
         </div>
-      ) : null}
 
-      <div className="space-y-3">
-        <h2 className="text-xl font-semibold">Submissions</h2>
-        <SubmissionList
-          requestId={request.id}
-          initialSubmissions={initialSubmissions}
-          winnerId={request.winner_submission_id}
-          canSelectWinner={isOwner}
-          requestStatus={request.status}
-        />
+        {/* Right Column: Submissions */}
+        <div className="lg:col-span-2 space-y-6">
+          <SubmissionList
+            requestId={request.id}
+            initialSubmissions={initialSubmissions}
+            winnerId={request.winner_submission_id}
+            canSelectWinner={isOwner}
+            requestStatus={request.status}
+          />
+        </div>
       </div>
 
       {similarRequests && similarRequests.length > 0 ? (
-        <div className="space-y-4 pt-12 mt-12 border-t border-border">
-          <h2 className="text-xl font-semibold">Similar requests</h2>
+        <div className="space-y-4 pt-12 mt-12 border-t border-[#e5e7eb]">
+          <h2 className="text-2xl font-semibold">Similar requests</h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {similarRequests.map((similarRequest) => (
-              <RequestCardGrid key={similarRequest.id} request={similarRequest} />
+              <RequestCardGrid
+                key={similarRequest.id}
+                request={similarRequest}
+                images={similarRequestImages[similarRequest.id] || []}
+                isFavorite={similarRequestFavorites.has(similarRequest.id)}
+              />
             ))}
           </div>
         </div>

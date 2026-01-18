@@ -3,6 +3,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { AppNavbar } from "@/components/layout/app-navbar";
 import { AppFooter } from "@/components/layout/app-footer";
 import { BottomNav } from "@/components/layout/bottom-nav";
+import { ScrollToTop } from "@/components/layout/scroll-to-top";
 import { AuthProvider } from "@/components/layout/auth-provider";
 
 export const dynamic = "force-dynamic";
@@ -46,13 +47,14 @@ export default async function AppLayout({
     <AuthProvider user={user ?? null} profile={resolvedProfile ?? null}>
       <div className="flex flex-col min-h-screen bg-background pb-24">
         <AppNavbar />
-        <main className="flex-1 w-full px-4 py-6 md:px-6">
-          <div className="mx-auto max-w-7xl w-full">{children}</div>
+        <main className="flex-1 w-full px-4 py-8 md:px-8">
+          <div className="mx-auto max-w-6xl w-full">{children}</div>
         </main>
-        <div className="mx-auto max-w-7xl w-full">
+        <div className="mx-auto max-w-6xl w-full">
           <AppFooter />
         </div>
         <BottomNav />
+        <ScrollToTop />
       </div>
     </AuthProvider>
   );

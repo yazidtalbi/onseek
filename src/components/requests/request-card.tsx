@@ -1,27 +1,16 @@
+"use client";
+
 import Link from "next/link";
 import { memo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, MapPin, Package, Lock, Settings, DollarSign } from "lucide-react";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { MapPin } from "lucide-react";
+import { formatTimeAgo } from "@/lib/utils/time";
+import { formatSubmissionCount } from "@/lib/utils/submissions";
+import { FavoriteButton } from "@/components/requests/favorite-button";
+import { RequestMenu } from "@/components/requests/request-menu";
 import type { RequestItem } from "@/lib/types";
-
-const statusStyles: Record<string, "default" | "muted" | "outline"> = {
-  open: "default",
-  closed: "outline",
-  solved: "muted",
-};
-
-const statusLabels: Record<string, string> = {
-  open: "AVAILABLE",
-  closed: "CLOSED",
-  solved: "SOLVED",
-};
+import Image from "next/image";
 
 function cleanDescription(description: string) {
   return description.replace(/<!--REQUEST_PREFS:.*?-->/, "").trim();
@@ -39,11 +28,8 @@ function parseRequestPreferences(description: string) {
   return null;
 }
 
-function RequestCardComponent({ request }: { request: RequestItem }) {
-  const timeAgo = new Date(request.created_at).toLocaleDateString("en-US", {
-    day: "numeric",
-    month: "short",
-  });
+function RequestCardComponent({ request, isFavorite, firstImage, images = [], currentUserId }: { request: RequestItem; isFavorite?: boolean; firstImage?: string | null; images?: string[]; currentUserId?: string | null }) {
+  const timeAgo = formatTimeAgo(request.created_at);
   const cleanDesc = cleanDescription(request.description);
   const preferences = parseRequestPreferences(request.description) || {
     priceLock: "open",
@@ -51,127 +37,85 @@ function RequestCardComponent({ request }: { request: RequestItem }) {
     exactSpecification: false,
     exactPrice: false,
   };
-  const hasOptions = preferences.priceLock === "locked" || preferences.exactItem || preferences.exactSpecification || preferences.exactPrice;
-  
   return (
-    <Link href={`/app/requests/${request.id}`} prefetch={true} className="block">
-      <Card className="border-border bg-card hover:border-foreground/30 transition-colors cursor-pointer">
-        <CardContent className="p-6">
-          {/* Header Section */}
-          <div className="flex items-start gap-4 mb-4">
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-1">
-                <h3 className="text-xl font-semibold leading-tight text-foreground">
+    <div className="relative h-full">
+      <Link href={`/app/requests/${request.id}`} prefetch={true} className="block h-full">
+        <Card className="border-[#e5e7eb] bg-white h-full flex flex-col hover:border-foreground/30 hover:bg-[#fbfcfd] transition-colors cursor-pointer min-h-[320px]">
+          <CardContent className="p-6 flex flex-col flex-1 space-y-4">
+            <div className="flex items-start justify-between gap-2 mb-1">
+              <span className="text-xs text-gray-600">Posted {timeAgo}</span>
+              <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                <FavoriteButton requestId={request.id} isFavorite={isFavorite} />
+                <RequestMenu
+                  requestId={request.id}
+                  requestUserId={request.user_id}
+                  status={request.status}
+                />
+              </div>
+            </div>
+          
+            <div className="flex-1 space-y-3">
+              <div className="space-y-1">
+                <h3 className="text-lg font-semibold leading-tight text-foreground line-clamp-2">
                   {request.title}
                 </h3>
-                <CheckCircle2 className="h-5 w-5 text-foreground shrink-0" />
+                {(request.budget_min || request.budget_max) && (
+                  <p className="text-2xl font-bold text-foreground">
+                    {request.budget_min && request.budget_max ? (
+                      <>${request.budget_min} - ${request.budget_max}</>
+                    ) : request.budget_min ? (
+                      <>From ${request.budget_min}</>
+                    ) : (
+                      <>Up to ${request.budget_max}</>
+                    )}
+                  </p>
+                )}
+                {request.submissionCount !== undefined && (
+                  <p className="text-sm text-gray-500">
+                    {formatSubmissionCount(request.submissionCount)}
+                  </p>
+                )}
               </div>
-              {(request.budget_min || request.budget_max) && (
-                <p className="text-xl font-bold text-foreground mt-1">
-                  {request.budget_min && request.budget_max ? (
-                    <>${request.budget_min} - ${request.budget_max}</>
-                  ) : request.budget_min ? (
-                    <>From ${request.budget_min}</>
-                  ) : (
-                    <>Up to ${request.budget_max}</>
-                  )}
-                </p>
-              )}
+              <p className="text-base text-gray-600 line-clamp-4 leading-relaxed">
+                {cleanDesc}
+              </p>
             </div>
-          </div>
-
-          {/* Status Indicators */}
-          <div className="flex items-center gap-2 mb-4 flex-wrap">
-            <Badge variant={statusStyles[request.status]} className="flex items-center gap-1.5">
-              <div className={`h-2 w-2 rounded-full ${
-                request.status === 'open' ? 'bg-green-500' : 
-                request.status === 'solved' ? 'bg-gray-500' : 'bg-gray-400'
-              }`} />
-              {statusLabels[request.status]}
-            </Badge>
-            {request.country && (
-              <Badge variant="muted" className="flex items-center gap-1.5">
-                <MapPin className="h-4 w-4" />
-                {request.country}
-              </Badge>
-            )}
-            {request.condition && (
-              <Badge variant="muted" className="flex items-center gap-1.5">
-                <Package className="h-4 w-4" />
-                {request.condition}
-              </Badge>
-            )}
-            <Badge variant="muted" className="uppercase">
-              {request.category}
-            </Badge>
-          </div>
-
-          {/* Description Section */}
-          <div className="mb-4">
-            <h3 className="text-sm font-semibold text-foreground mb-2">Request details</h3>
-            <p className="text-sm text-muted-foreground line-clamp-3 leading-relaxed">
-              {cleanDesc}
-            </p>
-          </div>
-          
-          {/* Request Options Icons */}
-          {hasOptions && (
-            <TooltipProvider>
-              <div className="flex items-center gap-2">
-                {preferences.priceLock === "locked" && (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div className="cursor-help">
-                        <Lock className="h-4 w-4 text-muted-foreground" />
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Price locked</p>
-                    </TooltipContent>
-                  </Tooltip>
-                )}
-                {preferences.exactItem && (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div className="cursor-help">
-                        <Package className="h-4 w-4 text-muted-foreground" />
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Exact item</p>
-                    </TooltipContent>
-                  </Tooltip>
-                )}
-                {preferences.exactSpecification && (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div className="cursor-help">
-                        <Settings className="h-4 w-4 text-muted-foreground" />
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Exact specification</p>
-                    </TooltipContent>
-                  </Tooltip>
-                )}
-                {preferences.exactPrice && (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div className="cursor-help">
-                        <DollarSign className="h-4 w-4 text-muted-foreground" />
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Exact price</p>
-                    </TooltipContent>
-                  </Tooltip>
-                )}
+            
+            {/* Images - Small thumbnails like detail page (max 3) */}
+            {images && images.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-sm font-semibold">Images</p>
+                <div className="flex flex-wrap gap-2">
+                  {images.slice(0, 3).map((imgUrl, index) => (
+                    <div key={index} className="relative w-16 h-16 rounded-lg overflow-hidden border border-[#e5e7eb] bg-gray-100 hover:border-foreground/50 transition-colors">
+                      <Image
+                        src={imgUrl}
+                        alt={`${request.title} - Image ${index + 1}`}
+                        fill
+                        className="object-cover"
+                        unoptimized
+                      />
+                    </div>
+                  ))}
+                </div>
               </div>
-            </TooltipProvider>
-          )}
-        </CardContent>
-      </Card>
-    </Link>
+            )}
+            
+            <div className="flex flex-wrap items-center gap-2 pt-3">
+              {request.country ? (
+                <Badge variant="muted" className="flex items-center gap-1.5">
+                  <MapPin className="h-4 w-4" />
+                  {request.country}
+                </Badge>
+              ) : null}
+              {request.condition ? <Badge variant="muted">{request.condition}</Badge> : null}
+              {request.urgency ? <Badge variant="muted">{request.urgency}</Badge> : null}
+              <Badge variant="muted">{request.category}</Badge>
+            </div>
+          </CardContent>
+        </Card>
+      </Link>
+    </div>
   );
 }
 

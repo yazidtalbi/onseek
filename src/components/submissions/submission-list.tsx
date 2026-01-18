@@ -74,7 +74,7 @@ export function SubmissionList({
 
   if (!data?.length) {
     return (
-      <div className="rounded-2xl border border-dashed border-border bg-white/50 p-6 text-center text-sm text-muted-foreground">
+      <div className="rounded-2xl border border-dashed border-[#e5e7eb] bg-white/50 p-6 text-center text-sm text-gray-600">
         No submissions yet. Be the first to help!
       </div>
     );
@@ -103,18 +103,20 @@ export function SubmissionList({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2">
-        <span className="text-sm text-muted-foreground">Sort by:</span>
-        <Select value={sortBy} onValueChange={(value: "best" | "newest" | "price") => setSortBy(value)}>
-          <SelectTrigger className="w-[120px] h-9 rounded-lg border border-border bg-white text-sm font-medium">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="best">Best</SelectItem>
-            <SelectItem value="newest">Newest</SelectItem>
-            <SelectItem value="price">Price</SelectItem>
-          </SelectContent>
-        </Select>
+      <div className="flex items-center justify-end">
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">Sort by:</span>
+          <Select value={sortBy} onValueChange={(value: "best" | "newest" | "price") => setSortBy(value)}>
+            <SelectTrigger className="w-[120px] h-9 rounded-full border border-[#e5e7eb] bg-white text-sm font-medium">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="best">Best</SelectItem>
+              <SelectItem value="newest">Newest</SelectItem>
+              <SelectItem value="price">Price</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
       {sorted.map((submission) => (
         <SubmissionCard
