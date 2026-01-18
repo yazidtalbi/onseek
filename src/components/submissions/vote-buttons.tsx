@@ -85,7 +85,7 @@ export function VoteButtons({
         className={cn(
           "flex items-center gap-1 rounded-full border border-border px-3 py-1 text-xs font-semibold",
           submission.has_voted === 1
-            ? "bg-primary text-primary-foreground"
+            ? "bg-foreground text-primary-foreground"
             : "bg-white/70 text-muted-foreground"
         )}
       >

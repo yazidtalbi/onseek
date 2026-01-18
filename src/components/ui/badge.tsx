@@ -7,11 +7,11 @@ export interface BadgeProps extends React.HTMLAttributes<HTMLDivElement> {
 
 function badgeStyles(variant: BadgeProps["variant"]) {
   return cn(
-    "inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold",
-    variant === "default" && "bg-primary text-primary-foreground",
+    "inline-flex items-center rounded-lg px-3 py-1.5 text-sm font-medium",
+    variant === "default" && "bg-muted/50 text-foreground",
     variant === "outline" &&
-      "border border-border bg-transparent text-foreground",
-    variant === "muted" && "bg-muted/40 text-muted-foreground"
+      "border border-border bg-muted/50 text-foreground",
+    variant === "muted" && "bg-muted/50 text-foreground"
   );
 }
 

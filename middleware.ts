@@ -25,7 +25,12 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (request.nextUrl.pathname.startsWith("/app") && !user) {
+  // Allow guests to access /app routes, but protect specific actions
+  // Only redirect to login for protected routes like /app/settings, /app/submissions, etc.
+  const protectedPaths = ["/app/settings", "/app/submissions", "/app/new", "/app/profile"];
+  const isProtectedPath = protectedPaths.some(path => request.nextUrl.pathname.startsWith(path));
+  
+  if (isProtectedPath && !user) {
     const redirectUrl = new URL("/login", request.url);
     redirectUrl.searchParams.set("redirectTo", request.nextUrl.pathname);
     return NextResponse.redirect(redirectUrl);
@@ -36,7 +41,7 @@ export async function middleware(request: NextRequest) {
       request.nextUrl.pathname === "/signup") &&
     user
   ) {
-    return NextResponse.redirect(new URL("/app", request.url));
+    return NextResponse.redirect(new URL("/", request.url));
   }
 
   return response;

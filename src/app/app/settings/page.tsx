@@ -1,9 +1,10 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { ProfileForm } from "@/components/profile/profile-form";
+import { ThemeToggle } from "@/components/settings/theme-toggle";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { signOutAction } from "@/actions/auth.actions";
-import { Settings, User, Mail, Lock, Trash2 } from "lucide-react";
+import { Settings, User, Mail, Lock, Trash2, Palette } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -79,6 +80,22 @@ export default async function SettingsPage() {
                 </Button>
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Appearance Section */}
+        <Card className="border-border bg-card">
+          <CardContent className="p-6 space-y-4">
+            <div className="space-y-1">
+              <h2 className="text-lg font-semibold flex items-center gap-2">
+                <Palette className="h-5 w-5" />
+                Appearance
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Customize the look and feel of the app.
+              </p>
+            </div>
+            <ThemeToggle />
           </CardContent>
         </Card>
 

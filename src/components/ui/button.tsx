@@ -17,9 +17,9 @@ const buttonVariants = ({
   cn(
     "inline-flex items-center justify-center gap-2 rounded-2xl font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-60",
     variant === "default" &&
-      "bg-primary text-primary-foreground shadow-sm hover:bg-[#3d0a80]",
+      "bg-foreground text-primary-foreground hover:bg-foreground/90",
     variant === "accent" &&
-      "bg-accent text-accent-foreground shadow-[0_10px_30px_rgba(248,158,31,0.35)] hover:bg-[#d17000]",
+      "bg-foreground text-accent-foreground hover:bg-foreground/90",
     variant === "outline" &&
       "border border-border bg-transparent text-foreground hover:bg-muted/30",
     variant === "ghost" && "bg-transparent hover:bg-muted/25",

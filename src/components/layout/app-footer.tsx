@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export function AppFooter() {
   return (
-    <footer className="border-t border-border bg-card mt-12">
+    <footer className="border-t border-border mt-12">
       <div className="mx-auto w-full max-w-7xl px-4 py-12 md:px-6">
         {/* About Section */}
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4 mb-12">

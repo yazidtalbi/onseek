@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { signInSchema } from "@/lib/validators";
 import type { z } from "zod";
 import { signInAction } from "@/actions/auth.actions";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,6 +17,8 @@ export function SignInForm() {
   const [error, setError] = React.useState<string | null>(null);
   const [isPending, setIsPending] = React.useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get("redirectTo") || "/";
   const form = useForm<SignInValues>({
     resolver: zodResolver(signInSchema),
     defaultValues: { email: "", password: "" },
@@ -41,14 +43,14 @@ export function SignInForm() {
 
       // If no error, redirect happened in server action
       // But if we're here, redirect manually as fallback
-      router.push("/app");
+      router.push(redirectTo);
       router.refresh();
     } catch (err) {
       // redirect() throws NEXT_REDIRECT - catch it and redirect manually
       if (err && typeof err === "object" && "digest" in err) {
         const digest = String((err as { digest?: unknown }).digest);
         if (digest.includes("NEXT_REDIRECT")) {
-          router.push("/app");
+          router.push(redirectTo);
           router.refresh();
           return;
         }
@@ -63,7 +65,7 @@ export function SignInForm() {
     const { error: oauthError } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/app`,
+        redirectTo: `${window.location.origin}/`,
       },
     });
     if (oauthError) {

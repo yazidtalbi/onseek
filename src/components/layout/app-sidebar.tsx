@@ -136,7 +136,7 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
       </Sheet>
 
       {/* Desktop: Static Sidebar */}
-      <aside className="hidden md:fixed md:inset-y-0 md:left-0 md:z-10 md:w-64 md:border-r md:border-border md:bg-card md:pt-16">
+      <aside className="hidden md:block md:fixed md:inset-y-0 md:left-0 md:z-10 md:w-64 md:border-r md:border-border md:bg-card md:pt-16">
         <div className="flex h-full flex-col space-y-6 py-4">
           <div className="px-4 flex items-center justify-between">
             <h2 className="text-lg font-semibold">Menu</h2>
@@ -146,10 +146,7 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* Main Content with sidebar offset */}
-      <div className={cn(
-        "flex-1",
-        "md:ml-64" // Offset for desktop sidebar
-      )}>
+      <div className="flex-1 w-full md:ml-64">
         {children}
       </div>
     </>

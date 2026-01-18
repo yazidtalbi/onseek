@@ -14,7 +14,7 @@ export default function SignupPage() {
         <SignUpForm />
         <div className="text-center text-sm text-muted-foreground">
           Already have an account?{" "}
-          <Link href="/login" className="font-semibold text-primary">
+          <Link href="/login" className="font-semibold text-foreground">
             Log in
           </Link>
         </div>

@@ -26,21 +26,6 @@ export async function voteAction(formData: FormData) {
     .eq("user_id", user.id)
     .maybeSingle();
 
-  const { data: submission } = await supabase
-    .from("submissions")
-    .select("user_id")
-    .eq("id", submissionId)
-    .single();
-
-  const { data: ownerProfile } = submission
-    ? await supabase
-        .from("profiles")
-        .select("reputation")
-        .eq("id", submission.user_id)
-        .single()
-    : { data: null };
-
-  let reputationDelta = 0;
   if (existing) {
     if (existing.vote === vote) {
       await supabase
@@ -48,14 +33,12 @@ export async function voteAction(formData: FormData) {
         .delete()
         .eq("submission_id", submissionId)
         .eq("user_id", user.id);
-      reputationDelta = -vote;
     } else {
       await supabase
         .from("votes")
         .update({ vote })
         .eq("submission_id", submissionId)
         .eq("user_id", user.id);
-      reputationDelta = vote - existing.vote;
     }
   } else {
     await supabase.from("votes").insert({
@@ -63,14 +46,6 @@ export async function voteAction(formData: FormData) {
       user_id: user.id,
       vote,
     });
-    reputationDelta = vote;
-  }
-
-  if (submission?.user_id && typeof ownerProfile?.reputation === "number") {
-    await supabase
-      .from("profiles")
-      .update({ reputation: ownerProfile.reputation + reputationDelta })
-      .eq("id", submission.user_id);
   }
 
   if (requestId) {

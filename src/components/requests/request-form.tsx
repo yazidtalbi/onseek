@@ -1,6 +1,8 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { z } from "zod";
@@ -17,20 +19,27 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { CountryCombobox } from "@/components/ui/country-combobox";
 
 type RequestValues = z.infer<typeof requestSchema>;
 
 export function RequestForm() {
+  const router = useRouter();
+  const queryClient = useQueryClient();
   const [error, setError] = React.useState<string | null>(null);
   const [isPending, startTransition] = React.useTransition();
   const form = useForm<RequestValues>({
-    resolver: zodResolver(requestSchema),
+    resolver: zodResolver(requestSchema) as any,
     defaultValues: {
       title: "",
       description: "",
       category: "Tech",
       budgetMin: null,
       budgetMax: null,
+      priceLock: "open",
+      exactItem: false,
+      exactSpecification: false,
+      exactPrice: false,
       country: "",
       condition: "New",
       urgency: "Standard",
@@ -54,12 +63,25 @@ export function RequestForm() {
     formData.set("country", values.country || "");
     formData.set("condition", values.condition || "");
     formData.set("urgency", values.urgency || "");
+    formData.set("priceLock", values.priceLock || "open");
+    formData.set("exactItem", values.exactItem ? "true" : "false");
+    formData.set("exactSpecification", values.exactSpecification ? "true" : "false");
+    formData.set("exactPrice", values.exactPrice ? "true" : "false");
     if (values.referenceLinks) {
       formData.set("referenceLinks", values.referenceLinks);
     }
     startTransition(async () => {
+      // Invalidate React Query cache before creating request
+      queryClient.invalidateQueries({ queryKey: ["requests"] });
+      // Refresh server components
+      router.refresh();
+      
       const res = await createRequestAction(formData);
-      setError(res?.error || null);
+      if (res?.error) {
+        setError(res.error);
+      }
+      // If no error, redirect happens in server action
+      // But we've already invalidated the cache, so when user navigates back, data will be fresh
     });
   };
 
@@ -132,7 +154,11 @@ export function RequestForm() {
         </div>
         <div className="space-y-2">
           <Label htmlFor="country">Country</Label>
-          <Input id="country" {...form.register("country")} />
+          <CountryCombobox
+            value={form.watch("country") || null}
+            onChange={(value) => form.setValue("country", value || null)}
+            placeholder="Select or type country"
+          />
         </div>
       </div>
       <div className="grid gap-4 md:grid-cols-2">
@@ -155,6 +181,78 @@ export function RequestForm() {
           />
         </div>
       </div>
+      
+      {/* Price Lock Option */}
+      <div className="space-y-2">
+        <Label>Price</Label>
+        <div className="flex gap-4">
+          <div className="flex items-center gap-2">
+            <input
+              type="radio"
+              id="priceOpen"
+              value="open"
+              {...form.register("priceLock")}
+              className="h-4 w-4"
+            />
+            <Label htmlFor="priceOpen" className="text-sm font-normal cursor-pointer">
+              Open (allow price suggestions)
+            </Label>
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="radio"
+              id="priceLocked"
+              value="locked"
+              {...form.register("priceLock")}
+              className="h-4 w-4"
+            />
+            <Label htmlFor="priceLocked" className="text-sm font-normal cursor-pointer">
+              Locked (no price greater than specified)
+            </Label>
+          </div>
+        </div>
+      </div>
+
+      {/* Request Options */}
+      <div className="space-y-3">
+        <Label>Request Options</Label>
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="exactItem"
+              className="h-4 w-4 rounded border-border"
+              {...form.register("exactItem")}
+            />
+            <Label htmlFor="exactItem" className="text-sm font-normal cursor-pointer">
+              Exact item (no alternatives)
+            </Label>
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="exactSpecification"
+              className="h-4 w-4 rounded border-border"
+              {...form.register("exactSpecification")}
+            />
+            <Label htmlFor="exactSpecification" className="text-sm font-normal cursor-pointer">
+              Exact specification
+            </Label>
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="exactPrice"
+              className="h-4 w-4 rounded border-border"
+              {...form.register("exactPrice")}
+            />
+            <Label htmlFor="exactPrice" className="text-sm font-normal cursor-pointer">
+              Exact price
+            </Label>
+          </div>
+        </div>
+      </div>
+
       <div className="space-y-2">
         <Label htmlFor="referenceLinks">Reference links (comma separated)</Label>
         <Input id="referenceLinks" {...form.register("referenceLinks")} />

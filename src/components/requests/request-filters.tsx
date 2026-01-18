@@ -1,7 +1,20 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { Filter } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { CountryCombobox } from "@/components/ui/country-combobox";
 
 const categories = [
   "All",
@@ -17,8 +30,11 @@ export function RequestFilters() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const currentCategory = searchParams.get("category") || "All";
-  const status = searchParams.get("status") || "open";
   const sort = searchParams.get("sort") || "newest";
+  const priceMin = searchParams.get("priceMin") || "";
+  const priceMax = searchParams.get("priceMax") || "";
+  const country = searchParams.get("country") || "";
+  const [showFilters, setShowFilters] = useState(false);
 
   const updateParam = (key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -27,67 +43,114 @@ export function RequestFilters() {
     } else {
       params.set(key, value);
     }
-    router.push(`/app?${params.toString()}`);
+    // Reset to page 1 when category changes
+    if (key === "category") {
+      params.delete("page");
+    }
+    // Navigate to search page if there's a search query, otherwise home
+    const hasQuery = searchParams.get("q");
+    const path = hasQuery ? "/search" : "/";
+    router.push(`${path}?${params.toString()}`);
   };
+
+  const hasActiveFilters = priceMin || priceMax || country;
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap gap-2">
-        {categories.map((category) => (
-          <button
-            key={category}
-            type="button"
-            onClick={() => updateParam("category", category)}
-            className={cn(
-              "rounded-full border border-border px-4 py-2 text-xs font-semibold",
-              currentCategory === category
-                ? "bg-primary text-primary-foreground"
-                : "bg-white/70 text-muted-foreground"
-            )}
-          >
-            {category}
-          </button>
-        ))}
+      {/* Top Row: Sort and Categories */}
+      <div className="flex items-center gap-4 w-full overflow-x-auto pb-2">
+        {/* Popular Dropdown */}
+        <Select
+          value={sort}
+          onValueChange={(value) => updateParam("sort", value)}
+        >
+          <SelectTrigger className="w-[120px] h-9 rounded-lg border border-border bg-white text-sm font-medium shrink-0">
+            <SelectValue>
+              {sort === "newest" ? "Newest" : sort === "active" ? "Most active" : "Popular"}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="newest">Newest</SelectItem>
+            <SelectItem value="active">Most active</SelectItem>
+          </SelectContent>
+        </Select>
+
+        {/* Category Links - Centered */}
+        <div className="flex items-center gap-2 flex-1 justify-center overflow-x-auto py-1">
+          {categories.map((category) => {
+            const isActive = currentCategory === category;
+            return (
+              <button
+                key={category}
+                type="button"
+                onClick={() => updateParam("category", category)}
+                className={cn(
+                  "px-4 py-2 text-sm font-medium transition-colors whitespace-nowrap rounded-lg border border-border",
+                  isActive
+                    ? "bg-muted/30 text-foreground border-foreground"
+                    : "bg-white text-foreground hover:bg-muted/10"
+                )}
+              >
+                {category === "All" ? "Discover" : category}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Filters Button - Right Side */}
+        <Button
+          variant="outline"
+          size="sm"
+          className={cn(
+            "rounded-lg border border-border bg-white h-9 text-sm font-medium shrink-0",
+            hasActiveFilters && "border-foreground"
+          )}
+          onClick={() => setShowFilters(!showFilters)}
+        >
+          <Filter className="h-4 w-4 mr-2" />
+          Filters
+        </Button>
       </div>
-      <div className="flex flex-wrap gap-2 text-xs font-semibold">
-        {[
-          { label: "Unsolved", value: "open" },
-          { label: "Solved", value: "solved" },
-          { label: "Closed", value: "closed" },
-        ].map((item) => (
-          <button
-            key={item.value}
-            type="button"
-            onClick={() => updateParam("status", item.value)}
-            className={cn(
-              "rounded-full border border-border px-4 py-2",
-              status === item.value
-                ? "bg-accent text-accent-foreground"
-                : "bg-white/70 text-muted-foreground"
-            )}
-          >
-            {item.label}
-          </button>
-        ))}
-        {[
-          { label: "Newest", value: "newest" },
-          { label: "Most active", value: "active" },
-        ].map((item) => (
-          <button
-            key={item.value}
-            type="button"
-            onClick={() => updateParam("sort", item.value)}
-            className={cn(
-              "rounded-full border border-border px-4 py-2",
-              sort === item.value
-                ? "bg-primary text-primary-foreground"
-                : "bg-white/70 text-muted-foreground"
-            )}
-          >
-            {item.label}
-          </button>
-        ))}
-      </div>
+
+      {/* Filter Inputs Row - Expandable */}
+      {showFilters && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Price Range */}
+        <div className="space-y-2">
+          <Label htmlFor="priceMin" className="text-sm font-medium text-muted-foreground">Price</Label>
+          <div className="flex items-center gap-2">
+            <Input
+              id="priceMin"
+              type="number"
+              placeholder="Min"
+              value={priceMin}
+              onChange={(e) => updateParam("priceMin", e.target.value)}
+              className="h-9 text-sm rounded-lg"
+            />
+            <span className="text-muted-foreground">-</span>
+            <Input
+              id="priceMax"
+              type="number"
+              placeholder="Max"
+              value={priceMax}
+              onChange={(e) => updateParam("priceMax", e.target.value)}
+              className="h-9 text-sm rounded-lg"
+            />
+          </div>
+        </div>
+        
+        {/* Country */}
+        <div className="space-y-2">
+          <Label htmlFor="country" className="text-sm font-medium text-muted-foreground">Country</Label>
+          <CountryCombobox
+            value={country || null}
+            onChange={(value) => updateParam("country", value)}
+            placeholder="Select or type country"
+            className="h-9"
+          />
+        </div>
+        </div>
+      )}
     </div>
   );
 }

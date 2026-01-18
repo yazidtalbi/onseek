@@ -32,6 +32,10 @@ export async function createRequestAction(formData: FormData) {
     budgetMax: formData.get("budgetMax")
       ? Number(formData.get("budgetMax"))
       : null,
+    priceLock: String(formData.get("priceLock") || "open") as "open" | "locked",
+    exactItem: formData.get("exactItem") === "true",
+    exactSpecification: formData.get("exactSpecification") === "true",
+    exactPrice: formData.get("exactPrice") === "true",
     country: String(formData.get("country") || "") || null,
     condition: String(formData.get("condition") || "") || null,
     urgency: String(formData.get("urgency") || "") || null,
@@ -51,12 +55,23 @@ export async function createRequestAction(formData: FormData) {
     return { error: "Unauthorized" };
   }
 
+  // Store preferences as JSON metadata (will be moved to separate columns later)
+  const preferences = {
+    priceLock: parsed.data.priceLock || "open",
+    exactItem: parsed.data.exactItem || false,
+    exactSpecification: parsed.data.exactSpecification || false,
+    exactPrice: parsed.data.exactPrice || false,
+  };
+  const preferencesJson = JSON.stringify(preferences);
+  // Append preferences as hidden metadata to description
+  const descriptionWithMetadata = `${parsed.data.description}\n\n<!--REQUEST_PREFS:${preferencesJson}-->`;
+
   const { data: request, error } = await supabase
     .from("requests")
     .insert({
       user_id: user.id,
       title: parsed.data.title,
-      description: parsed.data.description,
+      description: descriptionWithMetadata,
       category: parsed.data.category,
       budget_min: parsed.data.budgetMin,
       budget_max: parsed.data.budgetMax,
@@ -133,22 +148,20 @@ export async function markSolvedAction(formData: FormData) {
     return { error: error.message };
   }
 
+  // Notify submission owner that they won - efficient single query
   const { data: submission } = await supabase
     .from("submissions")
     .select("user_id")
     .eq("id", submissionId)
     .single();
+  
   if (submission?.user_id) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("reputation")
-      .eq("id", submission.user_id)
-      .single();
-    const current = profile?.reputation ?? 0;
-    await supabase
-      .from("profiles")
-      .update({ reputation: current + 50 })
-      .eq("id", submission.user_id);
+    // Create notification in a single efficient operation
+    await supabase.from("notifications").insert({
+      user_id: submission.user_id,
+      type: "winner_selected",
+      payload: { request_id: requestId, submission_id: submissionId },
+    });
   }
 
   revalidatePath(`/app/requests/${requestId}`);

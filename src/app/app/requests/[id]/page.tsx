@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import type { Submission } from "@/lib/types";
 import { SubmissionList } from "@/components/submissions/submission-list";
@@ -8,13 +9,19 @@ import { RequestCardGrid } from "@/components/requests/request-card-grid";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { ReportDialog } from "@/components/reports/report-dialog";
+import { ChevronRight, Home, Lock, Package, Settings, DollarSign } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export const dynamic = "force-dynamic";
 
 function computeScore(
   item: Submission & {
     votes?: { vote: number; user_id: string }[];
-    profiles?: { reputation: number | null };
   },
   userId?: string | null
 ) {
@@ -22,12 +29,11 @@ function computeScore(
   const upvotes = votes?.filter((v) => v.vote === 1).length || 0;
   const downvotes = votes?.filter((v) => v.vote === -1).length || 0;
   const hasVoted = votes?.find((v) => v.user_id === userId)?.vote || 0;
-  const reputationBonus = Math.floor((item.profiles?.reputation ?? 0) / 50);
   return {
     ...item,
     upvotes,
     downvotes,
-    score: upvotes - downvotes + reputationBonus,
+    score: upvotes - downvotes,
     has_voted: hasVoted,
   } as Submission;
 }
@@ -60,7 +66,7 @@ export default async function RequestDetailPage({
 
   const { data: submissions } = await supabase
     .from("submissions")
-    .select("*, votes(vote, user_id), profiles(reputation)")
+    .select("*, votes(vote, user_id)")
     .eq("request_id", id)
     .order("created_at", { ascending: false });
 
@@ -77,10 +83,53 @@ export default async function RequestDetailPage({
     .limit(6);
 
   const isOwner = user?.id === request.user_id;
+  // Allow guests to see submission form (they'll be redirected to login on click)
   const canSubmit = request.status === "open" && !isOwner;
+
+  // Parse request preferences from description
+  function parseRequestPreferences(description: string) {
+    const match = description.match(/<!--REQUEST_PREFS:({.*?})-->/);
+    if (match) {
+      try {
+        return JSON.parse(match[1]);
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  }
+
+  function cleanDescription(description: string) {
+    return description.replace(/<!--REQUEST_PREFS:.*?-->/, "").trim();
+  }
+
+  const preferences = parseRequestPreferences(request.description) || {
+    priceLock: "open",
+    exactItem: false,
+    exactSpecification: false,
+    exactPrice: false,
+  };
+  const cleanDesc = cleanDescription(request.description);
 
   return (
     <div className="space-y-6">
+      {/* Breadcrumbs */}
+      <nav className="flex items-center gap-2 text-sm text-muted-foreground">
+        <Link href="/app" className="hover:text-foreground transition-colors flex items-center gap-1">
+          <Home className="h-4 w-4" />
+          Home
+        </Link>
+        <ChevronRight className="h-4 w-4" />
+        <Link 
+          href={`/app/category/${request.category.toLowerCase()}`} 
+          className="hover:text-foreground transition-colors"
+        >
+          {request.category}
+        </Link>
+        <ChevronRight className="h-4 w-4" />
+        <span className="text-foreground">{request.title}</span>
+      </nav>
+
       <Card className="border-border bg-white/80">
         <CardContent className="space-y-4 p-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
@@ -98,14 +147,89 @@ export default async function RequestDetailPage({
               <ReportDialog type="request" targetId={request.id} />
             </div>
           </div>
-          <p className="text-sm text-muted-foreground">{request.description}</p>
-          <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
-            <span>{request.category}</span>
-            {request.country ? <span>· {request.country}</span> : null}
-            {request.condition ? <span>· {request.condition}</span> : null}
-            {request.urgency ? <span>· {request.urgency}</span> : null}
-            {request.budget_min ? <span>· From ${request.budget_min}</span> : null}
-            {request.budget_max ? <span>· To ${request.budget_max}</span> : null}
+          <p className="text-sm text-muted-foreground">{cleanDesc}</p>
+          
+          {/* Request Details - Organized in sections */}
+          <div className="space-y-3 pt-2">
+            {/* Basic Info */}
+            <div className="flex flex-wrap gap-2">
+              {request.country ? <Badge variant="muted">{request.country}</Badge> : null}
+              {request.condition ? <Badge variant="muted">{request.condition}</Badge> : null}
+              {request.urgency ? <Badge variant="muted">{request.urgency}</Badge> : null}
+            </div>
+            
+            {/* Budget */}
+            {(request.budget_min || request.budget_max) && (
+              <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
+                {request.budget_min && request.budget_max ? (
+                  <span>Budget: ${request.budget_min} - ${request.budget_max}</span>
+                ) : request.budget_min ? (
+                  <span>Budget: From ${request.budget_min}</span>
+                ) : (
+                  <span>Budget: Up to ${request.budget_max}</span>
+                )}
+              </div>
+            )}
+            
+            {/* Request Options - Only show if any are set */}
+            {(preferences.priceLock === "locked" || preferences.exactItem || preferences.exactSpecification || preferences.exactPrice) && (
+              <TooltipProvider>
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {preferences.priceLock === "locked" && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Badge variant="muted" className="flex items-center gap-1.5 cursor-help">
+                          <Lock className="h-3.5 w-3.5" />
+                          Price locked
+                        </Badge>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>No price greater than the specified budget will be accepted</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
+                  {preferences.exactItem && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Badge variant="muted" className="flex items-center gap-1.5 cursor-help">
+                          <Package className="h-3.5 w-3.5" />
+                          Exact item
+                        </Badge>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Only the exact requested item is acceptable, no alternatives</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
+                  {preferences.exactSpecification && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Badge variant="muted" className="flex items-center gap-1.5 cursor-help">
+                          <Settings className="h-3.5 w-3.5" />
+                          Exact specification
+                        </Badge>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Item must match all specified requirements exactly</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
+                  {preferences.exactPrice && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Badge variant="muted" className="flex items-center gap-1.5 cursor-help">
+                          <DollarSign className="h-3.5 w-3.5" />
+                          Exact price
+                        </Badge>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Price must match the specified budget exactly</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
+                </div>
+              </TooltipProvider>
+            )}
           </div>
           {links?.length ? (
             <div className="space-y-2">
@@ -129,17 +253,9 @@ export default async function RequestDetailPage({
       </Card>
 
       {canSubmit ? (
-        <Card className="border-border bg-white/80">
-          <CardContent className="p-6">
-            <h2 className="text-xl font-semibold">Submit a link</h2>
-            <p className="text-sm text-muted-foreground">
-              Help the requester by sharing a trusted buying option.
-            </p>
-            <div className="mt-4">
-              <SubmissionForm requestId={request.id} />
-            </div>
-          </CardContent>
-        </Card>
+        <div>
+          <SubmissionForm requestId={request.id} />
+        </div>
       ) : null}
 
       <div className="space-y-3">
@@ -154,7 +270,7 @@ export default async function RequestDetailPage({
       </div>
 
       {similarRequests && similarRequests.length > 0 ? (
-        <div className="space-y-4 pt-6 border-t border-border">
+        <div className="space-y-4 pt-12 mt-12 border-t border-border">
           <h2 className="text-xl font-semibold">Similar requests</h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {similarRequests.map((similarRequest) => (

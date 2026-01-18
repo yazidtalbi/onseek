@@ -28,7 +28,7 @@ export async function signInAction(formData: FormData) {
     }
 
     // Redirect throws - this is expected behavior
-    redirect("/app");
+    redirect("/");
   } catch (error) {
     // Re-throw redirect errors
     if (error && typeof error === "object" && "digest" in error) {
@@ -70,7 +70,7 @@ export async function signUpAction(formData: FormData) {
       });
     }
 
-    redirect("/app");
+    redirect("/");
   } catch (error) {
     if (error && typeof error === "object" && "digest" in error) {
       throw error;

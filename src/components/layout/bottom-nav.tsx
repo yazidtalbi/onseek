@@ -38,9 +38,9 @@ export function BottomNav() {
               className={cn(
                 "flex flex-col items-center gap-1 text-[10px] font-semibold",
                 item.cta
-                  ? "rounded-2xl bg-accent px-3 py-2 text-foreground shadow-[0_10px_20px_rgba(248,158,31,0.35)]"
+                  ? "rounded-2xl bg-accent px-3 py-2 text-foreground"
                   : "text-muted-foreground",
-                isActive && !item.cta && "text-primary"
+                isActive && !item.cta && "text-foreground"
               )}
             >
               <Icon className="h-5 w-5" />

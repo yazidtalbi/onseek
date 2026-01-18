@@ -14,7 +14,7 @@ export default function LoginPage() {
         <SignInForm />
         <div className="flex items-center justify-between text-sm text-muted-foreground">
           <Link href="/forgot-password">Forgot password?</Link>
-          <Link href="/signup" className="font-semibold text-primary">
+          <Link href="/signup" className="font-semibold text-foreground">
             Create account
           </Link>
         </div>
