@@ -11,22 +11,22 @@ export function PromotionalSidebar() {
     <div className="space-y-6 max-w-md">
       {/* Main Promotional Card */}
       <div className="rounded-2xl border border-[#e5e7eb] bg-white p-6 space-y-4">
-        <h2 className="text-2xl font-semibold">The network for requests</h2>
+        <h2 className="text-2xl font-semibold text-foreground">The network for requests</h2>
         <div className="space-y-3">
           <div className="flex items-start gap-3">
-            <Check className="h-5 w-5 text-foreground mt-0.5 flex-shrink-0" />
+            <Check className="h-4 w-4 text-foreground mt-0.5 flex-shrink-0" />
             <p className="text-sm text-gray-600">
               Join thousands of members finding exactly what they need
             </p>
           </div>
           <div className="flex items-start gap-3">
-            <Check className="h-5 w-5 text-foreground mt-0.5 flex-shrink-0" />
+            <Check className="h-4 w-4 text-foreground mt-0.5 flex-shrink-0" />
             <p className="text-sm text-gray-600">
               Connect with helpful community members, get quality submissions, and find the best deals
             </p>
           </div>
           <div className="flex items-start gap-3">
-            <Check className="h-5 w-5 text-foreground mt-0.5 flex-shrink-0" />
+            <Check className="h-4 w-4 text-foreground mt-0.5 flex-shrink-0" />
             <p className="text-sm text-gray-600">
               Members have found over $1M in value through community recommendations
             </p>
@@ -42,7 +42,7 @@ export function PromotionalSidebar() {
 
       {/* Tips or Additional Info */}
       <div className="rounded-2xl border border-[#e5e7eb] bg-white p-6 space-y-3">
-        <h3 className="text-lg font-semibold">Tips for better requests</h3>
+        <h3 className="text-lg font-semibold text-foreground">Tips for better requests</h3>
         <ul className="space-y-2 text-sm text-gray-600">
           <li className="flex items-start gap-2">
             <span className="text-foreground mt-1">•</span>
@@ -65,7 +65,7 @@ export function PromotionalSidebar() {
 
       {/* What is Onseek */}
       <div className="rounded-2xl border border-[#e5e7eb] bg-white p-6 space-y-4">
-        <h3 className="text-lg font-semibold">What is Onseek?</h3>
+        <h3 className="text-lg font-semibold text-foreground">What is Onseek?</h3>
         <div className="space-y-3 text-sm text-gray-600">
           <p>
             Onseek is a community-driven platform where you can post requests for products, services, or solutions, and get quality submissions from helpful members.

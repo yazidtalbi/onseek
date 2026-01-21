@@ -99,10 +99,10 @@ export function AppNavbar() {
   }, [isHomePage]);
 
   return (
-    <header className="sticky top-0 z-20 bg-[#fbfcfd] backdrop-blur-sm">
-      <div className="flex w-full items-center gap-4 px-4 py-3 md:px-8">
+    <header className="sticky top-0 z-20 bg-[#fbfcfd] backdrop-blur-sm w-full">
+      <div className="flex w-full items-center gap-4 py-3 px-6">
         {/* Brand */}
-        <Link href="/" className="text-xl font-semibold text-foreground shrink-0">
+        <Link href="/" className="text-xl font-bold text-foreground shrink-0" style={{ fontFamily: 'var(--font-expanded)' }}>
           Onseek
         </Link>
         
@@ -118,8 +118,8 @@ export function AppNavbar() {
                 className={cn(
                   "px-3 py-2 text-sm font-medium transition-colors whitespace-nowrap",
                   active 
-                    ? "text-foreground" 
-                    : "text-muted-foreground hover:text-foreground"
+                    ? "text-[#7755FF]" 
+                    : "text-gray-600 hover:text-[#7755FF]"
                 )}
               >
                 {item.label}
@@ -134,8 +134,8 @@ export function AppNavbar() {
                 className={cn(
                   "px-3 py-2 text-sm font-medium transition-colors whitespace-nowrap flex items-center gap-1",
                        pathname === "/" || pathname.startsWith("/app/category") || pathname.startsWith("/app/requests")
-                           ? "text-foreground"
-                           : "text-muted-foreground hover:text-foreground"
+                           ? "text-[#7755FF]"
+                           : "text-gray-600 hover:text-[#7755FF]"
                        )}
                      >
                        Explore
@@ -187,10 +187,10 @@ export function AppNavbar() {
         <div className="flex items-center gap-2 shrink-0 ml-auto">
           {user ? (
             <>
-              <Button asChild variant="accent" size="sm" className="hidden sm:flex rounded-full">
+              <Button asChild size="sm" className="hidden sm:flex rounded-full bg-[#212733] text-white hover:bg-[#212733]/90">
                 <Link href="/app/new">
                   <Plus className="h-4 w-4 mr-1" />
-                  New
+                  Create a request
                 </Link>
               </Button>
               <Button
@@ -207,7 +207,7 @@ export function AppNavbar() {
               </Button>
               <Button variant="ghost" size="icon" asChild className={cn(
                 "relative",
-                pathname === "/app/saved" && "text-foreground"
+                pathname === "/app/saved" && "text-[#7755FF]"
               )}>
                 <Link href="/app/saved">
                   <Heart className={cn(
@@ -222,7 +222,7 @@ export function AppNavbar() {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-muted transition-colors">
-                    <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center text-foreground font-semibold text-sm">
+                    <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-foreground font-medium text-sm">
                       {profile?.username?.charAt(0).toUpperCase() || "U"}
                     </div>
                     <span className="hidden lg:inline text-sm font-medium">

@@ -55,12 +55,31 @@ export async function createRequestAction(formData: FormData) {
     return { error: "Unauthorized" };
   }
 
+  // Parse preferences and dealbreakers from formData
+  let preferencesList: Array<{ label: string; note?: string }> = [];
+  let dealbreakersList: Array<{ label: string; note?: string }> = [];
+  
+  try {
+    const prefsJson = formData.get("preferences");
+    const dealbreakersJson = formData.get("dealbreakers");
+    if (prefsJson && typeof prefsJson === "string") {
+      preferencesList = JSON.parse(prefsJson);
+    }
+    if (dealbreakersJson && typeof dealbreakersJson === "string") {
+      dealbreakersList = JSON.parse(dealbreakersJson);
+    }
+  } catch (e) {
+    // Ignore parsing errors, use empty arrays
+  }
+
   // Store preferences as JSON metadata (will be moved to separate columns later)
   const preferences = {
     priceLock: parsed.data.priceLock || "open",
     exactItem: parsed.data.exactItem || false,
     exactSpecification: parsed.data.exactSpecification || false,
     exactPrice: parsed.data.exactPrice || false,
+    preferences: preferencesList,
+    dealbreakers: dealbreakersList,
   };
   const preferencesJson = JSON.stringify(preferences);
   // Append preferences as hidden metadata to description

@@ -41,14 +41,6 @@ import { MAIN_CATEGORIES, SUBCATEGORIES, type MainCategory } from "@/lib/categor
 
 type RequestValues = z.infer<typeof requestSchema>;
 
-// Helper chips for description
-const HELPER_CHIPS = [
-  { label: "Brand preference", text: "Brand: " },
-  { label: "Size / dimensions", text: "Size: " },
-  { label: "Must-have features", text: "Must have: " },
-  { label: "Deal breakers", text: "Deal breakers: " },
-] as const;
-
 export function RequestForm({ onSuccess }: { onSuccess?: () => void }) {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -61,6 +53,12 @@ export function RequestForm({ onSuccess }: { onSuccess?: () => void }) {
   const [referenceLinks, setReferenceLinks] = React.useState<string[]>([]);
   const [linkInput, setLinkInput] = React.useState("");
   const [draggedIndex, setDraggedIndex] = React.useState<number | null>(null);
+  const [preferencesTab, setPreferencesTab] = React.useState<"preferences" | "dealbreakers">("preferences");
+  const [preferences, setPreferences] = React.useState<Array<{ label: string; note?: string }>>([]);
+  const [dealbreakers, setDealbreakers] = React.useState<Array<{ label: string; note?: string }>>([]);
+  const [preferenceInput, setPreferenceInput] = React.useState("");
+  const [dealbreakerInput, setDealbreakerInput] = React.useState("");
+  const [preferenceNote, setPreferenceNote] = React.useState("");
 
   const form = useForm<RequestValues>({
     resolver: zodResolver(requestSchema) as any,
@@ -82,7 +80,6 @@ export function RequestForm({ onSuccess }: { onSuccess?: () => void }) {
   });
 
   const titleValue = form.watch("title");
-  const descriptionValue = form.watch("description");
   const budgetMin = form.watch("budgetMin") || 0;
   const budgetMax = form.watch("budgetMax") || 1000;
   const priceLock = form.watch("priceLock");
@@ -91,23 +88,6 @@ export function RequestForm({ onSuccess }: { onSuccess?: () => void }) {
   // Character counter for title
   const titleLength = titleValue.length;
   const titleMaxLength = 120;
-
-  // Insert helper chip text into description
-  const insertHelperText = (text: string) => {
-    const currentDesc = descriptionValue || "";
-    const textarea = document.getElementById("description") as HTMLTextAreaElement;
-    if (textarea) {
-      const start = textarea.selectionStart;
-      const end = textarea.selectionEnd;
-      const newText = currentDesc.slice(0, start) + text + currentDesc.slice(end);
-      form.setValue("description", newText);
-      // Set cursor position after inserted text
-      setTimeout(() => {
-        textarea.focus();
-        textarea.setSelectionRange(start + text.length, start + text.length);
-      }, 0);
-    }
-  };
 
   // Handle reference link input
   const handleLinkInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -135,6 +115,52 @@ export function RequestForm({ onSuccess }: { onSuccess?: () => void }) {
 
   const removeLink = (index: number) => {
     setReferenceLinks(referenceLinks.filter((_, i) => i !== index));
+  };
+
+  // Handle preferences/dealbreakers
+  const handlePreferenceInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      addPreferenceOrDealbreaker();
+    }
+  };
+
+  const addPreferenceOrDealbreaker = () => {
+    if (preferencesTab === "preferences") {
+      const trimmed = preferenceInput.trim();
+      if (!trimmed) return;
+
+      if (preferences.length >= 10) {
+        setErrors((prev) => ({ ...prev, preferences: "Maximum 10 preferences allowed" }));
+        return;
+      }
+      if (!preferences.find((p) => p.label === trimmed)) {
+        setPreferences([...preferences, { label: trimmed, note: undefined }]);
+        setPreferenceInput("");
+        setErrors((prev) => ({ ...prev, preferences: "" }));
+      }
+    } else {
+      const trimmed = dealbreakerInput.trim();
+      if (!trimmed) return;
+
+      if (dealbreakers.length >= 10) {
+        setErrors((prev) => ({ ...prev, dealbreakers: "Maximum 10 dealbreakers allowed" }));
+        return;
+      }
+      if (!dealbreakers.find((d) => d.label === trimmed)) {
+        setDealbreakers([...dealbreakers, { label: trimmed, note: undefined }]);
+        setDealbreakerInput("");
+        setErrors((prev) => ({ ...prev, dealbreakers: "" }));
+      }
+    }
+  };
+
+  const removePreferenceOrDealbreaker = (index: number, type: "preferences" | "dealbreakers") => {
+    if (type === "preferences") {
+      setPreferences(preferences.filter((_, i) => i !== index));
+    } else {
+      setDealbreakers(dealbreakers.filter((_, i) => i !== index));
+    }
   };
 
   // Handle image upload
@@ -252,9 +278,6 @@ export function RequestForm({ onSuccess }: { onSuccess?: () => void }) {
     if (!values.title || values.title.length < 4) {
       validationErrors.title = "Title must be at least 4 characters";
     }
-    if (!values.description || values.description.length < 10) {
-      validationErrors.description = "Description must be at least 10 characters";
-    }
 
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
@@ -263,9 +286,21 @@ export function RequestForm({ onSuccess }: { onSuccess?: () => void }) {
 
     setErrors({});
 
+    // Auto-generate description from preferences/dealbreakers if empty
+    let description = values.description || "";
+    if (!description.trim()) {
+      const prefText = preferences.length > 0 
+        ? `Preferences: ${preferences.map(p => p.label).join(", ")}` 
+        : "";
+      const dealText = dealbreakers.length > 0 
+        ? `Dealbreakers: ${dealbreakers.map(d => d.label).join(", ")}` 
+        : "";
+      description = [prefText, dealText].filter(Boolean).join(". ") || "Looking for the requested item.";
+    }
+
     const formData = new FormData();
     formData.set("title", values.title);
-    formData.set("description", values.description);
+    formData.set("description", description);
     formData.set("category", values.category);
     formData.set(
       "budgetMin",
@@ -287,6 +322,10 @@ export function RequestForm({ onSuccess }: { onSuccess?: () => void }) {
     if (referenceLinks.length > 0) {
       formData.set("referenceLinks", referenceLinks.join(","));
     }
+
+    // Add preferences and dealbreakers as JSON
+    formData.set("preferences", JSON.stringify(preferences));
+    formData.set("dealbreakers", JSON.stringify(dealbreakers));
 
     // Add image URLs
     uploadedImages.forEach((url) => {
@@ -312,15 +351,11 @@ export function RequestForm({ onSuccess }: { onSuccess?: () => void }) {
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-12" noValidate>
       {/* SECTION 1: What are you looking for? */}
       <section className="space-y-6">
-        <div>
-          <h2 className="text-xl font-semibold mb-1">What are you looking for?</h2>
-          <p className="text-sm text-gray-600">Describe your request clearly</p>
-        </div>
 
         {/* Title */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <Label htmlFor="title">Title</Label>
+            <Label htmlFor="title">The item</Label>
             <span className={cn(
               "text-xs text-gray-600",
               titleLength > titleMaxLength && "text-red-600"
@@ -330,7 +365,7 @@ export function RequestForm({ onSuccess }: { onSuccess?: () => void }) {
           </div>
           <Input
             id="title"
-            placeholder="Wireless vacuum cleaner under $150"
+            placeholder="Casio W23"
             {...form.register("title")}
             className={cn(
               errors.title && "border-red-500 focus-visible:ring-red-500"
@@ -341,33 +376,129 @@ export function RequestForm({ onSuccess }: { onSuccess?: () => void }) {
           )}
         </div>
 
-        {/* Description with helper chips */}
-        <div className="space-y-3">
-          <Label htmlFor="description">Description</Label>
-          <div className="flex flex-wrap gap-2 mb-2">
-            {HELPER_CHIPS.map((chip) => (
-              <button
-                key={chip.label}
+        {/* Preferences and Dealbreakers - Two Columns */}
+        <div className="grid gap-4 md:grid-cols-2">
+          {/* Preferences */}
+          <div className="space-y-3">
+            <Label htmlFor="preferences">Preferences (Optional)</Label>
+            <div className="flex gap-2">
+              <Input
+                id="preferences"
+                placeholder="e.g., Good Battery"
+                value={preferenceInput}
+                onChange={(e) => {
+                  setPreferenceInput(e.target.value);
+                  setPreferencesTab("preferences");
+                  setErrors((prev) => ({ ...prev, preferences: "" }));
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && preferenceInput.trim()) {
+                    e.preventDefault();
+                    if (preferencesTab === "preferences") {
+                      addPreferenceOrDealbreaker();
+                    }
+                  }
+                }}
+                className="flex-1"
+              />
+              <Button
                 type="button"
-                onClick={() => insertHelperText(chip.text)}
-                className="px-3 py-1.5 text-xs font-medium rounded-full border border-[#e5e7eb] bg-white hover:bg-gray-100 transition-colors"
+                variant="ghost"
+                className="text-gray-900 hover:text-gray-900 font-bold"
+                onClick={() => {
+                  setPreferencesTab("preferences");
+                  addPreferenceOrDealbreaker();
+                }}
+                disabled={!preferenceInput.trim() || preferences.length >= 10}
               >
-                {chip.label}
-              </button>
-            ))}
-          </div>
-          <Textarea
-            id="description"
-            placeholder="Add details about what you're looking for..."
-            rows={6}
-            {...form.register("description")}
-            className={cn(
-              errors.description && "border-red-500 focus-visible:ring-red-500"
+                Add
+              </Button>
+            </div>
+            {preferences.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {preferences.map((item, index) => (
+                  <div
+                    key={index}
+                    className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[#e5e7eb] bg-[#F5F6F9] text-sm"
+                  >
+                    <span className="text-lime-500">+</span>
+                    <span>{item.label}</span>
+                    {item.note && (
+                      <span className="text-xs text-gray-500">({item.note})</span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => removePreferenceOrDealbreaker(index, "preferences")}
+                      className="text-gray-600 hover:text-foreground ml-1"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
             )}
-          />
-          {errors.description && (
-            <p className="text-xs text-red-600">{errors.description}</p>
-          )}
+          </div>
+
+          {/* Dealbreakers */}
+          <div className="space-y-3">
+            <Label htmlFor="dealbreakers">Dealbreakers (Optional)</Label>
+            <div className="flex gap-2">
+              <Input
+                id="dealbreakers"
+                placeholder="e.g., No defects"
+                value={dealbreakerInput}
+                onChange={(e) => {
+                  setDealbreakerInput(e.target.value);
+                  setPreferencesTab("dealbreakers");
+                  setErrors((prev) => ({ ...prev, dealbreakers: "" }));
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && dealbreakerInput.trim()) {
+                    e.preventDefault();
+                    if (preferencesTab === "dealbreakers") {
+                      addPreferenceOrDealbreaker();
+                    }
+                  }
+                }}
+                className="flex-1"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                className="text-gray-900 hover:text-gray-900 font-bold"
+                onClick={() => {
+                  setPreferencesTab("dealbreakers");
+                  addPreferenceOrDealbreaker();
+                }}
+                disabled={!dealbreakerInput.trim() || dealbreakers.length >= 10}
+              >
+                Add
+              </Button>
+            </div>
+            {dealbreakers.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {dealbreakers.map((item, index) => (
+                  <div
+                    key={index}
+                    className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[#e5e7eb] bg-[#F5F6F9] text-sm"
+                  >
+                    <span className="text-[#FF5F00]">-</span>
+                    <span>{item.label}</span>
+                    {item.note && (
+                      <span className="text-xs text-gray-500">({item.note})</span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => removePreferenceOrDealbreaker(index, "dealbreakers")}
+                      className="text-gray-600 hover:text-foreground ml-1"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </section>
 
@@ -557,6 +688,7 @@ export function RequestForm({ onSuccess }: { onSuccess?: () => void }) {
           </div>
         </div>
 
+
         {/* Advanced Matching Rules - Accordion */}
         <Accordion type="single" collapsible className="w-full">
           <AccordionItem value="advanced" className="border border-[#e5e7eb] rounded-lg bg-gray-50">
@@ -593,23 +725,6 @@ export function RequestForm({ onSuccess }: { onSuccess?: () => void }) {
                   checked={form.watch("exactSpecification")}
                   onCheckedChange={(checked) => {
                     form.setValue("exactSpecification", checked);
-                  }}
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5 flex-1">
-                  <Label htmlFor="exactPrice" className="text-sm font-medium">
-                    Must match budget exactly
-                  </Label>
-                  <p className="text-xs text-gray-600">
-                    Price must match the specified budget exactly
-                  </p>
-                </div>
-                <Switch
-                  id="exactPrice"
-                  checked={form.watch("exactPrice")}
-                  onCheckedChange={(checked) => {
-                    form.setValue("exactPrice", checked);
                   }}
                 />
               </div>
@@ -793,7 +908,7 @@ export function RequestForm({ onSuccess }: { onSuccess?: () => void }) {
       )}
 
       {/* Submit Button - Sticky on Mobile */}
-      <div className="sticky bottom-0 left-0 right-0 z-10 bg-white border-t border-[#e5e7eb] p-4 -mx-4 md:static md:border-t-0 md:p-0 md:mx-0">
+      <div className="sticky bottom-0 left-0 right-0 z-10 bg-white border-t border-[#e5e7eb] p-4 -mx-4 md:static md:border-t-0 md:p-0 md:mx-0 flex justify-end">
         <Button type="submit" variant="accent" className="w-full md:w-auto md:min-w-[200px]" disabled={isPending}>
           {getCTALabel()}
         </Button>

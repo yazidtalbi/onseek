@@ -38,7 +38,7 @@ export function BottomNav() {
               className={cn(
                 "flex flex-col items-center gap-1 text-[10px] font-semibold",
                 item.cta
-                  ? "rounded-2xl bg-accent px-3 py-2 text-foreground"
+                  ? "rounded-2xl bg-[#FF5F00] px-3 py-2 text-white"
                   : "text-muted-foreground",
                 isActive && !item.cta && "text-foreground"
               )}

@@ -112,44 +112,59 @@ export function RequestFeed({
         return [];
       }
       
-      // Fetch up to 3 images and submission counts for each request
-      if (requests && requests.length > 0) {
-        const requestIds = requests.map((r) => r.id);
-        const { data: images } = await supabase
-          .from("request_images")
-          .select("request_id, image_url, image_order")
-          .in("request_id", requestIds)
-          .order("image_order", { ascending: true });
-        
-        // Fetch submission counts
-        const { data: submissionCounts } = await supabase
-          .from("submissions")
-          .select("request_id")
-          .in("request_id", requestIds);
-        
-        // Create a map of request_id -> submission count
-        const submissionCountMap = new Map<string, number>();
-        submissionCounts?.forEach((sub) => {
-          const current = submissionCountMap.get(sub.request_id) || 0;
-          submissionCountMap.set(sub.request_id, current + 1);
-        });
-        
-        // Create a map of request_id -> array of images (max 3)
-        const imageMap = new Map<string, string[]>();
-        images?.forEach((img) => {
-          const existing = imageMap.get(img.request_id) || [];
-          if (existing.length < 3) {
-            existing.push(img.image_url);
-            imageMap.set(img.request_id, existing);
-          }
-        });
-        
-        // Attach images array and submission count to each request
-        const requestsWithImages = requests.map((req) => ({
-          ...req,
-          images: imageMap.get(req.id) || [],
-          submissionCount: submissionCountMap.get(req.id) || 0,
-        }));
+        // Fetch up to 3 images, links, and submission counts for each request
+        if (requests && requests.length > 0) {
+          const requestIds = requests.map((r) => r.id);
+          const { data: images } = await supabase
+            .from("request_images")
+            .select("request_id, image_url, image_order")
+            .in("request_id", requestIds)
+            .order("image_order", { ascending: true });
+          
+          // Fetch links
+          const { data: links } = await supabase
+            .from("request_links")
+            .select("request_id, url")
+            .in("request_id", requestIds);
+          
+          // Fetch submission counts
+          const { data: submissionCounts } = await supabase
+            .from("submissions")
+            .select("request_id")
+            .in("request_id", requestIds);
+          
+          // Create a map of request_id -> submission count
+          const submissionCountMap = new Map<string, number>();
+          submissionCounts?.forEach((sub) => {
+            const current = submissionCountMap.get(sub.request_id) || 0;
+            submissionCountMap.set(sub.request_id, current + 1);
+          });
+          
+          // Create a map of request_id -> array of images (max 3)
+          const imageMap = new Map<string, string[]>();
+          images?.forEach((img) => {
+            const existing = imageMap.get(img.request_id) || [];
+            if (existing.length < 3) {
+              existing.push(img.image_url);
+              imageMap.set(img.request_id, existing);
+            }
+          });
+          
+          // Create a map of request_id -> array of links
+          const linkMap = new Map<string, string[]>();
+          links?.forEach((link) => {
+            const existing = linkMap.get(link.request_id) || [];
+            existing.push(link.url);
+            linkMap.set(link.request_id, existing);
+          });
+          
+          // Attach images array, links array, and submission count to each request
+          const requestsWithImages = requests.map((req) => ({
+            ...req,
+            images: imageMap.get(req.id) || [],
+            links: linkMap.get(req.id) || [],
+            submissionCount: submissionCountMap.get(req.id) || 0,
+          }));
         
         // Filter out hidden requests
         if (typeof window !== "undefined") {
@@ -224,7 +239,13 @@ export function RequestFeed({
       {viewMode === "list" ? (
         <div className="space-y-3">
           {data.map((request: any) => (
-            <RequestCard key={request.id} request={request} firstImage={request.images?.[0] || null} images={request.images || []} />
+            <RequestCard 
+              key={request.id} 
+              request={request} 
+              variant="feed" 
+              images={request.images || []}
+              links={request.links || []}
+            />
           ))}
         </div>
       ) : (

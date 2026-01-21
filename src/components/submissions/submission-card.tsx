@@ -53,7 +53,7 @@ export function SubmissionCard({
   }, [submission.url]);
 
   return (
-    <Card className="border-[#e5e7eb] bg-white">
+    <Card className={isWinner ? "border-2 border-[#FF5F00] bg-[#FFDECA]/20" : "border-[#e5e7eb] bg-white"}>
       <CardContent className="space-y-4 p-6">
         <div className="flex gap-4">
           {thumbnailUrl && !imageError ? (
@@ -81,7 +81,7 @@ export function SubmissionCard({
                   href={submission.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-lg font-semibold hover:text-foreground transition-colors block truncate"
+                  className="text-lg font-semibold text-foreground hover:text-gray-400 transition-colors block truncate"
                 >
                   {submission.article_name || host || "Submission link"}
                 </a>
@@ -95,7 +95,7 @@ export function SubmissionCard({
             </div>
             {submission.price && (
               <div className="mb-2">
-                <span className="text-2xl font-semibold" style={{ color: '#333333' }}>
+                <span className="text-2xl font-semibold text-[#7755FF]">
                   ${submission.price.toFixed(2)}
                 </span>
               </div>

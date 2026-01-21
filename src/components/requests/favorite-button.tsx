@@ -48,8 +48,8 @@ export function FavoriteButton({
       className={cn(
         "flex items-center justify-center rounded-full p-2 transition-colors",
         isFavorite
-          ? "text-red-500 hover:text-red-600"
-          : "text-muted-foreground hover:text-foreground"
+          ? "text-[#FF5F00] hover:text-gray-400"
+          : "text-gray-600 hover:text-gray-400"
       )}
       aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
     >

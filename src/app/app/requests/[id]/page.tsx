@@ -4,21 +4,8 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import type { Submission } from "@/lib/types";
 import { SubmissionList } from "@/components/submissions/submission-list";
 import { SubmissionForm } from "@/components/submissions/submission-form";
-import { RequestActions } from "@/components/requests/request-actions";
-import { RequestCardGrid } from "@/components/requests/request-card-grid";
-import { RequestMenu } from "@/components/requests/request-menu";
-import { FavoriteButton } from "@/components/requests/favorite-button";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
-import { ReportDialog } from "@/components/reports/report-dialog";
-import { ChevronRight, Lock, Package, Settings, DollarSign, MapPin } from "lucide-react";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { ImageCarousel } from "@/components/requests/image-carousel";
+import { RequestCard } from "@/components/requests/request-card";
+import { ChevronRight } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -106,9 +93,24 @@ export default async function RequestDetailPage({
         if (!similarRequestImages[img.request_id]) {
           similarRequestImages[img.request_id] = [];
         }
-        if (similarRequestImages[img.request_id].length < 3) {
-          similarRequestImages[img.request_id].push(img.image_url);
-        }
+        similarRequestImages[img.request_id].push(img.image_url);
+      });
+    }
+  }
+
+  // Fetch submission counts for similar requests
+  let similarRequestSubmissionCounts: Record<string, number> = {};
+  if (similarRequests && similarRequests.length > 0) {
+    const similarRequestIds = similarRequests.map((r) => r.id);
+    const { data: submissionCounts } = await supabase
+      .from("submissions")
+      .select("request_id")
+      .in("request_id", similarRequestIds);
+
+    if (submissionCounts) {
+      submissionCounts.forEach((sub) => {
+        const current = similarRequestSubmissionCounts[sub.request_id] || 0;
+        similarRequestSubmissionCounts[sub.request_id] = current + 1;
       });
     }
   }
@@ -146,31 +148,6 @@ export default async function RequestDetailPage({
     isFavorite = !!favorite;
   }
 
-  // Parse request preferences from description
-  function parseRequestPreferences(description: string) {
-    const match = description.match(/<!--REQUEST_PREFS:({.*?})-->/);
-    if (match) {
-      try {
-        return JSON.parse(match[1]);
-      } catch {
-        return null;
-      }
-    }
-    return null;
-  }
-
-  function cleanDescription(description: string) {
-    return description.replace(/<!--REQUEST_PREFS:.*?-->/, "").trim();
-  }
-
-  const preferences = parseRequestPreferences(request.description) || {
-    priceLock: "open",
-    exactItem: false,
-    exactSpecification: false,
-    exactPrice: false,
-  };
-  const cleanDesc = cleanDescription(request.description);
-
   return (
     <div className="space-y-6">
       {/* Breadcrumbs */}
@@ -183,7 +160,7 @@ export default async function RequestDetailPage({
         </Link>
         <ChevronRight className="h-4 w-4" />
         <Link 
-          href={`/app/category/${request.category.toLowerCase()}`} 
+          href={`/category/${request.category.toLowerCase()}`} 
           className="hover:text-foreground transition-colors"
         >
           {request.category}
@@ -196,142 +173,13 @@ export default async function RequestDetailPage({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column: Request Details */}
         <div className="lg:col-span-1 space-y-6">
-          <Card className="border-[#e5e7eb] bg-white relative">
-            <CardContent className="space-y-4 p-6">
-              {/* Heart and Ellipsis - Top Right */}
-              <div className="absolute top-4 right-4 flex items-center gap-2">
-                <FavoriteButton requestId={request.id} isFavorite={isFavorite} />
-                <RequestMenu
-                  requestId={request.id}
-                  requestUserId={request.user_id}
-                  status={request.status}
-                />
-              </div>
-              
-              <div className="space-y-2 pr-16">
-                <Badge variant="muted">{request.status.toUpperCase()}</Badge>
-                <h1 className="text-3xl font-semibold">{request.title}</h1>
-                <p className="text-base text-gray-600">
-                  Posted by @{request.profiles?.username || "member"}
-                </p>
-              </div>
-              <p className="text-base text-gray-600">{cleanDesc}</p>
-              
-              {/* Request Images - Small thumbnails */}
-              {images && images.length > 0 && (
-                <div className="space-y-2">
-                  <p className="text-base font-semibold">Images</p>
-                  <ImageCarousel images={images} />
-                </div>
-              )}
-              
-              {/* Request Details - Organized in sections */}
-              <div className="space-y-3 pt-2">
-                {/* Basic Info */}
-                <div className="flex flex-wrap gap-2">
-                  {request.country ? (
-                    <Badge variant="muted" className="flex items-center gap-1.5">
-                      <MapPin className="h-4 w-4" />
-                      {request.country}
-                    </Badge>
-                  ) : null}
-                  {request.condition ? <Badge variant="muted">{request.condition}</Badge> : null}
-                  {request.urgency ? <Badge variant="muted">{request.urgency}</Badge> : null}
-                </div>
-                
-                {/* Budget */}
-                {(request.budget_min || request.budget_max) && (
-                  <div className="flex flex-wrap gap-2 text-base text-gray-600">
-                    {request.budget_min && request.budget_max ? (
-                      <span>Budget: ${request.budget_min} - ${request.budget_max}</span>
-                    ) : request.budget_min ? (
-                      <span>Budget: From ${request.budget_min}</span>
-                    ) : (
-                      <span>Budget: Up to ${request.budget_max}</span>
-                    )}
-                  </div>
-                )}
-                
-                {/* Request Options - Only show if any are set */}
-                {(preferences.priceLock === "locked" || preferences.exactItem || preferences.exactSpecification || preferences.exactPrice) && (
-                  <TooltipProvider>
-                    <div className="flex flex-wrap gap-2 pt-1">
-                      {preferences.priceLock === "locked" && (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Badge variant="muted" className="flex items-center gap-1.5 cursor-help">
-                              <Lock className="h-3.5 w-3.5" />
-                              Price locked
-                            </Badge>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>No price greater than the specified budget will be accepted</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      )}
-                      {preferences.exactItem && (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Badge variant="muted" className="flex items-center gap-1.5 cursor-help">
-                              <Package className="h-3.5 w-3.5" />
-                              Exact item
-                            </Badge>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Only the exact requested item is acceptable, no alternatives</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      )}
-                      {preferences.exactSpecification && (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Badge variant="muted" className="flex items-center gap-1.5 cursor-help">
-                              <Settings className="h-3.5 w-3.5" />
-                              Exact specification
-                            </Badge>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Item must match all specified requirements exactly</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      )}
-                      {preferences.exactPrice && (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Badge variant="muted" className="flex items-center gap-1.5 cursor-help">
-                              <DollarSign className="h-3.5 w-3.5" />
-                              Exact price
-                            </Badge>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Price must match the specified budget exactly</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      )}
-                    </div>
-                  </TooltipProvider>
-                )}
-              </div>
-              {links?.length ? (
-                <div className="space-y-2">
-                  <p className="text-base font-semibold">Reference links</p>
-                  <div className="space-y-1 text-base text-gray-600">
-                    {links.map((link) => (
-                      <a
-                        key={link.id}
-                        href={link.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="block underline"
-                      >
-                        {link.url}
-                      </a>
-                    ))}
-                  </div>
-                </div>
-              ) : null}
-            </CardContent>
-          </Card>
+          <RequestCard
+            request={request}
+            variant="detail"
+            isFavorite={isFavorite}
+            images={images?.map((img: any) => img.image_url) || []}
+            links={links?.map((link: any) => link.url) || []}
+          />
 
           {showSubmissionForm ? (
             <div>
@@ -354,12 +202,16 @@ export default async function RequestDetailPage({
 
       {similarRequests && similarRequests.length > 0 ? (
         <div className="space-y-4 pt-12 mt-12 border-t border-[#e5e7eb]">
-          <h2 className="text-2xl font-semibold">Similar requests</h2>
+          <h2 className="text-2xl font-semibold text-foreground">Similar requests</h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {similarRequests.map((similarRequest) => (
-              <RequestCardGrid
+              <RequestCard
                 key={similarRequest.id}
-                request={similarRequest}
+                request={{
+                  ...similarRequest,
+                  submissionCount: similarRequestSubmissionCounts[similarRequest.id] || 0,
+                }}
+                variant="feed"
                 images={similarRequestImages[similarRequest.id] || []}
                 isFavorite={similarRequestFavorites.has(similarRequest.id)}
               />

@@ -40,80 +40,75 @@ function RequestCardGridComponent({ request, isFavorite, images = [] }: { reques
   const hasOptions = preferences.priceLock === "locked" || preferences.exactItem || preferences.exactSpecification || preferences.exactPrice;
   
   return (
-    <div className="relative h-full">
-      <Link href={`/app/requests/${request.id}`} prefetch={true} className="block h-full">
-        <Card className="border-[#e5e7eb] bg-white h-full flex flex-col hover:border-foreground/30 hover:bg-[#fbfcfd] transition-colors cursor-pointer min-h-[320px]">
-          <CardContent className="p-6 flex flex-col flex-1 space-y-4">
-            <div className="flex items-start justify-between gap-2 mb-1">
-              <span className="text-xs text-muted-foreground">Posted {timeAgo}</span>
-              <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                <FavoriteButton requestId={request.id} isFavorite={isFavorite} />
-                <RequestMenu
-                  requestId={request.id}
-                  requestUserId={request.user_id}
-                  status={request.status}
-                />
-              </div>
+    <div className="relative">
+      <Link href={`/app/requests/${request.id}`} prefetch={true} className="block">
+        <Card className="border-[#e5e7eb] bg-white flex flex-col hover:border-gray-300 hover:bg-[#fbfcfd] transition-colors cursor-pointer relative">
+          <CardContent className="p-6 flex flex-col space-y-4">
+            {/* Heart and Ellipsis - Top Right */}
+            <div className="absolute top-4 right-4 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+              <FavoriteButton requestId={request.id} isFavorite={isFavorite} />
+              <RequestMenu
+                requestId={request.id}
+                requestUserId={request.user_id}
+                status={request.status}
+              />
             </div>
-          
-          <div className="flex-1 space-y-3">
-            <div className="space-y-1">
+            
+            <div className="space-y-2 pr-16">
+              <p className="text-xs text-gray-600">Posted {timeAgo}</p>
               <h3 className="text-lg font-semibold leading-tight text-foreground line-clamp-2">
                 {request.title}
               </h3>
+              {/* Budget right under title */}
               {(request.budget_min || request.budget_max) && (
-                <p className="text-2xl font-bold text-foreground">
+                <div className="flex flex-wrap gap-2 text-base text-[#7755FF] font-semibold" style={{ fontFamily: 'var(--font-expanded)' }}>
                   {request.budget_min && request.budget_max ? (
-                    <>${request.budget_min} - ${request.budget_max}</>
+                    <span>${request.budget_min} - ${request.budget_max}</span>
                   ) : request.budget_min ? (
-                    <>From ${request.budget_min}</>
+                    <span>From ${request.budget_min}</span>
                   ) : (
-                    <>Up to ${request.budget_max}</>
+                    <span>Up to ${request.budget_max}</span>
                   )}
-                </p>
-              )}
-              {request.submissionCount !== undefined && (
-                <p className="text-sm text-gray-500">
-                  {formatSubmissionCount(request.submissionCount)}
-                </p>
+                </div>
               )}
             </div>
             <p className="text-base text-gray-600 line-clamp-4 leading-relaxed">
               {cleanDesc}
             </p>
-          </div>
-          
-          {/* Images - Small thumbnails like detail page (max 3) */}
-          {images && images.length > 0 && (
-            <div className="space-y-2">
-              <p className="text-sm font-semibold">Images</p>
+            
+            {/* Request Images - Small thumbnails */}
+            {images && images.length > 0 && (
+              <div className="space-y-2">
+                <div className="flex flex-wrap gap-2">
+                  {images.slice(0, 3).map((imgUrl, index) => (
+                    <div key={index} className="relative w-16 h-16 rounded-lg overflow-hidden border border-[#e5e7eb] bg-gray-100 hover:border-gray-300 transition-colors">
+                      <Image
+                        src={imgUrl}
+                        alt={`${request.title} - Image ${index + 1}`}
+                        fill
+                        className="object-cover"
+                        unoptimized
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {/* Request Details */}
+            <div className="space-y-3 pt-2">
+              {/* Basic Info */}
               <div className="flex flex-wrap gap-2">
-                {images.slice(0, 3).map((imgUrl, index) => (
-                  <div key={index} className="relative w-16 h-16 rounded-lg overflow-hidden border border-[#e5e7eb] bg-gray-100 hover:border-foreground/50 transition-colors">
-                    <Image
-                      src={imgUrl}
-                      alt={`${request.title} - Image ${index + 1}`}
-                      fill
-                      className="object-cover"
-                      unoptimized
-                    />
-                  </div>
-                ))}
+                {request.country ? (
+                  <Badge variant="muted" className="flex items-center gap-1.5 bg-[#FFDECA]">
+                    <MapPin className="h-4 w-4 text-[#FF5F00]" />
+                    <span className="text-[#FF5F00]">{request.country}</span>
+                  </Badge>
+                ) : null}
+                {request.condition ? <Badge variant="muted">{request.condition}</Badge> : null}
+                {request.urgency ? <Badge variant="muted">{request.urgency}</Badge> : null}
               </div>
             </div>
-          )}
-          
-          <div className="flex flex-wrap items-center gap-2 pt-3">
-            {request.country ? (
-              <Badge variant="muted" className="flex items-center gap-1.5">
-                <MapPin className="h-4 w-4" />
-                {request.country}
-              </Badge>
-            ) : null}
-            {request.condition ? <Badge variant="muted">{request.condition}</Badge> : null}
-            {request.urgency ? <Badge variant="muted">{request.urgency}</Badge> : null}
-            <Badge variant="muted">{request.category}</Badge>
-          </div>
           </CardContent>
         </Card>
       </Link>

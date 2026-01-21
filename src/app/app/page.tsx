@@ -137,8 +137,11 @@ export default async function AppFeedPage({
           <div id="hero-search-section" className="space-y-6 pb-8 max-w-4xl">
             <div className="space-y-2">
               <h1 className="text-4xl md:text-5xl font-semibold text-left">
-                Discover community-made{" "}
-                <span className="text-foreground">requests</span>
+                Discover{" "}
+                <span className="text-foreground">
+                  <br />
+                  community-made requests
+                </span>
               </h1>
               <p className="text-lg text-gray-600 text-left">
                 Post what you're looking for and get quality submissions from the community

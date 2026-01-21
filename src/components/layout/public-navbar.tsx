@@ -10,7 +10,7 @@ export function PublicNavbar() {
   return (
     <header className="sticky top-0 z-20 border-b border-border bg-background/80 backdrop-blur">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
-        <Link href="/" className="text-lg font-semibold text-foreground">
+        <Link href="/" className="text-lg font-bold text-foreground">
           Onseek
         </Link>
         <div className="flex items-center gap-3">

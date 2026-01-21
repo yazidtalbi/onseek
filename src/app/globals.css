@@ -1,20 +1,20 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.cdnfonts.com/css/pp-neue-montreal');
 @import url('https://fonts.googleapis.com/css2?family=Zalando+Sans+SemiExpanded:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
+  --background: #fbfcfd;
   --foreground: #1a1a1a;
-  --primary: #1a1a1a;
+  --primary: #7755FF;
   --primary-foreground: #ffffff;
-  --accent: #1a1a1a;
+  --accent: #FF5F00;
   --accent-foreground: #ffffff;
-  --muted: #f3f4f6;
-  --muted-foreground: #6b7280;
+  --muted: #FFDECA;
+  --muted-foreground: #424143;
   --border: #e5e7eb;
   --card: #ffffff;
   --card-foreground: #1a1a1a;
-  --ring: rgba(26, 26, 26, 0.2);
+  --ring: rgba(119, 85, 255, 0.2);
 }
 
 .dark {
@@ -45,7 +45,7 @@
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
   --color-ring: var(--ring);
-  --font-sans: 'Inter', var(--font-inter-display), system-ui, -apple-system, sans-serif;
+  --font-sans: 'PP Neue Montreal', system-ui, -apple-system, sans-serif;
   --font-mono: var(--font-geist-mono);
   --font-expanded: 'Zalando Sans SemiExpanded', sans-serif;
 }
@@ -78,12 +78,13 @@
 
 h1, h2, h3, h4, h5, h6,
 .text-xl, .text-2xl, .text-3xl, .text-4xl, .text-5xl {
-  font-family: var(--font-expanded);
+  font-family: var(--font-sans);
 }
 
-/* Logo font */
+/* Logo font - Zalando Sans SemiExpanded */
 a[href="/app"].text-xl.font-semibold,
-a[href="/"].text-lg.font-semibold {
+a[href="/"].text-lg.font-semibold,
+a[href="/"].text-xl {
   font-family: var(--font-expanded);
 }
 
@@ -91,10 +92,19 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.5;
 }
 
 * {
   border-color: var(--border);
+  font-weight: 500;
+}
+
+/* Headings use medium weight */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 500;
 }
 
 /* Custom scrollbar styles */

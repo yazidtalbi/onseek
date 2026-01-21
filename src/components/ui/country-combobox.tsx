@@ -72,7 +72,7 @@ export function CountryCombobox({
           onChange={handleInputChange}
           onFocus={() => setOpen(true)}
           placeholder={placeholder}
-          className="pr-20 pl-0"
+          className="pr-20 pl-4"
         />
         {selectedCountry && (
           <Button
