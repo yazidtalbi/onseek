@@ -8,7 +8,7 @@ export function PromotionalSidebar() {
   const router = useRouter();
 
   return (
-    <div className="space-y-6 max-w-md">
+    <div className="space-y-6 max-w-md sticky top-20">
       {/* Main Promotional Card */}
       <div className="rounded-2xl border border-[#e5e7eb] bg-white p-6 space-y-4">
         <h2 className="text-2xl font-semibold text-foreground">The network for requests</h2>
@@ -64,14 +64,11 @@ export function PromotionalSidebar() {
       </div>
 
       {/* What is Onseek */}
-      <div className="rounded-2xl border border-[#e5e7eb] bg-white p-6 space-y-4">
+      <div className="space-y-4">
         <h3 className="text-lg font-semibold text-foreground">What is Onseek?</h3>
-        <div className="space-y-3 text-sm text-gray-600">
+        <div className="space-y-3 text-sm text-gray-400">
           <p>
-            Onseek is a community-driven platform where you can post requests for products, services, or solutions, and get quality submissions from helpful members.
-          </p>
-          <p>
-            Whether you're looking for the best deals, specific products, or expert recommendations, our community is here to help you find exactly what you need.
+            Onseek is a community-driven platform where you post requests for products, services, or solutions and get quality submissions from helpful members.
           </p>
         </div>
       </div>

@@ -28,6 +28,7 @@ export function AppNavbar() {
   const { user, profile } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const [showSearch, setShowSearch] = useState(false);
+  const [searchType, setSearchType] = useState<"requests" | "items">("requests");
   const [isPending, startTransition] = useTransition();
   const isHomePage = pathname === "/";
 
@@ -102,7 +103,7 @@ export function AppNavbar() {
     <header className="sticky top-0 z-20 bg-[#fbfcfd] backdrop-blur-sm w-full">
       <div className="flex w-full items-center gap-4 py-3 px-6">
         {/* Brand */}
-        <Link href="/" className="text-xl font-bold text-foreground shrink-0" style={{ fontFamily: 'var(--font-expanded)' }}>
+        <Link href="/" className="text-xl font-black text-foreground shrink-0" style={{ fontFamily: 'var(--font-expanded)' }}>
           Onseek
         </Link>
         
@@ -131,11 +132,11 @@ export function AppNavbar() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
-                className={cn(
-                  "px-3 py-2 text-sm font-medium transition-colors whitespace-nowrap flex items-center gap-1",
+                  className={cn(
+                    "px-3 py-2 text-sm font-medium transition-colors whitespace-nowrap flex items-center gap-1",
                        pathname === "/" || pathname.startsWith("/app/category") || pathname.startsWith("/app/requests")
                            ? "text-[#7755FF]"
-                           : "text-gray-600 hover:text-[#7755FF]"
+                           : "text-gray-600 hover:text-gray-400"
                        )}
                      >
                        Explore
@@ -172,13 +173,41 @@ export function AppNavbar() {
         {/* Search Bar - Centered (hidden on home page when hero is visible) */}
         {showSearch && (
           <div className="flex-1 flex justify-center max-w-md mx-4">
-            <form action="/search" method="get" className="relative w-full">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                name="q"
-                placeholder="Search requests..."
-                className="pl-9 bg-card/70 border-border w-full rounded-full"
-              />
+            <form action="/search" method="get" className="relative w-full flex items-center">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  name="q"
+                  placeholder="Search..."
+                  className="pl-9 pr-32 bg-white border-r-0 border-border w-full rounded-l-full rounded-r-none"
+                />
+              </div>
+              <div className="h-6 w-px bg-border"></div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    className="h-11 flex items-center gap-1.5 px-3 text-sm font-medium text-foreground hover:bg-gray-100 rounded-r-full border border-l-0 border-border bg-white shrink-0"
+                  >
+                    {searchType === "requests" ? "Requests" : "Items"}
+                    <ChevronDown className="h-4 w-4" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuItem onClick={() => setSearchType("requests")}>
+                    <div className="flex flex-col">
+                      <span className="font-medium">Requests</span>
+                      <span className="text-xs text-muted-foreground">Search community requests</span>
+                    </div>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSearchType("items")}>
+                    <div className="flex flex-col">
+                      <span className="font-medium">Items</span>
+                      <span className="text-xs text-muted-foreground">Search products and items</span>
+                    </div>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </form>
           </div>
         )}

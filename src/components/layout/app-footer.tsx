@@ -4,7 +4,7 @@ import { Facebook, Linkedin, Twitter, Youtube, Instagram } from "lucide-react";
 export function AppFooter() {
   return (
     <footer className="border-t border-[#e5e7eb] mt-12 bg-white">
-      <div className="w-full px-4 py-12 md:px-8">
+      <div className="w-full px-4 pt-12 pb-6 md:px-8">
         {/* Links Grid */}
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4 mb-8">
           {/* Column 1 */}

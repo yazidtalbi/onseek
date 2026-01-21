@@ -38,6 +38,8 @@ interface RequestCardProps {
   links?: string[];
   attributes?: Array<{ label: string; value: boolean }>;
   currentUserId?: string | null;
+  isFirst?: boolean;
+  isLast?: boolean;
 }
 
 function RequestCardComponent({
@@ -48,6 +50,8 @@ function RequestCardComponent({
   links = [],
   attributes = [],
   currentUserId,
+  isFirst = false,
+  isLast = false,
 }: RequestCardProps) {
   const timeAgo = formatTimeAgo(request.created_at);
   const cleanDesc = cleanDescription(request.description);
@@ -83,7 +87,7 @@ function RequestCardComponent({
         {/* Header: Posted time, Title, and Actions */}
         <div className="flex items-start justify-between gap-4 mb-4">
           <div className="flex-1 min-w-0">
-            <p className="text-xs text-gray-500">request {timeAgo}</p>
+            <p className="text-xs text-gray-500">Requested {timeAgo}</p>
             {/* Title: Primary, outcome-oriented, max 2 lines */}
             <h3
               className={cn(
@@ -137,17 +141,17 @@ function RequestCardComponent({
             {/* Preferences */}
             {visiblePreferences.length > 0 && (
               <div className="flex flex-wrap gap-2">
-                {visiblePreferences.map((pref, idx) => (
+                {visiblePreferences.map((pref: { label: string }, idx: number) => (
                   <span
                     key={idx}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-gray-50 text-sm text-gray-700 border border-gray-200/60"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-gray-100 text-sm text-gray-700"
                   >
                     <span className="text-green-500 font-semibold text-base leading-none">+</span>
                     <span>{pref.label}</span>
                   </span>
                 ))}
                 {remainingPreferences > 0 && (
-                  <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-gray-50 text-sm text-gray-700 border border-gray-200/60">
+                  <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-gray-100 text-sm text-gray-700">
                     +{remainingPreferences} more
                   </span>
                 )}
@@ -157,17 +161,17 @@ function RequestCardComponent({
             {/* Dealbreakers */}
             {visibleDealbreakers.length > 0 && (
               <div className="flex flex-wrap gap-2">
-                {visibleDealbreakers.map((deal, idx) => (
+                {visibleDealbreakers.map((deal: { label: string }, idx: number) => (
                   <span
                     key={idx}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-gray-50 text-sm text-gray-700 border border-gray-200/60"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-gray-100 text-sm text-gray-700"
                   >
                     <span className="text-[#FF5F00] font-semibold text-base leading-none">-</span>
                     <span>{deal.label}</span>
                   </span>
                 ))}
                 {remainingDealbreakers > 0 && (
-                  <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-gray-50 text-sm text-gray-700 border border-gray-200/60">
+                  <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-gray-100 text-sm text-gray-700">
                     +{remainingDealbreakers} more
                   </span>
                 )}
@@ -251,7 +255,7 @@ function RequestCardComponent({
 
         {/* Footer: Meta info */}
         {request.submissionCount !== undefined && request.submissionCount > 0 && (
-          <div className="flex items-center gap-2 flex-wrap pt-4 mt-auto border-t border-gray-100">
+          <div className="flex items-center gap-2 flex-wrap pt-4 mt-auto">
             <span className="text-sm text-gray-500">
               {formatSubmissionCount(request.submissionCount)} proposals
             </span>
@@ -274,11 +278,16 @@ function RequestCardComponent({
         <Link
           href={`/app/requests/${request.id}`}
           prefetch={true}
-          className="block focus:outline-none rounded-lg"
+          className="block focus:outline-none"
         >
           <Card
             className={cn(
-              "border-[#e5e7eb] bg-white flex flex-col hover:border-gray-300 transition-colors relative group"
+              "border-[#e5e7eb] bg-white flex flex-col hover:border-gray-300 transition-colors relative group",
+              isFirst && isLast && "rounded-2xl",
+              isFirst && !isLast && "rounded-t-2xl rounded-b-none",
+              !isFirst && isLast && "rounded-b-2xl rounded-t-none",
+              !isFirst && !isLast && "rounded-none",
+              !isLast && "border-b-0"
             )}
           >
             {cardContent}

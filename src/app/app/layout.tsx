@@ -45,12 +45,12 @@ export default async function AppLayout({
 
   return (
     <AuthProvider user={user ?? null} profile={resolvedProfile ?? null}>
-      <div className="flex flex-col min-h-screen bg-background pb-24">
+      <div className="flex flex-col min-h-screen bg-white pb-24">
         <AppNavbar />
         <main className="flex-1 w-full px-4 py-8 md:px-8">
-          <div className="mx-auto max-w-6xl w-full">{children}</div>
+          <div className="mx-auto max-w-5xl w-full">{children}</div>
         </main>
-        <div className="mx-auto max-w-6xl w-full">
+        <div className="mx-auto max-w-5xl w-full">
           <AppFooter />
         </div>
         <BottomNav />

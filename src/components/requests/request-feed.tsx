@@ -237,14 +237,16 @@ export function RequestFeed({
       )}
 
       {viewMode === "list" ? (
-        <div className="space-y-3">
-          {data.map((request: any) => (
+        <div>
+          {data.map((request: any, index: number) => (
             <RequestCard 
               key={request.id} 
               request={request} 
               variant="feed" 
               images={request.images || []}
               links={request.links || []}
+              isFirst={index === 0}
+              isLast={index === data.length - 1}
             />
           ))}
         </div>

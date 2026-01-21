@@ -21,8 +21,8 @@ const buttonVariants = ({
     variant === "accent" &&
       "bg-[#FF5F00] text-white hover:bg-[#FF5F00]/90",
     variant === "outline" &&
-      "border border-[#e5e7eb] bg-transparent text-foreground hover:bg-[#FFDECA]",
-    variant === "ghost" && "bg-transparent hover:bg-[#FFDECA]",
+      "border border-[#e5e7eb] bg-transparent text-foreground hover:bg-gray-100",
+    variant === "ghost" && "bg-transparent hover:bg-gray-100",
     size === "default" && "h-11 px-5 text-sm",
     size === "sm" && "h-9 px-4 text-sm",
     size === "lg" && "h-12 px-6 text-base",
