@@ -48,7 +48,7 @@ export default async function MyRequestsPage({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 rounded-3xl border border-[#e5e7eb] bg-white/80 p-6 md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-3xl font-semibold">My requests</h1>
           <p className="text-sm text-muted-foreground">

@@ -43,8 +43,21 @@ export default async function AppLayout({
     }
   }
 
+  // Serialize user object to ensure it's properly serializable for client component
+  // This prevents chunk loading errors by ensuring only serializable data is passed
+  const serializedUser = user
+    ? {
+        id: user.id,
+        email: user.email,
+        user_metadata: user.user_metadata,
+        app_metadata: user.app_metadata,
+        aud: user.aud,
+        created_at: user.created_at,
+      }
+    : null;
+
   return (
-    <AuthProvider user={user ?? null} profile={resolvedProfile ?? null}>
+    <AuthProvider user={serializedUser} profile={resolvedProfile ?? null}>
       <div className="flex flex-col min-h-screen bg-white pb-24">
         <AppNavbar />
         <main className="flex-1 w-full px-4 py-8 md:px-8">

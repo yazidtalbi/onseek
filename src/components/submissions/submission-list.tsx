@@ -61,7 +61,7 @@ export function SubmissionList({
       } = await supabase.auth.getUser();
       const { data: submissions } = await supabase
         .from("submissions")
-        .select("*, votes(vote, user_id)")
+        .select("*, votes(vote, user_id), profiles(username)")
         .eq("request_id", requestId)
         .order("created_at", { ascending: false });
       return (
@@ -103,7 +103,10 @@ export function SubmissionList({
 
   return (
     <div>
-      <div className="flex items-center justify-end mb-4">
+      <div className="flex items-center justify-between mb-4">
+        <div className="text-sm text-neutral-400">
+          {data.length} {data.length === 1 ? 'proposal' : 'proposals'}
+        </div>
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted-foreground">Sort by:</span>
           <Select value={sortBy} onValueChange={(value: "best" | "newest" | "price") => setSortBy(value)}>

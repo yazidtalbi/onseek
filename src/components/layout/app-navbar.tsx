@@ -5,7 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Bell, Plus, ChevronDown, TrendingUp, Sparkles, Moon, Sun, LogOut, Heart } from "lucide-react";
+import { Search, Bell, Plus, ChevronDown, TrendingUp, Sparkles, Moon, Sun, LogOut, Heart, User, Send, Settings } from "lucide-react";
 import { useAuth } from "@/components/layout/auth-provider";
 import { useTheme } from "@/components/layout/theme-provider";
 import { signOutAction } from "@/actions/auth.actions";
@@ -100,11 +100,11 @@ export function AppNavbar() {
   }, [isHomePage]);
 
   return (
-    <header className="sticky top-0 z-20 bg-[#fbfcfd] backdrop-blur-sm w-full">
+    <header className="z-20 w-full">
       <div className="flex w-full items-center gap-4 py-3 px-6">
         {/* Brand */}
-        <Link href="/" className="text-xl font-black text-foreground shrink-0" style={{ fontFamily: 'var(--font-expanded)' }}>
-          Onseek
+        <Link href="/" className="text-xl text-foreground shrink-0" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>
+          onseek
         </Link>
         
         {/* Navigation Links */}
@@ -179,15 +179,15 @@ export function AppNavbar() {
               <Input
                 name="q"
                   placeholder="Search..."
-                  className="pl-9 pr-32 bg-white border-r-0 border-border w-full rounded-l-full rounded-r-none"
+                  className="pl-9 pr-32 bg-gray-100 border-0 w-full rounded-l-full rounded-r-none"
                 />
               </div>
-              <div className="h-6 w-px bg-border"></div>
+              <div className="h-6 w-px bg-gray-300"></div>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button
                     type="button"
-                    className="h-11 flex items-center gap-1.5 px-3 text-sm font-medium text-foreground hover:bg-gray-100 rounded-r-full border border-l-0 border-border bg-white shrink-0"
+                    className="h-11 flex items-center gap-1.5 px-3 text-sm font-medium text-foreground hover:bg-gray-200 rounded-r-full bg-gray-100 shrink-0"
                   >
                     {searchType === "requests" ? "Requests" : "Items"}
                     <ChevronDown className="h-4 w-4" />
@@ -222,58 +222,72 @@ export function AppNavbar() {
                   Create a request
                 </Link>
               </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={toggleTheme}
-                aria-label="Toggle theme"
-              >
-                {theme === "dark" ? (
-                  <Sun className="h-5 w-5" />
-                ) : (
-                  <Moon className="h-5 w-5" />
-                )}
-              </Button>
-              <Button variant="ghost" size="icon" asChild className={cn(
-                "relative",
-                pathname === "/app/saved" && "text-[#7755FF]"
-              )}>
-                <Link href="/app/saved">
-                  <Heart className={cn(
-                    "h-5 w-5",
-                    pathname === "/app/saved" && "fill-current"
-                  )} />
-                </Link>
-              </Button>
               <Button variant="ghost" size="icon" className="relative">
                 <Bell className="h-5 w-5" />
               </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-muted transition-colors">
+                  <button className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-gray-100 transition-colors">
                     <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-foreground font-medium text-sm">
                       {profile?.username?.charAt(0).toUpperCase() || "U"}
                     </div>
-                    <span className="hidden lg:inline text-sm font-medium">
-                      {profile?.username || "User"}
-                    </span>
-                    <ChevronDown className="h-4 w-4 text-muted-foreground hidden lg:block" />
+                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
+                <DropdownMenuContent align="end" className="w-56">
+                  <div className="px-2 py-2 border-b border-[#e5e7eb]">
+                    <div className="flex items-center gap-2">
+                      <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-foreground font-medium text-sm">
+                        {profile?.username?.charAt(0).toUpperCase() || "U"}
+                      </div>
+                      <span className="text-sm font-medium">
+                        {profile?.username || "User"}
+                      </span>
+                    </div>
+                  </div>
                   <DropdownMenuItem asChild>
-                    <Link href={profile?.username ? `/app/profile/${profile.username}` : "/app/settings"}>
+                    <Link href={profile?.username ? `/app/profile/${profile.username}` : "/app/settings"} className="flex items-center">
+                      <User className="h-4 w-4 mr-2" />
                       Profile
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href="/app/submissions">Submissions</Link>
+                    <Link href="/app/submissions" className="flex items-center">
+                      <Send className="h-4 w-4 mr-2" />
+                      Submissions
+                    </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href="/app/settings">Settings</Link>
+                    <Link href="/app/saved" className="flex items-center">
+                      <Heart className={cn(
+                        "h-4 w-4 mr-2",
+                        pathname === "/app/saved" && "fill-current"
+                      )} />
+                      Saved
+                    </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleSignOut} disabled={isPending}>
+                  <DropdownMenuItem onClick={toggleTheme} className="flex items-center">
+                    {theme === "dark" ? (
+                      <>
+                        <Sun className="h-4 w-4 mr-2" />
+                        Light mode
+                      </>
+                    ) : (
+                      <>
+                        <Moon className="h-4 w-4 mr-2" />
+                        Dark mode
+                      </>
+                    )}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/app/settings" className="flex items-center">
+                      <Settings className="h-4 w-4 mr-2" />
+                      Settings
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSignOut} disabled={isPending} className="flex items-center">
                     <LogOut className="h-4 w-4 mr-2" />
                     Sign out
                   </DropdownMenuItem>

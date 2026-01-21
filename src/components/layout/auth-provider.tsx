@@ -4,8 +4,11 @@ import * as React from "react";
 import type { User } from "@supabase/supabase-js";
 import type { Profile } from "@/lib/types";
 
+// Serialized user type for passing from server to client
+type SerializedUser = Pick<User, "id" | "email" | "user_metadata" | "app_metadata" | "aud" | "created_at"> | null;
+
 type AuthContextValue = {
-  user: User | null;
+  user: SerializedUser;
   profile: Profile | null;
 };
 
@@ -19,7 +22,7 @@ export function AuthProvider({
   profile,
   children,
 }: {
-  user: User | null;
+  user: SerializedUser;
   profile: Profile | null;
   children: React.ReactNode;
 }) {

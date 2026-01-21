@@ -62,7 +62,7 @@ export default async function RequestDetailPage({
 
   const { data: submissions } = await supabase
     .from("submissions")
-    .select("*, votes(vote, user_id)")
+    .select("*, votes(vote, user_id), profiles(username)")
     .eq("request_id", id)
     .order("created_at", { ascending: false });
 
@@ -148,6 +148,8 @@ export default async function RequestDetailPage({
     isFavorite = !!favorite;
   }
 
+  const proposalCount = initialSubmissions.length;
+
   return (
     <div className="space-y-6">
       {/* Breadcrumbs */}
@@ -173,13 +175,14 @@ export default async function RequestDetailPage({
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         {/* Left Column: Request Details */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="sticky top-20 space-y-6">
+          <div className="sticky top-6 space-y-6">
             <RequestCard
               request={request}
               variant="detail"
               isFavorite={isFavorite}
               images={images?.map((img: any) => img.image_url) || []}
               links={links?.map((link: any) => link.url) || []}
+              proposalCount={proposalCount}
             />
 
             {showSubmissionForm ? (

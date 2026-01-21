@@ -79,35 +79,38 @@ export function VoteButtons({
   const score = submission.score ?? 0;
 
   return (
-    <div className="flex items-center rounded-full border border-border overflow-hidden">
+    <div className="flex items-center gap-0 rounded-full border border-neutral-200 overflow-hidden h-9">
       <button
         type="button"
         onClick={() => handleVote(1)}
         disabled={isPending}
-        className="flex items-center justify-center px-2 py-1.5 hover:bg-gray-100 transition-colors"
+        className="flex items-center justify-center h-full px-2.5 hover:bg-neutral-100 transition-colors text-neutral-400 hover:text-neutral-600"
+        aria-label="Upvote"
       >
         <ChevronUp
           className={cn(
             "h-4 w-4",
-            submission.has_voted === 1 ? "text-orange-500" : "text-gray-600"
+            submission.has_voted === 1 ? "text-[#FF5F00]" : "text-neutral-400"
           )}
         />
       </button>
-      <div className="h-6 w-px bg-border"></div>
-      <div className="px-3 py-1.5 min-w-[2.5rem] text-center">
-        <span className="text-sm font-semibold text-foreground">{score}</span>
-      </div>
-      <div className="h-6 w-px bg-border"></div>
+      <span className={cn(
+        "text-sm min-w-[1.5rem] text-center font-semibold px-1 flex items-center h-full",
+        submission.has_voted === 1 ? "text-[#FF5F00]" : submission.has_voted === -1 ? "text-[#7755FF]" : "text-neutral-400"
+      )}>
+        {score}
+      </span>
       <button
         type="button"
         onClick={() => handleVote(-1)}
         disabled={isPending}
-        className="flex items-center justify-center px-2 py-1.5 hover:bg-gray-100 transition-colors"
+        className="flex items-center justify-center h-full px-2.5 hover:bg-neutral-100 transition-colors text-neutral-400 hover:text-neutral-600"
+        aria-label="Downvote"
       >
         <ChevronDown
           className={cn(
             "h-4 w-4",
-            submission.has_voted === -1 ? "text-orange-500" : "text-gray-600"
+            submission.has_voted === -1 ? "text-[#7755FF]" : "text-neutral-400"
           )}
         />
       </button>
