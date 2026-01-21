@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ThumbsUp, ThumbsDown } from "lucide-react";
+import { ChevronUp, ChevronDown } from "lucide-react";
 import { voteAction } from "@/actions/vote.actions";
 import type { Submission } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -76,35 +76,40 @@ export function VoteButtons({
     startTransition(() => mutateVote.mutate(vote));
   };
 
+  const score = submission.score ?? 0;
+
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex items-center rounded-full border border-border overflow-hidden">
       <button
         type="button"
         onClick={() => handleVote(1)}
         disabled={isPending}
-        className={cn(
-          "flex items-center gap-1 rounded-full border border-border px-3 py-1 text-xs font-semibold",
-          submission.has_voted === 1
-            ? "bg-foreground text-primary-foreground"
-            : "bg-white/70 text-gray-600"
-        )}
+        className="flex items-center justify-center px-2 py-1.5 hover:bg-gray-100 transition-colors"
       >
-        <ThumbsUp className="h-3 w-3" />
-        Upvote
+        <ChevronUp
+          className={cn(
+            "h-4 w-4",
+            submission.has_voted === 1 ? "text-orange-500" : "text-gray-600"
+          )}
+        />
       </button>
+      <div className="h-6 w-px bg-border"></div>
+      <div className="px-3 py-1.5 min-w-[2.5rem] text-center">
+        <span className="text-sm font-semibold text-foreground">{score}</span>
+      </div>
+      <div className="h-6 w-px bg-border"></div>
       <button
         type="button"
         onClick={() => handleVote(-1)}
         disabled={isPending}
-        className={cn(
-          "flex items-center gap-1 rounded-full border border-border px-3 py-1 text-xs font-semibold",
-          submission.has_voted === -1
-            ? "bg-accent text-accent-foreground"
-            : "bg-white/70 text-gray-600"
-        )}
+        className="flex items-center justify-center px-2 py-1.5 hover:bg-gray-100 transition-colors"
       >
-        <ThumbsDown className="h-3 w-3" />
-        Downvote
+        <ChevronDown
+          className={cn(
+            "h-4 w-4",
+            submission.has_voted === -1 ? "text-orange-500" : "text-gray-600"
+          )}
+        />
       </button>
     </div>
   );

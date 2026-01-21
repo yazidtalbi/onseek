@@ -81,7 +81,7 @@ function RequestCardComponent({
   const visibleDealbreakers = dealbreakers.slice(0, maxDealbreakers);
   const remainingPreferences = preferences.length - maxPreferences;
   const remainingDealbreakers = dealbreakers.length - maxDealbreakers;
-
+  
   const cardContent = (
     <CardContent className={cn("flex flex-col", isFeed ? "p-6" : "p-7")}>
         {/* Header: Posted time, Title, and Actions */}
@@ -90,10 +90,10 @@ function RequestCardComponent({
             <p className="text-xs text-gray-500">Requested {timeAgo}</p>
             {/* Title: Primary, outcome-oriented, max 2 lines */}
             <h3
-              className={cn(
+          className={cn(
                 "font-medium leading-snug line-clamp-2 text-[20px] text-foreground"
-              )}
-            >
+          )}
+        >
               {request.title}
             </h3>
           </div>
@@ -139,42 +139,42 @@ function RequestCardComponent({
         {(visiblePreferences.length > 0 || visibleDealbreakers.length > 0) && (
           <div className="space-y-3 mb-4">
             {/* Preferences */}
-            {visiblePreferences.length > 0 && (
+        {visiblePreferences.length > 0 && (
               <div className="flex flex-wrap gap-2">
                 {visiblePreferences.map((pref: { label: string }, idx: number) => (
-                  <span
-                    key={idx}
+                <span
+                  key={idx}
                     className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-gray-100 text-sm text-gray-700"
-                  >
+                >
                     <span className="text-green-500 font-semibold text-base leading-none">+</span>
-                    <span>{pref.label}</span>
-                  </span>
-                ))}
-                {remainingPreferences > 0 && (
+                  <span>{pref.label}</span>
+                </span>
+              ))}
+              {remainingPreferences > 0 && (
                   <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-gray-100 text-sm text-gray-700">
-                    +{remainingPreferences} more
-                  </span>
-                )}
-              </div>
-            )}
+                  +{remainingPreferences} more
+                </span>
+              )}
+          </div>
+        )}
 
             {/* Dealbreakers */}
-            {visibleDealbreakers.length > 0 && (
+        {visibleDealbreakers.length > 0 && (
               <div className="flex flex-wrap gap-2">
                 {visibleDealbreakers.map((deal: { label: string }, idx: number) => (
-                  <span
-                    key={idx}
+                <span
+                  key={idx}
                     className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-gray-100 text-sm text-gray-700"
-                  >
+                >
                     <span className="text-[#FF5F00] font-semibold text-base leading-none">-</span>
-                    <span>{deal.label}</span>
-                  </span>
-                ))}
-                {remainingDealbreakers > 0 && (
+                  <span>{deal.label}</span>
+                </span>
+              ))}
+              {remainingDealbreakers > 0 && (
                   <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-gray-100 text-sm text-gray-700">
-                    +{remainingDealbreakers} more
-                  </span>
-                )}
+                  +{remainingDealbreakers} more
+                </span>
+              )}
               </div>
             )}
           </div>
@@ -254,13 +254,13 @@ function RequestCardComponent({
         )}
 
         {/* Footer: Meta info */}
-        {request.submissionCount !== undefined && request.submissionCount > 0 && (
+          {request.submissionCount !== undefined && request.submissionCount > 0 && (
           <div className="flex items-center gap-2 flex-wrap pt-4 mt-auto">
             <span className="text-sm text-gray-500">
               {formatSubmissionCount(request.submissionCount)} proposals
             </span>
           </div>
-        )}
+          )}
     </CardContent>
   );
 
@@ -291,10 +291,10 @@ function RequestCardComponent({
             )}
           >
             {cardContent}
-          </Card>
-        </Link>
+      </Card>
+    </Link>
       )}
-    </div>
+  </div>
   );
 }
 

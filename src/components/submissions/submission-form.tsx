@@ -12,11 +12,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Plus, Loader2, Upload, ZoomIn, X } from "lucide-react";
 import Image from "next/image";
 import { useAuth } from "@/components/layout/auth-provider";
+import { getSavedPersonalItemsAction, savePersonalItemAction } from "@/actions/saved-items.actions";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { cn } from "@/lib/utils";
 
 type Values = z.infer<typeof submissionSchema>;
 
@@ -35,6 +44,9 @@ export function SubmissionForm({ requestId, requestBudgetMax, requestDescription
   const [uploadedImage, setUploadedImage] = React.useState<string | null>(null);
   const [uploadedImageFile, setUploadedImageFile] = React.useState<File | null>(null);
   const [zoomImage, setZoomImage] = React.useState<string | null>(null);
+  const [savedItems, setSavedItems] = React.useState<any[]>([]);
+  const [isLoadingSavedItems, setIsLoadingSavedItems] = React.useState(false);
+  const [saveItem, setSaveItem] = React.useState(true); // Checked by default for personal items
   const form = useForm<Values>({
     resolver: zodResolver(submissionSchema) as any,
     defaultValues: {
@@ -49,6 +61,40 @@ export function SubmissionForm({ requestId, requestBudgetMax, requestDescription
   const submissionType = form.watch("submissionType");
   const url = form.watch("url");
 
+  // Load saved items when modal opens and user selects personal item type
+  React.useEffect(() => {
+    if (isExpanded && submissionType === "personal" && user) {
+      loadSavedItems();
+    }
+  }, [isExpanded, submissionType, user]);
+
+  const loadSavedItems = async () => {
+    setIsLoadingSavedItems(true);
+    try {
+      const result = await getSavedPersonalItemsAction();
+      if (result.data) {
+        setSavedItems(result.data);
+      }
+    } catch (err) {
+      console.error("Error loading saved items:", err);
+    } finally {
+      setIsLoadingSavedItems(false);
+    }
+  };
+
+  const handleSelectSavedItem = (itemId: string) => {
+    const item = savedItems.find((i) => i.id === itemId);
+    if (item) {
+      form.setValue("articleName", item.article_name || "");
+      form.setValue("price", item.price || null);
+      form.setValue("notes", item.description || "");
+      if (item.image_url) {
+        setUploadedImage(item.image_url);
+        setUploadedImageFile(null); // We don't have the file, just the URL
+      }
+    }
+  };
+
   // Clear preview when switching submission type
   React.useEffect(() => {
     if (submissionType !== "link") {
@@ -56,12 +102,14 @@ export function SubmissionForm({ requestId, requestBudgetMax, requestDescription
       setImageError(false);
       setUrlFetchAttempted(false);
       setUrlFetchCompleted(false);
+      setSaveItem(true); // Enable save checkbox by default for personal items
     } else {
       // Reset fetch state when switching back to link
       if (!url) {
         setUrlFetchAttempted(false);
         setUrlFetchCompleted(false);
       }
+      setSaveItem(false); // Disable save checkbox for link submissions
     }
   }, [submissionType, url]);
 
@@ -142,7 +190,29 @@ export function SubmissionForm({ requestId, requestBudgetMax, requestDescription
     }
   };
 
-  const onSubmit = (values: Values) => {
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      setIsExpanded(false);
+      form.reset();
+      setError(null);
+      setPreviewImage(null);
+      setImageError(false);
+      setUploadedImage(null);
+      setUploadedImageFile(null);
+      setUrlFetchAttempted(false);
+      setUrlFetchCompleted(false);
+    } else {
+      if (!user) {
+        // Redirect to login with return URL
+        const currentPath = window.location.pathname + window.location.search;
+        router.push(`/login?redirectTo=${encodeURIComponent(currentPath)}`);
+        return;
+      }
+      setIsExpanded(true);
+    }
+  };
+
+  const onSubmit = async (values: Values) => {
     const formData = new FormData();
     formData.set("requestId", requestId);
     formData.set("submissionType", values.submissionType);
@@ -154,75 +224,151 @@ export function SubmissionForm({ requestId, requestBudgetMax, requestDescription
       Number.isFinite(values.price) ? String(values.price) : ""
     );
     formData.set("notes", values.notes || "");
-    // Add uploaded image if available
+    
+    // Upload image first if it's a personal item submission
     if (uploadedImageFile && values.submissionType === "personal") {
-      formData.set("image", uploadedImageFile);
-    }
-    startTransition(async () => {
-      const res = await createSubmissionAction(formData);
-      setError(res?.error || null);
-      if (!res?.error) {
-        form.reset();
-        setIsExpanded(false);
-        setPreviewImage(null);
-        setImageError(false);
-        setUploadedImage(null);
-        setUploadedImageFile(null);
-        setUrlFetchAttempted(false);
-        setUrlFetchCompleted(false);
-        // Invalidate React Query cache for submissions
-        queryClient.invalidateQueries({ queryKey: ["submissions", requestId] });
-        // Refresh server components to get updated data
-        router.refresh();
-      }
-    });
-  };
-
-  if (!isExpanded) {
-    return (
-      <Button
-        type="button"
-        variant="outline"
-        className="w-full"
-        onClick={() => {
-          if (!user) {
-            // Redirect to login with return URL
-            const currentPath = window.location.pathname + window.location.search;
-            router.push(`/login?redirectTo=${encodeURIComponent(currentPath)}`);
-          } else {
-            setIsExpanded(true);
+      startTransition(async () => {
+        try {
+          const uploadFormData = new FormData();
+          uploadFormData.append("images", uploadedImageFile);
+          
+          const uploadResponse = await fetch("/api/upload-image", {
+            method: "POST",
+            body: uploadFormData,
+          });
+          
+          if (!uploadResponse.ok) {
+            const errorData = await uploadResponse.json();
+            setError(errorData.error || "Failed to upload image");
+            return;
           }
-        }}
-      >
-        <Plus className="h-4 w-4 mr-2" />
-        Submit a link
-      </Button>
-    );
-  }
+          
+          const uploadData = await uploadResponse.json();
+          if (uploadData.urls && uploadData.urls.length > 0) {
+            formData.set("imageUrl", uploadData.urls[0]);
+          }
+          
+          // Now create the submission with the image URL
+          const res = await createSubmissionAction(formData);
+          setError(res?.error || null);
+          if (!res?.error) {
+            // Save item if checkbox is checked
+            if (saveItem && values.articleName) {
+              try {
+                const saveFormData = new FormData();
+                saveFormData.set("articleName", values.articleName);
+                saveFormData.set("description", values.notes || "");
+                saveFormData.set("price", values.price ? String(values.price) : "");
+                if (uploadData.urls && uploadData.urls.length > 0) {
+                  saveFormData.set("imageUrl", uploadData.urls[0]);
+                }
+                await savePersonalItemAction(saveFormData);
+              } catch (err) {
+                console.error("Error saving item:", err);
+                // Don't fail the submission if save fails
+              }
+            }
+            form.reset();
+            handleOpenChange(false);
+            setPreviewImage(null);
+            setImageError(false);
+            setUploadedImage(null);
+            setUploadedImageFile(null);
+            setUrlFetchAttempted(false);
+            setUrlFetchCompleted(false);
+            // Invalidate React Query cache for submissions
+            queryClient.invalidateQueries({ queryKey: ["submissions", requestId] });
+            // Refresh server components to get updated data
+            router.refresh();
+          }
+        } catch (err) {
+          setError("Failed to upload image");
+          console.error("Upload error:", err);
+        }
+      });
+    } else {
+      // No image upload needed, proceed directly
+      startTransition(async () => {
+        const res = await createSubmissionAction(formData);
+        setError(res?.error || null);
+        if (!res?.error) {
+          // Save item if checkbox is checked and it's a personal item
+          if (saveItem && values.submissionType === "personal" && values.articleName) {
+            try {
+              const saveFormData = new FormData();
+              saveFormData.set("articleName", values.articleName);
+              saveFormData.set("description", values.notes || "");
+              saveFormData.set("price", values.price ? String(values.price) : "");
+              // For personal items without new upload, check if we have an existing uploaded image URL
+              if (uploadedImage && uploadedImage.startsWith("http")) {
+                saveFormData.set("imageUrl", uploadedImage);
+              }
+              await savePersonalItemAction(saveFormData);
+            } catch (err) {
+              console.error("Error saving item:", err);
+              // Don't fail the submission if save fails
+            }
+          }
+          form.reset();
+          handleOpenChange(false);
+          setPreviewImage(null);
+          setImageError(false);
+          setUploadedImage(null);
+          setUploadedImageFile(null);
+          setUrlFetchAttempted(false);
+          setUrlFetchCompleted(false);
+          // Invalidate React Query cache for submissions
+          queryClient.invalidateQueries({ queryKey: ["submissions", requestId] });
+          // Refresh server components to get updated data
+          router.refresh();
+        }
+      });
+    }
+  };
 
   return (
     <>
-    <Card className="border-[#e5e7eb] bg-white/80">
-      <CardContent className="p-6">
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" noValidate>
+      <Button
+        type="button"
+        className="w-full rounded-full bg-[#212733] text-white hover:bg-[#212733]/90"
+        onClick={() => handleOpenChange(true)}
+      >
+        <Plus className="h-4 w-4 mr-2" />
+        Submit a proposal
+      </Button>
+
+      <Dialog open={isExpanded} onOpenChange={handleOpenChange}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader className="mb-4">
+            <DialogTitle className="text-xl font-semibold">Submit a proposal</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5" noValidate>
           {/* Submission Type Selection */}
           <div className="flex gap-2">
-              <Button
+              <button
                 type="button"
-                variant={submissionType === "link" ? "default" : "outline"}
-                className="flex-1"
+                className={cn(
+                  "flex-1 rounded-full px-4 py-2 text-sm font-medium transition-colors cursor-pointer",
+                  submissionType === "link"
+                    ? "bg-gray-100 text-gray-900"
+                    : "bg-transparent text-gray-400 hover:text-gray-600"
+                )}
                 onClick={() => form.setValue("submissionType", "link")}
               >
-                Submit a link
-              </Button>
-              <Button
+                Link
+              </button>
+              <button
                 type="button"
-                variant={submissionType === "personal" ? "default" : "outline"}
-                className="flex-1"
+                className={cn(
+                  "flex-1 rounded-full px-4 py-2 text-sm font-medium transition-colors cursor-pointer",
+                  submissionType === "personal"
+                    ? "bg-gray-100 text-gray-900"
+                    : "bg-transparent text-gray-400 hover:text-gray-600"
+                )}
                 onClick={() => form.setValue("submissionType", "personal")}
               >
-                Submit personal item
-              </Button>
+                Personal item
+              </button>
           </div>
 
           {/* URL field - only for link submissions */}
@@ -259,17 +405,40 @@ export function SubmissionForm({ requestId, requestBudgetMax, requestDescription
             </div>
           )}
 
-          {/* Description for personal items */}
+          {/* Personal items fields */}
           {submissionType === "personal" && (
-            <div className="space-y-2">
-              <Label htmlFor="personalDescription">Item description</Label>
-              <Textarea 
-                id="personalDescription"
-                placeholder="Describe the item you have..."
-                {...form.register("notes")} 
-              />
-              
-              {/* Image upload for personal items */}
+            <div className="space-y-3">
+              {/* Saved Items Selector */}
+              {savedItems.length > 0 && (
+                <div className="space-y-2">
+                  <Label>Load from saved items (optional)</Label>
+                  <Select onValueChange={handleSelectSavedItem}>
+                    <SelectTrigger className="rounded-lg">
+                      <SelectValue placeholder="Select a saved item..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {savedItems.map((item) => (
+                        <SelectItem key={item.id} value={item.id}>
+                          {item.article_name} {item.price ? `- $${item.price}` : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {/* Article name - first for personal items */}
+              <div className="space-y-2">
+                <Label htmlFor="articleName">Article name</Label>
+                <Input 
+                  id="articleName" 
+                  className="rounded-lg"
+                  placeholder="e.g., iPhone 15 Pro, Nike Air Max..."
+                  {...form.register("articleName")}
+                />
+              </div>
+
+              {/* Image upload for personal items - second */}
               <div className="space-y-2">
                 <Label htmlFor="imageUpload">Item image (optional)</Label>
                 <div className="flex items-center gap-2">
@@ -314,11 +483,33 @@ export function SubmissionForm({ requestId, requestBudgetMax, requestDescription
                   </div>
                 )}
               </div>
+
+              {/* Description - third for personal items */}
+              <div className="space-y-2">
+                <Label htmlFor="personalDescription">Item description</Label>
+                <Textarea 
+                  id="personalDescription"
+                  placeholder="Describe the item you have..."
+                  {...form.register("notes")} 
+                />
+              </div>
+
+              {/* Price - fourth for personal items */}
+              <div className="space-y-2">
+                <Label htmlFor="price">Price</Label>
+                <Input
+                  id="price"
+                  type="number"
+                  step="0.01"
+                  className="rounded-lg"
+                  {...form.register("price", { valueAsNumber: true })}
+                />
+              </div>
             </div>
           )}
 
-          {/* Show these fields only after URL fetch is attempted (for link) or always (for personal) */}
-          {(submissionType === "personal" || urlFetchAttempted) && (
+          {/* Show these fields only after URL fetch is attempted (for link submissions) */}
+          {submissionType === "link" && urlFetchAttempted && (
             <>
               <div className="space-y-2">
                 <Label htmlFor="articleName">Article name</Label>
@@ -328,9 +519,9 @@ export function SubmissionForm({ requestId, requestBudgetMax, requestDescription
                     className="rounded-lg pr-10"
                     placeholder="e.g., iPhone 15 Pro, Nike Air Max..."
                     {...form.register("articleName")}
-                    disabled={isLoadingPreview && submissionType === "link"}
+                    disabled={isLoadingPreview}
                   />
-                  {isLoadingPreview && submissionType === "link" && (
+                  {isLoadingPreview && (
                     <div className="absolute right-3 top-1/2 -translate-y-1/2">
                       <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
                     </div>
@@ -347,42 +538,52 @@ export function SubmissionForm({ requestId, requestBudgetMax, requestDescription
                   {...form.register("price", { valueAsNumber: true })}
                 />
               </div>
-              {submissionType === "link" && (
-                <div className="space-y-2">
-                  <Label htmlFor="notes">Why it matches</Label>
-                  <Textarea id="notes" {...form.register("notes")} />
-                </div>
-              )}
+              <div className="space-y-2">
+                <Label htmlFor="notes">Why it matches</Label>
+                <Textarea id="notes" {...form.register("notes")} />
+              </div>
             </>
           )}
 
-          {error ? <p className="text-sm text-red-600">{error}</p> : null}
-          <div className="flex gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              className="flex-1"
-              onClick={() => {
-                setIsExpanded(false);
-                form.reset();
-                setError(null);
-                setPreviewImage(null);
-                setImageError(false);
-                setUploadedImage(null);
-                setUploadedImageFile(null);
-                setUrlFetchAttempted(false);
-                setUrlFetchCompleted(false);
-              }}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" variant="accent" className="flex-1" disabled={isPending}>
-              {isPending ? "Submitting..." : submissionType === "link" ? "Submit link" : "Submit item"}
-            </Button>
-          </div>
-        </form>
-      </CardContent>
-    </Card>
+          {/* Save item checkbox for personal items */}
+          {submissionType === "personal" && (
+            <div className="flex items-center space-x-2 pt-2">
+              <Checkbox
+                id="saveItem"
+                checked={saveItem}
+                onCheckedChange={(checked) => setSaveItem(checked === true)}
+              />
+              <label
+                htmlFor="saveItem"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+              >
+                Save item for later / future proposals
+              </label>
+            </div>
+          )}
+
+            {error ? <p className="text-sm text-red-600">{error}</p> : null}
+            <div className="flex gap-2 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1 rounded-full"
+                onClick={() => handleOpenChange(false)}
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="submit" 
+                variant="default"
+                className="flex-1 rounded-full !bg-[#212733] !text-white hover:!bg-[#212733]/90"
+                disabled={isPending}
+              >
+                {isPending ? "Submitting..." : submissionType === "link" ? "Submit link" : "Submit item"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     {zoomImage && (
       <Dialog open={!!zoomImage} onOpenChange={() => setZoomImage(null)}>
         <DialogContent className="max-w-4xl p-0 bg-transparent border-none">

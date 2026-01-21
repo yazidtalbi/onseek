@@ -379,7 +379,7 @@ export function RequestForm({ onSuccess }: { onSuccess?: () => void }) {
         {/* Preferences and Dealbreakers - Two Columns */}
         <div className="grid gap-4 md:grid-cols-2">
           {/* Preferences */}
-          <div className="space-y-3">
+        <div className="space-y-3">
             <Label htmlFor="preferences">Preferences (Optional)</Label>
             <div className="flex gap-2">
               <Input
@@ -426,16 +426,16 @@ export function RequestForm({ onSuccess }: { onSuccess?: () => void }) {
                     {item.note && (
                       <span className="text-xs text-gray-500">({item.note})</span>
                     )}
-                    <button
-                      type="button"
+              <button
+                type="button"
                       onClick={() => removePreferenceOrDealbreaker(index, "preferences")}
                       className="text-gray-600 hover:text-foreground ml-1"
-                    >
+              >
                       <X className="h-3 w-3" />
-                    </button>
+              </button>
                   </div>
-                ))}
-              </div>
+            ))}
+          </div>
             )}
           </div>
 
@@ -497,7 +497,7 @@ export function RequestForm({ onSuccess }: { onSuccess?: () => void }) {
                   </div>
                 ))}
               </div>
-            )}
+          )}
           </div>
         </div>
       </section>

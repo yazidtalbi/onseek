@@ -78,21 +78,24 @@ export async function createSubmissionAction(formData: FormData) {
   // For personal items, use a placeholder URL or store in notes
   let url = parsed.data.url;
   let storeName = parsed.data.articleName;
+  let imageUrl: string | null = null;
   
   if (submissionType === "personal") {
     url = "personal-item"; // Placeholder for personal items
     if (!storeName) {
       storeName = "Personal Item";
     }
+    // Get image URL from formData for personal items
+    const imageUrlString = String(formData.get("imageUrl") || "");
+    if (imageUrlString) {
+      imageUrl = imageUrlString;
+    }
   } else if (url) {
     storeName = parseStoreName(url, storeName);
   }
 
-  // Add submission type info to notes
+  // Notes
   let notes = parsed.data.notes || "";
-  if (submissionType === "personal") {
-    notes = `[Personal Item] ${notes}`;
-  }
 
   const { data: submission, error } = await supabase
     .from("submissions")
@@ -104,6 +107,7 @@ export async function createSubmissionAction(formData: FormData) {
       price: parsed.data.price ?? null,
       shipping_cost: null,
       notes: notes.trim() || null,
+      image_url: imageUrl,
     })
     .select("id")
     .single();

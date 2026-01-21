@@ -102,8 +102,8 @@ export function SubmissionList({
   }, [data, sortBy]);
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-end">
+    <div>
+      <div className="flex items-center justify-end mb-4">
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted-foreground">Sort by:</span>
           <Select value={sortBy} onValueChange={(value: "best" | "newest" | "price") => setSortBy(value)}>
@@ -118,7 +118,7 @@ export function SubmissionList({
           </Select>
         </div>
       </div>
-      {sorted.map((submission) => (
+      {sorted.map((submission, index) => (
         <SubmissionCard
           key={submission.id}
           submission={submission}
@@ -130,6 +130,8 @@ export function SubmissionList({
             setLocalStatus("solved");
           }}
           disableWinnerAction={localStatus !== "open"}
+          isFirst={index === 0}
+          isLast={index === sorted.length - 1}
         />
       ))}
     </div>

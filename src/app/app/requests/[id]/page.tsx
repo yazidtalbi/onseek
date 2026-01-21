@@ -93,7 +93,7 @@ export default async function RequestDetailPage({
         if (!similarRequestImages[img.request_id]) {
           similarRequestImages[img.request_id] = [];
         }
-        similarRequestImages[img.request_id].push(img.image_url);
+          similarRequestImages[img.request_id].push(img.image_url);
       });
     }
   }
@@ -170,26 +170,26 @@ export default async function RequestDetailPage({
       </nav>
 
       {/* Two Column Layout: Request on Left, Submissions on Right */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         {/* Left Column: Request Details */}
-        <div className="lg:col-span-1 space-y-6">
-          <RequestCard
-            request={request}
-            variant="detail"
-            isFavorite={isFavorite}
-            images={images?.map((img: any) => img.image_url) || []}
-            links={links?.map((link: any) => link.url) || []}
-          />
+        <div className="lg:col-span-2 space-y-6">
+          <div className="sticky top-20 space-y-6">
+            <RequestCard
+              request={request}
+              variant="detail"
+              isFavorite={isFavorite}
+              images={images?.map((img: any) => img.image_url) || []}
+              links={links?.map((link: any) => link.url) || []}
+            />
 
-          {showSubmissionForm ? (
-            <div>
+            {showSubmissionForm ? (
               <SubmissionForm requestId={request.id} requestBudgetMax={request.budget_max} requestDescription={request.description} />
-            </div>
-          ) : null}
+            ) : null}
+          </div>
         </div>
 
         {/* Right Column: Submissions */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-3 space-y-6">
           <SubmissionList
             requestId={request.id}
             initialSubmissions={initialSubmissions}
@@ -214,6 +214,8 @@ export default async function RequestDetailPage({
                 variant="feed"
                 images={similarRequestImages[similarRequest.id] || []}
                 isFavorite={similarRequestFavorites.has(similarRequest.id)}
+                isFirst={true}
+                isLast={true}
               />
             ))}
           </div>

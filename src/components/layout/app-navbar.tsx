@@ -132,10 +132,10 @@ export function AppNavbar() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
-                  className={cn(
-                    "px-3 py-2 text-sm font-medium transition-colors whitespace-nowrap flex items-center gap-1",
+                className={cn(
+                  "px-3 py-2 text-sm font-medium transition-colors whitespace-nowrap flex items-center gap-1",
                        pathname === "/" || pathname.startsWith("/app/category") || pathname.startsWith("/app/requests")
-                           ? "text-[#7755FF]"
+                           ? "text-foreground"
                            : "text-gray-600 hover:text-gray-400"
                        )}
                      >
@@ -175,9 +175,9 @@ export function AppNavbar() {
           <div className="flex-1 flex justify-center max-w-md mx-4">
             <form action="/search" method="get" className="relative w-full flex items-center">
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  name="q"
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                name="q"
                   placeholder="Search..."
                   className="pl-9 pr-32 bg-white border-r-0 border-border w-full rounded-l-full rounded-r-none"
                 />

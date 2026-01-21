@@ -37,6 +37,7 @@ export type Submission = {
   price: number | null;
   shipping_cost: number | null;
   notes: string | null;
+  image_url: string | null;
   created_at: string;
   updated_at: string;
   score?: number | null;
