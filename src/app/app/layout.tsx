@@ -32,7 +32,6 @@ export default async function AppLayout({
       await supabase.from("profiles").upsert({
         id: user.id,
         username: user.email?.split("@")[0] || `user-${user.id.slice(0, 6)}`,
-        display_name: user.user_metadata?.full_name || "Onseek member",
       });
       const { data } = await supabase
         .from("profiles")
@@ -58,7 +57,7 @@ export default async function AppLayout({
 
   return (
     <AuthProvider user={serializedUser} profile={resolvedProfile ?? null}>
-      <div className="flex flex-col min-h-screen bg-white pb-24">
+      <div className="flex flex-col min-h-screen bg-background pb-24">
         <AppNavbar />
         <main className="flex-1 w-full px-4 py-8 md:px-8">
           <div className="mx-auto max-w-5xl w-full">{children}</div>

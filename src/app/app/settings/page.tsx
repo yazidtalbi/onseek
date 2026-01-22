@@ -1,10 +1,11 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { ProfileForm } from "@/components/profile/profile-form";
+import { ContactInfoForm } from "@/components/profile/contact-info-form";
 import { ThemeToggle } from "@/components/settings/theme-toggle";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { signOutAction } from "@/actions/auth.actions";
-import { Settings, User, Mail, Lock, Trash2, Palette } from "lucide-react";
+import { Settings, User, Mail, Lock, Trash2, Palette, Phone } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -29,7 +30,7 @@ export default async function SettingsPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="max-w-2xl mx-auto space-y-8">
       <div className="space-y-1">
         <h1 className="text-2xl font-semibold flex items-center gap-2">
           <Settings className="h-6 w-6" />
@@ -54,6 +55,22 @@ export default async function SettingsPage() {
               </p>
             </div>
             <ProfileForm profile={profile} />
+          </CardContent>
+        </Card>
+
+        {/* Contact Information Section */}
+        <Card className="border-border bg-card">
+          <CardContent className="p-6 space-y-6">
+            <div className="space-y-1">
+              <h2 className="text-lg font-semibold flex items-center gap-2">
+                <Phone className="h-5 w-5" />
+                Contact Information
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Add your contact details for personal item sales. Only visible to request owners.
+              </p>
+            </div>
+            <ContactInfoForm profile={profile} />
           </CardContent>
         </Card>
 

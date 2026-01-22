@@ -38,12 +38,14 @@ export function SubmissionList({
   winnerId,
   canSelectWinner,
   requestStatus,
+  requestOwnerId,
 }: {
   requestId: string;
   initialSubmissions: Submission[];
   winnerId?: string | null;
   canSelectWinner?: boolean;
   requestStatus?: "open" | "closed" | "solved";
+  requestOwnerId?: string;
 }) {
   const [localWinner, setLocalWinner] = React.useState<string | null>(
     winnerId ?? null
@@ -135,6 +137,7 @@ export function SubmissionList({
           disableWinnerAction={localStatus !== "open"}
           isFirst={index === 0}
           isLast={index === sorted.length - 1}
+          requestOwnerId={requestOwnerId}
         />
       ))}
     </div>

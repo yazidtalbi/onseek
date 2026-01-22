@@ -116,22 +116,8 @@ export async function createSubmissionAction(formData: FormData) {
     return { error: error?.message || "Failed to create submission." };
   }
 
-  // Notify request owner of new submission - efficient single query
-  // Get request owner in same query batch to minimize database calls
-  const { data: requestOwner } = await supabase
-    .from("requests")
-    .select("user_id")
-    .eq("id", requestId)
-    .single();
-
-  if (requestOwner?.user_id && requestOwner.user_id !== user.id) {
-    // Create notification efficiently - single insert operation
-    await supabase.from("notifications").insert({
-      user_id: requestOwner.user_id,
-      type: "new_submission",
-      payload: { request_id: requestId, submission_id: submission.id },
-    });
-  }
+  // Notification is now handled automatically by database trigger (more efficient)
+  // No need to manually create notification here
 
   revalidatePath(`/app/requests/${requestId}`);
   revalidatePath("/app/submissions");

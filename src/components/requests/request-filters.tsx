@@ -4,7 +4,8 @@ import { useState } from "react";
 import * as React from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Filter } from "lucide-react";
+import { Filter, LayoutList, Grid3x3 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -12,7 +13,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CountryCombobox } from "@/components/ui/country-combobox";
@@ -21,7 +21,15 @@ import { MAIN_CATEGORIES } from "@/lib/categories";
 
 const categories = ["All", ...MAIN_CATEGORIES];
 
-export function RequestFilters() {
+export function RequestFilters({ 
+  viewMode, 
+  onViewModeChange,
+  hideViewToggle = false
+}: { 
+  viewMode?: "list" | "grid";
+  onViewModeChange?: (mode: "list" | "grid") => void;
+  hideViewToggle?: boolean;
+}) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const currentCategory = searchParams.get("category") || "All";
@@ -83,36 +91,68 @@ export function RequestFilters() {
   return (
     <div className="space-y-4">
       {/* Top Row: Sort and Filters */}
-      <div className="flex items-center gap-4 w-full overflow-x-auto pb-2">
-        {/* Popular Dropdown */}
-        <Select
-          value={sort}
-          onValueChange={(value) => updateParam("sort", value)}
-        >
-          <SelectTrigger className="w-[120px] h-9 rounded-full border border-[#e5e7eb] bg-white text-sm font-medium shrink-0">
-            <SelectValue>
-              {sort === "newest" ? "Newest" : sort === "active" ? "Most active" : "Popular"}
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="newest">Newest</SelectItem>
-            <SelectItem value="active">Most active</SelectItem>
-          </SelectContent>
-        </Select>
+      <div className="flex items-center justify-between gap-4 w-full overflow-x-auto pb-2">
+        <div className="flex items-center gap-4 shrink-0">
+          {/* Popular Dropdown */}
+          <Select
+            value={sort}
+            onValueChange={(value) => updateParam("sort", value)}
+          >
+            <SelectTrigger className="w-[120px] h-9 rounded-full border border-[#e5e7eb] bg-white text-sm font-medium shrink-0">
+              <SelectValue>
+                {sort === "newest" ? "Newest" : sort === "active" ? "Most active" : "Popular"}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="newest">Newest</SelectItem>
+              <SelectItem value="active">Most active</SelectItem>
+            </SelectContent>
+          </Select>
 
-        {/* Filters Button - Right Side */}
-        <Button
-          variant="outline"
-          size="sm"
-          className={cn(
-            "rounded-full border border-[#e5e7eb] bg-white h-9 text-sm font-medium shrink-0",
-            hasActiveFilters && "border-foreground"
-          )}
-          onClick={() => setShowFilters(!showFilters)}
-        >
-          <Filter className="h-4 w-4 mr-2" />
-          Filters
-        </Button>
+          {/* Filters Button */}
+          <Button
+            variant="outline"
+            size="sm"
+            className={cn(
+              "rounded-full border border-[#e5e7eb] bg-white h-9 text-sm font-medium shrink-0",
+              hasActiveFilters && "border-foreground"
+            )}
+            onClick={() => setShowFilters(!showFilters)}
+          >
+            <Filter className="h-4 w-4 mr-2" />
+            Filters
+          </Button>
+        </div>
+
+        {/* View Selector - Far Right */}
+        {!hideViewToggle && viewMode !== undefined && onViewModeChange && (
+          <div className="flex gap-1 rounded-full shrink-0">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onViewModeChange("list")}
+              className={cn(
+                "h-8 w-8 p-0 rounded-full",
+                viewMode === "list" && "bg-gray-100"
+              )}
+              title="List view"
+            >
+              <LayoutList className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onViewModeChange("grid")}
+              className={cn(
+                "h-8 w-8 p-0 rounded-full",
+                viewMode === "grid" && "bg-gray-100"
+              )}
+              title="Grid view"
+            >
+              <Grid3x3 className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Filter Inputs Row - Expandable */}

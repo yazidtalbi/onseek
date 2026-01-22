@@ -1,5 +1,5 @@
 /**
- * Format budget range for display
+ * Format budget for display (max only)
  */
 export function formatBudget(
   min: number | null | undefined,
@@ -8,11 +8,7 @@ export function formatBudget(
 ): string {
   const symbol = currency === "USD" ? "$" : currency;
   
-  if (min && max) {
-    return `${symbol}${min} - ${symbol}${max}`;
-  } else if (min) {
-    return `From ${symbol}${min}`;
-  } else if (max) {
+  if (max) {
     return `Up to ${symbol}${max}`;
   }
   return "";

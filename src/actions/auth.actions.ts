@@ -43,7 +43,6 @@ export async function signUpAction(formData: FormData) {
     email: String(formData.get("email") || ""),
     password: String(formData.get("password") || ""),
     username: String(formData.get("username") || ""),
-    displayName: String(formData.get("displayName") || ""),
   };
 
   const parsed = signUpSchema.safeParse(payload);
@@ -66,7 +65,6 @@ export async function signUpAction(formData: FormData) {
       await supabase.from("profiles").upsert({
         id: data.user.id,
         username: parsed.data.username,
-        display_name: parsed.data.displayName,
       });
     }
 

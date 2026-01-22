@@ -21,7 +21,6 @@ export function ProfileForm({ profile }: { profile: Profile }) {
   const form = useForm<Values>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      displayName: profile.display_name || "",
       username: profile.username || "",
       bio: profile.bio || "",
     },
@@ -29,7 +28,6 @@ export function ProfileForm({ profile }: { profile: Profile }) {
 
   const onSubmit = (values: Values) => {
     const formData = new FormData();
-    formData.set("displayName", values.displayName);
     formData.set("username", values.username);
     formData.set("bio", values.bio || "");
     startTransition(async () => {
@@ -46,15 +44,6 @@ export function ProfileForm({ profile }: { profile: Profile }) {
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" noValidate>
-      <div className="space-y-2">
-        <Label htmlFor="displayName">Display name</Label>
-        <Input id="displayName" {...form.register("displayName")} />
-        {form.formState.errors.displayName ? (
-          <p className="text-xs text-red-600">
-            {form.formState.errors.displayName.message}
-          </p>
-        ) : null}
-      </div>
       <div className="space-y-2">
         <Label htmlFor="username">Username</Label>
         <Input id="username" {...form.register("username")} />
@@ -75,7 +64,7 @@ export function ProfileForm({ profile }: { profile: Profile }) {
       </div>
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
       {status ? <p className="text-sm text-emerald-700">{status}</p> : null}
-      <Button type="submit" variant="accent" className="w-full" disabled={isPending}>
+      <Button type="submit" variant="outline" className="w-full bg-gray-100 text-neutral-900 hover:bg-gray-200 border-gray-300" disabled={isPending}>
         {isPending ? "Saving..." : "Save changes"}
       </Button>
     </form>

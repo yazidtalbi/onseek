@@ -31,7 +31,7 @@ export default async function LeaderboardPage() {
                   href={`/app/profile/${profile.username}`}
                   className="text-lg font-semibold"
                 >
-                  {profile.display_name || profile.username}
+                  {profile.username}
                 </Link>
               </div>
               <div className="flex items-center gap-3">

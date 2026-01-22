@@ -1,6 +1,7 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
+import { Bell } from "lucide-react";
+import { NotificationItem } from "@/components/notifications/notification-item";
 
 export const dynamic = "force-dynamic";
 
@@ -19,37 +20,41 @@ export default async function NotificationsPage() {
     .select("*")
     .eq("user_id", user.id)
     .order("created_at", { ascending: false })
-    .limit(20);
+    .limit(50);
+
+  const unreadCount = notifications?.filter((n) => !n.read).length || 0;
 
   return (
     <div className="space-y-6">
       <div className="rounded-3xl border border-[#e5e7eb] bg-white/80 p-6">
-        <h1 className="text-3xl font-semibold">Notifications</h1>
-        <p className="text-sm text-muted-foreground">
-          Stay updated on wins, votes, and new activity.
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-semibold">Notifications</h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              Stay updated on wins, votes, and new activity.
+            </p>
+          </div>
+          {unreadCount > 0 && (
+            <Badge variant="default" className="bg-[#7755FF] text-white">
+              {unreadCount} new
+            </Badge>
+          )}
+        </div>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-3">
         {notifications?.length ? (
           notifications.map((item) => (
-            <Card key={item.id} className="border-[#e5e7eb] bg-white/80">
-              <CardContent className="flex items-center justify-between p-5">
-                <div>
-                  <p className="text-sm font-semibold">{item.type}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {new Date(item.created_at).toLocaleString()}
-                  </p>
-                </div>
-                <Badge variant={item.read ? "outline" : "muted"}>
-                  {item.read ? "Read" : "New"}
-                </Badge>
-              </CardContent>
-            </Card>
+            <NotificationItem
+              key={item.id}
+              notification={item}
+            />
           ))
         ) : (
-          <div className="rounded-2xl border border-dashed border-[#e5e7eb] bg-white/50 p-6 text-center text-sm text-gray-600">
-            No notifications yet.
+          <div className="rounded-2xl border border-dashed border-[#e5e7eb] bg-white/50 p-8 text-center text-sm text-gray-600">
+            <Bell className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+            <p className="text-base font-medium mb-2">No notifications yet</p>
+            <p className="text-sm">You'll be notified when someone responds to your requests.</p>
           </div>
         )}
       </div>

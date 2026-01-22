@@ -1,6 +1,5 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { RequestFilters } from "@/components/requests/request-filters";
-import { RequestFeed } from "@/components/requests/request-feed";
+import { RequestFeedWrapper } from "@/components/requests/request-feed-wrapper";
 import { RequestInputSection } from "@/components/requests/request-input-section";
 import { PromotionalSidebar } from "@/components/requests/promotional-sidebar";
 
@@ -152,8 +151,7 @@ export default async function AppFeedPage({
               <RequestInputSection />
             </div>
           </div>
-          <RequestFilters />
-          <RequestFeed
+          <RequestFeedWrapper
             initialRequests={requestsWithCounts}
             filters={{
               category,

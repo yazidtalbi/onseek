@@ -9,10 +9,11 @@ import { WinnerButton } from "@/components/submissions/winner-button";
 import { ReportDialog } from "@/components/reports/report-dialog";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
-import { MoreHorizontal, Link as LinkIcon } from "lucide-react";
+import { MoreHorizontal, Link as LinkIcon, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatTimeAgo } from "@/lib/utils/time";
 import { ImagePreviewDialog } from "@/components/ui/image-preview-dialog";
+import { ContactInfoDialog } from "@/components/submissions/contact-info-dialog";
 import Link from "next/link";
 import {
   DropdownMenu,
@@ -20,6 +21,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useAuth } from "@/components/layout/auth-provider";
+import { createBrowserSupabaseClient } from "@/lib/supabase/client";
+import type { Profile } from "@/lib/types";
 
 function getHost(url: string) {
   try {
@@ -38,6 +42,8 @@ export function SubmissionCard({
   disableWinnerAction,
   isFirst = false,
   isLast = false,
+  hideVotes = false,
+  requestOwnerId,
 }: {
   submission: Submission;
   requestId: string;
@@ -47,13 +53,21 @@ export function SubmissionCard({
   disableWinnerAction?: boolean;
   isFirst?: boolean;
   isLast?: boolean;
+  hideVotes?: boolean;
+  requestOwnerId?: string;
 }) {
   const host = getHost(submission.url);
   const [thumbnailUrl, setThumbnailUrl] = React.useState<string | null>(null);
   const [imageError, setImageError] = React.useState(false);
   const [reportOpen, setReportOpen] = React.useState(false);
   const [previewOpen, setPreviewOpen] = React.useState(false);
+  const [contactDialogOpen, setContactDialogOpen] = React.useState(false);
+  const [submitterProfile, setSubmitterProfile] = React.useState<Profile | null>(null);
+  const { user } = useAuth();
   const submittedAt = formatTimeAgo(submission.created_at);
+  
+  // Check if current user is the request owner
+  const isRequestOwner = user?.id === requestOwnerId;
 
   // Fetch thumbnail URL on mount or use uploaded image for personal items
   React.useEffect(() => {
@@ -87,11 +101,52 @@ export function SubmissionCard({
   // Get username from profiles relation
   const username = (submission as any).profiles?.username;
 
+  // Fetch submitter profile when contact dialog opens (for everyone)
+  React.useEffect(() => {
+    if (contactDialogOpen && submission.user_id) {
+      const fetchProfile = async () => {
+        const supabase = createBrowserSupabaseClient();
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", submission.user_id)
+          .single();
+        if (profile) {
+          setSubmitterProfile(profile);
+        }
+      };
+      fetchProfile();
+    }
+  }, [contactDialogOpen, submission.user_id]);
+
+  // Pre-fetch profile for personal items (to check if contact info exists)
+  const [hasContactInfo, setHasContactInfo] = React.useState(false);
+  React.useEffect(() => {
+    if (isPersonalItem && submission.user_id && !contactDialogOpen) {
+      const checkContactInfo = async () => {
+        const supabase = createBrowserSupabaseClient();
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("contact_email, contact_phone, contact_whatsapp, contact_telegram")
+          .eq("id", submission.user_id)
+          .single();
+        if (profile && (
+          profile.contact_email || 
+          profile.contact_phone || 
+          profile.contact_whatsapp || 
+          profile.contact_telegram
+        )) {
+          setHasContactInfo(true);
+        }
+      };
+      checkContactInfo();
+    }
+  }, [isPersonalItem, submission.user_id, contactDialogOpen]);
+
   return (
     <Card
       className={cn(
         "border border-neutral-200 bg-white transition-all hover:border-neutral-300 hover:bg-[#f9fafb] group cursor-pointer",
-        isWinner && "border-2 border-[#FF5F00] bg-[#FFDECA]/20",
         isFirst && isLast && "rounded-2xl",
         isFirst && !isLast && "rounded-t-2xl rounded-b-none",
         !isFirst && isLast && "rounded-b-2xl rounded-t-none",
@@ -116,6 +171,14 @@ export function SubmissionCard({
               </>
             ) : null}
             <span className="text-xs text-neutral-500">{submittedAt}</span>
+            {user?.id === submission.user_id && (
+              <>
+                <span className="text-xs text-neutral-400">•</span>
+                <Badge variant="outline" className="text-xs font-medium text-[#7755FF] border-[#7755FF] bg-[#7755FF]/10 px-2 py-0 h-5">
+                  You
+                </Badge>
+              </>
+            )}
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -208,50 +271,55 @@ export function SubmissionCard({
           )}
         </div>
 
-        {/* Bottom row: View item button, Voting */}
+        {/* Bottom row: Winner badge (if applicable) on far left, Select winner button, View item + Voting on far right */}
         <div className="flex items-center justify-between gap-3 pt-2">
-          {/* Left: Empty space */}
-          <div className="flex-1 min-w-0"></div>
-
-          {/* Center-right: View item button */}
-          <Button
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              if (isPersonalItem && hasImage) {
-                setPreviewOpen(true);
-              } else if (!isPersonalItem && submission.url) {
-                window.open(submission.url, "_blank", "noopener,noreferrer");
-              }
-            }}
-            className="flex-shrink-0 bg-[#F2F3F5] text-[#363B40] hover:bg-[#F2F3F5]/90 cursor-pointer"
-            disabled={isPersonalItem && !hasImage}
-          >
-            View item
-          </Button>
-
-          {/* Far-right: Voting control */}
+          {/* Far-left: Winner badge (prominent orange) or Select winner button */}
           <div className="flex items-center gap-2 flex-shrink-0">
-            {isWinner && (
-              <Badge variant="default" className="text-xs">
-                Winner
+            {isWinner ? (
+              <Badge className="bg-[#FF5F00] text-white border-0 text-sm font-semibold px-3 py-1">
+                Picked
               </Badge>
+            ) : canSelectWinner ? (
+              <WinnerButton
+                requestId={requestId}
+                submissionId={submission.id}
+                onSelected={onWinnerSelected}
+                disabled={disableWinnerAction}
+              />
+            ) : null}
+          </div>
+
+          {/* Far-right: View item button and Voting control next to each other */}
+          <div className="flex items-center gap-2 flex-shrink-0 ml-auto">
+            <Button
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (isPersonalItem && hasImage) {
+                  // For personal items, show contact dialog
+                  setContactDialogOpen(true);
+                } else if (!isPersonalItem && submission.url) {
+                  window.open(submission.url, "_blank", "noopener,noreferrer");
+                }
+              }}
+              className="flex-shrink-0 bg-[#F2F3F5] text-[#363B40] hover:bg-[#F2F3F5]/90 cursor-pointer"
+              disabled={isPersonalItem && !hasImage}
+            >
+              View item
+            </Button>
+            {hideVotes ? (
+              <Link
+                href={`/app/requests/${requestId}`}
+                className="text-sm text-[#7755FF] hover:underline"
+                onClick={(e) => e.stopPropagation()}
+              >
+                View request
+              </Link>
+            ) : (
+              <VoteButtons submission={submission} requestId={requestId} />
             )}
-            <VoteButtons submission={submission} requestId={requestId} />
           </div>
         </div>
-
-        {/* Winner selection button (if applicable) */}
-        {canSelectWinner && (
-          <div className="mt-3 pt-3">
-            <WinnerButton
-              requestId={requestId}
-              submissionId={submission.id}
-              onSelected={onWinnerSelected}
-              disabled={disableWinnerAction}
-            />
-          </div>
-        )}
       </CardContent>
 
       {/* Fullscreen image preview for personal items */}
@@ -261,6 +329,19 @@ export function SubmissionCard({
           alt={storeName}
           open={previewOpen}
           onOpenChange={setPreviewOpen}
+        />
+      )}
+
+      {/* Contact info dialog for personal items (for everyone) */}
+      {isPersonalItem && (
+        <ContactInfoDialog
+          open={contactDialogOpen}
+          onOpenChange={setContactDialogOpen}
+          submitterProfile={submitterProfile}
+          imageUrl={imageUrl}
+          itemName={storeName}
+          description={description}
+          price={submission.price}
         />
       )}
     </Card>

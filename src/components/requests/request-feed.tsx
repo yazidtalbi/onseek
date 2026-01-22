@@ -6,7 +6,6 @@ import { useQuery } from "@tanstack/react-query";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import type { RequestItem } from "@/lib/types";
 import { RequestCard } from "@/components/requests/request-card";
-import { RequestCardGrid } from "@/components/requests/request-card-grid";
 import { Button } from "@/components/ui/button";
 import { LayoutList, Grid3x3, ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -27,19 +26,23 @@ export function RequestFeed({
   page = 1,
   totalPages = 1,
   forceListView = false,
+  viewMode: externalViewMode,
+  onViewModeChange,
 }: {
   initialRequests: RequestItem[];
   filters: Filters;
   page?: number;
   totalPages?: number;
   forceListView?: boolean;
+  viewMode?: "list" | "grid";
+  onViewModeChange?: (mode: "list" | "grid") => void;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const currentPage = page;
   
-  // Persist view mode to localStorage - default to grid (unless forced to list)
-  const [viewMode, setViewMode] = useState<"list" | "grid">(() => {
+  // Use external viewMode if provided, otherwise manage internally
+  const [internalViewMode, setInternalViewMode] = useState<"list" | "grid">(() => {
     if (forceListView) return "list";
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("requestViewMode");
@@ -48,9 +51,14 @@ export function RequestFeed({
     return "grid";
   });
 
+  const viewMode = externalViewMode ?? internalViewMode;
+  const setViewMode = onViewModeChange ?? setInternalViewMode;
+
   useEffect(() => {
-    localStorage.setItem("requestViewMode", viewMode);
-  }, [viewMode]);
+    if (!externalViewMode) {
+      localStorage.setItem("requestViewMode", viewMode);
+    }
+  }, [viewMode, externalViewMode]);
 
   const { data, isLoading } = useQuery({
     queryKey: ["requests", filters, currentPage],
@@ -211,33 +219,9 @@ export function RequestFeed({
 
   return (
     <div className="space-y-4">
-      {!forceListView && (
-        <div className="flex items-center justify-end gap-2">
-          <div className="flex gap-1 p-1 bg-gray-100 rounded-full">
-            <Button
-              variant={viewMode === "list" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setViewMode("list")}
-              className="h-8 w-8 p-0 rounded-full"
-              title="List view"
-            >
-              <LayoutList className="h-4 w-4" />
-            </Button>
-            <Button
-              variant={viewMode === "grid" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setViewMode("grid")}
-              className="h-8 w-8 p-0 rounded-full"
-              title="Grid view"
-            >
-              <Grid3x3 className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      )}
 
       {viewMode === "list" ? (
-        <div>
+        <div className="max-w-2xl mx-auto">
           {data.map((request: any, index: number) => (
             <RequestCard 
               key={request.id} 
@@ -251,10 +235,21 @@ export function RequestFeed({
           ))}
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {data.map((request: any) => (
-            <RequestCardGrid key={request.id} request={request} images={request.images || []} />
-          ))}
+        <div className="max-w-2xl mx-auto w-full">
+          <div className="columns-1 sm:columns-2 gap-4 w-full">
+            {data.map((request: any) => (
+              <div key={request.id} className="break-inside-avoid mb-4 w-full">
+                <RequestCard 
+                  request={request} 
+                  variant="feed" 
+                  images={request.images || []}
+                  links={request.links || []}
+                  isFirst={true}
+                  isLast={true}
+                />
+              </div>
+            ))}
+          </div>
         </div>
       )}
 

@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { MoreHorizontal, EyeOff, Flag, X } from "lucide-react";
+import { MoreHorizontal, EyeOff, Flag, X, Share2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -70,6 +70,31 @@ export function RequestMenu({
     }
   };
 
+  const handleShare = async () => {
+    if (typeof window === "undefined") return;
+    
+    const url = `${window.location.origin}/app/requests/${requestId}`;
+    
+    try {
+      // Try Web Share API first (mobile)
+      if (navigator.share) {
+        await navigator.share({
+          title: "Check out this request",
+          url: url,
+        });
+      } else {
+        // Fallback to clipboard
+        await navigator.clipboard.writeText(url);
+        // You could add a toast notification here
+      }
+    } catch (error) {
+      // User cancelled or error occurred
+      if (error instanceof Error && error.name !== "AbortError") {
+        console.error("Error sharing:", error);
+      }
+    }
+  };
+
   return (
     <>
       <DropdownMenu>
@@ -92,6 +117,16 @@ export function RequestMenu({
           >
             <EyeOff className="h-4 w-4 mr-2" />
             Hide
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={(e) => {
+              e.stopPropagation();
+              handleShare();
+            }}
+            className="cursor-pointer"
+          >
+            <Share2 className="h-4 w-4 mr-2" />
+            Share
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={(e) => {

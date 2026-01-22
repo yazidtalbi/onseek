@@ -21,7 +21,6 @@ export function SignUpForm() {
       email: "",
       password: "",
       username: "",
-      displayName: "",
     },
   });
 
@@ -30,7 +29,6 @@ export function SignUpForm() {
     formData.set("email", values.email);
     formData.set("password", values.password);
     formData.set("username", values.username);
-    formData.set("displayName", values.displayName);
     startTransition(async () => {
       const res = await signUpAction(formData);
       setError(res?.error || null);
@@ -39,15 +37,6 @@ export function SignUpForm() {
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" noValidate>
-      <div className="space-y-2">
-        <Label htmlFor="displayName">Display name</Label>
-        <Input id="displayName" {...form.register("displayName")} />
-        {form.formState.errors.displayName ? (
-          <p className="text-xs text-red-600">
-            {form.formState.errors.displayName.message}
-          </p>
-        ) : null}
-      </div>
       <div className="space-y-2">
         <Label htmlFor="username">Username</Label>
         <Input id="username" {...form.register("username")} />

@@ -5,6 +5,7 @@ import type { Submission } from "@/lib/types";
 import { SubmissionList } from "@/components/submissions/submission-list";
 import { SubmissionForm } from "@/components/submissions/submission-form";
 import { RequestCard } from "@/components/requests/request-card";
+import { BackButton } from "@/components/ui/back-button";
 import { ChevronRight } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -41,7 +42,7 @@ export default async function RequestDetailPage({
 
   const { data: request } = await supabase
     .from("requests")
-    .select("*, profiles(username, display_name)")
+    .select("*, profiles(username)")
     .eq("id", id)
     .single();
 
@@ -152,24 +153,27 @@ export default async function RequestDetailPage({
 
   return (
     <div className="space-y-6">
-      {/* Breadcrumbs */}
-      <nav className="flex items-center gap-2 text-sm text-gray-600">
-        <Link 
-          href="/"
-          className="hover:text-foreground transition-colors"
-        >
-          Home
-        </Link>
-        <ChevronRight className="h-4 w-4" />
-        <Link 
-          href={`/category/${request.category.toLowerCase()}`} 
-          className="hover:text-foreground transition-colors"
-        >
-          {request.category}
-        </Link>
-        <ChevronRight className="h-4 w-4" />
-        <span className="text-foreground">{request.title}</span>
-      </nav>
+      {/* Back Button and Breadcrumbs */}
+      <div className="flex items-center gap-4">
+        <BackButton />
+        <nav className="flex items-center gap-2 text-sm text-gray-600">
+          <Link 
+            href="/"
+            className="hover:text-foreground transition-colors"
+          >
+            Home
+          </Link>
+          <ChevronRight className="h-4 w-4" />
+          <Link 
+            href={`/category/${request.category.toLowerCase()}`} 
+            className="hover:text-foreground transition-colors"
+          >
+            {request.category}
+          </Link>
+          <ChevronRight className="h-4 w-4" />
+          <span className="text-foreground">{request.title}</span>
+        </nav>
+      </div>
 
       {/* Two Column Layout: Request on Left, Submissions on Right */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
@@ -199,6 +203,7 @@ export default async function RequestDetailPage({
             winnerId={request.winner_submission_id}
             canSelectWinner={isOwner}
             requestStatus={request.status}
+            requestOwnerId={request.user_id}
           />
         </div>
       </div>

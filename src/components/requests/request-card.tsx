@@ -14,6 +14,7 @@ import Image from "next/image";
 import { MapPin, Check, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ImagePreviewDialog } from "@/components/ui/image-preview-dialog";
+import { AnnouncementBanner } from "@/components/requests/announcement-banner";
 
 function cleanDescription(description: string) {
   return description.replace(/<!--REQUEST_PREFS:.*?-->/, "").trim();
@@ -32,7 +33,7 @@ function parseRequestPreferences(description: string) {
 }
 
 interface RequestCardProps {
-  request: RequestItem & { profiles?: { username?: string; display_name?: string | null } };
+  request: RequestItem & { profiles?: { username?: string } };
   variant?: "feed" | "detail";
   isFavorite?: boolean;
   images?: string[];
@@ -76,6 +77,12 @@ function RequestCardComponent({
   const budgetText = formatBudget(request.budget_min, request.budget_max);
   const isFeed = variant === "feed";
 
+  // Check if request should show announcement banner (no submissions and old)
+  const hasNoSubmissions = (request.submissionCount ?? 0) === 0;
+  const requestAge = new Date().getTime() - new Date(request.created_at).getTime();
+  const daysOld = requestAge / (1000 * 60 * 60 * 24);
+  const shouldShowAnnouncement = hasNoSubmissions && daysOld >= 7; // Show if 7+ days old with no submissions
+
   // Limit display for feed variant
   const maxImages = 3;
   const maxPreferences = isFeed ? 4 : preferences.length;
@@ -116,6 +123,19 @@ function RequestCardComponent({
         >
               {request.title}
             </h3>
+            {/* Budget and Location - only show on feed variant */}
+            {isFeed && (budgetText || request.country) && (
+              <div className="flex items-center gap-3 mt-2 text-sm text-gray-500">
+                {budgetText && <span>{budgetText}</span>}
+                {budgetText && request.country && <span>•</span>}
+                {request.country && (
+                  <div className="flex items-center gap-1.5">
+                    <MapPin className="h-3.5 w-3.5" />
+                    <span>{request.country}</span>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
           <div
             className="flex items-center gap-1.5 flex-shrink-0 relative z-10"
@@ -141,6 +161,12 @@ function RequestCardComponent({
           </div>
         </div>
 
+        {/* Announcement Banner - only show on feed variant for old requests with no submissions */}
+        {isFeed && shouldShowAnnouncement && (
+          <div className="mb-4">
+            <AnnouncementBanner />
+          </div>
+        )}
 
         {/* Preferences and Dealbreakers - only show on feed variant */}
         {variant === "feed" && (visiblePreferences.length > 0 || visibleDealbreakers.length > 0) && (
@@ -259,7 +285,10 @@ function RequestCardComponent({
 
             {/* Budget, Location, and Condition in same row */}
             {(budgetText || request.country || request.condition) && (
-              <div className="border-t border-neutral-200 pt-6 pb-6 border-b border-neutral-200">
+              <div className={cn(
+                "border-t border-neutral-200 pt-6 pb-6",
+                (images.length > 0 || links.length > 0) && "border-b border-neutral-200"
+              )}>
                 <div className="flex gap-8 w-full">
                   {budgetText && (
                     <div className="flex-1">
@@ -382,7 +411,7 @@ function RequestCardComponent({
         >
           <Card
             className={cn(
-              "border-[#e5e7eb] bg-white flex flex-col hover:border-gray-300 hover:bg-[#f9fafb] transition-colors relative group",
+              "border-[#e5e7eb] bg-white flex flex-col hover:border-gray-300 hover:bg-[#f9fafb] transition-colors relative group h-full",
               isFirst && isLast && "rounded-2xl",
               isFirst && !isLast && "rounded-t-2xl rounded-b-none",
               !isFirst && isLast && "rounded-b-2xl rounded-t-none",

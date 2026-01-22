@@ -6,6 +6,11 @@ export type Profile = {
   bio: string | null;
   created_at: string;
   reputation: number | null;
+  contact_email?: string | null;
+  contact_phone?: string | null;
+  contact_whatsapp?: string | null;
+  contact_telegram?: string | null;
+  contact_preferred?: "email" | "phone" | "whatsapp" | "telegram" | null;
 };
 
 export type RequestStatus = "open" | "closed" | "solved";

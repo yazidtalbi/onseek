@@ -26,9 +26,7 @@ export async function createRequestAction(formData: FormData) {
     title: String(formData.get("title") || ""),
     description: String(formData.get("description") || ""),
     category: String(formData.get("category") || ""),
-    budgetMin: formData.get("budgetMin")
-      ? Number(formData.get("budgetMin"))
-      : null,
+    budgetMin: null,
     budgetMax: formData.get("budgetMax")
       ? Number(formData.get("budgetMax"))
       : null,
@@ -44,7 +42,30 @@ export async function createRequestAction(formData: FormData) {
 
   const parsed = requestSchema.safeParse(payload);
   if (!parsed.success) {
-    return { error: "Please complete all required fields." };
+    // Log validation errors to console
+    console.error("Request validation failed:", parsed.error.errors);
+    console.error("Payload received:", payload);
+    
+    // Return specific field errors
+    const errors = parsed.error.errors.map((err) => {
+      const field = err.path[0] as string;
+      return `${field}: ${err.message}`;
+    });
+    
+    const fieldErrors = parsed.error.errors.reduce((acc, err) => {
+      const field = err.path[0] as string;
+      acc[field] = err.message;
+      return acc;
+    }, {} as Record<string, string>);
+    
+    console.error("Formatted field errors:", fieldErrors);
+    
+    return { 
+      error: errors.length > 0 
+        ? errors.join(". ") 
+        : "Please complete all required fields.",
+      fieldErrors
+    };
   }
 
   const supabase = await createServerSupabaseClient();
@@ -85,26 +106,48 @@ export async function createRequestAction(formData: FormData) {
   // Append preferences as hidden metadata to description
   const descriptionWithMetadata = `${parsed.data.description}\n\n<!--REQUEST_PREFS:${preferencesJson}-->`;
 
+  console.log("=== Server Action Debug ===");
+  console.log("Parsed data:", JSON.stringify(parsed.data, null, 2));
+  console.log("Description with metadata length:", descriptionWithMetadata.length);
+  console.log("Description preview:", descriptionWithMetadata.substring(0, 200));
+  console.log("User ID:", user.id);
+  
+  const insertData = {
+    user_id: user.id,
+    title: parsed.data.title,
+    description: descriptionWithMetadata,
+    category: parsed.data.category,
+    budget_min: parsed.data.budgetMin,
+    budget_max: parsed.data.budgetMax,
+    country: parsed.data.country,
+    condition: parsed.data.condition,
+    urgency: parsed.data.urgency,
+    status: "open" as const,
+  };
+  
+  console.log("Insert data:", JSON.stringify(insertData, null, 2));
+  
   const { data: request, error } = await supabase
     .from("requests")
-    .insert({
-      user_id: user.id,
-      title: parsed.data.title,
-      description: descriptionWithMetadata,
-      category: parsed.data.category,
-      budget_min: parsed.data.budgetMin,
-      budget_max: parsed.data.budgetMax,
-      country: parsed.data.country,
-      condition: parsed.data.condition,
-      urgency: parsed.data.urgency,
-      status: "open",
-    })
+    .insert(insertData)
     .select()
     .single();
 
-  if (error || !request) {
-    return { error: error?.message || "Failed to create request." };
+  if (error) {
+    console.error("Database insert error:", error);
+    console.error("Error code:", error.code);
+    console.error("Error message:", error.message);
+    console.error("Error details:", error.details);
+    console.error("Error hint:", error.hint);
+    return { error: error.message || "Failed to create request." };
   }
+  
+  if (!request) {
+    console.error("No request returned from insert, but no error either");
+    return { error: "Failed to create request - no data returned." };
+  }
+  
+  console.log("Request created successfully! ID:", request.id);
 
   const links = parseLinks(parsed.data.referenceLinks);
   if (links.length) {

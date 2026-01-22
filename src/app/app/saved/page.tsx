@@ -1,8 +1,6 @@
-import Link from "next/link";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { SavedRequestsList } from "@/components/requests/saved-requests-list";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Heart } from "lucide-react";
 import { redirect } from "next/navigation";
 
@@ -44,19 +42,15 @@ export default async function SavedRequestsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col gap-4">
         <div>
-          <h1 className="text-3xl font-semibold flex items-center gap-2">
-            <Heart className="h-8 w-8 fill-current text-red-500" />
+          <h1 className="text-3xl font-semibold">
             Saved Requests
           </h1>
           <p className="text-sm text-muted-foreground mt-2">
             Your favorite requests saved for later.
           </p>
         </div>
-        <Button asChild variant="accent">
-          <Link href="/app/new">New request</Link>
-        </Button>
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">

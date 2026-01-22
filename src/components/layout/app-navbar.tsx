@@ -9,6 +9,7 @@ import { Search, Bell, Plus, ChevronDown, TrendingUp, Sparkles, Moon, Sun, LogOu
 import { useAuth } from "@/components/layout/auth-provider";
 import { useTheme } from "@/components/layout/theme-provider";
 import { signOutAction } from "@/actions/auth.actions";
+import { LoginDropdown } from "@/components/auth/login-dropdown";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -18,6 +19,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { MAIN_CATEGORIES } from "@/lib/categories";
+import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 
 const categories = MAIN_CATEGORIES;
 
@@ -30,6 +32,7 @@ export function AppNavbar() {
   const [showSearch, setShowSearch] = useState(false);
   const [searchType, setSearchType] = useState<"requests" | "items">("requests");
   const [isPending, startTransition] = useTransition();
+  const [unreadCount, setUnreadCount] = useState(0);
   const isHomePage = pathname === "/";
 
   const handleSignOut = () => {
@@ -67,6 +70,48 @@ export function AppNavbar() {
       router.push(`/app/category/${slug}`);
     }
   };
+
+  // Fetch unread notification count
+  useEffect(() => {
+    if (!user) {
+      setUnreadCount(0);
+      return;
+    }
+
+    const supabase = createBrowserSupabaseClient();
+    const fetchUnreadCount = async () => {
+      const { count } = await supabase
+        .from("notifications")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .eq("read", false);
+      
+      setUnreadCount(count || 0);
+    };
+
+    fetchUnreadCount();
+
+    // Set up real-time subscription for notifications
+    const channel = supabase
+      .channel("notifications")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "notifications",
+          filter: `user_id=eq.${user.id}`,
+        },
+        () => {
+          fetchUnreadCount();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
 
   // Detect when hero section is out of view on home page
   useEffect(() => {
@@ -222,8 +267,15 @@ export function AppNavbar() {
                   Create a request
                 </Link>
               </Button>
-              <Button variant="ghost" size="icon" className="relative">
-                <Bell className="h-5 w-5" />
+              <Button variant="ghost" size="icon" className="relative" asChild>
+                <Link href="/app/notifications">
+                  <Bell className="h-5 w-5" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-[#7755FF] text-white text-[10px] font-semibold flex items-center justify-center">
+                      {unreadCount > 9 ? "9+" : unreadCount}
+                    </span>
+                  )}
+                </Link>
               </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -267,19 +319,6 @@ export function AppNavbar() {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={toggleTheme} className="flex items-center">
-                    {theme === "dark" ? (
-                      <>
-                        <Sun className="h-4 w-4 mr-2" />
-                        Light mode
-                      </>
-                    ) : (
-                      <>
-                        <Moon className="h-4 w-4 mr-2" />
-                        Dark mode
-                      </>
-                    )}
-                  </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link href="/app/settings" className="flex items-center">
                       <Settings className="h-4 w-4 mr-2" />
@@ -296,28 +335,18 @@ export function AppNavbar() {
             </>
           ) : (
             <>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={toggleTheme}
-                aria-label="Toggle theme"
-              >
-                {theme === "dark" ? (
-                  <Sun className="h-5 w-5" />
-                ) : (
-                  <Moon className="h-5 w-5" />
-                )}
-              </Button>
-              <Link href="/login">
-                <Button variant="ghost" size="sm" className="hidden sm:flex">
-                  Log in
+              <Link href="/app/new">
+                <Button variant="outline" size="sm" className="border-neutral-900 bg-white text-neutral-900 hover:bg-gray-50">
+                  <Plus className="h-4 w-4 mr-1.5" />
+                  Create a request
                 </Button>
               </Link>
               <Link href="/signup">
-                <Button variant="accent" size="sm">
-                  Get started
+                <Button variant="default" size="sm" className="bg-neutral-900 text-white hover:bg-neutral-800">
+                  Sign Up
                 </Button>
               </Link>
+              <LoginDropdown />
             </>
           )}
         </div>

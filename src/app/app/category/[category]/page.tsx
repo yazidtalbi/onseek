@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { RequestFeed } from "@/components/requests/request-feed";
-import { RequestFilters } from "@/components/requests/request-filters";
+import { RequestFeedWrapper } from "@/components/requests/request-feed-wrapper";
 import { MAIN_CATEGORIES } from "@/lib/categories";
 
 export const dynamic = "force-dynamic";
@@ -65,16 +64,14 @@ export default async function CategoryPage({
   return (
     <div className="space-y-8">
       {/* Category Header */}
-      <div className="space-y-4">
+      <div className="max-w-2xl mx-auto space-y-4">
         <h1 className="text-4xl md:text-5xl font-semibold">{categoryName} Requests</h1>
         <p className="text-lg text-muted-foreground">
           Browse all {categoryName.toLowerCase()} requests from the community
         </p>
       </div>
 
-      <RequestFilters />
-
-      <RequestFeed
+      <RequestFeedWrapper
         initialRequests={requests ?? []}
         filters={{
           category: dbCategory,

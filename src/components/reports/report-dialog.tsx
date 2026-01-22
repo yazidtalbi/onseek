@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 
 type Values = z.infer<typeof reportSchema>;
 
@@ -63,24 +64,56 @@ export function ReportDialog({
         </Button>
       )}
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Report this {type}</DialogTitle>
           </DialogHeader>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3" noValidate>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" noValidate>
             <div className="space-y-2">
-              <Label htmlFor={`reason-${targetId}`}>Reason</Label>
-              <Textarea id={`reason-${targetId}`} {...form.register("reason")} />
+              <Label htmlFor={`reason-${targetId}`} className="text-sm font-medium text-neutral-900">
+                Reason
+              </Label>
+              <Textarea 
+                id={`reason-${targetId}`} 
+                {...form.register("reason")}
+                className="min-h-[120px] resize-none rounded-lg border-[#e5e7eb] bg-white focus:border-[#7755FF] focus:ring-1 focus:ring-[#7755FF]"
+                placeholder="Please describe why you're reporting this..."
+              />
               {form.formState.errors.reason ? (
                 <p className="text-xs text-red-600">
                   {form.formState.errors.reason.message}
                 </p>
               ) : null}
             </div>
-            {status ? <p className="text-xs text-muted-foreground">{status}</p> : null}
-            <Button type="submit" variant="accent" className="w-full" disabled={isPending}>
-              {isPending ? "Submitting..." : "Submit report"}
-            </Button>
+            {status && (
+              <p className={cn(
+                "text-sm",
+                status.includes("error") || status.includes("Error") 
+                  ? "text-red-600" 
+                  : "text-emerald-700"
+              )}>
+                {status}
+              </p>
+            )}
+            <div className="flex gap-3 pt-2">
+              <Button 
+                type="button" 
+                variant="outline" 
+                className="flex-1 rounded-full"
+                onClick={() => setOpen(false)}
+                disabled={isPending}
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="submit" 
+                variant="default" 
+                className="flex-1 rounded-full bg-[#7755FF] text-white hover:bg-[#7755FF]/90" 
+                disabled={isPending}
+              >
+                {isPending ? "Submitting..." : "Submit report"}
+              </Button>
+            </div>
           </form>
         </DialogContent>
       </Dialog>

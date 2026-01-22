@@ -9,15 +9,14 @@ export const signUpSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
   username: z.string().min(3).max(24),
-  displayName: z.string().min(2).max(40),
 });
 
 export const requestSchema = z.object({
-  title: z.string().min(4).max(120),
-  description: z.string().min(10).max(1000),
-  category: z.string().min(2).max(40),
+  title: z.string().min(4, "Title must be at least 4 characters").max(120, "Title must be less than 120 characters"),
+  description: z.string().optional().default(""), // Description is auto-generated, no validation needed
+  category: z.string().min(2, "Category is required").max(40),
   budgetMin: z.number().min(0).nullable().optional(),
-  budgetMax: z.number().min(0).nullable().optional(),
+  budgetMax: z.number().min(0, "Budget must be a positive number").nullable().optional(),
   priceLock: z.enum(["open", "locked"]).default("open"),
   exactItem: z.boolean().default(false),
   exactSpecification: z.boolean().default(false),
@@ -64,9 +63,16 @@ export const submissionSchema = z.object({
 });
 
 export const profileSchema = z.object({
-  displayName: z.string().min(2).max(40),
   username: z.string().min(3).max(24),
   bio: z.string().max(240).optional().nullable(),
+});
+
+export const contactInfoSchema = z.object({
+  contactEmail: z.string().email().optional().nullable().or(z.literal("")),
+  contactPhone: z.string().max(20).optional().nullable().or(z.literal("")),
+  contactWhatsapp: z.string().max(20).optional().nullable().or(z.literal("")),
+  contactTelegram: z.string().max(50).optional().nullable().or(z.literal("")),
+  contactPreferred: z.enum(["email", "phone", "whatsapp", "telegram"]).optional().nullable(),
 });
 
 export const reportSchema = z.object({

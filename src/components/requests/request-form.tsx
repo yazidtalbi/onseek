@@ -66,7 +66,6 @@ export function RequestForm({ onSuccess }: { onSuccess?: () => void }) {
       title: "",
       description: "",
       category: "Tech" as const,
-      budgetMin: null,
       budgetMax: null,
       priceLock: "open",
       exactItem: false,
@@ -80,7 +79,6 @@ export function RequestForm({ onSuccess }: { onSuccess?: () => void }) {
   });
 
   const titleValue = form.watch("title");
-  const budgetMin = form.watch("budgetMin") || 0;
   const budgetMax = form.watch("budgetMax") || 1000;
   const priceLock = form.watch("priceLock");
   const urgency = form.watch("urgency");
@@ -246,22 +244,14 @@ export function RequestForm({ onSuccess }: { onSuccess?: () => void }) {
     setDraggedIndex(null);
   };
 
-  // Budget slider handlers
-  const handleBudgetChange = (values: number[]) => {
-    form.setValue("budgetMin", values[0]);
-    form.setValue("budgetMax", values[1]);
-  };
-
-  const handleBudgetMinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseFloat(e.target.value) || 0;
-    const max = form.watch("budgetMax") || 1000;
-    form.setValue("budgetMin", Math.min(value, max));
+  // Budget slider handler
+  const handleBudgetChange = (value: number[]) => {
+    form.setValue("budgetMax", value[0]);
   };
 
   const handleBudgetMaxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseFloat(e.target.value) || 1000;
-    const min = form.watch("budgetMin") || 0;
-    form.setValue("budgetMax", Math.max(value, min));
+    const value = parseFloat(e.target.value) || 0;
+    form.setValue("budgetMax", Math.max(0, value));
   };
 
   // Dynamic CTA label
@@ -273,39 +263,68 @@ export function RequestForm({ onSuccess }: { onSuccess?: () => void }) {
   };
 
   const onSubmit = (values: RequestValues) => {
+    console.log("=== onSubmit called ===");
+    console.log("Form values:", values);
+    console.log("Preferences:", preferences);
+    console.log("Dealbreakers:", dealbreakers);
+    
     // Collect validation errors
     const validationErrors: Record<string, string> = {};
-    if (!values.title || values.title.length < 4) {
+    
+    // Validate title
+    console.log("Validating title:", values.title, "length:", values.title?.length);
+    if (!values.title || values.title.trim().length < 4) {
       validationErrors.title = "Title must be at least 4 characters";
+      console.log("Title validation failed: too short");
     }
+    if (values.title && values.title.length > 120) {
+      validationErrors.title = "Title must be less than 120 characters";
+      console.log("Title validation failed: too long");
+    }
+
+    // Validate category
+    console.log("Validating category:", values.category);
+    if (!values.category || values.category.trim().length < 2) {
+      validationErrors.category = "Please select a category";
+      console.log("Category validation failed");
+    }
+
+    // Auto-generate description from preferences/dealbreakers (always, since description field was removed)
+    const prefText = preferences.length > 0 
+      ? `Preferences: ${preferences.map(p => p.label).join(", ")}` 
+      : "";
+    const dealText = dealbreakers.length > 0 
+      ? `Dealbreakers: ${dealbreakers.map(d => d.label).join(", ")}` 
+      : "";
+    const description = [prefText, dealText].filter(Boolean).join(". ") || "Looking for the requested item.";
+    console.log("Auto-generated description:", description);
+
+    // Validate budget if provided
+    if (values.budgetMax !== null && values.budgetMax !== undefined) {
+      if (values.budgetMax < 0) {
+        validationErrors.budgetMax = "Budget must be a positive number";
+        console.log("Budget validation failed: negative");
+      }
+    }
+
+    console.log("Validation errors found:", Object.keys(validationErrors).length, validationErrors);
 
     if (Object.keys(validationErrors).length > 0) {
+      console.error("Validation errors:", validationErrors);
       setErrors(validationErrors);
+      setError(null); // Clear general error when showing field errors
       return;
     }
+    
+    console.log("Client-side validation passed, proceeding to submit...");
 
     setErrors({});
-
-    // Auto-generate description from preferences/dealbreakers if empty
-    let description = values.description || "";
-    if (!description.trim()) {
-      const prefText = preferences.length > 0 
-        ? `Preferences: ${preferences.map(p => p.label).join(", ")}` 
-        : "";
-      const dealText = dealbreakers.length > 0 
-        ? `Dealbreakers: ${dealbreakers.map(d => d.label).join(", ")}` 
-        : "";
-      description = [prefText, dealText].filter(Boolean).join(". ") || "Looking for the requested item.";
-    }
+    setError(null);
 
     const formData = new FormData();
     formData.set("title", values.title);
     formData.set("description", description);
     formData.set("category", values.category);
-    formData.set(
-      "budgetMin",
-      Number.isFinite(values.budgetMin) ? String(values.budgetMin) : ""
-    );
     formData.set(
       "budgetMax",
       Number.isFinite(values.budgetMax) ? String(values.budgetMax) : ""
@@ -335,20 +354,180 @@ export function RequestForm({ onSuccess }: { onSuccess?: () => void }) {
     startTransition(async () => {
       queryClient.invalidateQueries({ queryKey: ["requests"] });
       
-      const res = await createRequestAction(formData);
-      if (res?.error) {
-        setError(res.error);
-      } else if (onSuccess) {
-        // Request was created successfully (redirect will happen, but call onSuccess to close modal)
-        onSuccess();
+      // Log what we're sending
+      console.log("=== Form Submission Debug ===");
+      console.log("Form values:", values);
+      console.log("Auto-generated description:", description);
+      console.log("Description length:", description.length);
+      console.log("Preferences:", preferences);
+      console.log("Dealbreakers:", dealbreakers);
+      console.log("FormData entries:");
+      for (const [key, value] of formData.entries()) {
+        console.log(`  ${key}:`, value);
       }
-      // Note: createRequestAction redirects on success, so this code may not execute
-      router.refresh();
+      
+      try {
+        const res = await createRequestAction(formData);
+        console.log("Server response:", res);
+        console.log("Response has error?", !!res?.error);
+        console.log("Response has fieldErrors?", !!res?.fieldErrors);
+        
+        if (res?.error) {
+          console.error("Request creation error:", res.error);
+          console.error("Field errors:", res.fieldErrors);
+          setError(res.error);
+          // If there are field-specific errors, set them
+          if (res.fieldErrors) {
+            console.log("Setting field errors:", res.fieldErrors);
+            setErrors(res.fieldErrors);
+          } else {
+            // Try to parse field errors from the error message
+            const fieldErrorMatch = res.error.match(/(\w+):\s*(.+?)(?:\.|$)/g);
+            if (fieldErrorMatch) {
+              console.log("Parsing field errors from error message:", fieldErrorMatch);
+              const parsedErrors: Record<string, string> = {};
+              fieldErrorMatch.forEach((match: string) => {
+                const parsed = match.match(/(\w+):\s*(.+?)(?:\.|$)/);
+                if (parsed && parsed[1] && parsed[2]) {
+                  parsedErrors[parsed[1]] = parsed[2].trim();
+                }
+              });
+              if (Object.keys(parsedErrors).length > 0) {
+                console.log("Parsed errors:", parsedErrors);
+                setErrors(parsedErrors);
+              }
+            }
+          }
+          return;
+        } else {
+          console.log("Request created successfully! Response:", res);
+          if (onSuccess) {
+            // Request was created successfully (redirect will happen, but call onSuccess to close modal)
+            onSuccess();
+          }
+          // Note: createRequestAction redirects on success, so this code may not execute
+          router.refresh();
+        }
+      } catch (err) {
+        console.error("Unexpected error during request creation:", err);
+        setError(err instanceof Error ? err.message : "An unexpected error occurred");
+      }
     });
   };
 
+  // Check if there are any validation errors
+  const hasValidationErrors = Object.keys(errors).length > 0 || error !== null;
+  
+  // Debug: Log current error state
+  React.useEffect(() => {
+    if (hasValidationErrors) {
+      console.log("=== Error State Debug ===");
+      console.log("error state:", error);
+      console.log("errors object:", errors);
+      console.log("hasValidationErrors:", hasValidationErrors);
+    }
+  }, [error, errors, hasValidationErrors]);
+
+  // Also log form errors from react-hook-form
+  React.useEffect(() => {
+    if (Object.keys(form.formState.errors).length > 0) {
+      console.log("React Hook Form errors:", form.formState.errors);
+    }
+  }, [form.formState.errors]);
+
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-12" noValidate>
+    <form 
+      onSubmit={form.handleSubmit(
+        (data) => {
+          console.log("React Hook Form validation passed, calling onSubmit");
+          onSubmit(data);
+        },
+        (errors) => {
+          console.log("React Hook Form validation failed:", errors);
+          // Convert react-hook-form errors to our format
+          const formErrors: Record<string, string> = {};
+          Object.entries(errors).forEach(([key, value]) => {
+            if (value && typeof value === 'object' && 'message' in value) {
+              formErrors[key] = value.message as string;
+            }
+          });
+          if (Object.keys(formErrors).length > 0) {
+            setErrors(formErrors);
+            setError("Please fix the validation errors below");
+          }
+        }
+      )} 
+      className="space-y-12" 
+      noValidate
+    >
+      {/* Error Banner at Top - Prevents Request Creation */}
+      {hasValidationErrors && (
+        <div className="rounded-lg border-2 border-red-300 bg-red-50 p-4 space-y-2 shadow-sm">
+          <div className="flex items-start gap-3">
+            <div className="flex-shrink-0 mt-0.5">
+              <svg className="h-5 w-5 text-red-600" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="mb-1">
+                <span className="text-xs font-semibold text-red-700 uppercase tracking-wide">Validation Error</span>
+              </div>
+              <h3 className="text-sm font-semibold text-red-900 mb-2">
+                Cannot publish request — please fix the following errors:
+              </h3>
+              <ul className="space-y-1.5 text-sm text-red-800">
+                {/* Show general error */}
+                {error && (
+                  <li className="flex items-start gap-2">
+                    <span className="text-red-600 mt-0.5">•</span>
+                    <span>{error}</span>
+                  </li>
+                )}
+                {/* Show field-specific errors */}
+                {errors.title && (
+                  <li className="flex items-start gap-2">
+                    <span className="text-red-600 mt-0.5">•</span>
+                    <span><strong>Title:</strong> {errors.title}</span>
+                  </li>
+                )}
+                {errors.category && (
+                  <li className="flex items-start gap-2">
+                    <span className="text-red-600 mt-0.5">•</span>
+                    <span><strong>Category:</strong> {errors.category}</span>
+                  </li>
+                )}
+                {errors.budgetMax && (
+                  <li className="flex items-start gap-2">
+                    <span className="text-red-600 mt-0.5">•</span>
+                    <span><strong>Budget:</strong> {errors.budgetMax}</span>
+                  </li>
+                )}
+                {/* Show any other field errors */}
+                {Object.entries(errors).map(([key, value]) => {
+                  if (!["title", "category", "description", "budgetMax", "preferences", "dealbreakers", "linkInput"].includes(key)) {
+                    return (
+                      <li key={key} className="flex items-start gap-2">
+                        <span className="text-red-600 mt-0.5">•</span>
+                        <span><strong>{key.charAt(0).toUpperCase() + key.slice(1)}:</strong> {value}</span>
+                      </li>
+                    );
+                  }
+                  return null;
+                })}
+                {/* Debug: Show if error exists but no errors object */}
+                {error && Object.keys(errors).length === 0 && (
+                  <li className="flex items-start gap-2 text-xs text-red-600 italic">
+                    <span className="text-red-600 mt-0.5">•</span>
+                    <span>Check browser console for detailed error information</span>
+                  </li>
+                )}
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* SECTION 1: What are you looking for? */}
       <section className="space-y-6">
 
@@ -520,9 +699,12 @@ export function RequestForm({ onSuccess }: { onSuccess?: () => void }) {
               value={form.watch("category").split(" > ")[0] || ""}
               onValueChange={(value) => {
                 form.setValue("category", value);
+                setErrors((prev) => ({ ...prev, category: "" }));
               }}
             >
-              <SelectTrigger>
+              <SelectTrigger className={cn(
+                errors.category && "border-red-500 focus-visible:ring-red-500"
+              )}>
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
               <SelectContent>
@@ -533,6 +715,9 @@ export function RequestForm({ onSuccess }: { onSuccess?: () => void }) {
                 ))}
               </SelectContent>
             </Select>
+            {errors.category && (
+              <p className="text-xs text-red-600">{errors.category}</p>
+            )}
           </div>
 
           {/* Subcategory */}
@@ -616,7 +801,7 @@ export function RequestForm({ onSuccess }: { onSuccess?: () => void }) {
           </div>
         </div>
 
-        {/* Budget with Range Slider */}
+        {/* Budget */}
         <div className="space-y-4 p-4 rounded-lg border border-[#e5e7eb] bg-white/30">
           <div className="flex items-center justify-between">
             <Label className="text-base font-semibold">Budget</Label>
@@ -628,7 +813,7 @@ export function RequestForm({ onSuccess }: { onSuccess?: () => void }) {
                   </button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>Set your budget range. Submissions outside this range won't be shown.</p>
+                  <p>Set your maximum budget. Submissions above this amount won't be shown.</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -636,38 +821,24 @@ export function RequestForm({ onSuccess }: { onSuccess?: () => void }) {
 
           <div className="space-y-4">
             <Slider
-              value={[budgetMin, budgetMax]}
+              value={[budgetMax]}
               onValueChange={handleBudgetChange}
               min={0}
               max={5000}
               step={10}
               className="w-full"
             />
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <Label htmlFor="budgetMin" className="text-xs text-gray-600">Min ($)</Label>
-                <Input
-                  id="budgetMin"
-                  type="number"
-                  step="10"
-                  min={0}
-                  value={budgetMin}
-                  onChange={handleBudgetMinChange}
-                  className="h-9"
-                />
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="budgetMax" className="text-xs text-gray-600">Max ($)</Label>
-                <Input
-                  id="budgetMax"
-                  type="number"
-                  step="10"
-                  min={budgetMin}
-                  value={budgetMax}
-                  onChange={handleBudgetMaxChange}
-                  className="h-9"
-                />
-              </div>
+            <div className="space-y-1">
+              <Label htmlFor="budgetMax" className="text-xs text-gray-600">Max ($)</Label>
+              <Input
+                id="budgetMax"
+                type="number"
+                step="10"
+                min={0}
+                value={budgetMax}
+                onChange={handleBudgetMaxChange}
+                className="h-9"
+              />
             </div>
           </div>
 
