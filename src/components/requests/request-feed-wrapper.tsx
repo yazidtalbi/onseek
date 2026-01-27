@@ -14,6 +14,7 @@ type Filters = {
   priceMin?: string | null;
   priceMax?: string | null;
   country?: string | null;
+  requestIds?: string[] | null;
 };
 
 export function RequestFeedWrapper({
@@ -22,12 +23,14 @@ export function RequestFeedWrapper({
   page = 1,
   totalPages = 1,
   forceListView = false,
+  allFavorited = false,
 }: {
   initialRequests: RequestItem[];
   filters: Filters;
   page?: number;
   totalPages?: number;
   forceListView?: boolean;
+  allFavorited?: boolean;
 }) {
   const [viewMode, setViewMode] = useState<"list" | "grid">(() => {
     if (forceListView) return "list";
@@ -44,13 +47,11 @@ export function RequestFeedWrapper({
 
   return (
     <div className="space-y-4">
-      <div className="max-w-2xl mx-auto">
-        <RequestFilters 
-          viewMode={viewMode} 
-          onViewModeChange={setViewMode}
-          hideViewToggle={forceListView}
-        />
-      </div>
+      <RequestFilters 
+        viewMode={viewMode} 
+        onViewModeChange={setViewMode}
+        hideViewToggle={forceListView}
+      />
       <RequestFeed
         initialRequests={initialRequests}
         filters={filters}
@@ -59,6 +60,7 @@ export function RequestFeedWrapper({
         forceListView={forceListView}
         viewMode={viewMode}
         onViewModeChange={setViewMode}
+        allFavorited={allFavorited}
       />
     </div>
   );

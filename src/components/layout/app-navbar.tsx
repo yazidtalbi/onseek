@@ -5,11 +5,12 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Bell, Plus, ChevronDown, TrendingUp, Sparkles, Moon, Sun, LogOut, Heart, User, Send, Settings } from "lucide-react";
+import { Search, Bell, Plus, ChevronDown, TrendingUp, Sparkles, Moon, Sun, LogOut, Bookmark, User, Send, Settings, ClipboardList, Package } from "lucide-react";
 import { useAuth } from "@/components/layout/auth-provider";
 import { useTheme } from "@/components/layout/theme-provider";
 import { signOutAction } from "@/actions/auth.actions";
 import { LoginDropdown } from "@/components/auth/login-dropdown";
+import { CountryFlagSelector } from "@/components/ui/country-flag-selector";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -146,7 +147,7 @@ export function AppNavbar() {
 
   return (
     <header className="z-20 w-full">
-      <div className="flex w-full items-center gap-4 py-3 px-6">
+      <div className="flex w-full max-w-7xl mx-auto items-center gap-4 py-3 px-6">
         {/* Brand */}
         <Link href="/" className="text-xl text-foreground shrink-0" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>
           onseek
@@ -224,15 +225,14 @@ export function AppNavbar() {
               <Input
                 name="q"
                   placeholder="Search..."
-                  className="pl-9 pr-32 bg-gray-100 border-0 w-full rounded-l-full rounded-r-none"
+                  className="pl-9 pr-32 bg-white border w-full rounded-l-full rounded-r-none"
                 />
               </div>
-              <div className="h-6 w-px bg-gray-300"></div>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button
                     type="button"
-                    className="h-11 flex items-center gap-1.5 px-3 text-sm font-medium text-foreground hover:bg-gray-200 rounded-r-full bg-gray-100 shrink-0"
+                    className="h-11 flex items-center gap-1.5 px-3 text-sm font-medium text-foreground hover:bg-gray-50 rounded-r-full bg-white border border-l-0 shrink-0"
                   >
                     {searchType === "requests" ? "Requests" : "Items"}
                     <ChevronDown className="h-4 w-4" />
@@ -259,6 +259,11 @@ export function AppNavbar() {
 
         {/* Right Actions */}
         <div className="flex items-center gap-2 shrink-0 ml-auto">
+          {/* Country Flag Selector - show for all users on app pages */}
+          {(pathname.startsWith("/app") || pathname === "/") && (
+            <CountryFlagSelector />
+          )}
+          
           {user ? (
             <>
               <Button asChild size="sm" className="hidden sm:flex rounded-full bg-[#212733] text-white hover:bg-[#212733]/90">
@@ -297,6 +302,39 @@ export function AppNavbar() {
                       </span>
                     </div>
                   </div>
+                  
+                  {/* My Content */}
+                  <DropdownMenuItem asChild>
+                    <Link href="/app/requests" className="flex items-center">
+                      <ClipboardList className="h-4 w-4 mr-2" />
+                      Requests
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/app/submissions" className="flex items-center">
+                      <Send className="h-4 w-4 mr-2" />
+                      Proposals
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/app/inventory" className="flex items-center">
+                      <Package className="h-4 w-4 mr-2" />
+                      Inventory
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/app/saved" className="flex items-center">
+                      <Bookmark className={cn(
+                        "h-4 w-4 mr-2",
+                        pathname === "/app/saved" && "fill-current"
+                      )} />
+                      Saved
+                    </Link>
+                  </DropdownMenuItem>
+                  
+                  <DropdownMenuSeparator />
+                  
+                  {/* Account */}
                   <DropdownMenuItem asChild>
                     <Link href={profile?.username ? `/app/profile/${profile.username}` : "/app/settings"} className="flex items-center">
                       <User className="h-4 w-4 mr-2" />
@@ -304,28 +342,15 @@ export function AppNavbar() {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href="/app/submissions" className="flex items-center">
-                      <Send className="h-4 w-4 mr-2" />
-                      Submissions
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/app/saved" className="flex items-center">
-                      <Heart className={cn(
-                        "h-4 w-4 mr-2",
-                        pathname === "/app/saved" && "fill-current"
-                      )} />
-                      Saved
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
                     <Link href="/app/settings" className="flex items-center">
                       <Settings className="h-4 w-4 mr-2" />
                       Settings
                     </Link>
                   </DropdownMenuItem>
+                  
                   <DropdownMenuSeparator />
+                  
+                  {/* Actions */}
                   <DropdownMenuItem onClick={handleSignOut} disabled={isPending} className="flex items-center">
                     <LogOut className="h-4 w-4 mr-2" />
                     Sign out

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, PlusCircle, ClipboardList, Send, User } from "lucide-react";
+import { Home, PlusCircle, ClipboardList, Send, User, Package } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/components/layout/auth-provider";
 
@@ -14,7 +14,7 @@ export function BottomNav() {
     { href: "/app", label: "Home", icon: Home },
     { href: "/app/requests", label: "My Requests", icon: ClipboardList },
     { href: "/app/new", label: "New", icon: PlusCircle, cta: true },
-    { href: "/app/submissions", label: "My Submissions", icon: Send },
+    { href: "/app/personal-items", label: "Items", icon: Package },
     {
       href: profile?.username ? `/app/profile/${profile.username}` : "/app/settings",
       label: "Profile",

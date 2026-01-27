@@ -188,8 +188,8 @@ export function ProfileTabs({
               })
             ) : (
               <div className="rounded-lg border border-dashed border-[#e5e7eb] bg-white/50 p-8 text-center text-sm text-muted-foreground">
-                <p className="text-base font-medium mb-2">No submissions yet</p>
-                <p className="text-sm">This user hasn't made any submissions.</p>
+                <p className="text-base font-medium mb-2">No proposals yet</p>
+                <p className="text-sm">This user hasn't made any proposals.</p>
               </div>
             )}
           </div>

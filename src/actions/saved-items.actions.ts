@@ -63,6 +63,51 @@ export async function getSavedPersonalItemsAction() {
   return { data: data || [] };
 }
 
+export async function updatePersonalItemAction(formData: FormData) {
+  const supabase = await createServerSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return { error: "Unauthorized" };
+  }
+
+  const itemId = String(formData.get("itemId") || "");
+  const articleName = String(formData.get("articleName") || "");
+  const description = String(formData.get("description") || "") || null;
+  const price = formData.get("price") ? Number(formData.get("price")) : null;
+  const imageUrl = String(formData.get("imageUrl") || "") || null;
+
+  if (!itemId) {
+    return { error: "Item ID is required" };
+  }
+
+  if (!articleName || articleName.trim() === "") {
+    return { error: "Article name is required" };
+  }
+
+  const { data, error } = await supabase
+    .from("saved_personal_items")
+    .update({
+      article_name: articleName.trim(),
+      description: description?.trim() || null,
+      price: price,
+      image_url: imageUrl,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", itemId)
+    .eq("user_id", user.id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Error updating personal item:", error);
+    return { error: "Failed to update item" };
+  }
+
+  return { data };
+}
+
 export async function deleteSavedPersonalItemAction(formData: FormData) {
   const supabase = await createServerSupabaseClient();
   const {

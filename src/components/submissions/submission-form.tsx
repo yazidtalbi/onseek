@@ -343,7 +343,7 @@ export function SubmissionForm({ requestId, requestBudgetMax, requestDescription
             <DialogTitle className="text-xl font-semibold">Submit a proposal</DialogTitle>
           </DialogHeader>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5" noValidate>
-          {/* Submission Type Selection */}
+          {/* Proposal Type Selection */}
           <div className="flex gap-2">
               <button
                 type="button"

@@ -9,7 +9,8 @@ import {
   X,
   Settings,
   User,
-  Send
+  Send,
+  Package
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/components/layout/auth-provider";
@@ -56,6 +57,7 @@ function SidebarContent({
     { href: "/app", label: "Home", icon: Home },
     { href: "/app/requests", label: "Requests", icon: Lightbulb },
     { href: "/app/submissions", label: "Submissions", icon: Send },
+    { href: "/app/personal-items", label: "Personal Items", icon: Package },
   ];
 
   const categoryNavItems = [

@@ -1,12 +1,25 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { SavedRequestsList } from "@/components/requests/saved-requests-list";
-import { Card, CardContent } from "@/components/ui/card";
-import { Heart } from "lucide-react";
+import { RequestFilters } from "@/components/requests/request-filters";
+import { RequestFeedWrapper } from "@/components/requests/request-feed-wrapper";
+import { Bookmark } from "lucide-react";
 import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
-export default async function SavedRequestsPage() {
+type SearchParams = {
+  category?: string;
+  sort?: string;
+  priceMin?: string;
+  priceMax?: string;
+  country?: string;
+};
+
+export default async function SavedRequestsPage({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}) {
   const supabase = await createServerSupabaseClient();
   const {
     data: { user },
@@ -28,47 +41,96 @@ export default async function SavedRequestsPage() {
   // Fetch the actual requests
   let requests: any[] = [];
   if (favoriteRequestIds.length > 0) {
-    const { data: favoriteRequests } = await supabase
+    let query = supabase
       .from("requests")
       .select("*")
-      .in("id", favoriteRequestIds)
-      .order("created_at", { ascending: false });
+      .in("id", favoriteRequestIds);
+
+    // Apply filters
+    const category = searchParams.category;
+    const sort = searchParams.sort ?? "newest";
+    const priceMin = searchParams.priceMin;
+    const priceMax = searchParams.priceMax;
+    const country = searchParams.country;
+
+    if (category && category !== "All") {
+      query = query.eq("category", category);
+    }
+    if (priceMin || priceMax) {
+      const min = priceMin ? parseFloat(priceMin) : null;
+      const max = priceMax ? parseFloat(priceMax) : null;
+      
+      if (min !== null && !isNaN(min)) {
+        query = query.or(`budget_max.gte.${min},budget_max.is.null`);
+      }
+      if (max !== null && !isNaN(max)) {
+        query = query.or(`budget_min.lte.${max},budget_min.is.null`);
+      }
+    }
+    if (country) {
+      query = query.ilike("country", `%${country}%`);
+    }
+    if (sort === "active") {
+      query = query.order("updated_at", { ascending: false });
+    } else {
+      query = query.order("created_at", { ascending: false });
+    }
+
+    const { data: favoriteRequests } = await query;
     
-    // Sort to match favorite order
-    requests = favoriteRequestIds
-      .map((id) => favoriteRequests?.find((r) => r.id === id))
-      .filter((r) => r !== undefined) as any[];
+    // Sort to match favorite order if no filters applied
+    if (!category && !priceMin && !priceMax && !country) {
+      requests = favoriteRequestIds
+        .map((id) => favoriteRequests?.find((r) => r.id === id))
+        .filter((r) => r !== undefined) as any[];
+    } else {
+      requests = favoriteRequests || [];
+    }
   }
+
+  const filters = {
+    category: searchParams.category || null,
+    sort: searchParams.sort || "newest",
+    priceMin: searchParams.priceMin || null,
+    priceMax: searchParams.priceMax || null,
+    country: searchParams.country || null,
+    mine: false,
+    requestIds: favoriteRequestIds.length > 0 ? favoriteRequestIds : null, // Only show saved requests
+  };
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4">
-        <div>
-          <h1 className="text-3xl font-semibold">
-            Saved Requests
-          </h1>
-          <p className="text-sm text-muted-foreground mt-2">
-            Your favorite requests saved for later.
-          </p>
+      <div className="max-w-2xl mx-auto w-full">
+        <div className="flex flex-col gap-4">
+          <div>
+            <h1 className="text-3xl font-semibold">
+              Saved Requests
+            </h1>
+            <p className="text-sm text-muted-foreground mt-2">
+              Your favorite requests saved for later.
+            </p>
+          </div>
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card className="border-[#e5e7eb] bg-white/80">
-          <CardContent className="p-5">
-            <p className="text-xs text-muted-foreground">Total Saved</p>
-            <p className="text-2xl font-semibold">{requests.length}</p>
-          </CardContent>
-        </Card>
-      </div>
-
       {requests.length > 0 ? (
-        <SavedRequestsList initialRequests={requests} />
+        <div className="max-w-2xl mx-auto w-full">
+          <RequestFeedWrapper
+            initialRequests={requests}
+            filters={filters}
+            page={1}
+            totalPages={1}
+            forceListView={false}
+            allFavorited={true}
+          />
+        </div>
       ) : (
-        <div className="rounded-lg border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
-          <Heart className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
-          <p className="text-base font-medium mb-2">No saved requests yet</p>
-          <p className="text-sm">Start saving requests you're interested in by clicking the heart icon.</p>
+        <div className="max-w-2xl mx-auto w-full">
+          <div className="rounded-lg border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
+            <Bookmark className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
+            <p className="text-base font-medium mb-2">No saved requests yet</p>
+            <p className="text-sm">Start saving requests you're interested in by clicking the save button.</p>
+          </div>
         </div>
       )}
     </div>

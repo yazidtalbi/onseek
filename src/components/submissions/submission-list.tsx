@@ -77,7 +77,7 @@ export function SubmissionList({
   if (!data?.length) {
     return (
       <div className="rounded-2xl border border-dashed border-[#e5e7eb] bg-white/50 p-6 text-center text-sm text-gray-600">
-        No submissions yet. Be the first to help!
+        No proposals yet. Be the first to help!
       </div>
     );
   }

@@ -24,8 +24,8 @@ function getNotificationContent(type: string, payload: any) {
     case "new_submission":
       return {
         icon: MessageSquare,
-        title: "New submission",
-        message: `Someone submitted "${payload?.submission_title || "a submission"}" to your request`,
+        title: "New proposal",
+        message: `Someone submitted "${payload?.submission_title || "a proposal"}" to your request`,
         link: payload?.request_id ? `/app/requests/${payload.request_id}` : null,
         color: "text-blue-600",
         bgColor: "bg-blue-50",
@@ -35,7 +35,7 @@ function getNotificationContent(type: string, payload: any) {
       return {
         icon: Award,
         title: "You won!",
-        message: `Your submission was selected as the winner`,
+        message: `Your proposal was selected as the winner`,
         link: payload?.request_id ? `/app/requests/${payload.request_id}` : null,
         color: "text-[#FF5F00]",
         bgColor: "bg-[#FFDECA]/20",

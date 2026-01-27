@@ -42,7 +42,7 @@ function RequestCardGridComponent({ request, isFavorite, images = [] }: { reques
   return (
     <div className="relative">
       <Link href={`/app/requests/${request.id}`} prefetch={true} className="block">
-        <Card className="border-[#e5e7eb] bg-white flex flex-col hover:border-gray-300 hover:bg-[#fbfcfd] transition-colors cursor-pointer relative">
+        <Card className="border-[#e5e7eb] bg-white flex flex-col hover:border-gray-300 hover:bg-[#f9fafb] transition-colors cursor-pointer relative">
           <CardContent className="p-6 flex flex-col space-y-4">
             {/* Heart and Ellipsis - Top Right */}
             <div className="absolute top-4 right-4 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>

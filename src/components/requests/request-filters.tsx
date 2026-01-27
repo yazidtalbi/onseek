@@ -62,9 +62,9 @@ export function RequestFilters({
     if (key === "category") {
       params.delete("page");
     }
-    // Navigate to search page if there's a search query, otherwise home
+    // Navigate to search page if there's a search query, otherwise app home
     const hasQuery = searchParams.get("q");
-    const path = hasQuery ? "/search" : "/";
+    const path = hasQuery ? "/search" : "/app";
     router.push(`${path}?${params.toString()}`);
   };
 
@@ -82,7 +82,7 @@ export function RequestFilters({
       params.delete("priceMax");
     }
     const hasQuery = searchParams.get("q");
-    const path = hasQuery ? "/search" : "/";
+    const path = hasQuery ? "/search" : "/app";
     router.push(`${path}?${params.toString()}`);
   };
 
@@ -93,12 +93,17 @@ export function RequestFilters({
       {/* Top Row: Sort and Filters */}
       <div className="flex items-center justify-between gap-4 w-full overflow-x-auto pb-2">
         <div className="flex items-center gap-4 shrink-0">
-          {/* Popular Dropdown */}
+          {/* Empty left side - can be used for future filters */}
+        </div>
+
+        {/* Right side: Newest, View Selector and Price Filter */}
+        <div className="flex items-center gap-3 shrink-0 ml-auto">
+          {/* Newest Dropdown */}
           <Select
             value={sort}
             onValueChange={(value) => updateParam("sort", value)}
           >
-            <SelectTrigger className="w-[120px] h-9 rounded-full border border-[#e5e7eb] bg-white text-sm font-medium shrink-0">
+            <SelectTrigger className="!w-auto !h-auto !border-0 !bg-transparent !rounded-none text-sm font-medium shrink-0 hover:!bg-transparent focus:!ring-0 focus:!ring-offset-0">
               <SelectValue>
                 {sort === "newest" ? "Newest" : sort === "active" ? "Most active" : "Popular"}
               </SelectValue>
@@ -109,50 +114,50 @@ export function RequestFilters({
             </SelectContent>
           </Select>
 
-          {/* Filters Button */}
+          {/* View Selector */}
+          {!hideViewToggle && viewMode !== undefined && onViewModeChange && (
+            <div className="flex gap-1 rounded-full">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onViewModeChange("list")}
+                className={cn(
+                  "h-8 w-8 p-0 rounded-full",
+                  viewMode === "list" && "bg-gray-100"
+                )}
+                title="List view"
+              >
+                <LayoutList className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onViewModeChange("grid")}
+                className={cn(
+                  "h-8 w-8 p-0 rounded-full",
+                  viewMode === "grid" && "bg-gray-100"
+                )}
+                title="Grid view"
+              >
+                <Grid3x3 className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+
+          {/* Price Filter Icon - Far Right */}
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
             className={cn(
-              "rounded-full border border-[#e5e7eb] bg-white h-9 text-sm font-medium shrink-0",
-              hasActiveFilters && "border-foreground"
+              "h-8 w-8 p-0 rounded-full",
+              hasActiveFilters && (priceMin || priceMax) && "bg-gray-100"
             )}
             onClick={() => setShowFilters(!showFilters)}
+            title="Price filter"
           >
-            <Filter className="h-4 w-4 mr-2" />
-            Filters
+            <Filter className="h-4 w-4" />
           </Button>
         </div>
-
-        {/* View Selector - Far Right */}
-        {!hideViewToggle && viewMode !== undefined && onViewModeChange && (
-          <div className="flex gap-1 rounded-full shrink-0">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onViewModeChange("list")}
-              className={cn(
-                "h-8 w-8 p-0 rounded-full",
-                viewMode === "list" && "bg-gray-100"
-              )}
-              title="List view"
-            >
-              <LayoutList className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onViewModeChange("grid")}
-              className={cn(
-                "h-8 w-8 p-0 rounded-full",
-                viewMode === "grid" && "bg-gray-100"
-              )}
-              title="Grid view"
-            >
-              <Grid3x3 className="h-4 w-4" />
-            </Button>
-          </div>
-        )}
       </div>
 
       {/* Filter Inputs Row - Expandable */}

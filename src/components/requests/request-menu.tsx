@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { MoreHorizontal, EyeOff, Flag, X, Share2 } from "lucide-react";
+import { MoreHorizontal, EyeOff, Flag, X, Share2, Ban } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,23 +21,30 @@ import {
 import { Button } from "@/components/ui/button";
 import { ReportDialog } from "@/components/reports/report-dialog";
 import { updateRequestStatusAction } from "@/actions/request.actions";
+import { hideCategoryAction } from "@/actions/preference.actions";
 import { useAuth } from "@/components/layout/auth-provider";
 import { useTransition } from "react";
+import type { Category } from "@/lib/types";
 
 export function RequestMenu({
   requestId,
   requestUserId,
   status,
+  categories,
 }: {
   requestId: string;
   requestUserId: string;
   status: "open" | "closed" | "solved";
+  categories?: Category[];
 }) {
   const router = useRouter();
   const { user } = useAuth();
   const [isPending, startTransition] = useTransition();
+  const [isHidingCategory, setIsHidingCategory] = React.useState(false);
   const [showReportDialog, setShowReportDialog] = React.useState(false);
   const [showCloseConfirmDialog, setShowCloseConfirmDialog] = React.useState(false);
+  const [showHideCategoryDialog, setShowHideCategoryDialog] = React.useState(false);
+  const [categoryToHide, setCategoryToHide] = React.useState<Category | null>(null);
 
   const isOwner = user?.id === requestUserId;
   const isOpen = status === "open";
@@ -95,6 +102,29 @@ export function RequestMenu({
     }
   };
 
+  const handleHideCategory = (category: Category) => {
+    setCategoryToHide(category);
+    setShowHideCategoryDialog(true);
+  };
+
+  const confirmHideCategory = async () => {
+    if (!categoryToHide) return;
+
+    setIsHidingCategory(true);
+    try {
+      const result = await hideCategoryAction(categoryToHide.id);
+      if (!("error" in result)) {
+        setShowHideCategoryDialog(false);
+        setCategoryToHide(null);
+        router.refresh();
+      }
+    } catch (error) {
+      console.error("Error hiding category:", error);
+    } finally {
+      setIsHidingCategory(false);
+    }
+  };
+
   return (
     <>
       <DropdownMenu>
@@ -128,6 +158,28 @@ export function RequestMenu({
             <Share2 className="h-4 w-4 mr-2" />
             Share
           </DropdownMenuItem>
+          {categories && categories.length > 0 && (
+            <>
+              <DropdownMenuSeparator />
+              <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
+                Not interested
+              </div>
+              {categories.map((category) => (
+                <DropdownMenuItem
+                  key={category.id}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleHideCategory(category);
+                  }}
+                  className="cursor-pointer text-sm"
+                >
+                  <Ban className="h-4 w-4 mr-2" />
+                  Hide {category.name}
+                </DropdownMenuItem>
+              ))}
+            </>
+          )}
+          <DropdownMenuSeparator />
           <DropdownMenuItem
             onClick={(e) => {
               e.stopPropagation();
@@ -187,6 +239,38 @@ export function RequestMenu({
               className="bg-red-600 hover:bg-red-700 text-white"
             >
               {isPending ? "Closing..." : "Close request"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Hide Category Confirmation Dialog */}
+      <Dialog open={showHideCategoryDialog} onOpenChange={setShowHideCategoryDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Hide category?</DialogTitle>
+            <DialogDescription>
+              We'll show you fewer requests from the "{categoryToHide?.name}" category. You can change this in your settings anytime.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowHideCategoryDialog(false);
+                setCategoryToHide(null);
+              }}
+              disabled={isHidingCategory}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="default"
+              onClick={confirmHideCategory}
+              disabled={isHidingCategory}
+              className="bg-[#7755FF] hover:bg-[#6644EE] text-white"
+            >
+              {isHidingCategory ? "Hiding..." : "Hide category"}
             </Button>
           </DialogFooter>
         </DialogContent>

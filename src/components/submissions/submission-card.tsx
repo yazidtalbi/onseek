@@ -146,12 +146,7 @@ export function SubmissionCard({
   return (
     <Card
       className={cn(
-        "border border-neutral-200 bg-white transition-all hover:border-neutral-300 hover:bg-[#f9fafb] group cursor-pointer",
-        isFirst && isLast && "rounded-2xl",
-        isFirst && !isLast && "rounded-t-2xl rounded-b-none",
-        !isFirst && isLast && "rounded-b-2xl rounded-t-none",
-        !isFirst && !isLast && "rounded-none",
-        !isLast && "border-b-0"
+        "border border-neutral-200 bg-white transition-all hover:border-neutral-300 hover:bg-[#f9fafb] group cursor-pointer rounded-2xl"
       )}
     >
       <CardContent className="p-4 sm:p-5">

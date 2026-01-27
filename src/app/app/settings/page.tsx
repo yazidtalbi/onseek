@@ -2,10 +2,11 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { ProfileForm } from "@/components/profile/profile-form";
 import { ContactInfoForm } from "@/components/profile/contact-info-form";
 import { ThemeToggle } from "@/components/settings/theme-toggle";
+import { CategoryPreferences } from "@/components/settings/category-preferences";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { signOutAction } from "@/actions/auth.actions";
-import { Settings, User, Mail, Lock, Trash2, Palette, Phone } from "lucide-react";
+import { Settings, User, Mail, Lock, Trash2, Palette, Phone, Sparkles } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -97,6 +98,13 @@ export default async function SettingsPage() {
                 </Button>
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Interests Section */}
+        <Card className="border-border bg-card">
+          <CardContent className="p-6 space-y-6">
+            <CategoryPreferences />
           </CardContent>
         </Card>
 

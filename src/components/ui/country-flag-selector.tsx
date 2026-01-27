@@ -1,19 +1,19 @@
 "use client";
 
 import * as React from "react";
-import { Check, ChevronDown, X, Globe } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Check, Globe } from "lucide-react";
 // @ts-ignore - react-select-country-list doesn't have type definitions
 import countryListFactory from "react-select-country-list";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 
-// Initialize country list - it's a factory function, not a class
+// Initialize country list
 const countryList = countryListFactory();
 const countryLabels: string[] = countryList.getLabels();
 
@@ -46,19 +46,11 @@ const POPULAR_COUNTRIES = [
   "Belgium",
 ];
 
-export function CountryCombobox({
-  value,
-  onChange,
-  placeholder = "Select or type country",
-  className,
-}: {
-  value?: string | null;
-  onChange: (value: string) => void;
-  placeholder?: string;
-  className?: string;
-}) {
+export function CountryFlagSelector() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const selectedCountry = searchParams.get("country") || null;
   const [open, setOpen] = React.useState(false);
-  const [inputValue, setInputValue] = React.useState(value || "");
   const [searchQuery, setSearchQuery] = React.useState("");
 
   // Filter countries based on search query and separate popular ones
@@ -80,13 +72,6 @@ export function CountryCombobox({
     return { popularCountries: popular, otherCountries: other };
   }, [searchQuery]);
 
-  // Update input when value prop changes (from outside)
-  React.useEffect(() => {
-    if (value !== undefined) {
-      setInputValue(value || "");
-    }
-  }, [value]);
-
   // Reset search when modal opens/closes
   React.useEffect(() => {
     if (!open) {
@@ -94,19 +79,19 @@ export function CountryCombobox({
     }
   }, [open]);
 
-  const handleSelect = (country: string) => {
-    setInputValue(country);
-    onChange(country);
+  const handleSelectCountry = (country: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (country === selectedCountry || country === "") {
+      params.delete("country");
+    } else {
+      params.set("country", country);
+    }
+    // Reset to page 1 when filter changes
+    params.delete("page");
+    router.push(`/app?${params.toString()}`);
     setOpen(false);
   };
 
-  const handleClear = () => {
-    setInputValue("");
-    onChange("");
-    setOpen(false);
-  };
-
-  const selectedCountry = value || inputValue;
   const selectedCountryCode = selectedCountry ? getCountryCode(selectedCountry) : null;
   const hasResults = popularCountries.length > 0 || otherCountries.length > 0;
 
@@ -117,7 +102,7 @@ export function CountryCombobox({
       <button
         key={country}
         type="button"
-        onClick={() => handleSelect(country)}
+        onClick={() => handleSelectCountry(country)}
         className={cn(
           "w-full flex items-center gap-3 px-3 py-2.5 text-sm rounded-lg transition-colors",
           "hover:bg-gray-100 cursor-pointer",
@@ -151,58 +136,31 @@ export function CountryCombobox({
 
   return (
     <>
-      <div className={cn("relative", className)}>
-        <div className="relative">
-          <div
-            onClick={() => setOpen(true)}
-            className="flex items-center gap-2 w-full h-11 rounded-lg border border-[#e5e7eb] bg-white px-4 pr-20 cursor-pointer hover:border-gray-300 transition-colors"
-          >
-            {selectedCountryCode ? (
-              <div className="flex-shrink-0 w-5 h-5 flex items-center justify-center overflow-hidden rounded-sm border border-gray-200">
-                <Image
-                  src={`https://flagcdn.com/w20/${selectedCountryCode.toLowerCase()}.png`}
-                  alt={selectedCountry || ""}
-                  width={20}
-                  height={15}
-                  className="object-cover w-full h-full"
-                  unoptimized
-                />
-              </div>
-            ) : (
-              <Globe className="h-4 w-4 flex-shrink-0 text-gray-400" />
-            )}
-            <span className={cn(
-              "flex-1 text-sm",
-              !inputValue && "text-gray-500"
-            )}>
-              {inputValue || placeholder}
-            </span>
+      <button
+        onClick={() => setOpen(true)}
+        className="flex items-center gap-2 px-3 py-1.5 rounded-md hover:bg-gray-100 transition-colors text-sm font-medium"
+        title={selectedCountry || "Select country"}
+      >
+        {selectedCountryCode ? (
+          <div className="flex-shrink-0 w-5 h-5 flex items-center justify-center overflow-hidden rounded-sm border border-gray-200">
+            <Image
+              src={`https://flagcdn.com/w20/${selectedCountryCode.toLowerCase()}.png`}
+              alt={selectedCountry || ""}
+              width={20}
+              height={15}
+              className="object-cover w-full h-full"
+              unoptimized
+            />
           </div>
-          {selectedCountry && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleClear();
-              }}
-              className="absolute right-8 top-1/2 -translate-y-1/2 h-6 w-6 rounded-full"
-            >
-              <X className="h-3 w-3" />
-            </Button>
-          )}
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={() => setOpen(true)}
-            className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 opacity-50"
-          >
-            <ChevronDown className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
+        ) : (
+          <Globe className="h-4 w-4 flex-shrink-0" />
+        )}
+        {selectedCountry && (
+          <span className="hidden sm:inline text-xs text-gray-600 max-w-[100px] truncate">
+            {selectedCountry}
+          </span>
+        )}
+      </button>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-md max-h-[80vh] flex flex-col p-0 gap-0">
@@ -231,7 +189,7 @@ export function CountryCombobox({
                   {/* All Countries option */}
                   <button
                     type="button"
-                    onClick={() => handleSelect("")}
+                    onClick={() => handleSelectCountry("")}
                     className={cn(
                       "w-full flex items-center gap-3 px-3 py-2.5 text-sm rounded-lg transition-colors",
                       "hover:bg-gray-100 cursor-pointer",
@@ -285,3 +243,4 @@ export function CountryCombobox({
     </>
   );
 }
+

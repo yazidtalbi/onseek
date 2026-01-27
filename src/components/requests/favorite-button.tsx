@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useTransition } from "react";
-import { Heart } from "lucide-react";
+import { Bookmark } from "lucide-react";
 import { toggleFavoriteAction } from "@/actions/favorite.actions";
 import { useAuth } from "@/components/layout/auth-provider";
 import { useRouter } from "next/navigation";
@@ -48,12 +48,12 @@ export function FavoriteButton({
       className={cn(
         "flex items-center justify-center rounded-full p-2 transition-colors",
         isFavorite
-          ? "text-[#FF5F00] hover:text-gray-400"
+          ? "text-amber-600 hover:text-amber-700"
           : "text-gray-600 hover:text-gray-400"
       )}
-      aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+      aria-label={isFavorite ? "Remove from saved" : "Save request"}
     >
-      <Heart
+      <Bookmark
         className={cn(
           "h-5 w-5 transition-all",
           isFavorite && "fill-current"

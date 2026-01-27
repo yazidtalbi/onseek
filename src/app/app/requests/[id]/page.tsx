@@ -6,6 +6,7 @@ import { SubmissionList } from "@/components/submissions/submission-list";
 import { SubmissionForm } from "@/components/submissions/submission-form";
 import { RequestCard } from "@/components/requests/request-card";
 import { BackButton } from "@/components/ui/back-button";
+import { AnnouncementBanner } from "@/components/requests/announcement-banner";
 import { ChevronRight } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -151,6 +152,12 @@ export default async function RequestDetailPage({
 
   const proposalCount = initialSubmissions.length;
 
+  // Check if request should show announcement banner (no proposals and old)
+  const hasNoSubmissions = proposalCount === 0;
+  const requestAge = new Date().getTime() - new Date(request.created_at).getTime();
+  const daysOld = requestAge / (1000 * 60 * 60 * 24);
+  const shouldShowAnnouncement = hasNoSubmissions && daysOld >= 7; // Show if 7+ days old with no proposals
+
   return (
     <div className="space-y-6">
       {/* Back Button and Breadcrumbs */}
@@ -195,8 +202,11 @@ export default async function RequestDetailPage({
           </div>
         </div>
 
-        {/* Right Column: Submissions */}
+        {/* Right Column: Proposals */}
         <div className="lg:col-span-3 space-y-6">
+          {shouldShowAnnouncement && (
+            <AnnouncementBanner />
+          )}
           <SubmissionList
             requestId={request.id}
             initialSubmissions={initialSubmissions}

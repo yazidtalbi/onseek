@@ -18,6 +18,7 @@ type Filters = {
   priceMin?: string | null;
   priceMax?: string | null;
   country?: string | null;
+  requestIds?: string[] | null; // For filtering to specific request IDs (e.g., saved requests)
 };
 
 export function RequestFeed({
@@ -28,6 +29,7 @@ export function RequestFeed({
   forceListView = false,
   viewMode: externalViewMode,
   onViewModeChange,
+  allFavorited = false, // If true, all requests are marked as favorited
 }: {
   initialRequests: RequestItem[];
   filters: Filters;
@@ -36,6 +38,7 @@ export function RequestFeed({
   forceListView?: boolean;
   viewMode?: "list" | "grid";
   onViewModeChange?: (mode: "list" | "grid") => void;
+  allFavorited?: boolean;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -65,6 +68,11 @@ export function RequestFeed({
     queryFn: async () => {
       const supabase = createBrowserSupabaseClient();
       let query = supabase.from("requests").select("*");
+
+      // If requestIds filter is provided, only fetch those specific requests
+      if (filters.requestIds && filters.requestIds.length > 0) {
+        query = query.in("id", filters.requestIds);
+      }
 
       if (filters.mine) {
         const {
@@ -229,6 +237,7 @@ export function RequestFeed({
               variant="feed" 
               images={request.images || []}
               links={request.links || []}
+              isFavorite={allFavorited}
               isFirst={index === 0}
               isLast={index === data.length - 1}
             />
@@ -236,14 +245,15 @@ export function RequestFeed({
         </div>
       ) : (
         <div className="max-w-2xl mx-auto w-full">
-          <div className="columns-1 sm:columns-2 gap-4 w-full">
+          <div className="grid grid-cols-1 gap-4 w-full">
             {data.map((request: any) => (
-              <div key={request.id} className="break-inside-avoid mb-4 w-full">
+              <div key={request.id} className="w-full">
                 <RequestCard 
                   request={request} 
                   variant="feed" 
                   images={request.images || []}
                   links={request.links || []}
+                  isFavorite={allFavorited}
                   isFirst={true}
                   isLast={true}
                 />

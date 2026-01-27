@@ -22,7 +22,7 @@ export function PromotionalSidebar() {
           <div className="flex items-start gap-3">
             <Check className="h-4 w-4 text-foreground mt-0.5 flex-shrink-0" />
             <p className="text-sm text-gray-600">
-              Connect with helpful community members, get quality submissions, and find the best deals
+              Connect with helpful community members, get quality proposals, and find the best deals
             </p>
           </div>
           <div className="flex items-start gap-3">
@@ -58,7 +58,7 @@ export function PromotionalSidebar() {
           </li>
           <li className="flex items-start gap-2">
             <span className="text-foreground mt-1">•</span>
-            <span>Engage with submissions and provide feedback</span>
+            <span>Engage with proposals and provide feedback</span>
           </li>
         </ul>
       </div>
@@ -68,7 +68,7 @@ export function PromotionalSidebar() {
         <h3 className="text-lg font-semibold text-foreground">What is Onseek?</h3>
         <div className="space-y-3 text-sm text-gray-400">
           <p>
-            Onseek is a community-driven platform where you post requests for products, services, or solutions and get quality submissions from helpful members.
+            Onseek is a community-driven platform where you post requests for products, services, or solutions and get quality proposals from helpful members.
           </p>
         </div>
       </div>

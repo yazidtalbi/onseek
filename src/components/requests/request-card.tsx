@@ -11,10 +11,10 @@ import { FavoriteButton } from "@/components/requests/favorite-button";
 import { RequestMenu } from "@/components/requests/request-menu";
 import type { RequestItem } from "@/lib/types";
 import Image from "next/image";
-import { MapPin, Check, X } from "lucide-react";
+import { MapPin, Check, X, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ImagePreviewDialog } from "@/components/ui/image-preview-dialog";
-import { AnnouncementBanner } from "@/components/requests/announcement-banner";
+import { Badge } from "@/components/ui/badge";
 
 function cleanDescription(description: string) {
   return description.replace(/<!--REQUEST_PREFS:.*?-->/, "").trim();
@@ -77,11 +77,6 @@ function RequestCardComponent({
   const budgetText = formatBudget(request.budget_min, request.budget_max);
   const isFeed = variant === "feed";
 
-  // Check if request should show announcement banner (no submissions and old)
-  const hasNoSubmissions = (request.submissionCount ?? 0) === 0;
-  const requestAge = new Date().getTime() - new Date(request.created_at).getTime();
-  const daysOld = requestAge / (1000 * 60 * 60 * 24);
-  const shouldShowAnnouncement = hasNoSubmissions && daysOld >= 7; // Show if 7+ days old with no submissions
 
   // Limit display for feed variant
   const maxImages = 3;
@@ -151,22 +146,25 @@ function RequestCardComponent({
             <FavoriteButton
               requestId={request.id}
               isFavorite={isFavorite}
-              aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
             />
             <RequestMenu
               requestId={request.id}
               requestUserId={request.user_id}
               status={request.status}
+              categories={request.categories}
             />
           </div>
         </div>
 
-        {/* Announcement Banner - only show on feed variant for old requests with no submissions */}
-        {isFeed && shouldShowAnnouncement && (
-          <div className="mb-4">
-            <AnnouncementBanner />
+        {/* Match Indicator - only show on feed variant if matched */}
+        {variant === "feed" && request.matchReason && (
+          <div className="mb-3 flex items-center gap-2 text-xs text-[#7755FF] bg-[#7755FF]/10 px-3 py-1.5 rounded-full w-fit">
+            <Sparkles className="h-3.5 w-3.5" />
+            <span>{request.matchReason}</span>
           </div>
         )}
+
+        {/* Category Tags - hidden on home/requests page */}
 
         {/* Preferences and Dealbreakers - only show on feed variant */}
         {variant === "feed" && (visiblePreferences.length > 0 || visibleDealbreakers.length > 0) && (
@@ -286,7 +284,8 @@ function RequestCardComponent({
             {/* Budget, Location, and Condition in same row */}
             {(budgetText || request.country || request.condition) && (
               <div className={cn(
-                "border-t border-neutral-200 pt-6 pb-6",
+                (preferences.length > 0 || dealbreakers.length > 0) && "border-t border-neutral-200",
+                "pt-6 pb-6",
                 (images.length > 0 || links.length > 0) && "border-b border-neutral-200"
               )}>
                 <div className="flex gap-8 w-full">

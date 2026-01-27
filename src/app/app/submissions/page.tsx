@@ -1,8 +1,32 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { RequestCard } from "@/components/requests/request-card";
-import type { RequestItem } from "@/lib/types";
+import { SubmissionCard } from "@/components/submissions/submission-card";
+import type { Submission } from "@/lib/types";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
+
+function computeScore(
+  item: Submission & {
+    votes?: { vote: number; user_id: string }[];
+  },
+  userId?: string | null
+) {
+  const votes = item.votes;
+  const upvotes = votes?.filter((v) => v.vote === 1).length || 0;
+  const downvotes = votes?.filter((v) => v.vote === -1).length || 0;
+  const hasVoted = userId
+    ? votes?.some((v) => v.user_id === userId) || false
+    : false;
+  const voteValue = votes?.find((v) => v.user_id === userId)?.vote || 0;
+
+  return {
+    ...item,
+    upvotes,
+    downvotes,
+    score: upvotes - downvotes,
+    has_voted: voteValue,
+  } as Submission;
+}
 
 export default async function MySubmissionsPage() {
   const supabase = await createServerSupabaseClient();
@@ -14,130 +38,72 @@ export default async function MySubmissionsPage() {
     return null;
   }
 
-  const { data: submissions } = await supabase
+  // Fetch submissions with votes and profiles, and request info
+  const { data: submissionsData } = await supabase
     .from("submissions")
-    .select("*, requests(*)")
+    .select("*, votes(vote, user_id), profiles(username), requests(id, title, user_id)")
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
 
-  // Get unique request IDs from submissions
-  const requestIds = submissions
-    ?.map((sub) => (sub.requests as any)?.id)
-    .filter((id) => id) || [];
+  const submissions = submissionsData
+    ? submissionsData.map((item) => computeScore(item as Submission, user.id))
+    : [];
 
-  // Fetch full request data
-  let requests: RequestItem[] = [];
-  if (requestIds.length > 0) {
-    const { data: requestsData } = await supabase
-      .from("requests")
-      .select("*")
-      .in("id", requestIds);
-    requests = (requestsData || []) as RequestItem[];
-  }
-
-  // Fetch images for requests
-  let requestImages: Record<string, string[]> = {};
-  if (requests.length > 0) {
-    const { data: images } = await supabase
-      .from("request_images")
-      .select("request_id, image_url, image_order")
-      .in("request_id", requests.map((r) => r.id))
-      .order("image_order", { ascending: true });
-
-    if (images) {
-      images.forEach((img) => {
-        if (!requestImages[img.request_id]) {
-          requestImages[img.request_id] = [];
-        }
-        requestImages[img.request_id].push(img.image_url);
-      });
+  // Get request owner IDs for winner selection
+  const requestOwnerIds: Record<string, string> = {};
+  submissions.forEach((sub) => {
+    const request = (sub as any).requests;
+    if (request?.id && request?.user_id) {
+      requestOwnerIds[request.id] = request.user_id;
     }
-  }
-
-  // Fetch links for requests
-  let requestLinks: Record<string, string[]> = {};
-  if (requests.length > 0) {
-    const { data: links } = await supabase
-      .from("request_links")
-      .select("request_id, url")
-      .in("request_id", requests.map((r) => r.id));
-
-    if (links) {
-      links.forEach((link) => {
-        if (!requestLinks[link.request_id]) {
-          requestLinks[link.request_id] = [];
-        }
-        requestLinks[link.request_id].push(link.url);
-      });
-    }
-  }
-
-  // Fetch submission counts
-  let requestSubmissionCounts: Record<string, number> = {};
-  if (requests.length > 0) {
-    const { data: submissionCounts } = await supabase
-      .from("submissions")
-      .select("request_id")
-      .in("request_id", requests.map((r) => r.id));
-
-    if (submissionCounts) {
-      submissionCounts.forEach((sub) => {
-        const current = requestSubmissionCounts[sub.request_id] || 0;
-        requestSubmissionCounts[sub.request_id] = current + 1;
-      });
-    }
-  }
-
-  // Fetch favorite status
-  let requestFavorites: Set<string> = new Set();
-  if (user && requests.length > 0) {
-    const { data: favorites } = await supabase
-      .from("favorites")
-      .select("request_id")
-      .eq("user_id", user.id)
-      .in("request_id", requests.map((r) => r.id));
-
-    if (favorites) {
-      favorites.forEach((fav) => {
-        requestFavorites.add(fav.request_id);
-      });
-    }
-  }
-
-  // Get unique requests (keep first occurrence of each request)
-  const uniqueRequests = requests.filter(
-    (request, index, self) => index === self.findIndex((r) => r.id === request.id)
-  );
+  });
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-semibold">My submissions</h1>
-        <p className="text-sm text-muted-foreground">
-          Track every link you have shared with the community.
-        </p>
+      <div className="max-w-2xl mx-auto w-full">
+        <div>
+          <h1 className="text-3xl font-semibold">Proposals</h1>
+          <p className="text-sm text-muted-foreground">
+            Track every link you have shared with the community.
+          </p>
+        </div>
       </div>
 
-      <div className="space-y-4">
-        {uniqueRequests.length > 0 ? (
-          uniqueRequests.map((request) => (
-            <RequestCard
-              key={request.id}
-              request={{
-                ...request,
-                submissionCount: requestSubmissionCounts[request.id] || 0,
-              }}
-              variant="feed"
-              images={requestImages[request.id] || []}
-              links={requestLinks[request.id] || []}
-              isFavorite={requestFavorites.has(request.id)}
-              isFirst={true}
-              isLast={true}
-            />
-          ))
+      <div className="max-w-2xl mx-auto w-full space-y-4">
+        {submissions.length > 0 ? (
+          submissions.map((submission, index) => {
+            const request = (submission as any).requests;
+            const requestId = request?.id;
+            const requestTitle = request?.title;
+            
+            return (
+              <div key={submission.id} className="space-y-2">
+                {/* Link to parent request */}
+                {requestId && requestTitle && (
+                  <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+                    <span>For request:</span>
+                    <Link
+                      href={`/app/requests/${requestId}`}
+                      className="text-[#7755FF] hover:underline font-medium"
+                    >
+                      {requestTitle}
+                    </Link>
+                  </div>
+                )}
+                
+                <SubmissionCard
+                  submission={submission}
+                  requestId={requestId || ""}
+                  isFirst={index === 0}
+                  isLast={index === submissions.length - 1}
+                  requestOwnerId={requestId ? requestOwnerIds[requestId] : undefined}
+                />
+              </div>
+            );
+          })
         ) : (
           <div className="rounded-2xl border border-dashed border-[#e5e7eb] bg-white/50 p-6 text-center text-sm text-gray-600">
-            No submissions yet. Explore requests and help find links.
+            No proposals yet. Explore requests and help find links.
           </div>
         )}
       </div>
