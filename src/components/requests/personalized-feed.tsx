@@ -3,7 +3,8 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { getPersonalizedFeedAction, getUserPreferencesAction } from "@/actions/preference.actions";
+import { getUserPreferencesAction } from "@/actions/preference.actions";
+import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { CategoryPills } from "@/components/requests/category-pills";
 import { RequestFilters } from "@/components/requests/request-filters";
 import { RequestCard } from "@/components/requests/request-card";
@@ -15,9 +16,10 @@ import Link from "next/link";
 
 interface PersonalizedFeedProps {
   initialMode?: FeedMode;
+  initialData?: { items: RequestItem[]; nextCursor: string | null };
 }
 
-export function PersonalizedFeed({ initialMode = "for_you" }: PersonalizedFeedProps) {
+export function PersonalizedFeed({ initialMode = "for_you", initialData }: PersonalizedFeedProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [mode, setMode] = useState<FeedMode>(() => {
@@ -106,56 +108,131 @@ export function PersonalizedFeed({ initialMode = "for_you" }: PersonalizedFeedPr
   } = useInfiniteQuery({
     queryKey: ["personalized-feed", mode, category, priceMin, priceMax, country, sort],
     queryFn: async ({ pageParam }) => {
-      try {
-        console.log("[PersonalizedFeed] Fetching feed with params:", { mode, category, priceMin, priceMax, country, sort, pageParam });
-        const startTime = Date.now();
-        const result = await getPersonalizedFeedAction(mode, pageParam, 20, {
-          category,
-          priceMin,
-          priceMax,
-          country,
-          sort,
-        });
-        const duration = Date.now() - startTime;
-        console.log(`[PersonalizedFeed] Query completed in ${duration}ms`);
-        
-        if ("error" in result) {
-          console.error("[PersonalizedFeed] Feed error:", result.error);
-          throw new Error(result.error);
-        }
-        
-        console.log("[PersonalizedFeed] Feed loaded successfully:", result.items?.length || 0, "items");
-        console.log("[PersonalizedFeed] First item sample:", result.items?.[0] ? {
-          id: result.items[0].id,
-          title: result.items[0].title,
-          hasImages: !!(result.items[0] as any).images,
-          hasLinks: !!(result.items[0] as any).links,
-        } : "No items");
-        return result;
-      } catch (error) {
-        console.error("[PersonalizedFeed] Feed fetch error:", error);
-        console.error("[PersonalizedFeed] Error stack:", error instanceof Error ? error.stack : "No stack");
-        throw error;
+      const supabase = createBrowserSupabaseClient();
+      const limit = 20;
+      
+      // Build query
+      let query = supabase
+        .from("requests")
+        .select("*")
+        .eq("status", "open");
+      
+      // Apply filters
+      if (category && category !== "All") {
+        query = query.eq("category", category);
       }
+      if (country) {
+        query = query.ilike("country", `%${country}%`);
+      }
+      if (priceMin || priceMax) {
+        const min = priceMin ? parseFloat(priceMin) : null;
+        const max = priceMax ? parseFloat(priceMax) : null;
+        if (min !== null && !isNaN(min)) {
+          query = query.or(`budget_max.gte.${min},budget_max.is.null`);
+        }
+        if (max !== null && !isNaN(max)) {
+          query = query.or(`budget_min.lte.${max},budget_min.is.null`);
+        }
+      }
+      
+      // Apply sort
+      const sortMode = sort || (mode === "latest" ? "newest" : mode === "trending" ? "active" : "newest");
+      if (sortMode === "active") {
+        query = query.order("updated_at", { ascending: false });
+      } else {
+        query = query.order("created_at", { ascending: false });
+      }
+      
+      // Cursor-based pagination
+      if (pageParam) {
+        query = query.lt("created_at", pageParam);
+      }
+      
+      const { data: requests, error: queryError } = await query.limit(limit + 1);
+      
+      if (queryError) {
+        throw new Error(queryError.message);
+      }
+      
+      if (!requests || requests.length === 0) {
+        return {
+          items: [],
+          nextCursor: null,
+        };
+      }
+      
+      const hasMore = requests.length > limit;
+      const items = requests.slice(0, limit);
+      const nextCursor = hasMore ? items[items.length - 1].created_at : null;
+      
+      // Fetch images, links, and submission counts in parallel
+      const requestIds = items.map((r: any) => r.id);
+      const [imagesResult, linksResult, submissionCountsResult] = await Promise.all([
+        supabase
+          .from("request_images")
+          .select("request_id, image_url, image_order")
+          .in("request_id", requestIds)
+          .order("image_order", { ascending: true }),
+        supabase
+          .from("request_links")
+          .select("request_id, url")
+          .in("request_id", requestIds),
+        supabase
+          .from("submissions")
+          .select("request_id")
+          .in("request_id", requestIds),
+      ]);
+      
+      // Create maps for efficient lookups
+      const imageMap = new Map<string, string[]>();
+      imagesResult.data?.forEach((img) => {
+        const existing = imageMap.get(img.request_id) || [];
+        if (existing.length < 3) {
+          existing.push(img.image_url);
+          imageMap.set(img.request_id, existing);
+        }
+      });
+      
+      const linkMap = new Map<string, string[]>();
+      linksResult.data?.forEach((link) => {
+        const existing = linkMap.get(link.request_id) || [];
+        existing.push(link.url);
+        linkMap.set(link.request_id, existing);
+      });
+      
+      const submissionCountMap = new Map<string, number>();
+      submissionCountsResult.data?.forEach((sub) => {
+        const current = submissionCountMap.get(sub.request_id) || 0;
+        submissionCountMap.set(sub.request_id, current + 1);
+      });
+      
+      // Attach images, links, and submission counts to items
+      const itemsWithExtras = items.map((req: any) => ({
+        ...req,
+        images: imageMap.get(req.id) || [],
+        links: linkMap.get(req.id) || [],
+        submissionCount: submissionCountMap.get(req.id) || 0,
+      }));
+      
+      return {
+        items: itemsWithExtras,
+        nextCursor,
+      };
     },
     initialPageParam: undefined as string | undefined,
-    getNextPageParam: (lastPage) => {
-      const cursor = lastPage.nextCursor || undefined;
-      console.log("[PersonalizedFeed] Next page param:", cursor);
-      return cursor;
-    },
+    getNextPageParam: (lastPage) => lastPage.nextCursor || undefined,
     refetchOnWindowFocus: false,
-    retry: 2,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
+    retry: 1,
     staleTime: 30 * 1000, // 30 seconds
     gcTime: 5 * 60 * 1000,
-    enabled: true, // Explicitly enable the query
+    initialData: initialData ? { pages: [initialData], pageParams: [undefined] } : undefined,
+    placeholderData: (previousData) => previousData, // Show stale data while refetching
   });
 
   const allItems = useMemo(() => {
-    if (!data) return [];
+    if (!data || !data.pages) return [];
     
-    const items = data.pages.flatMap((page) => page.items) || [];
+    const items = data.pages.flatMap((page) => page?.items || []);
     
     // Filter out hidden requests (client-side only)
     if (typeof window === "undefined") {
@@ -175,17 +252,6 @@ export function PersonalizedFeed({ initialMode = "for_you" }: PersonalizedFeedPr
     setMode(newMode);
   };
 
-  // Debug logging
-  useEffect(() => {
-    console.log("[PersonalizedFeed] State:", {
-      isLoading,
-      isFetching,
-      isError,
-      hasData: !!data,
-      itemsCount: allItems.length,
-      pagesCount: data?.pages?.length || 0,
-    });
-  }, [isLoading, isFetching, isError, data, allItems.length]);
 
   return (
     <div className="space-y-4">
@@ -196,19 +262,15 @@ export function PersonalizedFeed({ initialMode = "for_you" }: PersonalizedFeedPr
       
       {/* Description text */}
       <p className="text-sm text-gray-400">
-        Browse requests that match your preferences and interests. Ordered by most relevant.
+        Browse requests that match your preferences and interests.
+        <br />
+        Ordered by most relevant.
       </p>
 
       <RequestFilters hideViewToggle={true} />
 
-      {/* Loading state - only for requests area */}
-      {isLoading ? (
-        <div className="max-w-2xl mx-auto w-full space-y-4">
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className="h-64 bg-gray-200 rounded animate-pulse" />
-          ))}
-        </div>
-      ) : isError ? (
+      {/* Error state */}
+      {isError ? (
         <div className="max-w-2xl mx-auto w-full">
           <div className="rounded-lg border border-dashed border-[#e5e7eb]  p-8 text-center">
             <p className="text-sm text-gray-600 mb-2">Failed to load feed</p>
@@ -244,7 +306,7 @@ export function PersonalizedFeed({ initialMode = "for_you" }: PersonalizedFeedPr
             )}
           </div>
         </div>
-      ) : (
+      ) : allItems.length > 0 ? (
         <>
           {/* Show subtle loading indicator while fetching */}
           {isFetching && !isLoading && (
@@ -253,38 +315,20 @@ export function PersonalizedFeed({ initialMode = "for_you" }: PersonalizedFeedPr
             </div>
           )}
           
-          <div className="max-w-2xl mx-auto w-full space-y-1">
+          <div className="max-w-2xl mx-auto w-full">
             {allItems.map((request: RequestItem, index: number) => {
               const requestWithExtras = request as RequestItem & { images?: string[]; links?: string[] };
-              if (index === 0) {
-                console.log("[PersonalizedFeed] Rendering", allItems.length, "items");
-                console.log("[PersonalizedFeed] First request:", {
-                  id: request.id,
-                  title: request.title,
-                  hasImages: !!(requestWithExtras.images && requestWithExtras.images.length > 0),
-                  hasLinks: !!(requestWithExtras.links && requestWithExtras.links.length > 0),
-                });
-              }
-              try {
-                return (
-                  <RequestCard
-                    key={request.id}
-                    request={request}
-                    variant="feed"
-                    images={requestWithExtras.images || []}
-                    links={requestWithExtras.links || []}
-                    isFirst={index === 0}
-                    isLast={index === allItems.length - 1}
-                  />
-                );
-              } catch (error) {
-                console.error(`[PersonalizedFeed] Error rendering request ${request.id}:`, error);
-                return (
-                  <div key={request.id} className="p-4 border border-red-300 rounded">
-                    <p className="text-sm text-red-600">Error rendering request: {request.title}</p>
-                  </div>
-                );
-              }
+              return (
+                <RequestCard
+                  key={request.id}
+                  request={request}
+                  variant="feed"
+                  images={requestWithExtras.images || []}
+                  links={requestWithExtras.links || []}
+                  isFirst={index === 0}
+                  isLast={index === allItems.length - 1}
+                />
+              );
             })}
           </div>
 
@@ -308,7 +352,7 @@ export function PersonalizedFeed({ initialMode = "for_you" }: PersonalizedFeedPr
             </div>
           )}
         </>
-      )}
+      ) : null}
     </div>
   );
 }

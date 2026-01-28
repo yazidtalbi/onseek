@@ -12,6 +12,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import Image from "next/image";
+import { Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 function computeScore(
   item: Submission & {
@@ -78,8 +81,51 @@ export function SubmissionList({
 
   if (!data?.length) {
     return (
-      <div className="rounded-2xl border border-dashed border-[#e5e7eb] /50 p-6 text-center text-sm text-gray-600">
-        No proposals yet. Be the first to help!
+      <div className="rounded-2xl p-12 text-center">
+        {/* Illustration with Stars */}
+        <div className="relative flex items-center justify-center mb-8">
+          <div className="relative z-10">
+            {/* Stars - positioned around the illustration */}
+            <Sparkles className="absolute -top-1 -left-1 h-4 w-4 text-yellow-400 rotate-12" />
+            <Sparkles className="absolute -top-1 right-1 h-4 w-4 text-yellow-400 -rotate-12" />
+            <Sparkles className="absolute top-2 -right-1 h-5 w-5 text-yellow-400 rotate-45" />
+            <Sparkles className="absolute -bottom-1 left-1 h-4 w-4 text-yellow-400 -rotate-45" />
+            
+            <div className="relative w-32 h-32">
+              <Image
+                src="/illustrations/2.png"
+                alt="Achievement"
+                fill
+                className="object-contain"
+                unoptimized
+              />
+            </div>
+          </div>
+        </div>
+        
+        {/* Heading */}
+        <h3 className="text-2xl font-bold text-neutral-900 mb-3">
+          Be the first to help
+        </h3>
+        
+        {/* Body Text */}
+        <p className="text-sm text-gray-600 mb-6 max-w-md mx-auto">
+          Share a product or item that matches this request
+        </p>
+        
+        {/* CTA Button */}
+        <Button 
+          className="bg-[#212733] text-white hover:bg-[#212733]/90 rounded-full px-6"
+          onClick={() => {
+            // Find and click the submission form button by ID
+            const submitButton = document.getElementById('submission-form-trigger') as HTMLButtonElement;
+            if (submitButton) {
+              submitButton.click();
+            }
+          }}
+        >
+          Submit a proposal
+        </Button>
       </div>
     );
   }
@@ -141,6 +187,7 @@ export function SubmissionList({
             disableWinnerAction={localStatus !== "open"}
             isFirst={index === 0}
             isLast={index === sorted.length - 1}
+            isOnlyOne={sorted.length === 1}
             requestOwnerId={requestOwnerId}
           />
         ))}

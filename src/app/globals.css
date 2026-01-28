@@ -2,6 +2,15 @@
 @import url('https://fonts.googleapis.com/css2?family=Zalando+Sans+SemiExpanded:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
+html {
+  background-color: var(--background);
+}
+
+body {
+  background-color: var(--background);
+  transition: background-color 0.1s ease;
+}
+
 :root {
   --background: #ffffff;
   --foreground: #1a1a1a;

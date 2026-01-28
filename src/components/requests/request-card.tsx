@@ -124,8 +124,8 @@ function RequestCardComponent({
             {/* Title: Primary, outcome-oriented, max 2 lines */}
             <h3
           className={cn(
-                "font-medium leading-snug line-clamp-2 text-[20px] text-foreground transition-colors",
-                isFeed && "group-hover:text-[#7755FF]"
+                "font-medium leading-snug text-[20px] text-foreground transition-colors",
+                isFeed && "line-clamp-2 group-hover:text-[#7755FF]"
           )}
         >
               {request.title}
@@ -257,10 +257,41 @@ function RequestCardComponent({
         {/* Expanded Details Section - only show on detail variant */}
         {variant === "detail" && (
           <div className="space-y-6 pt-4">
+            {/* Budget, Location, and Condition in same row */}
+            {(budgetText || request.country || request.condition) && (
+              <>
+                <div className="border-t border-[#e5e7eb] -mx-7"></div>
+                <div className="flex gap-12 w-full justify-start">
+                  {budgetText && (
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-400 mb-2">Budget</h4>
+                      <p className="text-sm text-neutral-900">{budgetText}</p>
+                    </div>
+                  )}
+                  {request.country && (
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-400 mb-2">Location</h4>
+                      <div className="flex items-center gap-1.5 text-sm text-neutral-900">
+                        <MapPin className="h-4 w-4" />
+                        <span>{request.country}</span>
+                      </div>
+                    </div>
+                  )}
+                  {request.condition && (
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-400 mb-2">Condition</h4>
+                      <p className="text-sm text-neutral-900">{request.condition}</p>
+                    </div>
+                  )}
+                </div>
+                <div className="border-t border-[#e5e7eb] -mx-7"></div>
+              </>
+            )}
+
             {/* Preferences */}
             {preferences.length > 0 && (
               <div>
-                <h4 className="text-sm font-semibold text-neutral-900 mb-3">Preferences</h4>
+                <h4 className="text-sm font-semibold text-gray-400 mb-3">Preferences</h4>
                 <div className="flex flex-wrap gap-2">
                   {preferences.map((pref: { label: string }, idx: number) => (
                     <span
@@ -278,7 +309,7 @@ function RequestCardComponent({
             {/* Dealbreakers */}
             {dealbreakers.length > 0 && (
               <div>
-                <h4 className="text-sm font-semibold text-neutral-900 mb-3">Dealbreakers</h4>
+                <h4 className="text-sm font-semibold text-gray-400 mb-3">Dealbreakers</h4>
                 <div className="flex flex-wrap gap-2">
                   {dealbreakers.map((deal: { label: string }, idx: number) => (
                     <span
@@ -293,43 +324,10 @@ function RequestCardComponent({
               </div>
             )}
 
-            {/* Budget, Location, and Condition in same row */}
-            {(budgetText || request.country || request.condition) && (
-              <div className={cn(
-                "pt-2 pb-2"
-              )}>
-                <div className="rounded-lg border border-[#e5e7eb] p-4">
-                  <div className="flex gap-8 w-full">
-                    {budgetText && (
-                      <div className="flex-1">
-                        <h4 className="text-sm font-semibold text-neutral-900 mb-2">Budget</h4>
-                        <p className="text-sm text-neutral-600">{budgetText}</p>
-                      </div>
-                    )}
-                    {request.country && (
-                      <div className="flex-1">
-                        <h4 className="text-sm font-semibold text-neutral-900 mb-2">Location</h4>
-                        <div className="flex items-center gap-1.5 text-sm text-neutral-600">
-                          <MapPin className="h-4 w-4" />
-                          <span>{request.country}</span>
-                        </div>
-                      </div>
-                    )}
-                    {request.condition && (
-                      <div className="flex-1">
-                        <h4 className="text-sm font-semibold text-neutral-900 mb-2">Condition</h4>
-                        <p className="text-sm text-neutral-600">{request.condition}</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-
             {/* Reference Images */}
             {images.length > 0 && (
               <div>
-                <h4 className="text-sm font-semibold text-neutral-900 mb-3">Reference images</h4>
+                <h4 className="text-sm font-semibold text-gray-400 mb-3">Reference images</h4>
                 <div className="flex gap-2 overflow-x-auto">
                   {images.map((imgUrl, index) => (
                     <button
@@ -359,7 +357,7 @@ function RequestCardComponent({
             {/* Reference Links */}
             {links.length > 0 && (
               <div>
-                <h4 className="text-sm font-semibold text-neutral-900 mb-2">Reference links</h4>
+                <h4 className="text-sm font-semibold text-gray-400 mb-2">Reference links</h4>
                 <div className="space-y-1.5">
                   {links.map((link, index) => {
                     const fullUrl = link.startsWith('http') ? link : `https://${link}`;

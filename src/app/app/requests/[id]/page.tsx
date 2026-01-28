@@ -8,6 +8,7 @@ import { RequestCard } from "@/components/requests/request-card";
 import { BackButton } from "@/components/ui/back-button";
 import { AnnouncementBanner } from "@/components/requests/announcement-banner";
 import { ChevronRight } from "lucide-react";
+import { ShareButton } from "@/components/requests/share-button";
 
 export const dynamic = "force-dynamic";
 
@@ -196,9 +197,6 @@ export default async function RequestDetailPage({
               proposalCount={proposalCount}
             />
 
-            {showSubmissionForm ? (
-              <SubmissionForm requestId={request.id} requestBudgetMax={request.budget_max} requestDescription={request.description} />
-            ) : null}
           </div>
         </div>
 
@@ -207,6 +205,17 @@ export default async function RequestDetailPage({
           {shouldShowAnnouncement && (
             <AnnouncementBanner />
           )}
+          <div className="flex items-center gap-2">
+            {showSubmissionForm ? (
+              <SubmissionForm 
+                requestId={request.id} 
+                requestBudgetMax={request.budget_max} 
+                requestDescription={request.description}
+                hideButton={proposalCount === 0}
+              />
+            ) : null}
+            <ShareButton requestId={request.id} />
+          </div>
           <SubmissionList
             requestId={request.id}
             requestTitle={request.title}
@@ -220,22 +229,23 @@ export default async function RequestDetailPage({
       </div>
 
       {similarRequests && similarRequests.length > 0 ? (
-        <div className="space-y-4 pt-12 mt-12 border-t border-[#e5e7eb]">
+        <div className="space-y-4 pt-12 mt-12">
           <h2 className="text-2xl font-semibold text-foreground">Similar requests</h2>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="columns-1 sm:columns-2 lg:columns-3 gap-4">
             {similarRequests.map((similarRequest) => (
-              <RequestCard
-                key={similarRequest.id}
-                request={{
-                  ...similarRequest,
-                  submissionCount: similarRequestSubmissionCounts[similarRequest.id] || 0,
-                }}
-                variant="feed"
-                images={similarRequestImages[similarRequest.id] || []}
-                isFavorite={similarRequestFavorites.has(similarRequest.id)}
-                isFirst={true}
-                isLast={true}
-              />
+              <div key={similarRequest.id} className="break-inside-avoid mb-4">
+                <RequestCard
+                  request={{
+                    ...similarRequest,
+                    submissionCount: similarRequestSubmissionCounts[similarRequest.id] || 0,
+                  }}
+                  variant="feed"
+                  images={similarRequestImages[similarRequest.id] || []}
+                  isFavorite={similarRequestFavorites.has(similarRequest.id)}
+                  isFirst={true}
+                  isLast={true}
+                />
+              </div>
             ))}
           </div>
         </div>

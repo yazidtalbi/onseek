@@ -44,6 +44,9 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/", request.url));
   }
 
+  // Set pathname header for use in layouts
+  response.headers.set("x-pathname", request.nextUrl.pathname);
+
   return response;
 }
 

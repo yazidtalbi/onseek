@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Plus, Loader2, Upload, ZoomIn, X } from "lucide-react";
+import { Plus, Loader2, Upload, ZoomIn, X, FilePlus } from "lucide-react";
 import Image from "next/image";
 import { useAuth } from "@/components/layout/auth-provider";
 import { getSavedPersonalItemsAction, savePersonalItemAction } from "@/actions/saved-items.actions";
@@ -29,7 +29,7 @@ import { cn } from "@/lib/utils";
 
 type Values = z.infer<typeof submissionSchema>;
 
-export function SubmissionForm({ requestId, requestBudgetMax, requestDescription }: { requestId: string; requestBudgetMax?: number | null; requestDescription?: string }) {
+export function SubmissionForm({ requestId, requestBudgetMax, requestDescription, hideButton = false }: { requestId: string; requestBudgetMax?: number | null; requestDescription?: string; hideButton?: boolean }) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -328,14 +328,26 @@ export function SubmissionForm({ requestId, requestBudgetMax, requestDescription
 
   return (
     <>
-      <Button
-        type="button"
-        className="w-full rounded-full bg-[#212733] text-white hover:bg-[#212733]/90"
-        onClick={() => handleOpenChange(true)}
-      >
-        <Plus className="h-4 w-4 mr-2" />
-        Submit a proposal
-      </Button>
+      {!hideButton && (
+        <Button
+          type="button"
+          id="submission-form-trigger"
+          className="h-11 rounded-full bg-[#212733] text-white hover:bg-[#212733]/90"
+          onClick={() => handleOpenChange(true)}
+        >
+          Submit a proposal
+        </Button>
+      )}
+      {hideButton && (
+        <Button
+          type="button"
+          id="submission-form-trigger"
+          className="hidden"
+          onClick={() => handleOpenChange(true)}
+        >
+          Submit a proposal
+        </Button>
+      )}
 
       <Dialog open={isExpanded} onOpenChange={handleOpenChange}>
         <DialogContent className="max-w-lg">

@@ -44,6 +44,7 @@ export function SubmissionCard({
   disableWinnerAction,
   isFirst = false,
   isLast = false,
+  isOnlyOne = false,
   hideVotes = false,
   requestOwnerId,
 }: {
@@ -56,6 +57,7 @@ export function SubmissionCard({
   disableWinnerAction?: boolean;
   isFirst?: boolean;
   isLast?: boolean;
+  isOnlyOne?: boolean;
   hideVotes?: boolean;
   requestOwnerId?: string;
 }) {
@@ -149,10 +151,11 @@ export function SubmissionCard({
   return (
     <Card
       className={cn(
-        " transition-all hover:bg-[#f9fafb] group cursor-pointer",
-        isFirst ? "rounded-t-2xl rounded-b-none border-b-0" : "",
-        isLast && !isFirst ? "rounded-b-2xl rounded-t-none border-t-0" : "",
-        !isFirst && !isLast ? "rounded-none border-t-0" : ""
+        " transition-all hover:bg-[#f9fafb] group cursor-pointer border",
+        isOnlyOne ? "rounded-2xl" : "",
+        !isOnlyOne && isFirst ? "rounded-t-2xl rounded-b-none border-b border-t-0 border-l-0 border-r-0" : "",
+        !isOnlyOne && isLast && !isFirst ? "rounded-b-2xl rounded-t-none border-t-0 border-l-0 border-r-0" : "",
+        !isOnlyOne && !isFirst && !isLast ? "rounded-none border-t-0 border-l-0 border-r-0" : ""
       )}
     >
       <CardContent className="p-4 sm:p-5">

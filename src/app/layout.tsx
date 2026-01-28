@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/layout/providers";
+import { Toaster } from "@/components/ui/toaster";
 
 const interDisplay = Inter({
   variable: "--font-inter-display",
@@ -35,6 +36,7 @@ export default function RootLayout({
         className={`${interDisplay.variable} ${geistMono.variable} min-h-screen bg-background text-foreground antialiased`}
       >
         <Providers>{children}</Providers>
+        <Toaster />
       </body>
     </html>
   );

@@ -5,6 +5,7 @@ import { AppFooter } from "@/components/layout/app-footer";
 import { BottomNav } from "@/components/layout/bottom-nav";
 import { ScrollToTop } from "@/components/layout/scroll-to-top";
 import { AuthProvider } from "@/components/layout/auth-provider";
+import { MaxWidthWrapper } from "@/components/layout/max-width-wrapper";
 
 export const dynamic = "force-dynamic";
 
@@ -60,11 +61,11 @@ export default async function AppLayout({
       <div className="flex flex-col min-h-screen bg-background md:pb-24">
         <AppNavbar />
         <main className="flex-1 w-full px-6 pt-8 pb-8 md:px-8 md:pt-8">
-          <div className="mx-auto max-w-5xl w-full">{children}</div>
+          <MaxWidthWrapper>{children}</MaxWidthWrapper>
         </main>
-        <div className="mx-auto max-w-5xl w-full">
+        <MaxWidthWrapper>
           <AppFooter />
-        </div>
+        </MaxWidthWrapper>
         <div className="hidden md:block">
           <BottomNav />
         </div>
