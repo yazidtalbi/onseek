@@ -407,7 +407,7 @@ function RequestCardComponent({
         </Card>
       ) : (
         <Link
-          href={createRequestUrl(request.id, request.title)}
+          href={createRequestUrl(request.id)}
           prefetch={true}
           className="block focus:outline-none cursor-pointer"
           onClick={(e) => {

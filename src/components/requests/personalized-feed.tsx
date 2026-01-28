@@ -256,17 +256,35 @@ export function PersonalizedFeed({ initialMode = "for_you" }: PersonalizedFeedPr
           <div className="max-w-2xl mx-auto w-full space-y-1">
             {allItems.map((request: RequestItem, index: number) => {
               const requestWithExtras = request as RequestItem & { images?: string[]; links?: string[] };
-              return (
-                <RequestCard
-                  key={request.id}
-                  request={request}
-                  variant="feed"
-                  images={requestWithExtras.images || []}
-                  links={requestWithExtras.links || []}
-                  isFirst={index === 0}
-                  isLast={index === allItems.length - 1}
-                />
-              );
+              if (index === 0) {
+                console.log("[PersonalizedFeed] Rendering", allItems.length, "items");
+                console.log("[PersonalizedFeed] First request:", {
+                  id: request.id,
+                  title: request.title,
+                  hasImages: !!(requestWithExtras.images && requestWithExtras.images.length > 0),
+                  hasLinks: !!(requestWithExtras.links && requestWithExtras.links.length > 0),
+                });
+              }
+              try {
+                return (
+                  <RequestCard
+                    key={request.id}
+                    request={request}
+                    variant="feed"
+                    images={requestWithExtras.images || []}
+                    links={requestWithExtras.links || []}
+                    isFirst={index === 0}
+                    isLast={index === allItems.length - 1}
+                  />
+                );
+              } catch (error) {
+                console.error(`[PersonalizedFeed] Error rendering request ${request.id}:`, error);
+                return (
+                  <div key={request.id} className="p-4 border border-red-300 rounded">
+                    <p className="text-sm text-red-600">Error rendering request: {request.title}</p>
+                  </div>
+                );
+              }
             })}
           </div>
 
