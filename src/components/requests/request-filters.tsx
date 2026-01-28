@@ -90,109 +90,33 @@ export function RequestFilters({
 
   return (
     <div className="space-y-4">
-      {/* Top Row: Sort and Filters */}
-      <div className="flex items-center justify-between gap-4 w-full overflow-x-auto pb-2">
-        <div className="flex items-center gap-4 shrink-0">
-          {/* Empty left side - can be used for future filters */}
-        </div>
-
-        {/* Right side: Newest, View Selector and Price Filter */}
-        <div className="flex items-center gap-3 shrink-0 ml-auto">
-          {/* Newest Dropdown */}
-          <Select
-            value={sort}
-            onValueChange={(value) => updateParam("sort", value)}
-          >
-            <SelectTrigger className="!w-auto !h-auto !border-0 !bg-transparent !rounded-none text-sm font-medium shrink-0 hover:!bg-transparent focus:!ring-0 focus:!ring-offset-0">
-              <SelectValue>
-                {sort === "newest" ? "Newest" : sort === "active" ? "Most active" : "Popular"}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="newest">Newest</SelectItem>
-              <SelectItem value="active">Most active</SelectItem>
-            </SelectContent>
-          </Select>
-
-          {/* View Selector */}
-          {!hideViewToggle && viewMode !== undefined && onViewModeChange && (
-            <div className="flex gap-1 rounded-full">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onViewModeChange("list")}
-                className={cn(
-                  "h-8 w-8 p-0 rounded-full",
-                  viewMode === "list" && "bg-gray-100"
-                )}
-                title="List view"
-              >
-                <LayoutList className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onViewModeChange("grid")}
-                className={cn(
-                  "h-8 w-8 p-0 rounded-full",
-                  viewMode === "grid" && "bg-gray-100"
-                )}
-                title="Grid view"
-              >
-                <Grid3x3 className="h-4 w-4" />
-              </Button>
-            </div>
-          )}
-
-          {/* Price Filter Icon - Far Right */}
+      {/* View Selector - Only show if not hidden */}
+      {!hideViewToggle && viewMode !== undefined && onViewModeChange && (
+        <div className="flex items-center justify-end gap-1 rounded-full">
           <Button
             variant="ghost"
             size="sm"
+            onClick={() => onViewModeChange("list")}
             className={cn(
               "h-8 w-8 p-0 rounded-full",
-              hasActiveFilters && (priceMin || priceMax) && "bg-gray-100"
+              viewMode === "list" && "bg-gray-100"
             )}
-            onClick={() => setShowFilters(!showFilters)}
-            title="Price filter"
+            title="List view"
           >
-            <Filter className="h-4 w-4" />
+            <LayoutList className="h-4 w-4" />
           </Button>
-        </div>
-      </div>
-
-      {/* Filter Inputs Row - Expandable */}
-      {showFilters && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Price Range */}
-        <div className="space-y-3">
-          <Label htmlFor="priceRange" className="text-sm font-medium text-muted-foreground">Price</Label>
-          <div className="space-y-2">
-            <Slider
-              id="priceRange"
-              min={0}
-              max={10000}
-              step={100}
-              value={priceRange}
-              onValueChange={handlePriceRangeChange}
-              className="w-full"
-            />
-            <div className="flex items-center justify-between text-xs text-gray-600">
-              <span>${priceRange[0]}</span>
-              <span>${priceRange[1]}</span>
-            </div>
-          </div>
-        </div>
-        
-        {/* Country */}
-        <div className="space-y-2">
-          <Label htmlFor="country" className="text-sm font-medium text-muted-foreground">Country</Label>
-          <CountryCombobox
-            value={country || null}
-            onChange={(value) => updateParam("country", value)}
-            placeholder="Select or type country"
-            className="h-9"
-          />
-        </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onViewModeChange("grid")}
+            className={cn(
+              "h-8 w-8 p-0 rounded-full",
+              viewMode === "grid" && "bg-gray-100"
+            )}
+            title="Grid view"
+          >
+            <Grid3x3 className="h-4 w-4" />
+          </Button>
         </div>
       )}
     </div>

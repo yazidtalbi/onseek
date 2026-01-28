@@ -76,7 +76,7 @@ export function ReportDialog({
               <Textarea 
                 id={`reason-${targetId}`} 
                 {...form.register("reason")}
-                className="min-h-[120px] resize-none rounded-lg border-[#e5e7eb] bg-white focus:border-[#7755FF] focus:ring-1 focus:ring-[#7755FF]"
+                className="min-h-[120px] resize-none rounded-lg border-[#e5e7eb]  focus:border-[#7755FF] focus:ring-1 focus:ring-[#7755FF]"
                 placeholder="Please describe why you're reporting this..."
               />
               {form.formState.errors.reason ? (

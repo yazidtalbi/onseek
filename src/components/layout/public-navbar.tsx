@@ -10,8 +10,8 @@ export function PublicNavbar() {
   return (
     <header className="sticky top-0 z-20 border-b border-border bg-background/80 backdrop-blur">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
-        <Link href="/" className="text-lg font-bold text-foreground">
-          Onseek
+        <Link href="/" className="text-lg font-bold text-black" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>
+          onseek
         </Link>
         <div className="flex items-center gap-3">
           <Button
@@ -29,9 +29,11 @@ export function PublicNavbar() {
           <Link href="/login" className="text-sm font-semibold text-foreground">
             Log in
           </Link>
-          <Button asChild variant="accent" size="sm">
-            <Link href="/signup">Get started</Link>
-          </Button>
+          <div className="ml-3">
+            <Button asChild variant="accent" size="sm">
+              <Link href="/signup">Get started</Link>
+            </Button>
+          </div>
         </div>
       </div>
     </header>

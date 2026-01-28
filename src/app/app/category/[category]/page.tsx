@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { RequestFeedWrapper } from "@/components/requests/request-feed-wrapper";
 import { MAIN_CATEGORIES } from "@/lib/categories";
+import { getUserPreferencesAction } from "@/actions/preference.actions";
 
 export const dynamic = "force-dynamic";
 
@@ -61,6 +62,33 @@ export default async function CategoryPage({
 
   const { data: requests } = await query.limit(20);
 
+  // Get user preferences to add personalization cues
+  let requestsWithCues = requests ?? [];
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (user) {
+    const preferencesResult = await getUserPreferencesAction();
+    if (!("error" in preferencesResult) && preferencesResult.preferences.length > 0) {
+      // Get category names that user follows (from category.name field)
+      const followedCategoryNames = new Set(
+        preferencesResult.preferences
+          .map((p) => p.category?.name)
+          .filter((name): name is string => !!name)
+      );
+
+      // Add matchReason to requests that match user preferences
+      // Since requests.category is a text field matching category names
+      if (followedCategoryNames.has(dbCategory)) {
+        requestsWithCues = requestsWithCues.map((request: any) => ({
+          ...request,
+          matchReason: `Because you follow: ${dbCategory}`,
+        }));
+      }
+    }
+  }
+
   return (
     <div className="space-y-8">
       {/* Category Header */}
@@ -72,7 +100,7 @@ export default async function CategoryPage({
       </div>
 
       <RequestFeedWrapper
-        initialRequests={requests ?? []}
+        initialRequests={requestsWithCues}
         filters={{
           category: dbCategory,
           status,

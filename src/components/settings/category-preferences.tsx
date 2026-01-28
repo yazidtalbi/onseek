@@ -167,7 +167,7 @@ export function CategoryPreferences() {
                   <div className="flex items-center justify-between">
                     <h4 className="font-medium text-sm">{mainCat.name}</h4>
                     {selectedCount > 0 && (
-                      <Badge variant="secondary" className="text-xs">
+                      <Badge variant="default" className="text-xs">
                         {selectedCount} selected
                       </Badge>
                     )}

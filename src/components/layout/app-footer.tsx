@@ -1,18 +1,69 @@
 import Link from "next/link";
 import { Facebook, Linkedin, Twitter, Youtube, Instagram } from "lucide-react";
+import { MAIN_CATEGORIES } from "@/lib/categories";
 
 export function AppFooter() {
   return (
-    <footer className="border-t border-[#e5e7eb] mt-12 bg-white">
+    <footer className="border-t border-[#e5e7eb] mt-12 ">
       <div className="w-full px-4 pt-12 pb-6 md:px-8">
         {/* Links Grid */}
-        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4 mb-8">
-          {/* Column 1 */}
+        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-5 mb-8">
+          {/* Column 1: App Pages */}
           <div className="space-y-3">
-            <h4 className="text-sm font-semibold text-foreground">About Us</h4>
+            <h4 className="text-sm font-semibold text-foreground">App</h4>
+            <nav className="space-y-2">
+              <Link href="/app" className="block text-sm text-gray-600 hover:text-foreground transition-colors">
+                Home
+              </Link>
+              <Link href="/app/new" className="block text-sm text-gray-600 hover:text-foreground transition-colors">
+                Create a Request
+              </Link>
+              <Link href="/app/requests" className="block text-sm text-gray-600 hover:text-foreground transition-colors">
+                My Requests
+              </Link>
+              <Link href="/app/submissions" className="block text-sm text-gray-600 hover:text-foreground transition-colors">
+                Proposals
+              </Link>
+              <Link href="/app/personal-items" className="block text-sm text-gray-600 hover:text-foreground transition-colors">
+                Inventory
+              </Link>
+              <Link href="/app/saved" className="block text-sm text-gray-600 hover:text-foreground transition-colors">
+                Saved
+              </Link>
+              <Link href="/app/notifications" className="block text-sm text-gray-600 hover:text-foreground transition-colors">
+                Notifications
+              </Link>
+              <Link href="/app/leaderboard" className="block text-sm text-gray-600 hover:text-foreground transition-colors">
+                Leaderboard
+              </Link>
+            </nav>
+          </div>
+
+          {/* Column 2: Categories */}
+          <div className="space-y-3">
+            <h4 className="text-sm font-semibold text-foreground">Categories</h4>
+            <nav className="space-y-2">
+              {MAIN_CATEGORIES.map((category) => (
+                <Link
+                  key={category}
+                  href={`/app/category/${category.toLowerCase()}`}
+                  className="block text-sm text-gray-600 hover:text-foreground transition-colors"
+                >
+                  {category}
+                </Link>
+              ))}
+            </nav>
+          </div>
+
+          {/* Column 3: About & Support */}
+          <div className="space-y-3">
+            <h4 className="text-sm font-semibold text-foreground">About & Support</h4>
             <nav className="space-y-2">
               <Link href="/about" className="block text-sm text-gray-600 hover:text-foreground transition-colors">
                 About Us
+              </Link>
+              <Link href="/help" className="block text-sm text-gray-600 hover:text-foreground transition-colors">
+                Help & Support
               </Link>
               <Link href="/feedback" className="block text-sm text-gray-600 hover:text-foreground transition-colors">
                 Feedback
@@ -20,31 +71,24 @@ export function AppFooter() {
               <Link href="/trust" className="block text-sm text-gray-600 hover:text-foreground transition-colors">
                 Trust, Safety & Security
               </Link>
-            </nav>
-          </div>
-
-          {/* Column 2 */}
-          <div className="space-y-3">
-            <h4 className="text-sm font-semibold text-foreground">Help & Support</h4>
-            <nav className="space-y-2">
-              <Link href="/help" className="block text-sm text-gray-600 hover:text-foreground transition-colors">
-                Help & Support
-              </Link>
               <Link href="/foundation" className="block text-sm text-gray-600 hover:text-foreground transition-colors">
                 Onseek Foundation
               </Link>
-              <Link href="/terms" className="block text-sm text-gray-600 hover:text-foreground transition-colors">
-                Terms of Service
-              </Link>
             </nav>
           </div>
 
-          {/* Column 3 */}
+          {/* Column 4: Legal */}
           <div className="space-y-3">
-            <h4 className="text-sm font-semibold text-foreground">Privacy</h4>
+            <h4 className="text-sm font-semibold text-foreground">Legal</h4>
             <nav className="space-y-2">
+              <Link href="/terms" className="block text-sm text-gray-600 hover:text-foreground transition-colors">
+                Terms of Service
+              </Link>
               <Link href="/privacy" className="block text-sm text-gray-600 hover:text-foreground transition-colors">
                 Privacy Policy
+              </Link>
+              <Link href="/cookies" className="block text-sm text-gray-600 hover:text-foreground transition-colors">
+                Cookie Policy
               </Link>
               <Link href="/privacy/california" className="block text-sm text-gray-600 hover:text-foreground transition-colors">
                 CA Notice at Collection
@@ -58,21 +102,18 @@ export function AppFooter() {
             </nav>
           </div>
 
-          {/* Column 4 */}
+          {/* Column 5: Resources */}
           <div className="space-y-3">
             <h4 className="text-sm font-semibold text-foreground">Resources</h4>
             <nav className="space-y-2">
               <Link href="/desktop" className="block text-sm text-gray-600 hover:text-foreground transition-colors">
                 Desktop App
               </Link>
-              <Link href="/cookies" className="block text-sm text-gray-600 hover:text-foreground transition-colors">
-                Cookie Policy
-              </Link>
               <Link href="/enterprise" className="block text-sm text-gray-600 hover:text-foreground transition-colors">
                 Enterprise Solutions
               </Link>
               <Link href="/release-notes" className="block text-sm text-gray-600 hover:text-foreground transition-colors">
-                Release notes
+                Release Notes
               </Link>
             </nav>
           </div>
@@ -122,7 +163,7 @@ export function AppFooter() {
         {/* Copyright */}
         <div className="text-center">
           <p className="text-sm text-gray-600">
-            © 2024 - 2026 Onseek® Global LLC
+            © 2024 - 2026 <span className="text-black">onseek</span>® Global LLC
           </p>
         </div>
       </div>

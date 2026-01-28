@@ -802,7 +802,7 @@ export function RequestForm({ onSuccess }: { onSuccess?: () => void }) {
         </div>
 
         {/* Budget */}
-        <div className="space-y-4 p-4 rounded-lg border border-[#e5e7eb] bg-white/30">
+        <div className="space-y-4 p-4 rounded-lg border border-[#e5e7eb] /30">
           <div className="flex items-center justify-between">
             <Label className="text-base font-semibold">Budget</Label>
             <TooltipProvider>
@@ -948,7 +948,7 @@ export function RequestForm({ onSuccess }: { onSuccess?: () => void }) {
               {referenceLinks.map((link, index) => (
                 <div
                   key={index}
-                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[#e5e7eb] bg-white text-sm"
+                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[#e5e7eb]  text-sm"
                 >
                   <a
                     href={link}
@@ -1054,13 +1054,13 @@ export function RequestForm({ onSuccess }: { onSuccess?: () => void }) {
                     className="object-cover"
                     unoptimized
                   />
-                  <div className="absolute top-1 left-1 p-1 rounded bg-white/80 border border-[#e5e7eb] opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="absolute top-1 left-1 p-1 rounded /80 border border-[#e5e7eb] opacity-0 group-hover:opacity-100 transition-opacity">
                     <GripVertical className="h-3 w-3 text-gray-600" />
                   </div>
                   <button
                     type="button"
                     onClick={() => removeImage(index)}
-                    className="absolute top-1 right-1 p-1 rounded-full bg-white/80 hover:bg-white border border-[#e5e7eb] opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="absolute top-1 right-1 p-1 rounded-full /80 hover: border border-[#e5e7eb] opacity-0 group-hover:opacity-100 transition-opacity"
                   >
                     <X className="h-3 w-3" />
                   </button>
@@ -1079,7 +1079,7 @@ export function RequestForm({ onSuccess }: { onSuccess?: () => void }) {
       )}
 
       {/* Submit Button - Sticky on Mobile */}
-      <div className="sticky bottom-0 left-0 right-0 z-10 bg-white border-t border-[#e5e7eb] p-4 -mx-4 md:static md:border-t-0 md:p-0 md:mx-0 flex justify-end">
+      <div className="sticky bottom-0 left-0 right-0 z-10  border-t border-[#e5e7eb] p-4 -mx-4 md:static md:border-t-0 md:p-0 md:mx-0 flex justify-end">
         <Button type="submit" variant="accent" className="w-full md:w-auto md:min-w-[200px]" disabled={isPending}>
           {getCTALabel()}
         </Button>

@@ -11,6 +11,7 @@ import { FavoriteButton } from "@/components/requests/favorite-button";
 import { RequestMenu } from "@/components/requests/request-menu";
 import type { RequestItem } from "@/lib/types";
 import Image from "next/image";
+import { createRequestUrl } from "@/lib/utils/slug";
 
 function cleanDescription(description: string) {
   return description.replace(/<!--REQUEST_PREFS:.*?-->/, "").trim();
@@ -41,8 +42,8 @@ function RequestCardGridComponent({ request, isFavorite, images = [] }: { reques
   
   return (
     <div className="relative">
-      <Link href={`/app/requests/${request.id}`} prefetch={true} className="block">
-        <Card className="border-[#e5e7eb] bg-white flex flex-col hover:border-gray-300 hover:bg-[#f9fafb] transition-colors cursor-pointer relative">
+      <Link href={createRequestUrl(request.id, request.title)} prefetch={true} className="block">
+        <Card className=" flex flex-col hover:bg-[#f9fafb] transition-colors cursor-pointer relative">
           <CardContent className="p-6 flex flex-col space-y-4">
             {/* Heart and Ellipsis - Top Right */}
             <div className="absolute top-4 right-4 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
@@ -81,7 +82,7 @@ function RequestCardGridComponent({ request, isFavorite, images = [] }: { reques
               <div className="space-y-2">
                 <div className="flex flex-wrap gap-2">
                   {images.slice(0, 3).map((imgUrl, index) => (
-                    <div key={index} className="relative w-16 h-16 rounded-lg overflow-hidden border border-[#e5e7eb] bg-gray-100 hover:border-gray-300 transition-colors">
+                    <div key={index} className="relative w-16 h-16 rounded-lg overflow-hidden bg-gray-100 transition-colors">
                       <Image
                         src={imgUrl}
                         alt={`${request.title} - Image ${index + 1}`}

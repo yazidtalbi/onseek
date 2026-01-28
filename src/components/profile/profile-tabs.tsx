@@ -82,7 +82,7 @@ export function ProfileTabs({
                 <Link
                   key={activity.id}
                   href={activity.link}
-                  className="flex items-center gap-3 p-3 rounded-lg border border-[#e5e7eb] bg-white hover:bg-gray-50 transition-colors group"
+                  className="flex items-center gap-3 p-3 rounded-lg border border-[#e5e7eb]  hover:bg-gray-50 transition-colors group"
                 >
                   <div className={cn(
                     "w-8 h-8 rounded-full shrink-0 flex items-center justify-center",
@@ -136,7 +136,7 @@ export function ProfileTabs({
                 </Link>
               ))
             ) : (
-              <div className="rounded-lg border border-dashed border-[#e5e7eb] bg-white/50 p-8 text-center text-sm text-muted-foreground">
+              <div className="rounded-lg border border-dashed border-[#e5e7eb] /50 p-8 text-center text-sm text-muted-foreground">
                 <p className="text-base font-medium mb-2">No activity yet</p>
                 <p className="text-sm">This user hasn't had any activity yet.</p>
               </div>
@@ -145,7 +145,7 @@ export function ProfileTabs({
         )}
 
         {activeTab === "requests" && (
-          <div className="space-y-0">
+          <div className="space-y-1">
             {requests.length > 0 ? (
               requests.map((request, index) => (
                 <RequestCard
@@ -160,7 +160,7 @@ export function ProfileTabs({
                 />
               ))
             ) : (
-              <div className="rounded-lg border border-dashed border-[#e5e7eb] bg-white/50 p-8 text-center text-sm text-muted-foreground">
+              <div className="rounded-lg border border-dashed border-[#e5e7eb] /50 p-8 text-center text-sm text-muted-foreground">
                 <p className="text-base font-medium mb-2">No requests yet</p>
                 <p className="text-sm">This user hasn't posted any requests.</p>
               </div>
@@ -187,7 +187,7 @@ export function ProfileTabs({
                 );
               })
             ) : (
-              <div className="rounded-lg border border-dashed border-[#e5e7eb] bg-white/50 p-8 text-center text-sm text-muted-foreground">
+              <div className="rounded-lg border border-dashed border-[#e5e7eb] /50 p-8 text-center text-sm text-muted-foreground">
                 <p className="text-base font-medium mb-2">No proposals yet</p>
                 <p className="text-sm">This user hasn't made any proposals.</p>
               </div>
@@ -214,7 +214,7 @@ export function ProfileTabs({
                 );
               })
             ) : (
-              <div className="rounded-lg border border-dashed border-[#e5e7eb] bg-white/50 p-8 text-center text-sm text-muted-foreground">
+              <div className="rounded-lg border border-dashed border-[#e5e7eb] /50 p-8 text-center text-sm text-muted-foreground">
                 <p className="text-base font-medium mb-2">No winners yet</p>
                 <p className="text-sm">This user hasn't won any requests yet.</p>
               </div>

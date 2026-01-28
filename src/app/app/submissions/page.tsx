@@ -2,6 +2,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { SubmissionCard } from "@/components/submissions/submission-card";
 import type { Submission } from "@/lib/types";
 import Link from "next/link";
+import { createRequestUrl } from "@/lib/utils/slug";
 
 export const dynamic = "force-dynamic";
 
@@ -83,7 +84,7 @@ export default async function MySubmissionsPage() {
                   <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
                     <span>For request:</span>
                     <Link
-                      href={`/app/requests/${requestId}`}
+                      href={requestTitle ? createRequestUrl(requestId, requestTitle) : `/app/requests/${requestId}`}
                       className="text-[#7755FF] hover:underline font-medium"
                     >
                       {requestTitle}
@@ -94,6 +95,7 @@ export default async function MySubmissionsPage() {
                 <SubmissionCard
                   submission={submission}
                   requestId={requestId || ""}
+                  requestTitle={requestTitle}
                   isFirst={index === 0}
                   isLast={index === submissions.length - 1}
                   requestOwnerId={requestId ? requestOwnerIds[requestId] : undefined}
@@ -102,7 +104,7 @@ export default async function MySubmissionsPage() {
             );
           })
         ) : (
-          <div className="rounded-2xl border border-dashed border-[#e5e7eb] bg-white/50 p-6 text-center text-sm text-gray-600">
+          <div className="rounded-2xl border border-dashed border-[#e5e7eb]  p-6 text-center text-sm text-gray-600">
             No proposals yet. Explore requests and help find links.
           </div>
         )}

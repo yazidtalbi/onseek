@@ -5,7 +5,7 @@ import { Sparkles } from "lucide-react";
 
 export function AnnouncementBanner() {
   return (
-    <Card className="border border-neutral-200 bg-white">
+    <Card className="">
       <CardContent className="p-4">
         <div className="flex items-start gap-3">
           <div className="flex-shrink-0 mt-0.5">

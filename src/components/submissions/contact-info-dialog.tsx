@@ -8,7 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Mail, User, ExternalLink, Phone, Send, ZoomIn } from "lucide-react";
+import { Mail, User, ExternalLink, Phone, Send, ZoomIn, MessageCircle } from "lucide-react";
 import Image from "next/image";
 import type { Profile } from "@/lib/types";
 import { Button } from "@/components/ui/button";

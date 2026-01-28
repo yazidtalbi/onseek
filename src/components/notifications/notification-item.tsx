@@ -72,7 +72,7 @@ export function NotificationItem({ notification }: NotificationItemProps) {
   const NotificationCard = (
     <Card
       className={cn(
-        "border border-[#e5e7eb] bg-white transition-all hover:border-neutral-300",
+        " transition-all",
         !notification.read && "border-l-4 border-l-[#7755FF]"
       )}
     >

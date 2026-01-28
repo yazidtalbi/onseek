@@ -11,7 +11,7 @@ interface PersonalItemsListProps {
 export function PersonalItemsList({ initialItems }: PersonalItemsListProps) {
   if (initialItems.length === 0) {
     return (
-      <div className="rounded-lg border border-dashed border-[#e5e7eb] bg-white p-12 text-center">
+      <div className="rounded-lg border border-dashed border-[#e5e7eb]  p-12 text-center">
         <Package className="h-16 w-16 mx-auto mb-4 text-gray-400" />
         <h3 className="text-lg font-semibold mb-2">No personal items yet</h3>
         <p className="text-sm text-muted-foreground mb-6 max-w-md mx-auto">

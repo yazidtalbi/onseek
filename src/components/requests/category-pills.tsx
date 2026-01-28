@@ -2,9 +2,10 @@
 
 import * as React from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ChevronRight, ChevronLeft } from "lucide-react";
+import { ChevronRight, ChevronLeft, ListFilter } from "lucide-react";
 import { MAIN_CATEGORIES } from "@/lib/categories";
 import { cn } from "@/lib/utils";
+import { FiltersModal } from "@/components/requests/filters-modal";
 
 export function CategoryPills() {
   const router = useRouter();
@@ -70,19 +71,22 @@ export function CategoryPills() {
   };
 
   const categories = ["All", ...MAIN_CATEGORIES];
+  const [filtersOpen, setFiltersOpen] = React.useState(false);
+  const sort = searchParams.get("sort");
+  const hasActiveFilters = searchParams.get("priceMin") || searchParams.get("priceMax") || searchParams.get("country") || (sort && sort !== "newest");
 
   return (
     <div className="relative flex items-center group">
       {/* Left gradient overlay */}
       {canScrollLeft && (
-        <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-white via-white/80 to-transparent pointer-events-none z-10" />
+        <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-[#f5f6f9] via-[#f5f6f9]/80 to-transparent pointer-events-none z-10" />
       )}
       
       {/* Left chevron button */}
       {canScrollLeft && (
         <button
           onClick={scrollLeft}
-          className="absolute left-0 flex items-center justify-center w-8 h-8 rounded-full bg-white border border-gray-200 shadow-sm hover:bg-gray-50 transition-all z-20 opacity-0 group-hover:opacity-100"
+          className="absolute left-0 flex items-center justify-center w-8 h-8 rounded-full  border border-gray-200 shadow-sm hover:bg-gray-50 transition-all z-20 opacity-0 group-hover:opacity-100"
           aria-label="Scroll to previous categories"
         >
           <ChevronLeft className="h-4 w-4 text-gray-600" />
@@ -97,6 +101,21 @@ export function CategoryPills() {
           canScrollLeft && "pl-10"
         )}
       >
+        {/* Filters Button - Far Left */}
+        <FiltersModal open={filtersOpen} onOpenChange={setFiltersOpen}>
+          <button
+            className={cn(
+              "px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors flex items-center gap-2",
+              hasActiveFilters
+                ? "bg-gray-100 text-gray-900"
+                : " text-gray-700 hover:bg-gray-50 border border-gray-200"
+            )}
+          >
+            <ListFilter className="h-4 w-4" />
+            Filters
+          </button>
+        </FiltersModal>
+
         {categories.map((category) => {
           const isActive = selectedCategory === category || (selectedCategory === null && category === "All");
           return (
@@ -107,7 +126,7 @@ export function CategoryPills() {
                 "px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors",
                 isActive
                   ? "bg-[#212733] text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  : " text-gray-700 hover:bg-gray-50"
               )}
             >
               {category}
@@ -125,7 +144,7 @@ export function CategoryPills() {
       {canScrollRight && (
         <button
           onClick={scrollRight}
-          className="absolute right-0 flex items-center justify-center w-8 h-8 rounded-full bg-white border border-gray-200 shadow-sm hover:bg-gray-50 transition-all z-20 opacity-0 group-hover:opacity-100"
+          className="absolute right-0 flex items-center justify-center w-8 h-8 rounded-full  border border-gray-200 shadow-sm hover:bg-gray-50 transition-all z-20 opacity-0 group-hover:opacity-100"
           aria-label="Scroll to next categories"
         >
           <ChevronRight className="h-4 w-4 text-gray-600" />

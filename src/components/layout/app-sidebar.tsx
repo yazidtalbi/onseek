@@ -76,8 +76,8 @@ function SidebarContent({
       className={cn(
         "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
         active
-          ? "bg-muted text-foreground font-medium"
-          : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+          ? "bg-gray-100 text-foreground font-medium"
+          : "text-muted-foreground hover:text-foreground hover:bg-gray-50"
       )}
     >
       <item.icon className="h-5 w-5" />

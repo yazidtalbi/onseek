@@ -24,6 +24,7 @@ import {
 import { useAuth } from "@/components/layout/auth-provider";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import type { Profile } from "@/lib/types";
+import { createRequestUrl } from "@/lib/utils/slug";
 
 function getHost(url: string) {
   try {
@@ -36,6 +37,7 @@ function getHost(url: string) {
 export function SubmissionCard({
   submission,
   requestId,
+  requestTitle,
   isWinner,
   canSelectWinner,
   onWinnerSelected,
@@ -47,6 +49,7 @@ export function SubmissionCard({
 }: {
   submission: Submission;
   requestId: string;
+  requestTitle?: string;
   isWinner?: boolean;
   canSelectWinner?: boolean;
   onWinnerSelected?: (submissionId: string) => void;
@@ -146,7 +149,10 @@ export function SubmissionCard({
   return (
     <Card
       className={cn(
-        "border border-neutral-200 bg-white transition-all hover:border-neutral-300 hover:bg-[#f9fafb] group cursor-pointer rounded-2xl"
+        " transition-all hover:bg-[#f9fafb] group cursor-pointer",
+        isFirst ? "rounded-t-2xl rounded-b-none border-b-0" : "",
+        isLast && !isFirst ? "rounded-b-2xl rounded-t-none border-t-0" : "",
+        !isFirst && !isLast ? "rounded-none border-t-0" : ""
       )}
     >
       <CardContent className="p-4 sm:p-5">
@@ -304,7 +310,7 @@ export function SubmissionCard({
             </Button>
             {hideVotes ? (
               <Link
-                href={`/app/requests/${requestId}`}
+                href={requestTitle ? createRequestUrl(requestId, requestTitle) : `/app/requests/${requestId}`}
                 className="text-sm text-[#7755FF] hover:underline"
                 onClick={(e) => e.stopPropagation()}
               >

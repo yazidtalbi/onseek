@@ -219,7 +219,7 @@ export function RequestFeed({
 
   if (!data?.length) {
     return (
-      <div className="rounded-lg border border-dashed border-[#e5e7eb] bg-white p-8 text-center text-sm text-gray-600">
+      <div className="rounded-lg border border-dashed border-[#e5e7eb]  p-8 text-center text-sm text-gray-600">
         No requests yet. Be the first to post!
       </div>
     );
@@ -228,40 +228,20 @@ export function RequestFeed({
   return (
     <div className="space-y-4">
 
-      {viewMode === "list" ? (
-        <div className="max-w-2xl mx-auto">
-          {data.map((request: any, index: number) => (
-            <RequestCard 
-              key={request.id} 
-              request={request} 
-              variant="feed" 
-              images={request.images || []}
-              links={request.links || []}
-              isFavorite={allFavorited}
-              isFirst={index === 0}
-              isLast={index === data.length - 1}
-            />
-          ))}
-        </div>
-      ) : (
-        <div className="max-w-2xl mx-auto w-full">
-          <div className="grid grid-cols-1 gap-4 w-full">
-            {data.map((request: any) => (
-              <div key={request.id} className="w-full">
-                <RequestCard 
-                  request={request} 
-                  variant="feed" 
-                  images={request.images || []}
-                  links={request.links || []}
-                  isFavorite={allFavorited}
-                  isFirst={true}
-                  isLast={true}
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      <div className="max-w-2xl mx-auto w-full">
+        {data.map((request: any, index: number) => (
+          <RequestCard 
+            key={request.id} 
+            request={request} 
+            variant="feed" 
+            images={request.images || []}
+            links={request.links || []}
+            isFavorite={allFavorited}
+            isFirst={index === 0}
+            isLast={index === data.length - 1}
+          />
+        ))}
+      </div>
 
       {/* Pagination */}
       {totalPages > 1 && (

@@ -65,12 +65,18 @@ export default async function SearchPage({
   const country = searchParams.country;
 
   let query = supabase.from("requests").select("*");
+  
+  // Build base filters first
   if (status) {
     query = query.eq("status", status);
   }
   if (category && category !== "All") {
     query = query.eq("category", category);
   }
+  if (country) {
+    query = query.ilike("country", `%${country}%`);
+  }
+  
   // Price filtering: show requests where the budget range overlaps with the filter range
   if (priceMin || priceMax) {
     const min = priceMin ? parseFloat(priceMin) : null;
@@ -85,15 +91,18 @@ export default async function SearchPage({
       query = query.or(`budget_min.lte.${max},budget_min.is.null`);
     }
   }
-  if (country) {
-    query = query.ilike("country", `%${country}%`);
-  }
+  
+  // Text search - use a filter that works with other conditions
   if (queryText) {
-    const safeQuery = queryText.replace(/[%_]/g, "\\$&");
-    query = query.or(
-      `title.ilike.%${safeQuery}%,description.ilike.%${safeQuery}%`
-    );
+    const safeQuery = queryText.trim().replace(/[%_]/g, "\\$&");
+    if (safeQuery) {
+      // Search both title and description using or() with proper syntax
+      // Format: "column.operator.value,column.operator.value"
+      query = query.or(`title.ilike.%${safeQuery}%,description.ilike.%${safeQuery}%`);
+    }
   }
+  
+  // Apply sorting
   if (sort === "active") {
     query = query.order("updated_at", { ascending: false });
   } else {
@@ -105,13 +114,16 @@ export default async function SearchPage({
   const limit = 20;
   const offset = (page - 1) * limit;
 
-  // Get count separately
+  // Get count separately - apply same filters
   const countQuery = supabase.from("requests").select("*", { count: "exact", head: true });
   if (status) {
     countQuery.eq("status", status);
   }
   if (category && category !== "All") {
     countQuery.eq("category", category);
+  }
+  if (country) {
+    countQuery.ilike("country", `%${country}%`);
   }
   if (priceMin || priceMax) {
     const min = priceMin ? parseFloat(priceMin) : null;
@@ -123,18 +135,23 @@ export default async function SearchPage({
       countQuery.or(`budget_min.lte.${max},budget_min.is.null`);
     }
   }
-  if (country) {
-    countQuery.ilike("country", `%${country}%`);
-  }
   if (queryText) {
-    const safeQuery = queryText.replace(/[%_]/g, "\\$&");
-    countQuery.or(
-      `title.ilike.%${safeQuery}%,description.ilike.%${safeQuery}%`
-    );
+    const safeQuery = queryText.trim().replace(/[%_]/g, "\\$&");
+    if (safeQuery) {
+      countQuery.or(`title.ilike.%${safeQuery}%,description.ilike.%${safeQuery}%`);
+    }
   }
 
-  const { count } = await countQuery;
-  const { data: requests } = await query.range(offset, offset + limit - 1);
+  const { count, error: countError } = await countQuery;
+  if (countError) {
+    console.error("Error counting search results:", countError);
+  }
+  
+  const { data: requests, error: queryError } = await query.range(offset, offset + limit - 1);
+  if (queryError) {
+    console.error("Error fetching search results:", queryError);
+  }
+  
   const totalPages = count ? Math.ceil(count / limit) : 1;
 
   return (
@@ -161,7 +178,7 @@ export default async function SearchPage({
                   <Input
                     name="q"
                     placeholder='Search for requests like "mechanical keyboard"'
-                    className="pl-12 h-14 text-base bg-white border-[#e5e7eb] rounded-full"
+                    className="pl-12 h-14 text-base  border-[#e5e7eb] rounded-full"
                     defaultValue={queryText}
                   />
                 </div>

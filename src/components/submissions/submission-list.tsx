@@ -34,6 +34,7 @@ function computeScore(
 
 export function SubmissionList({
   requestId,
+  requestTitle,
   initialSubmissions,
   winnerId,
   canSelectWinner,
@@ -41,6 +42,7 @@ export function SubmissionList({
   requestOwnerId,
 }: {
   requestId: string;
+  requestTitle?: string;
   initialSubmissions: Submission[];
   winnerId?: string | null;
   canSelectWinner?: boolean;
@@ -76,7 +78,7 @@ export function SubmissionList({
 
   if (!data?.length) {
     return (
-      <div className="rounded-2xl border border-dashed border-[#e5e7eb] bg-white/50 p-6 text-center text-sm text-gray-600">
+      <div className="rounded-2xl border border-dashed border-[#e5e7eb] /50 p-6 text-center text-sm text-gray-600">
         No proposals yet. Be the first to help!
       </div>
     );
@@ -112,7 +114,7 @@ export function SubmissionList({
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted-foreground">Sort by:</span>
           <Select value={sortBy} onValueChange={(value: "best" | "newest" | "price") => setSortBy(value)}>
-            <SelectTrigger className="w-[120px] h-9 rounded-full border border-[#e5e7eb] bg-white text-sm font-medium">
+            <SelectTrigger className="w-[120px] h-9 rounded-full border border-[#e5e7eb]  text-sm font-medium">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -123,23 +125,26 @@ export function SubmissionList({
           </Select>
         </div>
       </div>
-      {sorted.map((submission, index) => (
-        <SubmissionCard
-          key={submission.id}
-          submission={submission}
-          requestId={requestId}
-          isWinner={localWinner === submission.id}
-          canSelectWinner={canSelectWinner && localStatus === "open"}
-          onWinnerSelected={(id) => {
-            setLocalWinner(id);
-            setLocalStatus("solved");
-          }}
-          disableWinnerAction={localStatus !== "open"}
-          isFirst={index === 0}
-          isLast={index === sorted.length - 1}
-          requestOwnerId={requestOwnerId}
-        />
-      ))}
+      <div>
+        {sorted.map((submission, index) => (
+          <SubmissionCard
+            key={submission.id}
+            submission={submission}
+            requestId={requestId}
+            requestTitle={requestTitle}
+            isWinner={localWinner === submission.id}
+            canSelectWinner={canSelectWinner && localStatus === "open"}
+            onWinnerSelected={(id) => {
+              setLocalWinner(id);
+              setLocalStatus("solved");
+            }}
+            disableWinnerAction={localStatus !== "open"}
+            isFirst={index === 0}
+            isLast={index === sorted.length - 1}
+            requestOwnerId={requestOwnerId}
+          />
+        ))}
+      </div>
     </div>
   );
 }

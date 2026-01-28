@@ -25,7 +25,7 @@ export default function NewRequestPage() {
           <RequestForm />
         </div>
         <div className="lg:col-span-1">
-          <div className="rounded-2xl border border-[#e5e7eb] bg-white p-6 space-y-4 sticky top-20">
+          <div className="rounded-2xl border border-[#e5e7eb]  p-6 space-y-4 sticky top-20">
             <h3 className="text-lg font-semibold text-foreground">Tips</h3>
             <ul className="space-y-3 text-base text-gray-600">
               <li className="flex items-start gap-2">

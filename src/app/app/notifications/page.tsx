@@ -26,7 +26,7 @@ export default async function NotificationsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-3xl border border-[#e5e7eb] bg-white/80 p-6">
+      <div className="rounded-3xl border border-[#e5e7eb]  p-6">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-semibold">Notifications</h1>
@@ -51,7 +51,7 @@ export default async function NotificationsPage() {
             />
           ))
         ) : (
-          <div className="rounded-2xl border border-dashed border-[#e5e7eb] bg-white/50 p-8 text-center text-sm text-gray-600">
+          <div className="rounded-2xl border border-dashed border-[#e5e7eb]  p-8 text-center text-sm text-gray-600">
             <Bell className="h-12 w-12 mx-auto mb-4 text-gray-400" />
             <p className="text-base font-medium mb-2">No notifications yet</p>
             <p className="text-sm">You'll be notified when someone responds to your requests.</p>

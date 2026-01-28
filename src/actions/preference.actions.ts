@@ -282,8 +282,27 @@ export async function getPersonalizedFeedAction(
   const { data: requests, error } = await query.limit(limit + 1);
 
   if (error) {
-    console.error("Error fetching personalized feed:", error);
-    return { error: "Failed to fetch feed" };
+    console.error("[getPersonalizedFeedAction] Error fetching personalized feed:", error);
+    console.error("[getPersonalizedFeedAction] Error details:", JSON.stringify(error, null, 2));
+    return { error: `Failed to fetch feed: ${error.message || "Unknown error"}` };
+  }
+
+  console.log(`[getPersonalizedFeedAction] Found ${requests?.length || 0} requests with status='open'`);
+  
+  // If no requests found, log for debugging
+  if (!requests || requests.length === 0) {
+    console.warn("[getPersonalizedFeedAction] No requests found. Checking if there are any requests in the database...");
+    const { data: allRequests, error: checkError } = await supabase
+      .from("requests")
+      .select("id, status, created_at")
+      .limit(5);
+    
+    if (checkError) {
+      console.error("[getPersonalizedFeedAction] Error checking requests:", checkError);
+    } else {
+      console.log(`[getPersonalizedFeedAction] Total requests in DB (sample):`, allRequests?.length || 0);
+      console.log(`[getPersonalizedFeedAction] Sample request statuses:`, allRequests?.map(r => ({ id: r.id, status: r.status })));
+    }
   }
 
   const hasMore = (requests?.length || 0) > limit;

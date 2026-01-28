@@ -4,6 +4,7 @@ import { ProfileTabs } from "@/components/profile/profile-tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import type { RequestItem, Submission } from "@/lib/types";
 import Image from "next/image";
+import { createRequestUrl } from "@/lib/utils/slug";
 
 export const dynamic = "force-dynamic";
 
@@ -68,7 +69,7 @@ export default async function ProfilePage({
         type: "request",
         points: 5,
         description: `Posted ${request.title}`,
-        link: `/app/requests/${request.id}`,
+        link: createRequestUrl(request.id, request.title),
         timestamp: request.created_at,
       });
   });
@@ -86,7 +87,9 @@ export default async function ProfilePage({
         type: "winner",
         points: 10,
         description: `+10 Accepted answer in ${requests?.find(r => r.id === submission.request_id)?.title || "a request"}`,
-        link: `/app/requests/${submission.request_id}`,
+        link: submission.request_id && requests?.find(r => r.id === submission.request_id) 
+          ? createRequestUrl(submission.request_id, requests.find(r => r.id === submission.request_id)!.title)
+          : `/app/requests/${submission.request_id}`,
         timestamp: submission.created_at,
       });
     } else {
@@ -96,7 +99,9 @@ export default async function ProfilePage({
         type: "submission",
         points: 2,
         description: `Posted ${(submission as any).article_name || (submission as any).store_name || "a submission"}`,
-        link: `/app/requests/${submission.request_id}`,
+        link: submission.request_id && requests?.find(r => r.id === submission.request_id) 
+          ? createRequestUrl(submission.request_id, requests.find(r => r.id === submission.request_id)!.title)
+          : `/app/requests/${submission.request_id}`,
         timestamp: submission.created_at,
       });
     }
@@ -109,7 +114,9 @@ export default async function ProfilePage({
           type: "vote",
           points: 1,
           description: `Received upvote on ${(submission as any).article_name || "submission"}`,
-          link: `/app/requests/${submission.request_id}`,
+          link: submission.request_id && requests?.find(r => r.id === submission.request_id) 
+          ? createRequestUrl(submission.request_id, requests.find(r => r.id === submission.request_id)!.title)
+          : `/app/requests/${submission.request_id}`,
           timestamp: submission.created_at,
         });
       }
@@ -264,7 +271,7 @@ export default async function ProfilePage({
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       {/* Left Column: Profile Card with Stats */}
       <div className="lg:col-span-1 space-y-4">
-        <Card className="border-[#e5e7eb] bg-white/80">
+        <Card className="border-[#e5e7eb] ">
           <CardContent className="p-6 space-y-4">
             <div className="flex items-start gap-4">
               {/* Avatar */}

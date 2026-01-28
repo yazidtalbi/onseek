@@ -57,15 +57,17 @@ export default async function AppLayout({
 
   return (
     <AuthProvider user={serializedUser} profile={resolvedProfile ?? null}>
-      <div className="flex flex-col min-h-screen bg-background pb-24">
+      <div className="flex flex-col min-h-screen bg-background md:pb-24">
         <AppNavbar />
-        <main className="flex-1 w-full px-4 py-8 md:px-8">
+        <main className="flex-1 w-full px-6 pt-8 pb-8 md:px-8 md:pt-8">
           <div className="mx-auto max-w-5xl w-full">{children}</div>
         </main>
         <div className="mx-auto max-w-5xl w-full">
           <AppFooter />
         </div>
-        <BottomNav />
+        <div className="hidden md:block">
+          <BottomNav />
+        </div>
         <ScrollToTop />
       </div>
     </AuthProvider>

@@ -61,19 +61,19 @@ export default async function MyRequestsPage({
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
-        <Card className="border-[#e5e7eb] bg-white/80">
+        <Card className="border-[#e5e7eb] ">
           <CardContent className="p-5">
             <p className="text-xs text-muted-foreground">Total</p>
             <p className="text-2xl font-semibold">{totalCount ?? 0}</p>
           </CardContent>
         </Card>
-        <Card className="border-[#e5e7eb] bg-white/80">
+        <Card className="border-[#e5e7eb] ">
           <CardContent className="p-5">
             <p className="text-xs text-muted-foreground">Open</p>
             <p className="text-2xl font-semibold">{openCount ?? 0}</p>
           </CardContent>
         </Card>
-        <Card className="border-[#e5e7eb] bg-white/80">
+        <Card className="border-[#e5e7eb] ">
           <CardContent className="p-5">
             <p className="text-xs text-muted-foreground">Solved</p>
             <p className="text-2xl font-semibold">{solvedCount ?? 0}</p>

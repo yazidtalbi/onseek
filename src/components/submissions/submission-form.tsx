@@ -451,7 +451,7 @@ export function SubmissionForm({ requestId, requestBudgetMax, requestDescription
                   />
                   <label
                     htmlFor="imageUpload"
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border bg-card hover:bg-muted/50 cursor-pointer transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border bg-card hover:bg-gray-50 cursor-pointer transition-colors"
                   >
                     <Upload className="h-4 w-4" />
                     <span className="text-sm">Upload image</span>

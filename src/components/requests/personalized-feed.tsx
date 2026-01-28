@@ -7,6 +7,7 @@ import { getPersonalizedFeedAction, getUserPreferencesAction } from "@/actions/p
 import { CategoryPills } from "@/components/requests/category-pills";
 import { RequestFilters } from "@/components/requests/request-filters";
 import { RequestCard } from "@/components/requests/request-card";
+import { RequestInputSection } from "@/components/requests/request-input-section";
 import type { RequestItem, FeedMode } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
@@ -106,7 +107,8 @@ export function PersonalizedFeed({ initialMode = "for_you" }: PersonalizedFeedPr
     queryKey: ["personalized-feed", mode, category, priceMin, priceMax, country, sort],
     queryFn: async ({ pageParam }) => {
       try {
-        console.log("Fetching feed with params:", { mode, category, priceMin, priceMax, country, sort });
+        console.log("[PersonalizedFeed] Fetching feed with params:", { mode, category, priceMin, priceMax, country, sort, pageParam });
+        const startTime = Date.now();
         const result = await getPersonalizedFeedAction(mode, pageParam, 20, {
           category,
           priceMin,
@@ -114,25 +116,40 @@ export function PersonalizedFeed({ initialMode = "for_you" }: PersonalizedFeedPr
           country,
           sort,
         });
+        const duration = Date.now() - startTime;
+        console.log(`[PersonalizedFeed] Query completed in ${duration}ms`);
         
         if ("error" in result) {
-          console.error("Feed error:", result.error);
+          console.error("[PersonalizedFeed] Feed error:", result.error);
           throw new Error(result.error);
         }
         
-        console.log("Feed loaded successfully:", result.items?.length || 0, "items");
+        console.log("[PersonalizedFeed] Feed loaded successfully:", result.items?.length || 0, "items");
+        console.log("[PersonalizedFeed] First item sample:", result.items?.[0] ? {
+          id: result.items[0].id,
+          title: result.items[0].title,
+          hasImages: !!(result.items[0] as any).images,
+          hasLinks: !!(result.items[0] as any).links,
+        } : "No items");
         return result;
       } catch (error) {
-        console.error("Feed fetch error:", error);
+        console.error("[PersonalizedFeed] Feed fetch error:", error);
+        console.error("[PersonalizedFeed] Error stack:", error instanceof Error ? error.stack : "No stack");
         throw error;
       }
     },
     initialPageParam: undefined as string | undefined,
-    getNextPageParam: (lastPage) => lastPage.nextCursor || undefined,
+    getNextPageParam: (lastPage) => {
+      const cursor = lastPage.nextCursor || undefined;
+      console.log("[PersonalizedFeed] Next page param:", cursor);
+      return cursor;
+    },
     refetchOnWindowFocus: false,
-    retry: 1,
-    staleTime: 0,
+    retry: 2,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
+    staleTime: 30 * 1000, // 30 seconds
     gcTime: 5 * 60 * 1000,
+    enabled: true, // Explicitly enable the query
   });
 
   const allItems = useMemo(() => {
@@ -158,9 +175,29 @@ export function PersonalizedFeed({ initialMode = "for_you" }: PersonalizedFeedPr
     setMode(newMode);
   };
 
+  // Debug logging
+  useEffect(() => {
+    console.log("[PersonalizedFeed] State:", {
+      isLoading,
+      isFetching,
+      isError,
+      hasData: !!data,
+      itemsCount: allItems.length,
+      pagesCount: data?.pages?.length || 0,
+    });
+  }, [isLoading, isFetching, isError, data, allItems.length]);
+
   return (
     <div className="space-y-4">
+      <div className="pb-4">
+        <RequestInputSection />
+      </div>
       <CategoryPills />
+      
+      {/* Description text */}
+      <p className="text-sm text-gray-400">
+        Browse requests that match your preferences and interests. Ordered by most relevant.
+      </p>
 
       <RequestFilters hideViewToggle={true} />
 
@@ -173,7 +210,7 @@ export function PersonalizedFeed({ initialMode = "for_you" }: PersonalizedFeedPr
         </div>
       ) : isError ? (
         <div className="max-w-2xl mx-auto w-full">
-          <div className="rounded-lg border border-dashed border-[#e5e7eb] bg-white p-8 text-center">
+          <div className="rounded-lg border border-dashed border-[#e5e7eb]  p-8 text-center">
             <p className="text-sm text-gray-600 mb-2">Failed to load feed</p>
             {error && (
               <p className="text-xs text-red-500 mb-4">
@@ -187,7 +224,7 @@ export function PersonalizedFeed({ initialMode = "for_you" }: PersonalizedFeedPr
         </div>
       ) : allItems.length === 0 ? (
         <div className="max-w-2xl mx-auto w-full">
-          <div className="rounded-lg border border-dashed border-[#e5e7eb] bg-white p-8 text-center">
+          <div className="rounded-lg border border-dashed border-[#e5e7eb]  p-8 text-center">
             {mode === "for_you" && !hasPreferences ? (
               <div className="space-y-4">
                 <p className="text-sm text-gray-600">
@@ -198,7 +235,12 @@ export function PersonalizedFeed({ initialMode = "for_you" }: PersonalizedFeedPr
                 </Button>
               </div>
             ) : (
-              <p className="text-sm text-gray-600">No requests found</p>
+              <div className="space-y-4">
+                <p className="text-sm text-gray-600">No requests found</p>
+                <Button onClick={() => refetch()} variant="outline" size="sm">
+                  Refresh
+                </Button>
+              </div>
             )}
           </div>
         </div>
@@ -211,18 +253,21 @@ export function PersonalizedFeed({ initialMode = "for_you" }: PersonalizedFeedPr
             </div>
           )}
           
-          <div className="max-w-2xl mx-auto w-full">
-            {allItems.map((request: RequestItem, index: number) => (
-              <RequestCard
-                key={request.id}
-                request={request}
-                variant="feed"
-                images={request.images || []}
-                links={request.links || []}
-                isFirst={index === 0}
-                isLast={index === allItems.length - 1}
-              />
-            ))}
+          <div className="max-w-2xl mx-auto w-full space-y-1">
+            {allItems.map((request: RequestItem, index: number) => {
+              const requestWithExtras = request as RequestItem & { images?: string[]; links?: string[] };
+              return (
+                <RequestCard
+                  key={request.id}
+                  request={request}
+                  variant="feed"
+                  images={requestWithExtras.images || []}
+                  links={requestWithExtras.links || []}
+                  isFirst={index === 0}
+                  isLast={index === allItems.length - 1}
+                />
+              );
+            })}
           </div>
 
           {hasNextPage && (
@@ -231,7 +276,7 @@ export function PersonalizedFeed({ initialMode = "for_you" }: PersonalizedFeedPr
                 onClick={() => fetchNextPage()}
                 disabled={isFetchingNextPage}
                 variant="outline"
-                className="bg-white"
+                className=""
               >
                 {isFetchingNextPage ? (
                   <>

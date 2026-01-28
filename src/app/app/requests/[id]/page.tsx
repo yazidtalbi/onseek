@@ -165,14 +165,14 @@ export default async function RequestDetailPage({
         <BackButton />
         <nav className="flex items-center gap-2 text-sm text-gray-600">
           <Link 
-            href="/"
+            href="/app"
             className="hover:text-foreground transition-colors"
           >
             Home
           </Link>
           <ChevronRight className="h-4 w-4" />
           <Link 
-            href={`/category/${request.category.toLowerCase()}`} 
+            href={`/app/category/${request.category.toLowerCase()}`} 
             className="hover:text-foreground transition-colors"
           >
             {request.category}
@@ -186,7 +186,7 @@ export default async function RequestDetailPage({
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         {/* Left Column: Request Details */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="sticky top-6 space-y-6">
+          <div className="sticky top-24 space-y-6">
             <RequestCard
               request={request}
               variant="detail"
@@ -209,6 +209,7 @@ export default async function RequestDetailPage({
           )}
           <SubmissionList
             requestId={request.id}
+            requestTitle={request.title}
             initialSubmissions={initialSubmissions}
             winnerId={request.winner_submission_id}
             canSelectWinner={isOwner}

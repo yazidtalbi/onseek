@@ -76,7 +76,7 @@ export function PersonalItemCard({ item }: PersonalItemCardProps) {
 
   return (
     <>
-      <Card className="border-[#e5e7eb] bg-white hover:border-gray-300 transition-colors">
+      <Card className=" transition-colors">
         <CardContent className="p-6">
           <div className="flex items-start gap-4">
             {/* Image */}

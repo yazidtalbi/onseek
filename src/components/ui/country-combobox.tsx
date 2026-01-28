@@ -155,7 +155,7 @@ export function CountryCombobox({
         <div className="relative">
           <div
             onClick={() => setOpen(true)}
-            className="flex items-center gap-2 w-full h-11 rounded-lg border border-[#e5e7eb] bg-white px-4 pr-20 cursor-pointer hover:border-gray-300 transition-colors"
+            className="flex items-center gap-2 w-full h-11 rounded-lg border border-[#e5e7eb]  px-4 pr-20 cursor-pointer hover:border-gray-300 transition-colors"
           >
             {selectedCountryCode ? (
               <div className="flex-shrink-0 w-5 h-5 flex items-center justify-center overflow-hidden rounded-sm border border-gray-200">

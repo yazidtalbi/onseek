@@ -106,7 +106,7 @@ export function AddItemModal({ onSuccess }: { onSuccess?: () => void }) {
         const result = await savePersonalItemAction(formData);
 
         if ("error" in result) {
-          setError(result.error);
+          setError(result.error || null);
           return;
         }
 
@@ -173,7 +173,7 @@ export function AddItemModal({ onSuccess }: { onSuccess?: () => void }) {
               />
               <label
                 htmlFor="imageUpload"
-                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border bg-card hover:bg-muted/50 cursor-pointer transition-colors disabled:opacity-50"
+                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border bg-card hover:bg-gray-50 cursor-pointer transition-colors disabled:opacity-50"
               >
                 {isUploading ? (
                   <Loader2 className="h-4 w-4 animate-spin" />

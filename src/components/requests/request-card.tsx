@@ -15,6 +15,7 @@ import { MapPin, Check, X, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ImagePreviewDialog } from "@/components/ui/image-preview-dialog";
 import { Badge } from "@/components/ui/badge";
+import { createRequestUrl } from "@/lib/utils/slug";
 
 function cleanDescription(description: string) {
   return description.replace(/<!--REQUEST_PREFS:.*?-->/, "").trim();
@@ -30,6 +31,17 @@ function parseRequestPreferences(description: string) {
     }
   }
   return null;
+}
+
+function getDomainFromUrl(url: string): string {
+  try {
+    const urlObj = new URL(url.startsWith('http') ? url : `https://${url}`);
+    return urlObj.hostname.replace('www.', '');
+  } catch {
+    // If URL parsing fails, try to extract domain manually
+    const match = url.match(/(?:https?:\/\/)?(?:www\.)?([^\/]+)/);
+    return match ? match[1] : url;
+  }
 }
 
 interface RequestCardProps {
@@ -224,7 +236,7 @@ function RequestCardComponent({
                     e.stopPropagation();
                     setPreviewImage(imgUrl);
                   }}
-                  className="relative w-16 h-16 rounded-lg border border-[#e5e7eb] bg-gray-50 overflow-hidden flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+                  className="relative w-16 h-16 rounded-lg bg-gray-50 overflow-hidden flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
                 >
                   <Image
                     src={imgUrl}
@@ -284,32 +296,32 @@ function RequestCardComponent({
             {/* Budget, Location, and Condition in same row */}
             {(budgetText || request.country || request.condition) && (
               <div className={cn(
-                (preferences.length > 0 || dealbreakers.length > 0) && "border-t border-neutral-200",
-                "pt-6 pb-6",
-                (images.length > 0 || links.length > 0) && "border-b border-neutral-200"
+                "pt-2 pb-2"
               )}>
-                <div className="flex gap-8 w-full">
-                  {budgetText && (
-                    <div className="flex-1">
-                      <h4 className="text-sm font-semibold text-neutral-900 mb-2">Budget</h4>
-                      <p className="text-sm text-neutral-600">{budgetText}</p>
-                    </div>
-                  )}
-                  {request.country && (
-                    <div className="flex-1">
-                      <h4 className="text-sm font-semibold text-neutral-900 mb-2">Location</h4>
-                      <div className="flex items-center gap-1.5 text-sm text-neutral-600">
-                        <MapPin className="h-4 w-4" />
-                        <span>{request.country}</span>
+                <div className="rounded-lg border border-[#e5e7eb] p-4">
+                  <div className="flex gap-8 w-full">
+                    {budgetText && (
+                      <div className="flex-1">
+                        <h4 className="text-sm font-semibold text-neutral-900 mb-2">Budget</h4>
+                        <p className="text-sm text-neutral-600">{budgetText}</p>
                       </div>
-                    </div>
-                  )}
-                  {request.condition && (
-                    <div className="flex-1">
-                      <h4 className="text-sm font-semibold text-neutral-900 mb-2">Condition</h4>
-                      <p className="text-sm text-neutral-600">{request.condition}</p>
-                    </div>
-                  )}
+                    )}
+                    {request.country && (
+                      <div className="flex-1">
+                        <h4 className="text-sm font-semibold text-neutral-900 mb-2">Location</h4>
+                        <div className="flex items-center gap-1.5 text-sm text-neutral-600">
+                          <MapPin className="h-4 w-4" />
+                          <span>{request.country}</span>
+                        </div>
+                      </div>
+                    )}
+                    {request.condition && (
+                      <div className="flex-1">
+                        <h4 className="text-sm font-semibold text-neutral-900 mb-2">Condition</h4>
+                        <p className="text-sm text-neutral-600">{request.condition}</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
@@ -328,7 +340,7 @@ function RequestCardComponent({
                         setPreviewImageIndex(index);
                         setPreviewImage(imgUrl);
                       }}
-                      className="relative w-16 h-16 rounded-lg border border-[#e5e7eb] bg-gray-50 overflow-hidden flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+                      className="relative w-16 h-16 rounded-lg bg-gray-50 overflow-hidden flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
                     >
                       <Image
                         src={imgUrl}
@@ -349,18 +361,23 @@ function RequestCardComponent({
               <div>
                 <h4 className="text-sm font-semibold text-neutral-900 mb-2">Reference links</h4>
                 <div className="space-y-1.5">
-                  {links.map((link, index) => (
-                    <a
-                      key={index}
-                      href={link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block text-sm text-neutral-600 hover:text-neutral-900 underline break-all"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      {link}
-                    </a>
-                  ))}
+                  {links.map((link, index) => {
+                    const fullUrl = link.startsWith('http') ? link : `https://${link}`;
+                    const domain = getDomainFromUrl(link);
+                    return (
+                      <a
+                        key={index}
+                        href={fullUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title={fullUrl}
+                        className="block text-sm text-neutral-600 hover:text-neutral-900 underline"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {domain}
+                      </a>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -383,14 +400,14 @@ function RequestCardComponent({
       {variant === "detail" ? (
         <Card
           className={cn(
-            "border-[#e5e7eb] bg-white flex flex-col hover:border-gray-300 transition-colors relative group"
+            " flex flex-col transition-colors relative group"
           )}
         >
           {cardContent}
         </Card>
       ) : (
         <Link
-          href={`/app/requests/${request.id}`}
+          href={createRequestUrl(request.id, request.title)}
           prefetch={true}
           className="block focus:outline-none cursor-pointer"
           onClick={(e) => {
@@ -410,12 +427,12 @@ function RequestCardComponent({
         >
           <Card
             className={cn(
-              "border-[#e5e7eb] bg-white flex flex-col hover:border-gray-300 hover:bg-[#f9fafb] transition-colors relative group h-full",
-              isFirst && isLast && "rounded-2xl",
-              isFirst && !isLast && "rounded-t-2xl rounded-b-none",
-              !isFirst && isLast && "rounded-b-2xl rounded-t-none",
-              !isFirst && !isLast && "rounded-none",
-              !isLast && "border-b-0"
+              " flex flex-col hover:bg-[#f9fafb] transition-colors relative group h-full",
+              !isFeed ? "rounded-2xl" : "",
+              isFeed && isFirst && isLast ? "rounded-2xl" : "",
+              isFeed && isFirst && !isLast ? "rounded-t-2xl rounded-b-none" : "",
+              isFeed && isLast && !isFirst ? "rounded-b-2xl rounded-t-none border-t-0" : "",
+              isFeed && !isFirst && !isLast ? "rounded-none border-t-0" : ""
             )}
           >
             {cardContent}

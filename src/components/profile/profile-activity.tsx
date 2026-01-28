@@ -123,7 +123,7 @@ export function ProfileActivity({
               <Link
                 key={activity.id}
                 href={activity.link}
-                className="flex items-start gap-3 p-3 rounded-lg border border-border bg-card hover:bg-muted/30 transition-colors group"
+                className="flex items-start gap-3 p-3 rounded-lg border border-border bg-card hover:bg-gray-50 transition-colors group"
               >
                 <div className={cn(
                   "p-1.5 rounded-full shrink-0",

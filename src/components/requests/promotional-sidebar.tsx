@@ -10,23 +10,23 @@ export function PromotionalSidebar() {
   return (
     <div className="space-y-6 max-w-md sticky top-20">
       {/* Main Promotional Card */}
-      <div className="rounded-2xl border border-[#e5e7eb] bg-white p-6 space-y-4">
+      <div className="rounded-2xl border border-[#e5e7eb] p-6 space-y-4">
         <h2 className="text-2xl font-semibold text-foreground">The network for requests</h2>
         <div className="space-y-3">
           <div className="flex items-start gap-3">
-            <Check className="h-4 w-4 text-foreground mt-0.5 flex-shrink-0" />
+            <Check className="h-4 w-4 text-[#7755FF] mt-0.5 flex-shrink-0" />
             <p className="text-sm text-gray-600">
               Join thousands of members finding exactly what they need
             </p>
           </div>
           <div className="flex items-start gap-3">
-            <Check className="h-4 w-4 text-foreground mt-0.5 flex-shrink-0" />
+            <Check className="h-4 w-4 text-[#7755FF] mt-0.5 flex-shrink-0" />
             <p className="text-sm text-gray-600">
               Connect with helpful community members, get quality proposals, and find the best deals
             </p>
           </div>
           <div className="flex items-start gap-3">
-            <Check className="h-4 w-4 text-foreground mt-0.5 flex-shrink-0" />
+            <Check className="h-4 w-4 text-[#7755FF] mt-0.5 flex-shrink-0" />
             <p className="text-sm text-gray-600">
               Members have found over $1M in value through community recommendations
             </p>
@@ -41,7 +41,7 @@ export function PromotionalSidebar() {
       </div>
 
       {/* Tips or Additional Info */}
-      <div className="rounded-2xl border border-[#e5e7eb] bg-white p-6 space-y-3">
+      <div className="rounded-2xl border border-[#e5e7eb] p-6 space-y-3">
         <h3 className="text-lg font-semibold text-foreground">Tips for better requests</h3>
         <ul className="space-y-2 text-sm text-gray-600">
           <li className="flex items-start gap-2">

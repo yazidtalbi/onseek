@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { requestSchema } from "@/lib/validators";
+import { createRequestUrl } from "@/lib/utils/slug";
 
 function parseLinks(raw?: string | null) {
   if (!raw) return [];
@@ -43,16 +44,16 @@ export async function createRequestAction(formData: FormData) {
   const parsed = requestSchema.safeParse(payload);
   if (!parsed.success) {
     // Log validation errors to console
-    console.error("Request validation failed:", parsed.error.errors);
+    console.error("Request validation failed:", parsed.error.issues);
     console.error("Payload received:", payload);
     
     // Return specific field errors
-    const errors = parsed.error.errors.map((err) => {
+    const errors = parsed.error.issues.map((err) => {
       const field = err.path[0] as string;
       return `${field}: ${err.message}`;
     });
     
-    const fieldErrors = parsed.error.errors.reduce((acc, err) => {
+    const fieldErrors = parsed.error.issues.reduce((acc, err) => {
       const field = err.path[0] as string;
       acc[field] = err.message;
       return acc;
@@ -175,7 +176,7 @@ export async function createRequestAction(formData: FormData) {
   revalidatePath("/app/requests");
   revalidatePath("/app/submissions");
   revalidatePath("/");
-  redirect(`/app/requests/${request.id}`);
+  redirect(createRequestUrl(request.id, request.title));
 }
 
 export async function updateRequestStatusAction(formData: FormData) {
