@@ -1,11 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function ScrollToTop() {
   const [isVisible, setIsVisible] = useState(false);
+  const pathname = usePathname();
+
+  // Hide on match page
+  if (pathname === "/app/requests/match") {
+    return null;
+  }
 
   useEffect(() => {
     const toggleVisibility = () => {

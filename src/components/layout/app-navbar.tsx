@@ -363,13 +363,13 @@ export function AppNavbar() {
         <div className="flex items-center gap-2">
           {/* Create Request Button */}
           {user ? (
-            <Button asChild size="icon" className="rounded-full bg-[#212733] text-white hover:bg-[#212733]/90">
+            <Button asChild size="icon" className="rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300">
               <Link href="/app/new">
                 <Plus className="h-4 w-4" />
               </Link>
             </Button>
           ) : (
-            <Button asChild size="icon" className="rounded-full  text-[#212733] hover:bg-gray-50 border-0">
+            <Button asChild size="icon" className="rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300">
               <Link href="/signup">
                 <Plus className="h-4 w-4" />
               </Link>
