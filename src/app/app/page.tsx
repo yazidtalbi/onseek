@@ -1,7 +1,5 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { PersonalizedFeed } from "@/components/requests/personalized-feed";
-import { PromotionalSidebar } from "@/components/requests/promotional-sidebar";
-import { NetworkSidebar } from "@/components/layout/network-sidebar";
 import type { FeedMode } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -132,26 +130,7 @@ export default async function AppFeedPage({
   });
 
   return (
-    <div className="space-y-8">
-      {/* Main Content: Left Sidebar, Requests Feed, Right Sidebar */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Left Column: Network for Requests (3/12 width) - Hidden on mobile */}
-        <div className="hidden lg:block lg:col-span-3">
-          <NetworkSidebar />
-        </div>
-
-        {/* Middle Column: Requests Feed (6/12 width) */}
-        <div className="lg:col-span-6 space-y-4">
-          <PersonalizedFeed initialMode={mode} initialData={initialData} />
-        </div>
-
-        {/* Right Column: Promotional Sidebar (3/12 width) - Hidden on mobile */}
-        <div className="hidden lg:block lg:col-span-3">
-          <PromotionalSidebar />
-        </div>
-      </div>
-
-    </div>
+    <PersonalizedFeed initialMode={mode} initialData={initialData} />
   );
 }
 

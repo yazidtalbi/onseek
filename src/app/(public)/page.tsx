@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { getLandingPageContent } from "@/lib/strapi/content";
+import { PromotionalSidebar } from "@/components/requests/promotional-sidebar";
 
 // Default fallback content
 const defaultContent = {
@@ -106,7 +107,7 @@ export default async function LandingPage() {
     <div className="min-h-screen bg-background">
       <PublicNavbar />
       <main className="mx-auto w-full max-w-6xl px-6 pb-24 pt-14">
-        <div className="grid gap-10 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
+        <div className="grid gap-10 lg:grid-cols-[1.2fr_0.8fr] lg:items-start">
           <div className="space-y-6">
             <Badge variant="muted" className="w-fit">
               {content.heroBadge}
@@ -138,39 +139,7 @@ export default async function LandingPage() {
               ))}
             </div>
           </div>
-          <Card className="border-[#e5e7eb]  shadow-lg">
-            <CardContent className="space-y-6 p-6">
-              <div className="space-y-2">
-                <p className="text-sm font-semibold text-muted-foreground">
-                  Sample request
-                </p>
-                <h2 className="text-2xl font-semibold">
-                  {content.sampleRequest.title}
-                </h2>
-                <p className="text-sm text-muted-foreground">
-                  {content.sampleRequest.description}
-                </p>
-              </div>
-              <div className="rounded-2xl border border-border bg-muted/30 p-4">
-                <p className="text-sm font-semibold text-foreground">
-                  Top submission
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  &quot;{content.sampleRequest.topSubmission.text}&quot;
-                </p>
-                <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
-                  <span>Score {content.sampleRequest.topSubmission.score}</span>
-                  <span>
-                    {content.sampleRequest.topSubmission.store} ·{" "}
-                    {content.sampleRequest.topSubmission.price}
-                  </span>
-                </div>
-              </div>
-              <Button asChild variant="accent" className="w-full">
-                <Link href="/signup">Join Onseek</Link>
-              </Button>
-            </CardContent>
-          </Card>
+          <PromotionalSidebar />
         </div>
       </main>
       <footer className="border-t border-border bg-background/80">

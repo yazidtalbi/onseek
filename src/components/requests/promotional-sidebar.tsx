@@ -26,19 +26,19 @@ export function PromotionalSidebar() {
           <div className="flex items-start gap-3">
             <Check className="h-4 w-4 text-foreground mt-0.5 flex-shrink-0" />
             <p className="text-sm text-gray-600">
-              Join thousands of members finding exactly what they need
+              Find what you need through community recommendations
             </p>
           </div>
           <div className="flex items-start gap-3">
             <Check className="h-4 w-4 text-foreground mt-0.5 flex-shrink-0" />
             <p className="text-sm text-gray-600">
-              Connect with helpful community members, get quality proposals, and find the best deals
+              Get quality proposals from people who know the market
             </p>
           </div>
           <div className="flex items-start gap-3">
             <Check className="h-4 w-4 text-foreground mt-0.5 flex-shrink-0" />
             <p className="text-sm text-gray-600">
-              Members have found over $1M in value through community recommendations
+              Save time and money on every purchase decision
             </p>
           </div>
         </div>
@@ -56,19 +56,19 @@ export function PromotionalSidebar() {
         <ul className="space-y-2 text-sm text-gray-600">
           <li className="flex items-start gap-2">
             <span className="text-foreground mt-1">•</span>
-            <span>Be specific about what you're looking for</span>
+            <span>Describe clearly what you need</span>
           </li>
           <li className="flex items-start gap-2">
             <span className="text-foreground mt-1">•</span>
-            <span>Set a realistic budget range</span>
+            <span>Share your approximate budget</span>
           </li>
           <li className="flex items-start gap-2">
             <span className="text-foreground mt-1">•</span>
-            <span>Add reference links or images if available</span>
+            <span>Add any helpful links or images</span>
           </li>
           <li className="flex items-start gap-2">
             <span className="text-foreground mt-1">•</span>
-            <span>Engage with proposals and provide feedback</span>
+            <span>Reply to proposals and give feedback</span>
           </li>
         </ul>
       </div>

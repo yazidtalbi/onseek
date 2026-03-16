@@ -99,6 +99,7 @@ export default async function MySubmissionsPage() {
                   isFirst={index === 0}
                   isLast={index === submissions.length - 1}
                   requestOwnerId={requestId ? requestOwnerIds[requestId] : undefined}
+                  hideVotes={true}
                 />
               </div>
             );

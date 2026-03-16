@@ -13,6 +13,7 @@ import type { RequestItem, FeedMode } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 interface PersonalizedFeedProps {
   initialMode?: FeedMode;
@@ -252,6 +253,24 @@ export function PersonalizedFeed({ initialMode = "for_you", initialData }: Perso
     setMode(newMode);
   };
 
+  // Infinite scroll: load more when user scrolls near bottom
+  useEffect(() => {
+    const handleScroll = () => {
+      // Check if we're near the bottom of the page (within 200px)
+      if (
+        window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 200 &&
+        hasNextPage &&
+        !isFetchingNextPage &&
+        !isFetching
+      ) {
+        fetchNextPage();
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [hasNextPage, isFetchingNextPage, isFetching, fetchNextPage]);
+
 
   return (
     <div className="space-y-4">
@@ -271,7 +290,7 @@ export function PersonalizedFeed({ initialMode = "for_you", initialData }: Perso
 
       {/* Error state */}
       {isError ? (
-        <div className="max-w-2xl mx-auto w-full">
+        <div className="mx-auto w-full">
           <div className="rounded-lg border border-dashed border-[#e5e7eb]  p-8 text-center">
             <p className="text-sm text-gray-600 mb-2">Failed to load feed</p>
             {error && (
@@ -285,7 +304,7 @@ export function PersonalizedFeed({ initialMode = "for_you", initialData }: Perso
           </div>
         </div>
       ) : allItems.length === 0 ? (
-        <div className="max-w-2xl mx-auto w-full">
+        <div className="mx-auto w-full">
           <div className="rounded-lg border border-dashed border-[#e5e7eb]  p-8 text-center">
             {mode === "for_you" && !hasPreferences ? (
               <div className="space-y-4">
@@ -310,24 +329,24 @@ export function PersonalizedFeed({ initialMode = "for_you", initialData }: Perso
         <>
           {/* Show subtle loading indicator while fetching */}
           {isFetching && !isLoading && (
-            <div className="max-w-2xl mx-auto w-full flex justify-center py-2">
+            <div className="mx-auto w-full flex justify-center py-2">
               <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
             </div>
           )}
           
-          <div className="max-w-2xl mx-auto w-full">
+          <div className="mx-auto w-full">
             {allItems.map((request: RequestItem, index: number) => {
               const requestWithExtras = request as RequestItem & { images?: string[]; links?: string[] };
               return (
-                <RequestCard
-                  key={request.id}
-                  request={request}
-                  variant="feed"
-                  images={requestWithExtras.images || []}
-                  links={requestWithExtras.links || []}
-                  isFirst={index === 0}
-                  isLast={index === allItems.length - 1}
-                />
+                  <RequestCard
+                    key={request.id}
+                    request={request}
+                    variant="feed"
+                    images={requestWithExtras.images || []}
+                    links={requestWithExtras.links || []}
+                    isFirst={index === 0}
+                    isLast={index === allItems.length - 1}
+                  />
               );
             })}
           </div>

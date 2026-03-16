@@ -103,10 +103,25 @@ export function NetworkSidebar() {
     return pathname === href || (href !== "/app" && pathname.startsWith(href));
   };
 
+  const handleGuestClick = (href?: string) => {
+    // For visitors, always send them to login regardless of the target
+    router.push("/login");
+  };
+
   return (
-    <section className="sticky top-8 flex flex-col h-[calc(100vh-4rem)] p-6">
+    <section className="flex flex-col h-[calc(100vh-4rem)] max-h-[calc(100vh-4rem)]">
       {/* Logo */}
-      <Link href="/app" prefetch={true} className="flex items-center gap-2 mb-6">
+      <Link
+        href={user ? "/app" : "/login"}
+        prefetch={true}
+        onClick={(e) => {
+          if (!user) {
+            e.preventDefault();
+            handleGuestClick();
+          }
+        }}
+        className="flex items-center gap-2 mb-6"
+      >
         <Image
           src="/logo.png"
           alt="onseek"
@@ -122,53 +137,90 @@ export function NetworkSidebar() {
 
       <div className="flex-1 space-y-6 overflow-y-auto">
         {/* Navigation Links */}
-        {user && (
-          <nav className="space-y-1">
-            {navLinks.map((link) => {
-              const active = isActive(link.href);
-              const Icon = link.icon;
+        <nav className="space-y-1">
+          {navLinks.map((link) => {
+            const active = isActive(link.href);
+            const Icon = link.icon;
+
+            const commonClasses = cn(
+              "flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors text-base relative w-full text-left",
+              active
+                ? "bg-gray-100 text-foreground font-medium"
+                : "text-gray-400 hover:text-gray-600 hover:bg-gray-50"
+            );
+
+            if (!user) {
               return (
-                <Link
+                <button
                   key={link.href}
-                  href={link.href}
-                  className={cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors text-base relative",
-                    active
-                      ? "bg-gray-100 text-foreground font-medium"
-                      : "text-muted-foreground hover:text-foreground hover:bg-gray-50"
-                  )}
+                  type="button"
+                  className={commonClasses}
+                  onClick={() => handleGuestClick(link.href)}
                 >
-                  <Icon className={cn(
-                    "h-5 w-5 shrink-0",
-                    link.href === "/app/saved" && active && "fill-current"
-                  )} />
+                  <Icon
+                    className={cn(
+                      "h-5 w-5 shrink-0",
+                      "text-gray-400"
+                    )}
+                  />
                   <span>{link.label}</span>
-                  {link.badge !== undefined && link.badge > 0 && (
-                    <span className="ml-auto h-5 w-5 rounded-full bg-[#7755FF] text-white text-[10px] font-semibold flex items-center justify-center shrink-0">
-                      {link.badge > 9 ? "9+" : link.badge}
-                    </span>
-                  )}
-                </Link>
+                </button>
               );
-            })}
-          </nav>
-        )}
+            }
+
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={cn(
+                  "flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors text-base relative",
+                  active
+                    ? "bg-gray-100 text-foreground font-medium"
+                    : "text-gray-400 hover:text-gray-600 hover:bg-gray-50"
+                )}
+              >
+                <Icon
+                  className={cn(
+                    "h-5 w-5 shrink-0",
+                    link.href === "/app/saved" && active && "fill-current",
+                    !active && "text-gray-400"
+                  )}
+                />
+                <span>{link.label}</span>
+                {link.badge !== undefined && link.badge > 0 && (
+                  <span className="ml-auto h-5 w-5 rounded-full bg-[#7755FF] text-white text-[10px] font-semibold flex items-center justify-center shrink-0">
+                    {link.badge > 9 ? "9+" : link.badge}
+                  </span>
+                )}
+              </Link>
+            );
+          })}
+        </nav>
       </div>
 
-      {/* User Avatar with Dropdown - Fixed at bottom */}
-      {user && (
-        <div className="pt-4 space-y-4 flex-shrink-0">
-          {/* Create Request Button */}
+      {/* Bottom area - Post request / auth */}
+      <div className="pt-4 space-y-4 flex-shrink-0">
+        {/* Primary CTA */}
+        {user ? (
           <Button 
             asChild 
             className="w-full h-14 rounded-full bg-[#212733] text-white hover:bg-[#212733]/90 border border-[#222234] text-base font-medium"
           >
             <Link href="/app/new">
-              <Plus className="h-5 w-5 mr-2" />
-              Create a request
+              Post request
             </Link>
           </Button>
+        ) : (
+          <Button
+            className="w-full h-14 rounded-full bg-[#212733] text-white hover:bg-[#212733]/90 border border-[#222234] text-base font-medium"
+            onClick={() => handleGuestClick("/app/new")}
+          >
+            Log in to post
+          </Button>
+        )}
 
+        {/* User / Login area */}
+        {user ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-gray-50 transition-colors">
@@ -201,8 +253,16 @@ export function NetworkSidebar() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        </div>
-      )}
+        ) : (
+          <Button
+            variant="outline"
+            className="w-full h-11 rounded-full text-base font-medium"
+            onClick={() => handleGuestClick()}
+          >
+            Log in
+          </Button>
+        )}
+      </div>
     </section>
   );
 }

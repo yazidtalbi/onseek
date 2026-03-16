@@ -89,6 +89,15 @@ function RequestCardComponent({
   const budgetText = formatBudget(request.budget_min, request.budget_max);
   const isFeed = variant === "feed";
 
+  const rawCategoryName =
+    (request.categories && request.categories[request.categories.length - 1]?.name) ||
+    request.category ||
+    "Category";
+
+  const primaryCategoryName = rawCategoryName.includes(">")
+    ? rawCategoryName.split(">").pop()!.trim()
+    : rawCategoryName;
+
 
   // Limit display for feed variant
   const maxImages = 3;
@@ -106,31 +115,39 @@ function RequestCardComponent({
         {/* Header Section */}
         <section>
           <div className="flex items-start gap-4 mb-4">
-            {/* Image - Left side (only on feed variant) */}
-            {isFeed && images.length > 0 && (
+            {/* Image / Category placeholder - Left side (only on feed variant) */}
+            {isFeed && (
               <div className="flex-shrink-0">
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setPreviewImage(images[0]);
-                  }}
-                  className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-lg bg-gray-50 overflow-hidden cursor-pointer hover:opacity-80 transition-opacity"
-                >
-                  <Image
-                    src={images[0]}
-                    alt={`${request.title} - Image 1`}
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 640px) 64px, 80px"
-                    unoptimized
-                  />
-                </button>
+                {images.length > 0 ? (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setPreviewImage(images[0]);
+                    }}
+                    className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-lg bg-gray-50 overflow-hidden cursor-pointer hover:opacity-80 transition-opacity"
+                  >
+                    <Image
+                      src={images[0]}
+                      alt={`${request.title} - Image 1`}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 640px) 64px, 80px"
+                      unoptimized
+                    />
+                  </button>
+                ) : (
+                  <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-lg bg-gray-100 flex items-center justify-center">
+                    <span className="px-2 text-xs font-medium text-gray-500 text-center line-clamp-2">
+                      {primaryCategoryName}
+                    </span>
+                  </div>
+                )}
               </div>
             )}
             
             {/* Content - Right side */}
-            <div className="flex-1 min-w-0 flex items-start justify-between gap-4">
+            <div className="flex-1 min-w-0">
               <div className="flex-1 min-w-0">
                 {variant === "detail" && request.profiles?.username && (
                   <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
@@ -167,28 +184,6 @@ function RequestCardComponent({
                     {timeAgo && <span>{timeAgo}</span>}
                   </div>
                 )}
-              </div>
-              <div
-                className="flex items-center gap-1.5 flex-shrink-0 relative z-10"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                }}
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                }}
-              >
-                <FavoriteButton
-                  requestId={request.id}
-                  isFavorite={isFavorite}
-                />
-                <RequestMenu
-                  requestId={request.id}
-                  requestUserId={request.user_id}
-                  status={request.status}
-                  categories={request.categories}
-                />
               </div>
             </div>
           </div>
@@ -383,12 +378,36 @@ function RequestCardComponent({
 
         {/* Footer Section */}
         <section>
-          {/* Footer: Meta info - only show on feed variant */}
-          {variant === "feed" && request.submissionCount !== undefined && request.submissionCount > 0 && (
-            <div className="flex items-center gap-2 flex-wrap pt-4 mt-auto">
+          {/* Footer: Meta info & actions - only show on feed variant */}
+          {variant === "feed" && (
+            <div className="flex items-center justify-between gap-2 flex-wrap pt-4 mt-auto">
               <span className="text-sm text-gray-500">
-                {formatSubmissionCount(request.submissionCount)} proposals
+                {request.submissionCount !== undefined && request.submissionCount > 0
+                  ? `${formatSubmissionCount(request.submissionCount)} proposals`
+                  : "No proposals yet"}
               </span>
+              <div
+                className="flex items-center gap-1.5 flex-shrink-0 relative z-10"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+              >
+                <FavoriteButton
+                  requestId={request.id}
+                  isFavorite={isFavorite}
+                />
+                <RequestMenu
+                  requestId={request.id}
+                  requestUserId={request.user_id}
+                  status={request.status}
+                  categories={request.categories}
+                />
+              </div>
             </div>
           )}
         </section>
@@ -400,7 +419,7 @@ function RequestCardComponent({
       {variant === "detail" ? (
         <Card
           className={cn(
-            "flex flex-col transition-colors relative group h-full w-full rounded-none border-0 overflow-y-auto scrollbar-hide"
+            "flex flex-col transition-colors relative group h-full w-full rounded-2xl border border-[#e5e7eb] overflow-y-auto scrollbar-hide"
           )}
         >
           {cardContent}
@@ -427,7 +446,7 @@ function RequestCardComponent({
         >
           <Card
             className={cn(
-              " flex flex-col hover:bg-[#f9fafb] transition-colors relative group h-full",
+              " flex flex-col transition-all relative group h-full",
               !isFeed ? "rounded-2xl" : "",
               isFeed && isFirst && isLast ? "rounded-2xl" : "",
               isFeed && isFirst && !isLast ? "rounded-t-2xl rounded-b-none" : "",
