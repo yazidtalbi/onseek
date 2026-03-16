@@ -34,11 +34,11 @@ export default function RequestsMatchPage() {
 
       if (error) {
         console.error("Error fetching requests:", error);
-        return { requests: [], images: {}, links: {} };
+        return { requests: [], images: {} as Record<string, string[]>, links: {} as Record<string, string[]>, favorites: new Set<string>() };
       }
 
       if (!requests || requests.length === 0) {
-        return { requests: [], images: {}, links: {} };
+        return { requests: [], images: {} as Record<string, string[]>, links: {} as Record<string, string[]>, favorites: new Set<string>() };
       }
 
       // Fetch images for all requests
