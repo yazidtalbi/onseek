@@ -3,7 +3,7 @@ import { AppNavbar } from "@/components/layout/app-navbar";
 import { BottomNav } from "@/components/layout/bottom-nav";
 import { ScrollToTop } from "@/components/layout/scroll-to-top";
 import { AuthProvider } from "@/components/layout/auth-provider";
-import { MaxWidthWrapper } from "@/components/layout/max-width-wrapper";
+
 import { PageLayout } from "@/components/layout/page-layout";
 
 export const dynamic = "force-dynamic";
@@ -57,16 +57,12 @@ export default async function AppLayout({
 
   return (
     <AuthProvider user={serializedUser} profile={resolvedProfile ?? null}>
-      <div className="flex flex-col min-h-screen bg-background md:pb-24">
+      <div className="flex flex-col min-h-screen bg-background pb-20 md:pb-0">
         <AppNavbar />
-        <main className="flex-1 w-full px-4 pt-8 pb-8 md:px-6 md:pt-8">
-          <MaxWidthWrapper>
-            <PageLayout>{children}</PageLayout>
-          </MaxWidthWrapper>
+        <main className="flex-1 w-full overflow-hidden flex flex-col">
+          <PageLayout>{children}</PageLayout>
         </main>
-        <div className="hidden md:block">
-          <BottomNav />
-        </div>
+        <BottomNav />
         <ScrollToTop />
       </div>
     </AuthProvider>

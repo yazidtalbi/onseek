@@ -8,10 +8,9 @@ import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { CategoryPills } from "@/components/requests/category-pills";
 import { RequestFilters } from "@/components/requests/request-filters";
 import { RequestCard } from "@/components/requests/request-card";
-import { RequestInputSection } from "@/components/requests/request-input-section";
 import type { RequestItem, FeedMode } from "@/lib/types";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { Loader2, Search } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
@@ -61,15 +60,15 @@ export function PersonalizedFeed({ initialMode = "for_you", initialData }: Perso
   useEffect(() => {
     // Only update if preferences have loaded
     if (hasPreferences === undefined) return;
-    
+
     // Skip if we just updated the URL (prevent infinite loop)
     if (hasUpdatedUrlRef.current) {
       hasUpdatedUrlRef.current = false;
       return;
     }
-    
+
     const currentMode = searchParams.get("mode");
-    
+
     // If mode is "for_you" but no preferences, switch to latest
     if (mode === "for_you" && !hasPreferences) {
       if (currentMode !== "latest") {
@@ -111,13 +110,13 @@ export function PersonalizedFeed({ initialMode = "for_you", initialData }: Perso
     queryFn: async ({ pageParam }) => {
       const supabase = createBrowserSupabaseClient();
       const limit = 20;
-      
+
       // Build query
       let query = supabase
         .from("requests")
         .select("*")
         .eq("status", "open");
-      
+
       // Apply filters
       if (category && category !== "All") {
         query = query.eq("category", category);
@@ -135,7 +134,7 @@ export function PersonalizedFeed({ initialMode = "for_you", initialData }: Perso
           query = query.or(`budget_min.lte.${max},budget_min.is.null`);
         }
       }
-      
+
       // Apply sort
       const sortMode = sort || (mode === "latest" ? "newest" : mode === "trending" ? "active" : "newest");
       if (sortMode === "active") {
@@ -143,29 +142,29 @@ export function PersonalizedFeed({ initialMode = "for_you", initialData }: Perso
       } else {
         query = query.order("created_at", { ascending: false });
       }
-      
+
       // Cursor-based pagination
       if (pageParam) {
         query = query.lt("created_at", pageParam);
       }
-      
+
       const { data: requests, error: queryError } = await query.limit(limit + 1);
-      
+
       if (queryError) {
         throw new Error(queryError.message);
       }
-      
+
       if (!requests || requests.length === 0) {
         return {
           items: [],
           nextCursor: null,
         };
       }
-      
+
       const hasMore = requests.length > limit;
       const items = requests.slice(0, limit);
       const nextCursor = hasMore ? items[items.length - 1].created_at : null;
-      
+
       // Fetch images, links, and submission counts in parallel
       const requestIds = items.map((r: any) => r.id);
       const [imagesResult, linksResult, submissionCountsResult] = await Promise.all([
@@ -183,7 +182,7 @@ export function PersonalizedFeed({ initialMode = "for_you", initialData }: Perso
           .select("request_id")
           .in("request_id", requestIds),
       ]);
-      
+
       // Create maps for efficient lookups
       const imageMap = new Map<string, string[]>();
       imagesResult.data?.forEach((img) => {
@@ -193,20 +192,20 @@ export function PersonalizedFeed({ initialMode = "for_you", initialData }: Perso
           imageMap.set(img.request_id, existing);
         }
       });
-      
+
       const linkMap = new Map<string, string[]>();
       linksResult.data?.forEach((link) => {
         const existing = linkMap.get(link.request_id) || [];
         existing.push(link.url);
         linkMap.set(link.request_id, existing);
       });
-      
+
       const submissionCountMap = new Map<string, number>();
       submissionCountsResult.data?.forEach((sub) => {
         const current = submissionCountMap.get(sub.request_id) || 0;
         submissionCountMap.set(sub.request_id, current + 1);
       });
-      
+
       // Attach images, links, and submission counts to items
       const itemsWithExtras = items.map((req: any) => ({
         ...req,
@@ -214,7 +213,7 @@ export function PersonalizedFeed({ initialMode = "for_you", initialData }: Perso
         links: linkMap.get(req.id) || [],
         submissionCount: submissionCountMap.get(req.id) || 0,
       }));
-      
+
       return {
         items: itemsWithExtras,
         nextCursor,
@@ -230,16 +229,19 @@ export function PersonalizedFeed({ initialMode = "for_you", initialData }: Perso
     placeholderData: (previousData) => previousData, // Show stale data while refetching
   });
 
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
   const allItems = useMemo(() => {
     if (!data || !data.pages) return [];
-    
+
     const items = data.pages.flatMap((page) => page?.items || []);
-    
-    // Filter out hidden requests (client-side only)
-    if (typeof window === "undefined") {
+
+    // Filter out hidden requests (client-side only, post-hydration)
+    if (!mounted || typeof window === "undefined") {
       return items;
     }
-    
+
     try {
       const hidden = JSON.parse(localStorage.getItem("hiddenRequests") || "[]");
       return items.filter((item: RequestItem) => !hidden.includes(item.id));
@@ -247,7 +249,7 @@ export function PersonalizedFeed({ initialMode = "for_you", initialData }: Perso
       console.error("Error reading hidden requests:", error);
       return items;
     }
-  }, [data]);
+  }, [data, mounted]);
 
   const handleModeChange = (newMode: FeedMode) => {
     setMode(newMode);
@@ -273,18 +275,33 @@ export function PersonalizedFeed({ initialMode = "for_you", initialData }: Perso
 
 
   return (
-    <div className="space-y-4">
-      <div className="pb-4">
-        <RequestInputSection />
+    <div className="flex flex-col w-full">
+      <section className="mx-auto max-w-4xl mb-8 rounded-2xl bg-white px-6 py-8 sm:px-10 sm:py-10">
+        <div className="mx-auto w-full text-center">
+          <h1 className="font-[family-name:var(--font-inter-display)] text-4xl font-bold leading-tight tracking-tight text-foreground sm:text-[4rem] sm:leading-[1.1]">
+            Get the Right Deal, Your Way.
+          </h1>
+          <p className="mx-auto mt-4 max-w-2xl text-base text-gray-500 sm:text-lg">
+            Post a request, receive offers, compare deals, and connect with the right seller — all in one place.
+          </p>
+          <div className="mx-auto mt-8 max-w-2xl">
+            <form action="/search" method="get" className="relative flex w-full items-center gap-3 rounded-full border border-transparent bg-gray-100 px-5 py-4 shadow-sm transition-all focus-within:border-gray-300 focus-within:bg-white focus-within:shadow-md focus-within:ring-1 focus-within:ring-gray-200 hover:bg-gray-200/50">
+              <Search className="h-5 w-5 text-gray-500 flex-shrink-0" />
+              <input
+                type="text"
+                name="q"
+                placeholder="Search for items, requests, categories..."
+                className="w-full bg-transparent text-base text-gray-900 outline-none placeholder:text-gray-500 font-normal"
+                autoComplete="off"
+              />
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <div className="shrink-0 mb-2">
+        <CategoryPills />
       </div>
-      <CategoryPills />
-      
-      {/* Description text */}
-      <p className="text-sm text-gray-400">
-        Browse requests that match your preferences and interests.
-        <br />
-        Ordered by most relevant.
-      </p>
 
       <RequestFilters hideViewToggle={true} />
 
@@ -326,53 +343,54 @@ export function PersonalizedFeed({ initialMode = "for_you", initialData }: Perso
           </div>
         </div>
       ) : allItems.length > 0 ? (
-        <>
+        <div className="relative group w-full flex flex-col">
           {/* Show subtle loading indicator while fetching */}
           {isFetching && !isLoading && (
-            <div className="mx-auto w-full flex justify-center py-2">
+            <div className="absolute top-0 left-0 right-0 z-20 flex justify-center py-2 pointer-events-none">
               <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
             </div>
           )}
-          
-          <div className="mx-auto w-full">
-            {allItems.map((request: RequestItem, index: number) => {
+
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 py-4">
+            {allItems.map((request: RequestItem) => {
               const requestWithExtras = request as RequestItem & { images?: string[]; links?: string[] };
               return (
+                <Link
+                  href={`/app/requests/${request.id}`}
+                  key={request.id}
+                  className="block w-full h-[550px]"
+                >
                   <RequestCard
-                    key={request.id}
                     request={request}
-                    variant="feed"
+                    variant="detail"
                     images={requestWithExtras.images || []}
                     links={requestWithExtras.links || []}
-                    isFirst={index === 0}
-                    isLast={index === allItems.length - 1}
+                    smallImages={true}
                   />
+                </Link>
               );
             })}
           </div>
-
+            
           {hasNextPage && (
-            <div className="flex justify-center pt-6">
+            <div className="w-full flex justify-center py-8">
               <Button
                 onClick={() => fetchNextPage()}
                 disabled={isFetchingNextPage}
                 variant="outline"
-                className=""
+                className="rounded-full h-12 px-8 border-2"
               >
-                {isFetchingNextPage ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Loading...
-                  </>
-                ) : (
-                  "Load more"
-                )}
+                {isFetchingNextPage ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                {isFetchingNextPage ? "Loading..." : "Load more requests"}
               </Button>
             </div>
           )}
-        </>
+
+          <div className="flex justify-center py-4 mt-8">
+            <p className="text-xs text-gray-400">&copy; 2026 OnSeek</p>
+          </div>
+        </div>
       ) : null}
     </div>
   );
 }
-

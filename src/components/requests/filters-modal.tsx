@@ -42,7 +42,6 @@ export function FiltersModal({ open, onOpenChange, children }: FiltersModalProps
   const country = searchParams.get("country") || "";
 
   // Local state for form
-  const [localSort, setLocalSort] = React.useState(sort);
   const [localPriceMax, setLocalPriceMax] = React.useState(priceMax);
   const [localCountry, setLocalCountry] = React.useState(country || "all");
   const [priceSlider, setPriceSlider] = React.useState<number[]>([
@@ -52,7 +51,6 @@ export function FiltersModal({ open, onOpenChange, children }: FiltersModalProps
   // Sync local state when modal opens
   React.useEffect(() => {
     if (open) {
-      setLocalSort(sort);
       setLocalPriceMax(priceMax);
       setLocalCountry(country || "all");
       setPriceSlider([priceMax ? parseInt(priceMax, 10) : 10000]);
@@ -91,13 +89,6 @@ export function FiltersModal({ open, onOpenChange, children }: FiltersModalProps
   const handleSave = () => {
     const params = new URLSearchParams(searchParams.toString());
     
-    // Update sort
-    if (localSort && localSort !== "newest") {
-      params.set("sort", localSort);
-    } else {
-      params.delete("sort");
-    }
-
     // Update max price
     if (localPriceMax && localPriceMax !== "") {
       params.set("priceMax", localPriceMax);
@@ -118,7 +109,6 @@ export function FiltersModal({ open, onOpenChange, children }: FiltersModalProps
   };
 
   const handleClearAll = () => {
-    setLocalSort("newest");
     setLocalPriceMax("");
     setLocalCountry("all");
 
@@ -152,20 +142,6 @@ export function FiltersModal({ open, onOpenChange, children }: FiltersModalProps
         </DialogHeader>
 
         <div className="space-y-6 py-4">
-          {/* Sort by */}
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">Sort by</Label>
-            <Select value={localSort} onValueChange={setLocalSort}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select sort option" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="newest">Newest</SelectItem>
-                <SelectItem value="active">Most active</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
           {/* Max Price */}
           <div className="space-y-3">
             <Label className="text-sm font-medium">Max price</Label>

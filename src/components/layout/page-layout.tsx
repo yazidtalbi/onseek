@@ -2,13 +2,21 @@
 
 import { usePathname } from "next/navigation";
 import { PromotionalSidebar } from "@/components/requests/promotional-sidebar";
+import { cn } from "@/lib/utils";
 
 export function PageLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const showPromotional = pathname === "/app";
+  const showPromotional = false; // pathname === "/app";
 
   if (!showPromotional) {
-    return <>{children}</>;
+    return (
+      <div className={cn(
+        "flex-1 w-full mx-auto max-w-[1440px] px-4 md:px-6",
+        pathname === "/app" ? "pt-5 md:pt-6 pb-0" : "pt-8 md:pt-8 pb-8"
+      )}>
+        {children}
+      </div>
+    );
   }
 
   return (

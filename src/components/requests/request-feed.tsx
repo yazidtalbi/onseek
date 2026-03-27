@@ -228,7 +228,7 @@ export function RequestFeed({
   return (
     <div className="space-y-4">
 
-      <div className="max-w-2xl mx-auto w-full">
+      <div className="mx-auto w-full">
         {data.map((request: any, index: number) => (
           <RequestCard 
             key={request.id} 

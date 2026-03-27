@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CountryCombobox } from "@/components/ui/country-combobox";
+import { CategoryCombobox } from "@/components/ui/category-combobox";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import {
@@ -34,7 +35,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Upload, X, GripVertical, Info, Plus } from "lucide-react";
+import { Upload, X, GripVertical, Info, Plus, Check } from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { MAIN_CATEGORIES, SUBCATEGORIES, type MainCategory } from "@/lib/categories";
@@ -59,13 +60,52 @@ export function RequestForm({ onSuccess }: { onSuccess?: () => void }) {
   const [preferenceInput, setPreferenceInput] = React.useState("");
   const [dealbreakerInput, setDealbreakerInput] = React.useState("");
   const [preferenceNote, setPreferenceNote] = React.useState("");
+  const [currentStep, setCurrentStep] = React.useState(1);
+
+  const steps = [
+    { id: 1, title: 'Item & Info' },
+    { id: 2, title: 'Constraints' },
+    { id: 3, title: 'References' }
+  ];
+
+  const stepTips = {
+    1: [
+      "Be specific about what you're looking for",
+      "Add detailed preferences to help guide sellers",
+      "List strict dealbreakers to filter unwanted proposals immediately"
+    ],
+    2: [
+      "Select the most accurate category for your item",
+      "Set a realistic budget range",
+      "Use Price Lock if you strictly cannot exceed your max budget"
+    ],
+    3: [
+      "Add context with strong reference links",
+      "Upload clear images to communicate your expectation",
+      "The more reference material you provide, the better the offers"
+    ]
+  };
+
+  const proceedToNextStep = async () => {
+    const fieldsToValidate = currentStep === 1 ? ["title"] : ["category", "budgetMax"];
+    const isValid = await form.trigger(fieldsToValidate as any);
+    if (isValid) {
+      setCurrentStep((prev) => Math.min(prev + 1, 3));
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
+  const goBack = () => {
+    setCurrentStep((prev) => Math.max(prev - 1, 1));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   const form = useForm<RequestValues>({
     resolver: zodResolver(requestSchema) as any,
     defaultValues: {
       title: "",
       description: "",
-      category: "Tech" as const,
+      category: "",
       budgetMax: null,
       priceLock: "open",
       exactItem: false,
@@ -436,6 +476,35 @@ export function RequestForm({ onSuccess }: { onSuccess?: () => void }) {
   }, [form.formState.errors]);
 
   return (
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="lg:col-span-2">
+        {/* Stepper Header */}
+        <div className="mb-12">
+          <div className="flex items-center justify-between relative max-w-md mx-auto">
+            <div className="absolute left-0 top-1/2 -mt-px w-full h-0.5 bg-gray-200 -z-10" />
+            {steps.map((step, idx) => {
+              const isActive = step.id === currentStep;
+              const isCompleted = step.id < currentStep;
+              return (
+                <div key={step.id} className="relative flex flex-col items-center bg-background px-4">
+                  <div className={cn(
+                    "w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-colors border-2 z-10",
+                    isActive || isCompleted ? "bg-[#7755FF] text-white border-[#7755FF]" : "bg-white text-gray-400 border-gray-200"
+                  )}>
+                    {isCompleted ? <Check className="w-5 h-5" /> : step.id}
+                  </div>
+                  <span className={cn(
+                    "absolute top-12 text-xs font-semibold whitespace-nowrap hidden sm:block",
+                    isActive || isCompleted ? "text-foreground" : "text-gray-400"
+                  )}>
+                    {step.title}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
     <form 
       onSubmit={form.handleSubmit(
         (data) => {
@@ -476,50 +545,33 @@ export function RequestForm({ onSuccess }: { onSuccess?: () => void }) {
               <h3 className="text-sm font-semibold text-red-900 mb-2">
                 Cannot publish request — please fix the following errors:
               </h3>
-              <ul className="space-y-1.5 text-sm text-red-800">
-                {/* Show general error */}
-                {error && (
+               <ul className="space-y-1.5 text-sm text-red-800">
+                {/* General error message */}
+                {error && error !== "Please fix the validation errors below" && (
                   <li className="flex items-start gap-2">
-                    <span className="text-red-600 mt-0.5">•</span>
+                    <span className="text-red-600 mt-1">•</span>
                     <span>{error}</span>
                   </li>
                 )}
-                {/* Show field-specific errors */}
-                {errors.title && (
-                  <li className="flex items-start gap-2">
-                    <span className="text-red-600 mt-0.5">•</span>
-                    <span><strong>Title:</strong> {errors.title}</span>
-                  </li>
-                )}
-                {errors.category && (
-                  <li className="flex items-start gap-2">
-                    <span className="text-red-600 mt-0.5">•</span>
-                    <span><strong>Category:</strong> {errors.category}</span>
-                  </li>
-                )}
-                {errors.budgetMax && (
-                  <li className="flex items-start gap-2">
-                    <span className="text-red-600 mt-0.5">•</span>
-                    <span><strong>Budget:</strong> {errors.budgetMax}</span>
-                  </li>
-                )}
-                {/* Show any other field errors */}
+                
+                {/* Map through all non-empty field errors */}
                 {Object.entries(errors).map(([key, value]) => {
-                  if (!["title", "category", "description", "budgetMax", "preferences", "dealbreakers", "linkInput"].includes(key)) {
-                    return (
-                      <li key={key} className="flex items-start gap-2">
-                        <span className="text-red-600 mt-0.5">•</span>
-                        <span><strong>{key.charAt(0).toUpperCase() + key.slice(1)}:</strong> {value}</span>
-                      </li>
-                    );
-                  }
-                  return null;
+                  if (!value) return null;
+                  return (
+                    <li key={key} className="flex items-start gap-2">
+                      <span className="text-red-600 mt-1">•</span>
+                      <span>
+                        <strong className="capitalize">{key}:</strong> {value}
+                      </span>
+                    </li>
+                  );
                 })}
-                {/* Debug: Show if error exists but no errors object */}
-                {error && Object.keys(errors).length === 0 && (
-                  <li className="flex items-start gap-2 text-xs text-red-600 italic">
-                    <span className="text-red-600 mt-0.5">•</span>
-                    <span>Check browser console for detailed error information</span>
+
+                {/* Safety fallback if both are somehow empty but we have validation errors */}
+                {Object.keys(errors).length === 0 && !error && (
+                  <li className="flex items-start gap-2">
+                    <span className="text-red-600 mt-1">•</span>
+                    <span>Form contains validation errors. Please check the fields below.</span>
                   </li>
                 )}
               </ul>
@@ -529,7 +581,8 @@ export function RequestForm({ onSuccess }: { onSuccess?: () => void }) {
       )}
 
       {/* SECTION 1: What are you looking for? */}
-      <section className="space-y-6">
+      {currentStep === 1 && (
+      <section className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
 
         {/* Title */}
         <div className="space-y-2">
@@ -680,75 +733,32 @@ export function RequestForm({ onSuccess }: { onSuccess?: () => void }) {
           </div>
         </div>
       </section>
-
-      {/* Divider */}
-      <div className="h-px bg-border" />
+      )}
 
       {/* SECTION 2: Constraints (Optional) */}
-      <section className="space-y-6">
+      {currentStep === 2 && (
+      <section className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
         <div>
           <h2 className="text-xl font-semibold mb-1">Constraints</h2>
           <p className="text-sm text-gray-600">Optional filters to help find better matches</p>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
-          {/* Category */}
-          <div className="space-y-2">
-            <Label>Category</Label>
-            <Select
-              value={form.watch("category").split(" > ")[0] || ""}
-              onValueChange={(value) => {
+          {/* What type of item? (Category) */}
+          <div className="space-y-2 md:col-span-2">
+            <Label>What type of item? (e.g. Watch, Car, Laptop)</Label>
+            <CategoryCombobox 
+              value={form.watch("category") || ""}
+              onChange={(value) => {
                 form.setValue("category", value);
                 setErrors((prev) => ({ ...prev, category: "" }));
               }}
-            >
-              <SelectTrigger className={cn(
-                errors.category && "border-red-500 focus-visible:ring-red-500"
-              )}>
-                <SelectValue placeholder="Select category" />
-              </SelectTrigger>
-              <SelectContent>
-                {MAIN_CATEGORIES.map((category) => (
-                  <SelectItem key={category} value={category}>
-                    {category}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              placeholder="Search or type item type..."
+            />
             {errors.category && (
-              <p className="text-xs text-red-600">{errors.category}</p>
+              <p className="text-xs text-red-600 font-medium mt-1">{errors.category}</p>
             )}
           </div>
-
-          {/* Subcategory */}
-          {form.watch("category") && SUBCATEGORIES[form.watch("category").split(" > ")[0] as MainCategory] && (
-            <div className="space-y-2">
-              <Label>Subcategory (Optional)</Label>
-              <Select
-                value={form.watch("category").includes(" > ") ? form.watch("category").split(" > ")[1] : "__NONE__"}
-                onValueChange={(subcategory) => {
-                  const mainCategory = form.watch("category").split(" > ")[0];
-                  if (subcategory === "__NONE__") {
-                    form.setValue("category", mainCategory);
-                  } else {
-                    form.setValue("category", `${mainCategory} > ${subcategory}`);
-                  }
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select subcategory" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__NONE__">None</SelectItem>
-                  {SUBCATEGORIES[form.watch("category").split(" > ")[0] as MainCategory]?.map((subcategory) => (
-                    <SelectItem key={subcategory} value={subcategory}>
-                      {subcategory}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
 
           {/* Condition */}
           <div className="space-y-2">
@@ -903,12 +913,11 @@ export function RequestForm({ onSuccess }: { onSuccess?: () => void }) {
           </AccordionItem>
         </Accordion>
       </section>
-
-      {/* Divider */}
-      <div className="h-px bg-border" />
+      )}
 
       {/* SECTION 3: References & Visibility */}
-      <section className="space-y-6">
+      {currentStep === 3 && (
+      <section className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
         <div>
           <h2 className="text-xl font-semibold mb-1">References & visibility</h2>
           <p className="text-sm text-gray-600">Help others understand what you're looking for</p>
@@ -1070,6 +1079,7 @@ export function RequestForm({ onSuccess }: { onSuccess?: () => void }) {
           )}
         </div>
       </section>
+      )}
 
       {/* Error Summary */}
       {error && (
@@ -1078,12 +1088,48 @@ export function RequestForm({ onSuccess }: { onSuccess?: () => void }) {
         </div>
       )}
 
-      {/* Submit Button - Sticky on Mobile */}
-      <div className="sticky bottom-0 left-0 right-0 z-10  border-t border-[#e5e7eb] p-4 -mx-4 md:static md:border-t-0 md:p-0 md:mx-0 flex justify-end">
-        <Button type="submit" variant="accent" className="w-full md:w-auto md:min-w-[200px]" disabled={isPending}>
-          {getCTALabel()}
-        </Button>
+      {/* Navigation Buttons */}
+      <div className="sticky bottom-0 left-0 right-0 z-10 bg-white/80 backdrop-blur-md border-t border-[#e5e7eb] p-4 -mx-4 md:static md:bg-transparent md:border-t-0 md:p-0 md:mx-0 flex flex-col-reverse sm:flex-row gap-3 sm:justify-between items-center mt-12">
+        {currentStep > 1 ? (
+          <Button type="button" variant="outline" onClick={goBack} className="w-full sm:w-auto h-12 px-8 rounded-full border-2 font-medium">
+            Back
+          </Button>
+        ) : (
+          <div className="hidden sm:block" />
+        )}
+        
+        {currentStep < 3 ? (
+          <Button type="button" onClick={proceedToNextStep} className="w-full sm:w-auto h-12 px-8 rounded-full bg-[#7755FF] hover:bg-[#6644EE] text-white font-medium shadow-sm transition-all hover:shadow">
+            Next step
+          </Button>
+        ) : (
+          <Button type="submit" variant="accent" className="w-full sm:w-auto h-12 px-8 rounded-full font-medium shadow-sm transition-all hover:shadow" disabled={isPending}>
+            {getCTALabel()}
+          </Button>
+        )}
       </div>
     </form>
+    </div>
+
+    {/* Right Sidebar - Tips */}
+    <div className="lg:col-span-1 hidden lg:block">
+      <div className="rounded-2xl border border-[#e5e7eb] p-6 space-y-6 sticky top-24 bg-gray-50/50">
+        <div className="flex items-center gap-2 text-foreground">
+          <Info className="h-5 w-5 text-[#7755FF]" />
+          <h3 className="text-lg font-semibold">Tips for Step {currentStep}</h3>
+        </div>
+        <ul className="space-y-5 text-sm text-gray-600">
+          {(stepTips as any)[currentStep].map((tip: string, idx: number) => (
+            <li key={idx} className="flex items-start gap-4">
+              <span className="flex-shrink-0 w-6 h-6 rounded-full bg-white border border-gray-200 flex items-center justify-center text-xs font-bold text-gray-500 shadow-sm mt-0.5">
+                {idx + 1}
+              </span>
+              <span className="leading-relaxed pt-1">{tip}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  </div>
   );
 }

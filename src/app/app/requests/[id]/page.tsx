@@ -160,7 +160,7 @@ export default async function RequestDetailPage({
   const shouldShowAnnouncement = hasNoSubmissions && daysOld >= 7; // Show if 7+ days old with no proposals
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full px-4 md:px-6">
       {/* Back Button and Breadcrumbs */}
       <div className="flex items-center gap-4">
         <BackButton />

@@ -343,7 +343,7 @@ export function AppNavbar() {
   return (
     <header className="sticky top-0 z-20 w-full bg-white">
       {/* Mobile Navbar */}
-      <div className="md:hidden flex items-center justify-between px-6 py-3">
+      <div className="md:hidden flex items-center justify-between py-3 px-4 md:px-6 max-w-[1440px] mx-auto w-full">
         {/* Brand */}
         <Link href="/app" prefetch={true} className="shrink-0 flex items-center gap-2">
           <Image
@@ -681,7 +681,7 @@ export function AppNavbar() {
       </div>
 
       {/* Desktop Navbar */}
-      <div className="hidden md:flex w-full items-center gap-4 py-3 px-6">
+      <div className="hidden md:flex w-full items-center gap-4 py-3 px-4 md:px-6 max-w-[1440px] mx-auto">
         {/* Brand */}
         <Link href="/app" prefetch={true} className="shrink-0 flex items-center gap-2">
           <Image
