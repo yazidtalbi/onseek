@@ -16,14 +16,14 @@ export const requestSchema = z.object({
   description: z.string().optional().default(""), // Description is auto-generated, no validation needed
   category: z.string().min(2, "Category is required").max(40),
   budgetMin: z.number().min(0).nullable().optional(),
-  budgetMax: z.number().min(0, "Budget must be a positive number").nullable().optional(),
+  budgetMax: z.number().min(1, "Budget is required"),
   priceLock: z.enum(["open", "locked"]).default("open"),
   exactItem: z.boolean().default(false),
   exactSpecification: z.boolean().default(false),
   exactPrice: z.boolean().default(false),
-  country: z.string().min(2).max(60).nullable().optional(),
-  condition: z.string().min(2).max(20).nullable().optional(),
-  urgency: z.string().min(2).max(30).nullable().optional(),
+  country: z.string().max(60).nullable().optional(),
+  condition: z.string().max(20).nullable().optional(),
+  urgency: z.string().max(30).nullable().optional(),
   referenceLinks: z.string().optional(),
 });
 
@@ -65,6 +65,7 @@ export const submissionSchema = z.object({
 export const profileSchema = z.object({
   username: z.string().min(3).max(24),
   bio: z.string().max(240).optional().nullable(),
+  country: z.string().max(60).optional().nullable(),
 });
 
 export const contactInfoSchema = z.object({

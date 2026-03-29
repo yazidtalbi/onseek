@@ -8,6 +8,7 @@ export async function updateProfileAction(formData: FormData) {
   const payload = {
     username: String(formData.get("username") || ""),
     bio: String(formData.get("bio") || "") || null,
+    country: String(formData.get("country") || "") || null,
   };
 
   const parsed = profileSchema.safeParse(payload);
@@ -28,6 +29,7 @@ export async function updateProfileAction(formData: FormData) {
     .update({
       username: parsed.data.username,
       bio: parsed.data.bio,
+      country: parsed.data.country,
     })
     .eq("id", user.id);
 

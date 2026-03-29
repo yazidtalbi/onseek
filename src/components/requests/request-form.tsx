@@ -12,13 +12,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { CountryCombobox } from "@/components/ui/country-combobox";
 import { CategoryCombobox } from "@/components/ui/category-combobox";
 import { Switch } from "@/components/ui/switch";
@@ -35,14 +28,23 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Upload, X, GripVertical, Info, Plus, Check } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Upload, X, GripVertical, Info, Plus, Check, Sparkles, Crown, LockKeyhole } from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { MAIN_CATEGORIES, SUBCATEGORIES, type MainCategory } from "@/lib/categories";
+import { RequestCard } from "@/components/requests/request-card";
+import type { RequestItem } from "@/lib/types";
 
 type RequestValues = z.infer<typeof requestSchema>;
 
-export function RequestForm({ onSuccess }: { onSuccess?: () => void }) {
+export function RequestForm({ onSuccess, userCountry }: { onSuccess?: () => void, userCountry?: string | null }) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [error, setError] = React.useState<string | null>(null);
@@ -61,11 +63,11 @@ export function RequestForm({ onSuccess }: { onSuccess?: () => void }) {
   const [dealbreakerInput, setDealbreakerInput] = React.useState("");
   const [preferenceNote, setPreferenceNote] = React.useState("");
   const [currentStep, setCurrentStep] = React.useState(1);
+  const [isEnhancedOpen, setIsEnhancedOpen] = React.useState(false);
 
   const steps = [
     { id: 1, title: 'Item & Info' },
-    { id: 2, title: 'Constraints' },
-    { id: 3, title: 'References' }
+    { id: 2, title: 'Constraints' }
   ];
 
   const stepTips = {
@@ -87,10 +89,10 @@ export function RequestForm({ onSuccess }: { onSuccess?: () => void }) {
   };
 
   const proceedToNextStep = async () => {
-    const fieldsToValidate = currentStep === 1 ? ["title"] : ["category", "budgetMax"];
+    const fieldsToValidate = currentStep === 1 ? ["title", "category"] : ["budgetMax"];
     const isValid = await form.trigger(fieldsToValidate as any);
     if (isValid) {
-      setCurrentStep((prev) => Math.min(prev + 1, 3));
+      setCurrentStep((prev) => Math.min(prev + 1, 2));
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
@@ -106,12 +108,12 @@ export function RequestForm({ onSuccess }: { onSuccess?: () => void }) {
       title: "",
       description: "",
       category: "",
-      budgetMax: null,
+      budgetMax: 0,
       priceLock: "open",
       exactItem: false,
       exactSpecification: false,
       exactPrice: false,
-      country: "",
+      country: userCountry || "",
       condition: "New",
       urgency: "Standard",
       referenceLinks: "",
@@ -119,8 +121,15 @@ export function RequestForm({ onSuccess }: { onSuccess?: () => void }) {
   });
 
   const titleValue = form.watch("title");
-  const budgetMax = form.watch("budgetMax") || 1000;
+  const budgetMax = form.watch("budgetMax") ?? 0;
   const priceLock = form.watch("priceLock");
+
+  // Sync userCountry prop to form state if it changes or arrives after initial render
+  React.useEffect(() => {
+    if (userCountry && !form.getValues("country")) {
+      form.setValue("country", userCountry);
+    }
+  }, [userCountry, form]);
   const urgency = form.watch("urgency");
 
   // Character counter for title
@@ -199,6 +208,33 @@ export function RequestForm({ onSuccess }: { onSuccess?: () => void }) {
     } else {
       setDealbreakers(dealbreakers.filter((_, i) => i !== index));
     }
+  };
+
+  const [draggedPrefIndex, setDraggedPrefIndex] = React.useState<number | null>(null);
+  const [draggedDealIndex, setDraggedDealIndex] = React.useState<number | null>(null);
+
+  const handlePrefDragStart = (index: number) => setDraggedPrefIndex(index);
+  const handlePrefDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (draggedPrefIndex === null || draggedPrefIndex === index) return;
+    const newPrefs = [...preferences];
+    const draggedItem = newPrefs[draggedPrefIndex];
+    newPrefs.splice(draggedPrefIndex, 1);
+    newPrefs.splice(index, 0, draggedItem);
+    setPreferences(newPrefs);
+    setDraggedPrefIndex(index);
+  };
+
+  const handleDealDragStart = (index: number) => setDraggedDealIndex(index);
+  const handleDealDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (draggedDealIndex === null || draggedDealIndex === index) return;
+    const newDeals = [...dealbreakers];
+    const draggedItem = newDeals[draggedDealIndex];
+    newDeals.splice(draggedDealIndex, 1);
+    newDeals.splice(index, 0, draggedItem);
+    setDealbreakers(newDeals);
+    setDraggedDealIndex(index);
   };
 
   // Handle image upload
@@ -286,80 +322,38 @@ export function RequestForm({ onSuccess }: { onSuccess?: () => void }) {
 
   // Budget slider handler
   const handleBudgetChange = (value: number[]) => {
-    form.setValue("budgetMax", value[0]);
+    form.setValue("budgetMax", value[0], { shouldValidate: true });
   };
 
   const handleBudgetMaxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseFloat(e.target.value) || 0;
-    form.setValue("budgetMax", Math.max(0, value));
+    form.setValue("budgetMax", Math.max(0, value), { shouldValidate: true });
   };
 
   // Dynamic CTA label
   const getCTALabel = () => {
     if (isPending) return "Publishing...";
-    if (priceLock === "locked") return "Publish locked request";
-    if (urgency === "ASAP") return "Publish urgent request";
-    return "Publish request";
+    return "Publish";
   };
 
   const onSubmit = (values: RequestValues) => {
     console.log("=== onSubmit called ===");
     console.log("Form values:", values);
-    console.log("Preferences:", preferences);
-    console.log("Dealbreakers:", dealbreakers);
-    
-    // Collect validation errors
-    const validationErrors: Record<string, string> = {};
-    
-    // Validate title
-    console.log("Validating title:", values.title, "length:", values.title?.length);
-    if (!values.title || values.title.trim().length < 4) {
-      validationErrors.title = "Title must be at least 4 characters";
-      console.log("Title validation failed: too short");
-    }
-    if (values.title && values.title.length > 120) {
-      validationErrors.title = "Title must be less than 120 characters";
-      console.log("Title validation failed: too long");
-    }
-
-    // Validate category
-    console.log("Validating category:", values.category);
-    if (!values.category || values.category.trim().length < 2) {
-      validationErrors.category = "Please select a category";
-      console.log("Category validation failed");
-    }
+    setErrors({});
+    setError(null);
+    setIsEnhancedOpen(false); // Close modal on submit
 
     // Auto-generate description from preferences/dealbreakers (always, since description field was removed)
-    const prefText = preferences.length > 0 
-      ? `Preferences: ${preferences.map(p => p.label).join(", ")}` 
+    const prefText = preferences.length > 0
+      ? `Preferences: ${preferences.map(p => p.label).join(", ")}`
       : "";
-    const dealText = dealbreakers.length > 0 
-      ? `Dealbreakers: ${dealbreakers.map(d => d.label).join(", ")}` 
+    const dealText = dealbreakers.length > 0
+      ? `Dealbreakers: ${dealbreakers.map(d => d.label).join(", ")}`
       : "";
     const description = [prefText, dealText].filter(Boolean).join(". ") || "Looking for the requested item.";
     console.log("Auto-generated description:", description);
 
-    // Validate budget if provided
-    if (values.budgetMax !== null && values.budgetMax !== undefined) {
-      if (values.budgetMax < 0) {
-        validationErrors.budgetMax = "Budget must be a positive number";
-        console.log("Budget validation failed: negative");
-      }
-    }
-
-    console.log("Validation errors found:", Object.keys(validationErrors).length, validationErrors);
-
-    if (Object.keys(validationErrors).length > 0) {
-      console.error("Validation errors:", validationErrors);
-      setErrors(validationErrors);
-      setError(null); // Clear general error when showing field errors
-      return;
-    }
-    
-    console.log("Client-side validation passed, proceeding to submit...");
-
-    setErrors({});
-    setError(null);
+    console.log("Proceeding to submit...");
 
     const formData = new FormData();
     formData.set("title", values.title);
@@ -376,7 +370,7 @@ export function RequestForm({ onSuccess }: { onSuccess?: () => void }) {
     formData.set("exactItem", values.exactItem ? "true" : "false");
     formData.set("exactSpecification", values.exactSpecification ? "true" : "false");
     formData.set("exactPrice", values.exactPrice ? "true" : "false");
-    
+
     // Join reference links with commas
     if (referenceLinks.length > 0) {
       formData.set("referenceLinks", referenceLinks.join(","));
@@ -393,7 +387,7 @@ export function RequestForm({ onSuccess }: { onSuccess?: () => void }) {
 
     startTransition(async () => {
       queryClient.invalidateQueries({ queryKey: ["requests"] });
-      
+
       // Log what we're sending
       console.log("=== Form Submission Debug ===");
       console.log("Form values:", values);
@@ -405,13 +399,13 @@ export function RequestForm({ onSuccess }: { onSuccess?: () => void }) {
       for (const [key, value] of formData.entries()) {
         console.log(`  ${key}:`, value);
       }
-      
+
       try {
         const res = await createRequestAction(formData);
         console.log("Server response:", res);
         console.log("Response has error?", !!res?.error);
         console.log("Response has fieldErrors?", !!res?.fieldErrors);
-        
+
         if (res?.error) {
           console.error("Request creation error:", res.error);
           console.error("Field errors:", res.fieldErrors);
@@ -457,7 +451,7 @@ export function RequestForm({ onSuccess }: { onSuccess?: () => void }) {
 
   // Check if there are any validation errors
   const hasValidationErrors = Object.keys(errors).length > 0 || error !== null;
-  
+
   // Debug: Log current error state
   React.useEffect(() => {
     if (hasValidationErrors) {
@@ -475,11 +469,47 @@ export function RequestForm({ onSuccess }: { onSuccess?: () => void }) {
     }
   }, [form.formState.errors]);
 
+  // Construct preview data
+  const previewRequest: RequestItem = {
+    id: "preview",
+    user_id: "preview",
+    title: titleValue || "Your Request Title",
+    description: `<!--REQUEST_PREFS:${JSON.stringify({
+      priceLock: form.watch("priceLock"),
+      exactItem: form.watch("exactItem"),
+      exactSpecification: form.watch("exactSpecification"),
+      exactPrice: form.watch("exactPrice"),
+      preferences,
+      dealbreakers,
+    })}-->`,
+    category: form.watch("category") || "Category",
+    budget_min: null,
+    budget_max: form.watch("budgetMax") || null,
+    country: form.watch("country") || "Country not set",
+    condition: form.watch("condition") || "New",
+    urgency: form.watch("urgency") || "Standard",
+    status: "open",
+    winner_submission_id: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    submissionCount: 0,
+  };
+
+  // Log whenever country changes or arrives
+  React.useEffect(() => {
+    if (userCountry || form.watch("country")) {
+      console.log("=== Country Debug ===");
+      console.log("Prop userCountry:", userCountry);
+      console.log("Form country value:", form.getValues("country"));
+      console.log("Initial defaultCountry used:", userCountry || "");
+    }
+  }, [form.watch("country"), userCountry]);
+
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      <div className="lg:col-span-2">
-        {/* Stepper Header */}
-        <div className="mb-12">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-0">
+      <div className="lg:col-span-2 lg:border-r border-[#e5e7eb] pr-12 pb-24">
+        {/* Step-by-Step Navigation - Hidden as requested */}
+        <div className="hidden mb-12">
           <div className="flex items-center justify-between relative max-w-md mx-auto">
             <div className="absolute left-0 top-1/2 -mt-px w-full h-0.5 bg-gray-200 -z-10" />
             {steps.map((step, idx) => {
@@ -505,631 +535,680 @@ export function RequestForm({ onSuccess }: { onSuccess?: () => void }) {
           </div>
         </div>
 
-    <form 
-      onSubmit={form.handleSubmit(
-        (data) => {
-          console.log("React Hook Form validation passed, calling onSubmit");
-          onSubmit(data);
-        },
-        (errors) => {
-          console.log("React Hook Form validation failed:", errors);
-          // Convert react-hook-form errors to our format
-          const formErrors: Record<string, string> = {};
-          Object.entries(errors).forEach(([key, value]) => {
-            if (value && typeof value === 'object' && 'message' in value) {
-              formErrors[key] = value.message as string;
+        <form
+          onSubmit={form.handleSubmit(
+            (data) => {
+              console.log("React Hook Form validation passed, calling onSubmit");
+              onSubmit(data);
+            },
+            (errors) => {
+              console.log("React Hook Form validation failed:", errors);
+              // Convert react-hook-form errors to our format
+              const formErrors: Record<string, string> = {};
+              Object.entries(errors).forEach(([key, value]) => {
+                if (value && typeof value === 'object' && 'message' in value) {
+                  formErrors[key] = value.message as string;
+                }
+              });
+              if (Object.keys(formErrors).length > 0) {
+                setErrors(formErrors);
+              }
             }
-          });
-          if (Object.keys(formErrors).length > 0) {
-            setErrors(formErrors);
-            setError("Please fix the validation errors below");
-          }
-        }
-      )} 
-      className="space-y-12" 
-      noValidate
-    >
-      {/* Error Banner at Top - Prevents Request Creation */}
-      {hasValidationErrors && (
-        <div className="rounded-lg border-2 border-red-300 bg-red-50 p-4 space-y-2 shadow-sm">
-          <div className="flex items-start gap-3">
-            <div className="flex-shrink-0 mt-0.5">
-              <svg className="h-5 w-5 text-red-600" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="mb-1">
-                <span className="text-xs font-semibold text-red-700 uppercase tracking-wide">Validation Error</span>
-              </div>
-              <h3 className="text-sm font-semibold text-red-900 mb-2">
-                Cannot publish request — please fix the following errors:
-              </h3>
-               <ul className="space-y-1.5 text-sm text-red-800">
-                {/* General error message */}
-                {error && error !== "Please fix the validation errors below" && (
-                  <li className="flex items-start gap-2">
-                    <span className="text-red-600 mt-1">•</span>
-                    <span>{error}</span>
-                  </li>
-                )}
-                
-                {/* Map through all non-empty field errors */}
-                {Object.entries(errors).map(([key, value]) => {
-                  if (!value) return null;
-                  return (
-                    <li key={key} className="flex items-start gap-2">
-                      <span className="text-red-600 mt-1">•</span>
-                      <span>
-                        <strong className="capitalize">{key}:</strong> {value}
-                      </span>
-                    </li>
-                  );
-                })}
-
-                {/* Safety fallback if both are somehow empty but we have validation errors */}
-                {Object.keys(errors).length === 0 && !error && (
-                  <li className="flex items-start gap-2">
-                    <span className="text-red-600 mt-1">•</span>
-                    <span>Form contains validation errors. Please check the fields below.</span>
-                  </li>
-                )}
-              </ul>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* SECTION 1: What are you looking for? */}
-      {currentStep === 1 && (
-      <section className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
-
-        {/* Title */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="title">The item</Label>
-            <span className={cn(
-              "text-xs text-gray-600",
-              titleLength > titleMaxLength && "text-red-600"
-            )}>
-              {titleLength}/{titleMaxLength}
-            </span>
-          </div>
-          <Input
-            id="title"
-            placeholder="Casio W23"
-            {...form.register("title")}
-            className={cn(
-              errors.title && "border-red-500 focus-visible:ring-red-500"
-            )}
-          />
-          {errors.title && (
-            <p className="text-xs text-red-600">{errors.title}</p>
           )}
-        </div>
-
-        {/* Preferences and Dealbreakers - Two Columns */}
-        <div className="grid gap-4 md:grid-cols-2">
-          {/* Preferences */}
-        <div className="space-y-3">
-            <Label htmlFor="preferences">Preferences (Optional)</Label>
-            <div className="flex gap-2">
-              <Input
-                id="preferences"
-                placeholder="e.g., Good Battery"
-                value={preferenceInput}
-                onChange={(e) => {
-                  setPreferenceInput(e.target.value);
-                  setPreferencesTab("preferences");
-                  setErrors((prev) => ({ ...prev, preferences: "" }));
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && preferenceInput.trim()) {
-                    e.preventDefault();
-                    if (preferencesTab === "preferences") {
-                      addPreferenceOrDealbreaker();
-                    }
-                  }
-                }}
-                className="flex-1"
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                className="text-gray-900 hover:text-gray-900 font-bold"
-                onClick={() => {
-                  setPreferencesTab("preferences");
-                  addPreferenceOrDealbreaker();
-                }}
-                disabled={!preferenceInput.trim() || preferences.length >= 10}
-              >
-                Add
-              </Button>
-            </div>
-            {preferences.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {preferences.map((item, index) => (
-                  <div
-                    key={index}
-                    className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[#e5e7eb] bg-[#F5F6F9] text-sm"
-                  >
-                    <span className="text-lime-500">+</span>
-                    <span>{item.label}</span>
-                    {item.note && (
-                      <span className="text-xs text-gray-500">({item.note})</span>
-                    )}
-              <button
-                type="button"
-                      onClick={() => removePreferenceOrDealbreaker(index, "preferences")}
-                      className="text-gray-600 hover:text-foreground ml-1"
-              >
-                      <X className="h-3 w-3" />
-              </button>
-                  </div>
-            ))}
-          </div>
-            )}
-          </div>
-
-          {/* Dealbreakers */}
-          <div className="space-y-3">
-            <Label htmlFor="dealbreakers">Dealbreakers (Optional)</Label>
-            <div className="flex gap-2">
-              <Input
-                id="dealbreakers"
-                placeholder="e.g., No defects"
-                value={dealbreakerInput}
-                onChange={(e) => {
-                  setDealbreakerInput(e.target.value);
-                  setPreferencesTab("dealbreakers");
-                  setErrors((prev) => ({ ...prev, dealbreakers: "" }));
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && dealbreakerInput.trim()) {
-                    e.preventDefault();
-                    if (preferencesTab === "dealbreakers") {
-                      addPreferenceOrDealbreaker();
-                    }
-                  }
-                }}
-                className="flex-1"
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                className="text-gray-900 hover:text-gray-900 font-bold"
-                onClick={() => {
-                  setPreferencesTab("dealbreakers");
-                  addPreferenceOrDealbreaker();
-                }}
-                disabled={!dealbreakerInput.trim() || dealbreakers.length >= 10}
-              >
-                Add
-              </Button>
-            </div>
-            {dealbreakers.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {dealbreakers.map((item, index) => (
-                  <div
-                    key={index}
-                    className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[#e5e7eb] bg-[#F5F6F9] text-sm"
-                  >
-                    <span className="text-[#FF5F00]">-</span>
-                    <span>{item.label}</span>
-                    {item.note && (
-                      <span className="text-xs text-gray-500">({item.note})</span>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => removePreferenceOrDealbreaker(index, "dealbreakers")}
-                      className="text-gray-600 hover:text-foreground ml-1"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-          )}
-          </div>
-        </div>
-      </section>
-      )}
-
-      {/* SECTION 2: Constraints (Optional) */}
-      {currentStep === 2 && (
-      <section className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
-        <div>
-          <h2 className="text-xl font-semibold mb-1">Constraints</h2>
-          <p className="text-sm text-gray-600">Optional filters to help find better matches</p>
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-2">
-          {/* What type of item? (Category) */}
-          <div className="space-y-2 md:col-span-2">
-            <Label>What type of item? (e.g. Watch, Car, Laptop)</Label>
-            <CategoryCombobox 
-              value={form.watch("category") || ""}
-              onChange={(value) => {
-                form.setValue("category", value);
-                setErrors((prev) => ({ ...prev, category: "" }));
-              }}
-              placeholder="Search or type item type..."
-            />
-            {errors.category && (
-              <p className="text-xs text-red-600 font-medium mt-1">{errors.category}</p>
-            )}
-          </div>
-
-          {/* Condition */}
-          <div className="space-y-2">
-            <Label>Condition</Label>
-            <Select
-              value={form.watch("condition") || "New"}
-              onValueChange={(value) => form.setValue("condition", value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Condition" />
-              </SelectTrigger>
-              <SelectContent>
-                {["New", "Used", "Either"].map((condition) => (
-                  <SelectItem key={condition} value={condition}>
-                    {condition}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Urgency */}
-          <div className="space-y-2">
-            <Label>Urgency</Label>
-            <Select
-              value={form.watch("urgency") || "Standard"}
-              onValueChange={(value) => form.setValue("urgency", value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Urgency" />
-              </SelectTrigger>
-              <SelectContent>
-                {["ASAP", "This week", "Standard"].map((urgency) => (
-                  <SelectItem key={urgency} value={urgency}>
-                    {urgency}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Country */}
-          <div className="space-y-2 md:col-span-2">
-            <Label htmlFor="country">Country</Label>
-            <CountryCombobox
-              value={form.watch("country") || null}
-              onChange={(value) => form.setValue("country", value || null)}
-              placeholder="Select or type country"
-            />
-          </div>
-        </div>
-
-        {/* Budget */}
-        <div className="space-y-4 p-4 rounded-lg border border-[#e5e7eb] /30">
-          <div className="flex items-center justify-between">
-            <Label className="text-base font-semibold">Budget</Label>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button type="button" className="text-gray-600 hover:text-foreground">
-                    <Info className="h-4 w-4" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Set your maximum budget. Submissions above this amount won't be shown.</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
-
-          <div className="space-y-4">
-            <Slider
-              value={[budgetMax]}
-              onValueChange={handleBudgetChange}
-              min={0}
-              max={5000}
-              step={10}
-              className="w-full"
-            />
-            <div className="space-y-1">
-              <Label htmlFor="budgetMax" className="text-xs text-gray-600">Max ($)</Label>
-              <Input
-                id="budgetMax"
-                type="number"
-                step="10"
-                min={0}
-                value={budgetMax}
-                onChange={handleBudgetMaxChange}
-                className="h-9"
-              />
-            </div>
-          </div>
-
-          {/* Lock Price Toggle */}
-          <div className="flex items-center justify-between pt-2 border-t border-[#e5e7eb]">
-            <div className="space-y-0.5 flex-1">
-              <Label className="text-sm font-medium">Lock price</Label>
-              <p className="text-xs text-gray-600">
-                Submissions above your max budget will be blocked
-              </p>
-            </div>
-            <Switch
-              checked={priceLock === "locked"}
-              onCheckedChange={(checked) => {
-                form.setValue("priceLock", checked ? "locked" : "open");
-              }}
-            />
-          </div>
-        </div>
-
-
-        {/* Advanced Matching Rules - Accordion */}
-        <Accordion type="single" collapsible className="w-full">
-          <AccordionItem value="advanced" className="border border-[#e5e7eb] rounded-lg bg-gray-50">
-            <AccordionTrigger className="px-4">Advanced matching rules</AccordionTrigger>
-            <AccordionContent className="px-4 pb-4 space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5 flex-1">
-                  <Label htmlFor="exactItem" className="text-sm font-medium">
-                    Only this exact item
-                  </Label>
-                  <p className="text-xs text-gray-600">
-                    No alternatives allowed
-                  </p>
+          className="space-y-12"
+          noValidate
+        >
+          {/* SECTION 1: What are you looking for? */}
+          {currentStep === 1 && (
+            <section className="space-y-6">
+  <div className="mb-8 flex items-center justify-between">
+                <div>
+                  <h1 className="text-3xl font-bold tracking-tight mb-2 text-foreground">
+                    Create a new request
+                  </h1>
+                  <p className="text-gray-500">Fast, simple, and exactly what you need.</p>
                 </div>
-                <Switch
-                  id="exactItem"
-                  checked={form.watch("exactItem")}
-                  onCheckedChange={(checked) => {
-                    form.setValue("exactItem", checked);
-                  }}
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5 flex-1">
-                  <Label htmlFor="exactSpecification" className="text-sm font-medium">
-                    No alternatives allowed
-                  </Label>
-                  <p className="text-xs text-gray-600">
-                    Item must match all specified requirements exactly
-                  </p>
-                </div>
-                <Switch
-                  id="exactSpecification"
-                  checked={form.watch("exactSpecification")}
-                  onCheckedChange={(checked) => {
-                    form.setValue("exactSpecification", checked);
-                  }}
-                />
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
-      </section>
-      )}
-
-      {/* SECTION 3: References & Visibility */}
-      {currentStep === 3 && (
-      <section className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
-        <div>
-          <h2 className="text-xl font-semibold mb-1">References & visibility</h2>
-          <p className="text-sm text-gray-600">Help others understand what you're looking for</p>
-        </div>
-
-        {/* Reference Links as Chips */}
-        <div className="space-y-3">
-          <Label>Reference links</Label>
-          <div className="flex gap-2">
-            <Input
-              placeholder="Paste URL and press Enter"
-              value={linkInput}
-              onChange={(e) => {
-                setLinkInput(e.target.value);
-                setErrors((prev) => ({ ...prev, linkInput: "" }));
-              }}
-              onKeyDown={handleLinkInputKeyDown}
-              onBlur={addLink}
-              className={cn(
-                errors.linkInput && "border-red-500 focus-visible:ring-red-500"
-              )}
-            />
-            <Button
-              type="button"
-              variant="outline"
-              onClick={addLink}
-              className="shrink-0"
-            >
-              <Plus className="h-4 w-4" />
-            </Button>
-          </div>
-          {errors.linkInput && (
-            <p className="text-xs text-red-600">{errors.linkInput}</p>
-          )}
-          {referenceLinks.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {referenceLinks.map((link, index) => (
-                <div
-                  key={index}
-                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[#e5e7eb]  text-sm"
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setIsEnhancedOpen(true)}
+                  className="rounded-full px-8 h-12 font-medium border transition-all hover:bg-[#222234] hover:text-white hover:border-[#222234]"
                 >
-                  <a
-                    href={link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-foreground hover:underline truncate max-w-[200px]"
-                  >
-                    {link}
-                  </a>
-                  <button
-                    type="button"
-                    onClick={() => removeLink(index)}
-                    className="text-gray-600 hover:text-foreground"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Image Upload with Drag & Drop */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="images">Images</Label>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button type="button" className="text-gray-600 hover:text-foreground">
-                    <Info className="h-4 w-4" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Add images to help others understand what you're looking for. Max 5 images, 5MB each.</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
-
-          <div
-            className={cn(
-              "relative border-2 border-dashed rounded-lg p-6 transition-colors",
-              "hover:border-foreground/30",
-              isUploading && "opacity-50 cursor-not-allowed"
-            )}
-            onDragOver={(e) => {
-              e.preventDefault();
-            }}
-            onDrop={(e) => {
-              e.preventDefault();
-              const files = e.dataTransfer.files;
-              handleImageUpload(files);
-            }}
-          >
-            <input
-              id="images"
-              type="file"
-              accept="image/*"
-              multiple
-              onChange={(e) => handleImageUpload(e.target.files)}
-              disabled={isUploading || uploadedImages.length >= 5}
-              className="hidden"
-            />
-            <label
-              htmlFor="images"
-              className={cn(
-                "flex flex-col items-center justify-center gap-2 cursor-pointer",
-                (isUploading || uploadedImages.length >= 5) && "cursor-not-allowed"
-              )}
-            >
-              <Upload className="h-8 w-8 text-gray-600" />
-              <div className="text-center">
-                <p className="text-sm font-medium">
-                  {isUploading ? "Uploading..." : "Drag & drop images or click to browse"}
-                </p>
-                <p className="text-xs text-gray-600 mt-1">
-                  {uploadedImages.length}/5 images • Max 5MB each
-                </p>
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  Enhance
+                </Button>
               </div>
-            </label>
-          </div>
 
-          {/* Image Previews with Reorder */}
-          {uploadedImages.length > 0 && (
-            <div className="grid grid-cols-5 gap-3">
-              {uploadedImages.map((url, index) => (
-                <div
-                  key={index}
-                  draggable
-                  onDragStart={() => handleDragStart(index)}
-                  onDragOver={(e) => handleDragOver(e, index)}
-                  onDragEnd={handleDragEnd}
+              {/* What type of item? (Category) - Now First */}
+              <div className="space-y-2">
+                <Label>What type of item? (e.g. Watch, Car, Laptop)</Label>
+                <CategoryCombobox
+                  value={form.watch("category") || ""}
+                  onChange={(value) => {
+                    form.setValue("category", value);
+                    setErrors((prev) => ({ ...prev, category: "" }));
+                  }}
+                  placeholder="Search or type item type..."
+                  className="placeholder:text-gray-400"
+                />
+                {form.formState.errors.category && (
+                  <p className="text-xs text-red-600 font-medium mt-1">{form.formState.errors.category.message}</p>
+                )}
+              </div>
+
+              {/* Title - Now Second */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="title">The item</Label>
+                  <span className={cn(
+                    "text-xs text-gray-600",
+                    titleLength > titleMaxLength && "text-red-600"
+                  )}>
+                    {titleLength}/{titleMaxLength}
+                  </span>
+                </div>
+                <Input
+                  id="title"
+                  placeholder="Rolex Submariner 126610LN"
+                  {...form.register("title")}
                   className={cn(
-                    "relative aspect-square rounded-lg overflow-hidden border border-[#e5e7eb] bg-gray-100 group cursor-move",
-                    draggedIndex === index && "opacity-50"
+                    "placeholder:text-gray-400",
+                    form.formState.errors.title && "border-red-500 focus-visible:ring-red-500"
                   )}
-                >
-                  <Image
-                    src={url}
-                    alt={`Upload ${index + 1}`}
-                    fill
-                    className="object-cover"
-                    unoptimized
-                  />
-                  <div className="absolute top-1 left-1 p-1 rounded /80 border border-[#e5e7eb] opacity-0 group-hover:opacity-100 transition-opacity">
-                    <GripVertical className="h-3 w-3 text-gray-600" />
+                />
+                {form.formState.errors.title && (
+                  <p className="text-xs text-red-600">{form.formState.errors.title.message}</p>
+                )}
+              </div>
+
+              {/* Preferences and Dealbreakers - Two Columns */}
+              <div className="grid gap-4 md:grid-cols-2">
+                {/* Preferences */}
+                <div className="space-y-3">
+                  <Label htmlFor="preferences">Preferences (Optional)</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="preferences"
+                      placeholder="e.g., Good Battery"
+                      className="flex-1 placeholder:text-gray-400"
+                      value={preferenceInput}
+                      onChange={(e) => {
+                        setPreferenceInput(e.target.value);
+                        setPreferencesTab("preferences");
+                        setErrors((prev) => ({ ...prev, preferences: "" }));
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && preferenceInput.trim()) {
+                          e.preventDefault();
+                          if (preferencesTab === "preferences") {
+                            addPreferenceOrDealbreaker();
+                          }
+                        }
+                      }}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className="text-gray-900 hover:text-gray-900 font-bold"
+                      onClick={() => {
+                        setPreferencesTab("preferences");
+                        addPreferenceOrDealbreaker();
+                      }}
+                      disabled={!preferenceInput.trim() || preferences.length >= 10}
+                    >
+                      Add
+                    </Button>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => removeImage(index)}
-                    className="absolute top-1 right-1 p-1 rounded-full /80 hover: border border-[#e5e7eb] opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
+                  {preferences.length > 0 && (
+                    <div className="flex flex-col gap-2">
+                      {preferences.map((item, index) => (
+                        <div
+                          key={index}
+                          draggable
+                          onDragStart={() => handlePrefDragStart(index)}
+                          onDragOver={(e) => handlePrefDragOver(e, index)}
+                          onDragEnd={() => setDraggedPrefIndex(null)}
+                          className={cn(
+                            "group flex items-center gap-3 px-3 py-2 rounded-lg border border-[#e5e7eb] bg-[#F5F6F9] text-sm transition-all",
+                            draggedPrefIndex === index && "opacity-50 cursor-move"
+                          )}
+                        >
+                          <GripVertical className="h-4 w-4 text-gray-400 cursor-move opacity-50 group-hover:opacity-100" />
+                          <div className="flex-1 flex items-center gap-2">
+                            <span className="text-lime-500 font-bold">+</span>
+                            <span>{item.label}</span>
+                            {item.note && (
+                              <span className="text-xs text-gray-500">({item.note})</span>
+                            )}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removePreferenceOrDealbreaker(index, "preferences")}
+                            className="text-gray-400 hover:text-red-500 transition-colors"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              ))}
-            </div>
+
+                {/* Dealbreakers */}
+                <div className="space-y-3">
+                  <Label htmlFor="dealbreakers">Dealbreakers (Optional)</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="dealbreakers"
+                      placeholder="e.g., No defects"
+                      className="flex-1 placeholder:text-gray-400"
+                      value={dealbreakerInput}
+                      onChange={(e) => {
+                        setDealbreakerInput(e.target.value);
+                        setPreferencesTab("dealbreakers");
+                        setErrors((prev) => ({ ...prev, dealbreakers: "" }));
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && dealbreakerInput.trim()) {
+                          e.preventDefault();
+                          if (preferencesTab === "dealbreakers") {
+                            addPreferenceOrDealbreaker();
+                          }
+                        }
+                      }}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className="text-gray-900 hover:text-gray-900 font-bold"
+                      onClick={() => {
+                        setPreferencesTab("dealbreakers");
+                        addPreferenceOrDealbreaker();
+                      }}
+                      disabled={!dealbreakerInput.trim() || dealbreakers.length >= 10}
+                    >
+                      Add
+                    </Button>
+                  </div>
+                  {dealbreakers.length > 0 && (
+                    <div className="flex flex-col gap-2">
+                      {dealbreakers.map((item, index) => (
+                        <div
+                          key={index}
+                          draggable
+                          onDragStart={() => handleDealDragStart(index)}
+                          onDragOver={(e) => handleDealDragOver(e, index)}
+                          onDragEnd={() => setDraggedDealIndex(null)}
+                          className={cn(
+                            "group flex items-center gap-3 px-3 py-2 rounded-lg border border-[#e5e7eb] bg-[#F5F6F9] text-sm transition-all",
+                            draggedDealIndex === index && "opacity-50 cursor-move"
+                          )}
+                        >
+                          <GripVertical className="h-4 w-4 text-gray-400 cursor-move opacity-50 group-hover:opacity-100" />
+                          <div className="flex-1 flex items-center gap-2">
+                            <span className="text-[#FF5F00] font-bold">-</span>
+                            <span>{item.label}</span>
+                            {item.note && (
+                              <span className="text-xs text-gray-500">({item.note})</span>
+                            )}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removePreferenceOrDealbreaker(index, "dealbreakers")}
+                            className="text-gray-400 hover:text-red-500 transition-colors"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </section>
           )}
-        </div>
-      </section>
-      )}
 
-      {/* Error Summary */}
-      {error && (
-        <div className="p-4 rounded-lg border border-red-500/50 bg-red-50 dark:bg-red-950/20">
-          <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-        </div>
-      )}
+          {/* SECTION 2: Constraints (Optional) */}
+          {currentStep === 2 && (
+            <section className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-semibold mb-1">Constraints</h2>
+                  <p className="text-sm text-gray-600">Optional filters to help find better matches</p>
+                </div>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setIsEnhancedOpen(true)}
+                  className="rounded-full px-8 h-12 font-medium border transition-all hover:bg-[#222234] hover:text-white hover:border-[#222234]"
+                >
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  Enhance
+                </Button>
+              </div>
 
-      {/* Navigation Buttons */}
-      <div className="sticky bottom-0 left-0 right-0 z-10 bg-white/80 backdrop-blur-md border-t border-[#e5e7eb] p-4 -mx-4 md:static md:bg-transparent md:border-t-0 md:p-0 md:mx-0 flex flex-col-reverse sm:flex-row gap-3 sm:justify-between items-center mt-12">
-        {currentStep > 1 ? (
-          <Button type="button" variant="outline" onClick={goBack} className="w-full sm:w-auto h-12 px-8 rounded-full border-2 font-medium">
-            Back
-          </Button>
-        ) : (
-          <div className="hidden sm:block" />
-        )}
-        
-        {currentStep < 3 ? (
-          <Button type="button" onClick={proceedToNextStep} className="w-full sm:w-auto h-12 px-8 rounded-full bg-[#7755FF] hover:bg-[#6644EE] text-white font-medium shadow-sm transition-all hover:shadow">
-            Next step
-          </Button>
-        ) : (
-          <Button type="submit" variant="accent" className="w-full sm:w-auto h-12 px-8 rounded-full font-medium shadow-sm transition-all hover:shadow" disabled={isPending}>
-            {getCTALabel()}
-          </Button>
-        )}
+              {/* Budget First */}
+              <div className="space-y-4 p-4 rounded-lg border border-[#e5e7eb]/30">
+                <div className="flex items-center justify-between">
+                  <Label className="text-base font-semibold">Budget</Label>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button type="button" className="text-gray-600 hover:text-foreground">
+                          <Info className="h-4 w-4" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Set your maximum budget. Submissions above this amount won't be shown.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+
+                <div className="space-y-4">
+                  <Slider
+                    value={[budgetMax]}
+                    onValueChange={handleBudgetChange}
+                    min={0}
+                    max={5000}
+                    step={10}
+                    className="w-full"
+                  />
+                  <div className="space-y-1">
+                    <Label htmlFor="budgetMax" className="text-xs text-gray-600">Max ($)</Label>
+                    <Input
+                      id="budgetMax"
+                      type="number"
+                      step="10"
+                      min={0}
+                      value={budgetMax}
+                      onChange={handleBudgetMaxChange}
+                      className={cn(
+                        "h-9 placeholder:text-gray-400",
+                        form.formState.errors.budgetMax && "border-red-500"
+                      )}
+                    />
+                  </div>
+                </div>
+                {form.formState.errors.budgetMax && (
+                  <p className="text-xs text-red-600 font-medium mt-1">{form.formState.errors.budgetMax.message}</p>
+                )}
+
+                {/* Lock Price Toggle */}
+                <div className="flex items-center justify-between pt-2 border-t border-[#e5e7eb]">
+                  <div className="space-y-0.5 flex-1">
+                    <Label className="text-sm font-medium flex items-center gap-1.5">
+                      Lock price
+                    </Label>
+                    <p className="text-xs text-gray-600">
+                      Proposals above your budget won’t be accepted
+                    </p>
+                  </div>
+                  <Switch
+                    checked={priceLock === "locked"}
+                    onCheckedChange={(checked) => {
+                      form.setValue("priceLock", checked ? "locked" : "open");
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Condition Second - New Style */}
+              <div className="space-y-4 p-4 rounded-lg border border-[#e5e7eb]/30">
+                <div className="flex items-center justify-between mb-2">
+                  <Label className="text-base font-semibold">Condition</Label>
+                </div>
+                <div className="flex flex-row gap-2 w-full">
+                  {["New", "Used", "Either"].map((option) => {
+                    const isSelected = form.watch("condition") === option;
+                    return (
+                      <Button
+                        key={option}
+                        type="button"
+                        variant={isSelected ? "default" : "outline"}
+                        className={cn(
+                          "flex-1 px-4 rounded-lg border h-10 transition-all font-medium",
+                          isSelected 
+                            ? "bg-[#222234] text-white border-[#222234] hover:bg-[#2a2a3f]" 
+                            : "border-gray-200 hover:border-[#222234] hover:text-[#222234] hover:bg-white text-gray-600"
+                        )}
+                        onClick={() => form.setValue("condition", option)}
+                      >
+                        {option}
+                      </Button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Urgency Last - Condition Style */}
+              <div className="space-y-4 p-4 rounded-lg border border-[#e5e7eb]/30">
+                <div className="flex items-center gap-1.5 mb-2">
+                  <Label className="text-base font-semibold">Urgency</Label>
+                  <Crown className="h-4 w-4 text-amber-500 fill-amber-500" />
+                </div>
+                <div className="flex flex-row gap-2 w-full">
+                  {["ASAP", "This week", "Standard"].map((option) => {
+                    const isSelected = (form.watch("urgency") || "Standard") === option;
+                    return (
+                      <Button
+                        key={option}
+                        type="button"
+                        variant={isSelected ? "default" : "outline"}
+                        className={cn(
+                          "flex-1 px-4 rounded-lg border h-10 transition-all font-medium",
+                          isSelected 
+                            ? "bg-[#222234] text-white border-[#222234] hover:bg-[#2a2a3f]" 
+                            : "border-gray-200 hover:border-[#222234] hover:text-[#222234] hover:bg-white text-gray-600"
+                        )}
+                        onClick={() => form.setValue("urgency", option)}
+                      >
+                        {option}
+                      </Button>
+                    );
+                  })}
+                </div>
+              </div>
+
+
+              {/* Advanced Matching Rules - Boxed Radio Style */}
+              <div className="space-y-4 p-4 rounded-lg border border-[#e5e7eb]/30">
+                <div className="flex items-center justify-between mb-2">
+                  <Label className="text-base font-semibold text-[#222234]">Advanced Matching</Label>
+                </div>
+                
+                <div className="space-y-6">
+                  {/* Exact Only vs Exact + Similar */}
+                  <div className="space-y-3">
+                    <Label className="text-sm font-medium text-gray-700">Item specificity</Label>
+                    <div className="flex flex-row gap-2 w-full">
+                      {[
+                        { label: "Exact only", value: true },
+                        { label: "Exact + similar", value: false }
+                      ].map((option) => {
+                        const isSelected = form.watch("exactItem") === option.value;
+                        return (
+                          <Button
+                            key={option.label}
+                            type="button"
+                            variant={isSelected ? "default" : "outline"}
+                            className={cn(
+                              "flex-1 px-4 rounded-lg border h-10 transition-all font-medium",
+                              isSelected 
+                                ? "bg-[#222234] text-white border-[#222234] hover:bg-[#2a2a3f]" 
+                                : "border-gray-200 hover:border-[#222234] hover:text-[#222234] hover:bg-white text-gray-600"
+                            )}
+                            onClick={() => form.setValue("exactItem", option.value)}
+                          >
+                            {option.label}
+                          </Button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* No Alternatives Allowed Switch */}
+                  <div className="flex items-center justify-between pt-4 border-t border-[#e5e7eb]">
+                    <div className="space-y-0.5 flex-1">
+                      <Label htmlFor="exactSpecification" className="text-sm font-medium">
+                        Strict requirements
+                      </Label>
+                      <p className="text-xs text-gray-600">
+                        Item must match all specified preferences exactly
+                      </p>
+                    </div>
+                    <Switch
+                      id="exactSpecification"
+                      checked={form.watch("exactSpecification")}
+                      onCheckedChange={(checked) => {
+                        form.setValue("exactSpecification", checked);
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </section>
+          )}
+
+          <Dialog open={isEnhancedOpen} onOpenChange={setIsEnhancedOpen}>
+            <DialogContent className="sm:max-w-[600px] p-0 overflow-hidden rounded-2xl border-none shadow-2xl">
+              <DialogHeader className="p-8 bg-gray-50/50 border-b border-[#e5e7eb]/50">
+                <div className="flex items-center gap-2 mb-1">
+                  <Sparkles className="h-5 w-5 text-[#222234]" />
+                  <DialogTitle className="text-2xl font-bold tracking-tight">References & visibility</DialogTitle>
+                </div>
+                <DialogDescription className="text-base text-gray-500">
+                  Add more details to help sellers bring you exactly what you want.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="p-8 space-y-8 max-h-[70vh] overflow-y-auto custom-scrollbar">
+                {/* Reference Links as Chips */}
+                <div className="space-y-3">
+                  <Label className="text-sm font-semibold uppercase tracking-wider text-gray-400">Reference links</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Paste URL and press Enter"
+                      value={linkInput}
+                      onChange={(e) => {
+                        setLinkInput(e.target.value);
+                        setErrors((prev) => ({ ...prev, linkInput: "" }));
+                      }}
+                      onKeyDown={handleLinkInputKeyDown}
+                      onBlur={addLink}
+                      className={cn(
+                        "h-12 bg-white border-[#e5e7eb] rounded-xl focus-visible:ring-[#222234] placeholder:text-gray-400",
+                        errors.linkInput && "border-red-500 focus-visible:ring-red-500"
+                      )}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={addLink}
+                      className="shrink-0 h-12 w-12 rounded-xl border flex items-center justify-center"
+                    >
+                      <Plus className="h-7 w-7" />
+                    </Button>
+                  </div>
+                  {errors.linkInput && (
+                    <p className="text-xs text-red-600 font-medium ml-1">{errors.linkInput}</p>
+                  )}
+                  {referenceLinks.length > 0 && (
+                    <div className="flex flex-wrap gap-2 pt-2">
+                      {referenceLinks.map((link, index) => (
+                        <div
+                          key={index}
+                          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-[#e5e7eb] bg-white text-sm shadow-sm transition-all hover:shadow-md"
+                        >
+                          <a
+                            href={link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[#222234] hover:underline truncate max-w-[240px] font-medium"
+                          >
+                            {link}
+                          </a>
+                          <button
+                            type="button"
+                            onClick={() => removeLink(index)}
+                            className="text-gray-400 hover:text-red-500 transition-colors"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Image Upload with Drag & Drop */}
+                <div className="space-y-4 pt-4 border-t border-gray-100">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-semibold uppercase tracking-wider text-gray-400">Images</Label>
+                    <span className="text-xs font-medium text-gray-400 bg-gray-100 px-2.5 py-1 rounded-full">
+                      {uploadedImages.length}/5
+                    </span>
+                  </div>
+
+                  <div
+                    className={cn(
+                      "relative border-2 border-dashed rounded-2xl p-10 transition-all duration-300",
+                      "hover:border-[#222234]/30 hover:bg-gray-50/50",
+                      isUploading && "opacity-50 cursor-not-allowed",
+                      uploadedImages.length >= 5 ? "border-gray-100 bg-gray-50/30" : "border-[#e5e7eb]"
+                    )}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                    }}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      const files = e.dataTransfer.files;
+                      handleImageUpload(files);
+                    }}
+                  >
+                    <input
+                      id="images"
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={(e) => handleImageUpload(e.target.files)}
+                      disabled={isUploading || uploadedImages.length >= 5}
+                      className="hidden"
+                    />
+                    <label
+                      htmlFor="images"
+                      className={cn(
+                        "flex flex-col items-center justify-center gap-4 cursor-pointer",
+                        (isUploading || uploadedImages.length >= 5) && "cursor-not-allowed"
+                      )}
+                    >
+                      <div className="h-12 w-12 rounded-full bg-white shadow-sm border border-gray-100 flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <Upload className="h-6 w-6 text-[#222234]" />
+                      </div>
+                      <div className="text-center">
+                        <p className="text-base font-semibold text-[#222234]">
+                          {isUploading ? "Uploading..." : "Click to upload or drag and drop"}
+                        </p>
+                        <p className="text-sm text-gray-500 mt-1">
+                          High-quality images get 2x more offers
+                        </p>
+                      </div>
+                    </label>
+                  </div>
+
+                  {/* Image Previews with Reorder */}
+                  {uploadedImages.length > 0 && (
+                    <div className="grid grid-cols-4 gap-4 pt-2">
+                      {uploadedImages.map((url, index) => (
+                        <div
+                          key={index}
+                          draggable
+                          onDragStart={() => handleDragStart(index)}
+                          onDragOver={(e) => handleDragOver(e, index)}
+                          onDragEnd={handleDragEnd}
+                          className={cn(
+                            "relative aspect-square rounded-xl overflow-hidden border-2 border-[#e5e7eb] bg-gray-100 group cursor-move shadow-sm hover:shadow-md transition-all",
+                            draggedIndex === index && "opacity-50"
+                          )}
+                        >
+                          <Image
+                            src={url}
+                            alt={`Upload ${index + 1}`}
+                            fill
+                            className="object-cover"
+                            unoptimized
+                          />
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+                          <div className="absolute top-1.5 left-1.5 p-1 bg-white/90 backdrop-blur rounded-lg shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                            <GripVertical className="h-3.5 w-3.5 text-gray-600" />
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeImage(index)}
+                            className="absolute top-1.5 right-1.5 p-1.5 bg-red-500 text-white rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-all hover:scale-110"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="p-8 bg-gray-50/50 border-t border-[#e5e7eb]/50 flex justify-end">
+                <Button 
+                  type="button" 
+                  onClick={() => setIsEnhancedOpen(false)}
+                  className="rounded-xl px-8 h-12 bg-[#222234] hover:bg-[#2a2a3f] text-white font-bold"
+                >
+                  Done
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+
+          {/* Navigation Buttons */}
+          <div className="flex flex-col-reverse sm:flex-row gap-3 sm:justify-between items-center mt-12 bg-transparent">
+            {currentStep > 1 ? (
+              <Button type="button" variant="outline" onClick={goBack} className="w-full sm:w-auto h-12 px-8 rounded-full border-2 font-medium">
+                Back
+              </Button>
+            ) : (
+              <div className="hidden sm:block" />
+            )}
+
+            {currentStep < 2 ? (
+              <div className="flex items-center gap-4 w-full sm:w-auto">
+                <span className="text-sm font-medium text-gray-400">1 / 2</span>
+                <Button type="button" onClick={proceedToNextStep} className="w-full sm:w-auto h-12 px-8 rounded-full bg-[#222234] hover:bg-[#2a2a3f] text-white font-medium shadow-sm transition-all hover:shadow whitespace-nowrap">
+                  Next: Budget & Condition
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-4 w-full sm:w-auto">
+                <span className="text-sm font-medium text-gray-400">2 / 2</span>
+                <Button type="submit" variant="accent" className="w-full sm:w-auto h-12 px-8 rounded-full font-medium shadow-sm transition-all hover:shadow bg-[#222234] hover:bg-[#2a2a3f] text-white whitespace-nowrap" disabled={isPending}>
+                  {getCTALabel()}
+                </Button>
+              </div>
+            )}
+          </div>
+        </form>
       </div>
-    </form>
-    </div>
 
-    {/* Right Sidebar - Tips */}
-    <div className="lg:col-span-1 hidden lg:block">
-      <div className="rounded-2xl border border-[#e5e7eb] p-6 space-y-6 sticky top-24 bg-gray-50/50">
-        <div className="flex items-center gap-2 text-foreground">
-          <Info className="h-5 w-5 text-[#7755FF]" />
-          <h3 className="text-lg font-semibold">Tips for Step {currentStep}</h3>
+      {/* Right Sidebar - Preview */}
+      <div className="lg:col-span-1 hidden lg:block pl-12 h-fit sticky top-24">
+        <div className="space-y-4 max-w-[460px]">
+          <div className="flex items-center gap-2 text-foreground px-1">
+            <Sparkles className="h-5 w-5 text-[#7755FF]" />
+            <h3 className="text-lg font-semibold tracking-tight">Live Preview</h3>
+          </div>
+          
+          <div className="pointer-events-none">
+            <RequestCard 
+              request={previewRequest}
+              variant="feed"
+              images={uploadedImages}
+              isPreview={true}
+              isFirst={true}
+              isLast={true}
+            />
+          </div>
+
+          <div className="rounded-2xl border border-dashed border-gray-200 p-6 bg-gray-50/30">
+            <div className="flex items-center gap-2 text-gray-500 mb-3">
+              <Info className="h-4 w-4" />
+              <h4 className="text-sm font-medium">Why a preview?</h4>
+            </div>
+            <p className="text-xs text-gray-400 leading-relaxed">
+              This is exactly how sellers will see your request in their feed. 
+              Make sure your title and preferences are clear to get the best offers.
+            </p>
+          </div>
         </div>
-        <ul className="space-y-5 text-sm text-gray-600">
-          {(stepTips as any)[currentStep].map((tip: string, idx: number) => (
-            <li key={idx} className="flex items-start gap-4">
-              <span className="flex-shrink-0 w-6 h-6 rounded-full bg-white border border-gray-200 flex items-center justify-center text-xs font-bold text-gray-500 shadow-sm mt-0.5">
-                {idx + 1}
-              </span>
-              <span className="leading-relaxed pt-1">{tip}</span>
-            </li>
-          ))}
-        </ul>
       </div>
     </div>
-  </div>
   );
 }

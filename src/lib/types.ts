@@ -6,6 +6,7 @@ export type Profile = {
   bio: string | null;
   created_at: string;
   reputation: number | null;
+  country: string | null;
   contact_email?: string | null;
   contact_phone?: string | null;
   contact_whatsapp?: string | null;

@@ -77,6 +77,15 @@ export async function createRequestAction(formData: FormData) {
     return { error: "Unauthorized" };
   }
 
+  // Fetch user's country from profile
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("country")
+    .eq("id", user.id)
+    .single();
+
+  const userCountry = profile?.country || null;
+
   // Parse preferences and dealbreakers from formData
   let preferencesList: Array<{ label: string; note?: string }> = [];
   let dealbreakersList: Array<{ label: string; note?: string }> = [];
@@ -112,6 +121,7 @@ export async function createRequestAction(formData: FormData) {
   console.log("Description with metadata length:", descriptionWithMetadata.length);
   console.log("Description preview:", descriptionWithMetadata.substring(0, 200));
   console.log("User ID:", user.id);
+  console.log("User Country from Profile:", userCountry);
   
   const insertData = {
     user_id: user.id,
@@ -120,7 +130,7 @@ export async function createRequestAction(formData: FormData) {
     category: parsed.data.category,
     budget_min: parsed.data.budgetMin,
     budget_max: parsed.data.budgetMax,
-    country: parsed.data.country,
+    country: userCountry, // Always take from profile
     condition: parsed.data.condition,
     urgency: parsed.data.urgency,
     status: "open" as const,

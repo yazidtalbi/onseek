@@ -11,7 +11,7 @@ import { FavoriteButton } from "@/components/requests/favorite-button";
 import { RequestMenu } from "@/components/requests/request-menu";
 import type { RequestItem } from "@/lib/types";
 import Image from "next/image";
-import { MapPin, Check, X, Sparkles, Laptop, Gamepad2, ShoppingBag, HeartPulse, Baby, Home, Shovel, Car, Apple, Package, Watch, Smartphone, Tv, Gem, Headphones, Camera, Footprints } from "lucide-react";
+import { MapPin, Check, X, Sparkles, Laptop, Gamepad2, ShoppingBag, HeartPulse, Baby, Home, Shovel, Car, Apple, Package, Watch, Smartphone, Tv, Gem, Headphones, Camera, Footprints, LockKeyhole } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ImagePreviewDialog } from "@/components/ui/image-preview-dialog";
 import { Badge } from "@/components/ui/badge";
@@ -56,6 +56,7 @@ interface RequestCardProps {
   isLast?: boolean;
   proposalCount?: number;
   smallImages?: boolean;
+  isPreview?: boolean;
 }
 
 function RequestCardComponent({
@@ -70,6 +71,7 @@ function RequestCardComponent({
   isLast = false,
   proposalCount,
   smallImages = false,
+  isPreview = false,
 }: RequestCardProps) {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [previewImageIndex, setPreviewImageIndex] = useState<number>(0);
@@ -176,7 +178,8 @@ function RequestCardComponent({
                   </span>
                 )}
                 {(isFeed || smallImages) && budgetDisplay && (
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[13px] font-bold bg-[#785ffe]/10 text-[#785ffe] shrink-0 tracking-tight">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[13px] font-bold bg-[#785ffe]/10 text-[#785ffe] shrink-0 tracking-tight">
+                    {parsedPrefs.priceLock === "locked" && <LockKeyhole className="h-3.5 w-3.5" />}
                     {budgetDisplay}
                   </span>
                 )}
@@ -271,48 +274,44 @@ function RequestCardComponent({
 
         {/* Preferences and Dealbreakers - only show on feed variant */}
         {variant === "feed" && (visiblePreferences.length > 0 || visibleDealbreakers.length > 0) && (
-          <div className="flex gap-6 mb-3 mt-3">
+          <div className="flex flex-col gap-3 mb-3 mt-3">
             {/* Preferences */}
             {visiblePreferences.length > 0 && (
-              <div className="flex-1">
-                <div className="flex flex-wrap gap-2">
-                  {visiblePreferences.map((pref: { label: string }, idx: number) => (
-                    <span
-                      key={idx}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-green-50 text-sm text-[#015a25]"
-                    >
-                      <Check className="h-4 w-4 text-green-500" />
-                      <span>{pref.label}</span>
-                    </span>
-                  ))}
-                  {remainingPreferences > 0 && (
-                    <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-green-50 text-sm text-[#015a25]">
-                      +{remainingPreferences} more
-                    </span>
-                  )}
-                </div>
+              <div className="flex flex-wrap gap-2">
+                {visiblePreferences.map((pref: { label: string }, idx: number) => (
+                  <span
+                    key={idx}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-green-50 text-sm text-[#015a25]"
+                  >
+                    <Check className="h-4 w-4 text-green-500" />
+                    <span>{pref.label}</span>
+                  </span>
+                ))}
+                {remainingPreferences > 0 && (
+                  <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-green-50 text-sm text-[#015a25]">
+                    +{remainingPreferences} more
+                  </span>
+                )}
               </div>
             )}
 
             {/* Dealbreakers */}
             {visibleDealbreakers.length > 0 && (
-              <div className="flex-1">
-                <div className="flex flex-wrap gap-2">
-                  {visibleDealbreakers.map((deal: { label: string }, idx: number) => (
-                    <span
-                      key={idx}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-amber-50 text-sm text-amber-700"
-                    >
-                      <X className="h-4 w-4 text-amber-500 opacity-70" />
-                      <span>{deal.label}</span>
-                    </span>
-                  ))}
-                  {remainingDealbreakers > 0 && (
-                    <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-amber-50 text-sm text-amber-700">
-                      +{remainingDealbreakers} more
-                    </span>
-                  )}
-                </div>
+              <div className="flex flex-wrap gap-2">
+                {visibleDealbreakers.map((deal: { label: string }, idx: number) => (
+                  <span
+                    key={idx}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-amber-50 text-sm text-amber-700"
+                  >
+                    <X className="h-4 w-4 text-amber-500 opacity-70" />
+                    <span>{deal.label}</span>
+                  </span>
+                ))}
+                {remainingDealbreakers > 0 && (
+                  <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-amber-50 text-sm text-amber-700">
+                    +{remainingDealbreakers} more
+                  </span>
+                )}
               </div>
             )}
           </div>
@@ -480,28 +479,30 @@ function RequestCardComponent({
                 ? `${formatSubmissionCount(request.submissionCount)} proposals`
                 : "No proposals yet"}
             </span>
-            <div
-              className="flex items-center gap-1.5 flex-shrink-0 relative z-10"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-              }}
-              onMouseDown={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-              }}
-            >
-              <FavoriteButton
-                requestId={request.id}
-                isFavorite={isFavorite}
-              />
-              <RequestMenu
-                requestId={request.id}
-                requestUserId={request.user_id}
-                status={request.status}
-                categories={request.categories}
-              />
-            </div>
+            {!isPreview && (
+              <div
+                className="flex items-center gap-1.5 flex-shrink-0 relative z-10"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+              >
+                <FavoriteButton
+                  requestId={request.id}
+                  isFavorite={isFavorite}
+                />
+                <RequestMenu
+                  requestId={request.id}
+                  requestUserId={request.user_id}
+                  status={request.status}
+                  categories={request.categories}
+                />
+              </div>
+            )}
           </div>
         )}
       </section>
@@ -527,6 +528,19 @@ function RequestCardComponent({
               </span>
             </div>
           )}
+        </Card>
+      ) : isPreview ? (
+        <Card
+          className={cn(
+            "flex flex-col relative group h-full",
+            !isFeed ? "rounded-2xl" : "",
+            isFeed && isFirst && isLast ? "rounded-2xl" : "",
+            isFeed && isFirst && !isLast ? "rounded-t-2xl rounded-b-none" : "",
+            isFeed && isLast && !isFirst ? "rounded-b-2xl rounded-t-none border-t-0" : "",
+            isFeed && !isFirst && !isLast ? "rounded-none border-t-0" : ""
+          )}
+        >
+          {cardContent}
         </Card>
       ) : (
         <Link

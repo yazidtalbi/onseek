@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Check, ChevronDown, X, Package, Search } from "lucide-react";
+import { Check, ChevronDown, X, Package, Search, CircleHelp } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -59,7 +59,8 @@ export function CategoryCombobox({
     setOpen(false);
   };
 
-  const hasResults = filteredItems.length > 0;
+    const isCustomCategory = value && !ALL_SUGGESTIONS.includes(value);
+    const hasResults = filteredItems.length > 0;
 
   return (
     <>
@@ -67,9 +68,13 @@ export function CategoryCombobox({
         <div className="relative">
           <div
             onClick={() => setOpen(true)}
-            className="flex items-center gap-3 w-full h-11 rounded-lg border border-[#e5e7eb] px-4 pr-20 cursor-pointer hover:border-gray-300 transition-colors bg-white shadow-sm"
+            className="flex items-center gap-3 w-full h-11 rounded-lg border border-[#e5e7eb] px-4 pr-20 cursor-pointer hover:border-gray-300 transition-colors bg-white"
           >
-            <Package className="h-4 w-4 flex-shrink-0 text-gray-400" />
+            {isCustomCategory ? (
+              <CircleHelp className="h-4 w-4 flex-shrink-0 text-[#7755FF]" />
+            ) : (
+              <Package className="h-4 w-4 flex-shrink-0 text-gray-400" />
+            )}
             <span className={cn(
               "flex-1 text-sm truncate",
               !value && "text-gray-500"
