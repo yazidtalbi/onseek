@@ -109,12 +109,12 @@ function RequestCardComponent({
 
   const budgetText = formatBudget(request.budget_min, request.budget_max);
   const maxBudget = request.budget_max ? `$${request.budget_max}` : budgetText;
+  const budgetDisplay = maxBudget ? `Up to ${maxBudget}` : null;
   const isFeed = variant === "feed";
 
   const formattedCondition = request.condition?.toLowerCase() === "new" ? "Brand New" : request.condition;
 
   const shortMetadata = [
-    maxBudget ? `Budget up to ${maxBudget}` : null,
     formattedCondition
   ].filter(Boolean).join(" - ");
 
@@ -130,8 +130,8 @@ function RequestCardComponent({
 
   // Limit display for feed variant
   const maxImages = 3;
-  const maxPreferences = isFeed ? 4 : preferences.length;
-  const maxDealbreakers = isFeed ? 3 : dealbreakers.length;
+  const maxPreferences = isFeed || smallImages ? 3 : preferences.length;
+  const maxDealbreakers = isFeed || smallImages ? 3 : dealbreakers.length;
 
   const visibleImages = images.slice(0, maxImages);
   const visiblePreferences = preferences.slice(0, maxPreferences);
@@ -143,8 +143,64 @@ function RequestCardComponent({
     <CardContent className={cn("flex flex-col h-full", isFeed ? "p-5" : variant === "detail" ? (smallImages ? "p-5 sm:p-6" : "p-6 sm:p-8 pb-24") : "p-6")}>
       {/* Header Section */}
       <section>
-        <div className="flex items-start gap-3 mb-3">
-          {/* Image / Category placeholder - Left side (shown in feed or with smallImages prop) */}
+        <div className="flex items-start gap-4 pb-5">
+          {/* Content - Left side */}
+          <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0">
+              {variant === "detail" && request.profiles?.username && (
+                <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
+                  <Link
+                    href={`/app/profile/${request.profiles.username}`}
+                    className="hover:text-gray-700 hover:underline"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    @{request.profiles.username}
+                  </Link>
+                </div>
+              )}
+              {/* Title & Category Row */}
+              {/* Title: Truncated to one line in preview modes */}
+              <h3
+                className={cn(
+                  "font-bold leading-snug text-[18px] text-foreground transition-colors font-[family-name:var(--font-inter-display)]",
+                  (isFeed || smallImages) && "line-clamp-1"
+                )}
+              >
+                {request.title}
+              </h3>
+              {/* Concise preview metadata: Condition - Location */}
+              <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                {(isFeed || smallImages) && shortMetadata && (
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[13px] font-bold bg-gray-100 text-gray-500 shrink-0 tracking-tight">
+                    {shortMetadata}
+                  </span>
+                )}
+                {(isFeed || smallImages) && budgetDisplay && (
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[13px] font-bold bg-[#785ffe]/10 text-[#785ffe] shrink-0 tracking-tight">
+                    {budgetDisplay}
+                  </span>
+                )}
+              </div>
+              {/* Detailed budget/location only for non-preview feed cards if needed, 
+                  but we'll prioritize the new single-line metadata for now */}
+              {isFeed && !shortMetadata && (budgetText || request.country || timeAgo) && (
+                <div className="flex items-center gap-3 mt-2 text-sm text-gray-500">
+                  {budgetText && <span>{budgetText}</span>}
+                  {budgetText && (request.country || timeAgo) && <span>•</span>}
+                  {request.country && (
+                    <div className="flex items-center gap-1.5">
+                      <MapPin className="h-3.5 w-3.5" />
+                      <span>{request.country}</span>
+                    </div>
+                  )}
+                  {request.country && timeAgo && <span>•</span>}
+                  {timeAgo && <span>{timeAgo}</span>}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Image / Category placeholder - Right side (shown in feed or with smallImages prop) */}
           {(isFeed || smallImages) && (
             <div className="flex-shrink-0">
               {images.length > 0 ? (
@@ -198,60 +254,11 @@ function RequestCardComponent({
               )}
             </div>
           )}
-
-          {/* Content - Right side */}
-          <div className="flex-1 min-w-0">
-            <div className="flex-1 min-w-0">
-              {variant === "detail" && request.profiles?.username && (
-                <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
-                  <Link
-                    href={`/app/profile/${request.profiles.username}`}
-                    className="hover:text-gray-700 hover:underline"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    @{request.profiles.username}
-                  </Link>
-                </div>
-              )}
-              {/* Title & Category Row */}
-              {/* Title: Truncated to one line in preview modes */}
-              <h3
-                className={cn(
-                  "font-bold leading-snug text-[18px] text-foreground transition-colors font-[family-name:var(--font-inter-display)]",
-                  (isFeed || smallImages) && "line-clamp-1"
-                )}
-              >
-                {request.title}
-              </h3>
-              {/* Concise preview metadata: Budget - Condition - Location */}
-              {(isFeed || smallImages) && shortMetadata && (
-                <div className="mt-1 text-sm text-gray-500 line-clamp-1">
-                  {shortMetadata}
-                </div>
-              )}
-              {/* Detailed budget/location only for non-preview feed cards if needed, 
-                  but we'll prioritize the new single-line metadata for now */}
-              {isFeed && !shortMetadata && (budgetText || request.country || timeAgo) && (
-                <div className="flex items-center gap-3 mt-2 text-sm text-gray-500">
-                  {budgetText && <span>{budgetText}</span>}
-                  {budgetText && (request.country || timeAgo) && <span>•</span>}
-                  {request.country && (
-                    <div className="flex items-center gap-1.5">
-                      <MapPin className="h-3.5 w-3.5" />
-                      <span>{request.country}</span>
-                    </div>
-                  )}
-                  {request.country && timeAgo && <span>•</span>}
-                  {timeAgo && <span>{timeAgo}</span>}
-                </div>
-              )}
-            </div>
-          </div>
         </div>
       </section>
 
       {/* Main Content Section */}
-      <section className="flex-1">
+      <section className="flex-1 flex flex-col justify-center">
         {/* Match Indicator - only show on feed variant if matched */}
         {variant === "feed" && request.matchReason && (
           <div className="mb-2 flex items-center gap-2 text-xs text-[#7755FF] bg-[#7755FF]/10 px-3 py-1.5 rounded-full w-fit">
@@ -272,14 +279,14 @@ function RequestCardComponent({
                   {visiblePreferences.map((pref: { label: string }, idx: number) => (
                     <span
                       key={idx}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-green-50 text-sm text-gray-700"
+                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-green-50 text-sm text-[#015a25]"
                     >
                       <Check className="h-4 w-4 text-green-500" />
                       <span>{pref.label}</span>
                     </span>
                   ))}
                   {remainingPreferences > 0 && (
-                    <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-green-50 text-sm text-gray-700">
+                    <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-green-50 text-sm text-[#015a25]">
                       +{remainingPreferences} more
                     </span>
                   )}
@@ -346,22 +353,21 @@ function RequestCardComponent({
 
             {/* Preferences */}
             {(preferences.length > 0 || smallImages) && (
-              <div>
-                <h4 className="text-sm font-semibold text-gray-400 mb-1.5">Preferences</h4>
+              <div className="pt-2">
                 <div className="flex flex-wrap gap-2">
                   {preferences.length > 0 ? (
                     <>
                       {visiblePreferences.map((pref: { label: string }, idx: number) => (
                         <span
                           key={idx}
-                          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-green-50 text-sm text-gray-700"
+                          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-green-50 text-sm text-[#015a25]"
                         >
                           <Check className="h-4 w-4 text-green-500" />
                           <span>{pref.label}</span>
                         </span>
                       ))}
                       {remainingPreferences > 0 && (
-                        <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-green-50 text-sm text-gray-700">
+                        <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-green-50 text-sm text-[#015a25]">
                           +{remainingPreferences} more
                         </span>
                       )}
@@ -377,8 +383,7 @@ function RequestCardComponent({
 
             {/* Dealbreakers */}
             {(dealbreakers.length > 0 || smallImages) && (
-              <div>
-                <h4 className="text-sm font-semibold text-gray-400 mb-1.5">Dealbreakers</h4>
+              <div className="pt-2">
                 <div className="flex flex-wrap gap-2">
                   {dealbreakers.length > 0 ? (
                     <>
@@ -437,9 +442,9 @@ function RequestCardComponent({
             )}
 
             {/* Reference Links */}
-            {links.length > 0 && (
-              <div>
-                <h4 className="text-sm font-semibold text-gray-400 mb-1.5">Reference links</h4>
+            {links.length > 0 && !smallImages && (
+              <div className={cn("border-t border-gray-100 pt-3 mt-1", smallImages ? "-mx-5 sm:-mx-6 px-5 sm:px-6" : "-mx-6 sm:-mx-8 px-6 sm:px-8")}>
+                <h4 className="text-sm font-semibold text-gray-400 mb-2">Reference links</h4>
                 <div className="space-y-1.5">
                   {links.map((link, index) => {
                     const fullUrl = link.startsWith('http') ? link : `https://${link}`;
@@ -509,7 +514,8 @@ function RequestCardComponent({
         <Card
           ref={cardRef}
           className={cn(
-            "flex flex-col transition-colors relative group h-full w-full rounded-2xl border border-[#e5e7eb] overflow-hidden"
+            "flex flex-col transition-all duration-300 ease-out relative group h-full w-full rounded-2xl border border-[#e5e7eb] overflow-hidden",
+            "hover:-translate-y-2 hover:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.15)] bg-white"
           )}
         >
           {cardContent}

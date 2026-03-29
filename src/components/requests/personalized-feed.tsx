@@ -9,9 +9,13 @@ import { CategoryPills } from "@/components/requests/category-pills";
 import { RequestFilters } from "@/components/requests/request-filters";
 import { RequestCard } from "@/components/requests/request-card";
 import type { RequestItem, FeedMode } from "@/lib/types";
+import { useAuth } from "@/components/layout/auth-provider";
+import { usePathname } from "next/navigation";
+import { FaqSection } from "@/components/requests/faq-section";
 import { Button } from "@/components/ui/button";
-import { Loader2, Search } from "lucide-react";
+import { Loader2, Search, ChevronRight } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 interface PersonalizedFeedProps {
@@ -22,6 +26,9 @@ interface PersonalizedFeedProps {
 export function PersonalizedFeed({ initialMode = "for_you", initialData }: PersonalizedFeedProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const { user } = useAuth();
+  const isHomePage = pathname === "/app" || pathname === "/";
   const [mode, setMode] = useState<FeedMode>(() => {
     const modeParam = searchParams.get("mode");
     return (modeParam === "for_you" || modeParam === "latest" || modeParam === "trending"
@@ -30,6 +37,7 @@ export function PersonalizedFeed({ initialMode = "for_you", initialData }: Perso
   });
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const [hasPreferences, setHasPreferences] = useState<boolean | undefined>(undefined);
+  const [tradeMode, setTradeMode] = useState<"buy" | "sell">("buy");
   const hasUpdatedUrlRef = useRef(false);
 
   // Load user preferences to check if they have any
@@ -109,7 +117,7 @@ export function PersonalizedFeed({ initialMode = "for_you", initialData }: Perso
     queryKey: ["personalized-feed", mode, category, priceMin, priceMax, country, sort],
     queryFn: async ({ pageParam }) => {
       const supabase = createBrowserSupabaseClient();
-      const limit = 20;
+      const limit = isHomePage ? 16 : 20;
 
       // Build query
       let query = supabase
@@ -260,6 +268,7 @@ export function PersonalizedFeed({ initialMode = "for_you", initialData }: Perso
     const handleScroll = () => {
       // Check if we're near the bottom of the page (within 200px)
       if (
+        !isHomePage &&
         window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 200 &&
         hasNextPage &&
         !isFetchingNextPage &&
@@ -276,25 +285,86 @@ export function PersonalizedFeed({ initialMode = "for_you", initialData }: Perso
 
   return (
     <div className="flex flex-col w-full">
-      <section className="mx-auto max-w-4xl mb-8 rounded-2xl bg-white px-6 py-8 sm:px-10 sm:py-10">
-        <div className="mx-auto w-full text-center">
-          <h1 className="font-[family-name:var(--font-inter-display)] text-4xl font-bold leading-tight tracking-tight text-foreground sm:text-[4rem] sm:leading-[1.1]">
-            Get the Right Deal, Your Way.
+      <section className="relative mx-auto w-full max-w-[1360px] mb-8 rounded-[32px] bg-white px-6 py-12 sm:px-10 sm:py-16 overflow-hidden flex items-center justify-center min-h-[440px]">
+        {/* Left Hero Image */}
+        <div className="hidden lg:block absolute -left-6 xl:-left-10 top-[40%] -translate-y-1/2 w-[260px] xl:w-[320px] h-[260px] xl:h-[320px] pointer-events-none z-0">
+          <Image src="/hero/left.png" alt="Microphone composition" fill className="object-contain mix-blend-multiply" priority />
+        </div>
+
+        {/* Right Hero Image */}
+        <div className="hidden lg:block absolute -right-6 xl:-right-10 top-[40%] -translate-y-1/2 w-[260px] xl:w-[320px] h-[260px] xl:h-[320px] pointer-events-none z-0">
+          <Image src="/hero/right.png" alt="Gadgets composition" fill className="object-contain mix-blend-multiply" priority />
+        </div>
+
+        <div className="mx-auto w-full text-center flex flex-col items-center max-w-3xl relative z-10">
+          <div className="relative flex items-center p-1.5 bg-[#f4f5f8] rounded-2xl mb-6 w-fit mx-auto">
+            <div
+              className="absolute inset-y-1.5 w-[calc(50%-6px)] bg-white rounded-xl transition-all duration-300 ease-out"
+              style={{
+                left: tradeMode === "buy" ? '6px' : 'calc(50%)'
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => setTradeMode("buy")}
+              className={cn(
+                "relative z-10 px-8 py-2.5 min-w-[120px] text-[13px] font-bold tracking-widest transition-colors duration-300 outline-none",
+                tradeMode === "buy" ? "text-[#1e2330]" : "text-[#8e95a5] hover:text-[#6a7282]"
+              )}
+            >
+              BUY
+            </button>
+            <button
+              type="button"
+              onClick={() => setTradeMode("sell")}
+              className={cn(
+                "relative z-10 px-8 py-2.5 min-w-[120px] text-[13px] font-bold tracking-widest transition-colors duration-300 outline-none",
+                tradeMode === "sell" ? "text-[#1e2330]" : "text-[#8e95a5] hover:text-[#6a7282]"
+              )}
+            >
+              SELL
+            </button>
+          </div>
+
+          <h1 
+            className="mx-auto text-3xl leading-tight tracking-tight text-foreground sm:text-5xl sm:leading-[1.1]"
+            style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}
+          >
+            Stop searching, start <span className="text-[#7860fe] bg-[#f0edff] px-3 py-1 rounded-l-lg pb-1.5 align-baseline border-solid border-r-[3px]" style={{ borderRightColor: "#7860fe" }}>seeking</span>
           </h1>
-          <p className="mx-auto mt-4 max-w-2xl text-base text-gray-500 sm:text-lg">
-            Post a request, receive offers, compare deals, and connect with the right seller — all in one place.
+          <p className="mx-auto mt-4 max-w-xl text-base text-gray-500 sm:text-lg">
+            Post a request, receive offers, compare deals,<br />and connect with the right seller.
           </p>
-          <div className="mx-auto mt-8 max-w-2xl">
-            <form action="/search" method="get" className="relative flex w-full items-center gap-3 rounded-full border border-transparent bg-gray-100 px-5 py-4 shadow-sm transition-all focus-within:border-gray-300 focus-within:bg-white focus-within:shadow-md focus-within:ring-1 focus-within:ring-gray-200 hover:bg-gray-200/50">
-              <Search className="h-5 w-5 text-gray-500 flex-shrink-0" />
-              <input
-                type="text"
-                name="q"
-                placeholder="Search for items, requests, categories..."
-                className="w-full bg-transparent text-base text-gray-900 outline-none placeholder:text-gray-500 font-normal"
-                autoComplete="off"
-              />
-            </form>
+
+          <div className="mx-auto mt-8 w-full max-w-xl relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-100/60 via-indigo-50/60 to-purple-100/60 blur-3xl rounded-full scale-[1.1] -z-10 pointer-events-none" />
+
+            {tradeMode === "buy" ? (
+              <div
+                onClick={() => router.push('/app/new')}
+                role="button"
+                tabIndex={0}
+                className="relative w-full rounded-2xl bg-white border border-[#e6e7eb] shadow-[0_8px_30px_rgb(0,0,0,0.06)] transition-all hover:bg-white hover:border-gray-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.1)] h-[130px] flex flex-col p-5 cursor-pointer group"
+              >
+                <span className="text-[#a5abb7] text-[16px] font-medium text-left flex-1 pl-1 pt-1">
+                  I'm looking for a smartphone with 8gb..
+                </span>
+                <div className="absolute bottom-4 right-4">
+                  <div className="rounded-full bg-[#222234] group-hover:bg-[#1a1a27] text-white px-6 py-2.5 text-[15px] font-medium flex items-center justify-center transition-colors">
+                    Request
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="flex justify-center h-[64px] items-center">
+                <Button
+                  asChild
+                  className="rounded-full bg-[#1e2330] hover:bg-[#2a303f] text-white px-10 py-6 text-[16px] font-medium"
+                >
+                  <Link href="/app/new">Sell your item</Link>
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -358,7 +428,7 @@ export function PersonalizedFeed({ initialMode = "for_you", initialData }: Perso
                 <Link
                   href={`/app/requests/${request.id}`}
                   key={request.id}
-                  className="block w-full h-[550px]"
+                  className="block w-full h-[380px]"
                 >
                   <RequestCard
                     request={request}
@@ -371,18 +441,40 @@ export function PersonalizedFeed({ initialMode = "for_you", initialData }: Perso
               );
             })}
           </div>
-            
-          {hasNextPage && (
-            <div className="w-full flex justify-center py-8">
-              <Button
-                onClick={() => fetchNextPage()}
-                disabled={isFetchingNextPage}
-                variant="outline"
-                className="rounded-full h-12 px-8 border-2"
-              >
-                {isFetchingNextPage ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                {isFetchingNextPage ? "Loading..." : "Load more requests"}
-              </Button>
+
+          <div className="w-full flex justify-center py-8">
+            <Button
+              onClick={() => {
+                if (!user) {
+                  router.push("/login");
+                } else {
+                  if (isHomePage) {
+                    router.push("/search"); // Or another route, but let's just fetch next page if they want infinite load here
+                  }
+                  fetchNextPage();
+                }
+              }}
+              disabled={isFetchingNextPage && !!user}
+              variant="outline"
+              className="rounded-full font-medium h-10 px-6 border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 flex items-center shadow-sm"
+            >
+              {isFetchingNextPage && user ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              {isFetchingNextPage && user ? "Loading..." : "Explore projects"}
+            </Button>
+          </div>
+
+          {isHomePage && <FaqSection />}
+
+          {isHomePage && (
+            <div className="w-full bg-[#785ffe] rounded-[32px] px-8 py-24 sm:px-16 mt-16 mb-8 flex flex-col items-center text-center justify-center min-h-[400px]">
+              <h2 className="text-4xl lg:text-6xl tracking-tight text-white mb-10 max-w-2xl" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>
+                Let your item come fiiind you
+              </h2>
+              <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
+                <Button size="lg" className="rounded-full bg-white hover:bg-white/90 text-[#785ffe] px-10 h-14 text-[16px] font-bold w-full sm:w-auto shadow-sm" onClick={() => router.push(user ? '/app/new' : '/signup')}>
+                  Join the community now
+                </Button>
+              </div>
             </div>
           )}
 

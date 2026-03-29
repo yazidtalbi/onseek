@@ -95,21 +95,19 @@ export function CategoryPills() {
 
   return (
     <div className="flex items-center w-full gap-3">
-      {/* Filters Button */}
+      {/* Sort Dropdown - NOW ON THE FAR LEFT */}
       <div className="flex-shrink-0">
-        <FiltersModal open={filtersOpen} onOpenChange={setFiltersOpen}>
-          <button
-            className={cn(
-              "px-3 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors flex items-center gap-2 border border-gray-200",
-              hasActiveFilters
-                ? "bg-gray-100 text-gray-900 border-gray-300"
-                : "bg-white text-gray-500 hover:text-gray-700"
-            )}
-          >
-            <ListFilter className="h-4 w-4" />
-            <span className="hidden sm:inline">Filters</span>
-          </button>
-        </FiltersModal>
+        <Select value={sort} onValueChange={(val) => updateParam("sort", val)}>
+          <SelectTrigger className="w-[100px] border-none shadow-none font-medium h-9 px-2 hover:bg-gray-50 rounded-full transition-colors text-gray-600 focus:ring-0">
+            <div className="flex items-center gap-2">
+              <span className="truncate">{sort === "active" ? "Active" : "Newest"}</span>
+            </div>
+          </SelectTrigger>
+          <SelectContent className="bg-white min-w-[150px]">
+            <SelectItem value="newest">Newest first</SelectItem>
+            <SelectItem value="active">Most active</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Categories Scroller */}
@@ -140,10 +138,10 @@ export function CategoryPills() {
                 key={category}
                 onClick={() => handleCategorySelect(category)}
                 className={cn(
-                  "px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors",
+                  "px-4 py-1.5 rounded-full text-[15px] whitespace-nowrap transition-colors",
                   isActive
-                    ? "bg-gray-100 text-gray-800 font-semibold"
-                    : "bg-white text-gray-400 hover:text-gray-600"
+                    ? "bg-gray-100 text-gray-900 font-bold"
+                    : "bg-white text-gray-500 hover:text-gray-700 font-semibold"
                 )}
               >
                 {category}
@@ -168,19 +166,21 @@ export function CategoryPills() {
         )}
       </div>
 
-      {/* Sort Dropdown - NOW ON THE FAR RIGHT */}
+      {/* Filters Button - NOW ON THE FAR RIGHT */}
       <div className="flex-shrink-0">
-        <Select value={sort} onValueChange={(val) => updateParam("sort", val)}>
-          <SelectTrigger className="w-[110px] sm:w-[140px] border-none shadow-none font-medium h-9 px-2 hover:bg-gray-50 rounded-full transition-colors text-gray-600 focus:ring-0 text-right justify-end">
-            <div className="flex items-center gap-2">
-              <span className="truncate">Sort: {sort === "active" ? "Active" : "Newest"}</span>
-            </div>
-          </SelectTrigger>
-          <SelectContent className="bg-white min-w-[150px]">
-            <SelectItem value="newest">Newest first</SelectItem>
-            <SelectItem value="active">Most active</SelectItem>
-          </SelectContent>
-        </Select>
+        <FiltersModal open={filtersOpen} onOpenChange={setFiltersOpen}>
+          <button
+            className={cn(
+              "px-3 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors flex items-center gap-2 border border-gray-200",
+              hasActiveFilters
+                ? "bg-gray-100 text-gray-900 border-gray-300"
+                : "bg-white text-gray-500 hover:text-gray-700"
+            )}
+          >
+            <ListFilter className="h-4 w-4" />
+            <span className="hidden sm:inline">Filters</span>
+          </button>
+        </FiltersModal>
       </div>
     </div>
   );

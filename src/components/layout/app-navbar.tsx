@@ -343,7 +343,7 @@ export function AppNavbar() {
   return (
     <header className="sticky top-0 z-20 w-full bg-white">
       {/* Mobile Navbar */}
-      <div className="md:hidden flex items-center justify-between py-3 px-4 md:px-6 max-w-[1440px] mx-auto w-full">
+      <div className="md:hidden flex items-center justify-between py-3 px-4 md:px-6 max-w-[1360px] mx-auto w-full">
         {/* Brand */}
         <Link href="/app" prefetch={true} className="shrink-0 flex items-center gap-2">
           <Image
@@ -681,7 +681,7 @@ export function AppNavbar() {
       </div>
 
       {/* Desktop Navbar */}
-      <div className="hidden md:flex w-full items-center gap-4 py-3 px-4 md:px-6 max-w-[1440px] mx-auto">
+      <div className="hidden md:flex w-full items-center gap-4 py-3 px-4 md:px-6 max-w-[1360px] mx-auto">
         {/* Brand */}
         <Link href="/app" prefetch={true} className="shrink-0 flex items-center gap-2">
           <Image
@@ -720,6 +720,7 @@ export function AppNavbar() {
         </nav>
 
         {/* Explore Dropdown - Desktop */}
+        {false && (
         <DropdownMenu open={exploreOpen} onOpenChange={setExploreOpen}>
           <DropdownMenuTrigger asChild>
             <button
@@ -762,11 +763,12 @@ export function AppNavbar() {
             })}
           </DropdownMenuContent>
         </DropdownMenu>
+        )}
 
         {/* Right Actions */}
         <div className="flex items-center gap-2 shrink-0 ml-auto">
           {/* Search Bar - Medium Width (hidden on home page when hero is visible) */}
-          {showSearch && (
+          {false && (
             <div className="flex mr-2">
               <form action="/search" method="get" className="relative flex items-center">
                 <div className="relative w-64">
@@ -807,9 +809,8 @@ export function AppNavbar() {
           )}
           {user ? (
             <>
-              <Button asChild className="hidden sm:flex h-11 rounded-full bg-[#212733] text-white hover:bg-[#212733]/90 border border-[#222234]">
+              <Button asChild className="hidden sm:flex h-11 rounded-full bg-transparent text-gray-900 hover:bg-gray-50 border border-gray-900 font-medium">
                 <Link href="/app/new">
-                  <Plus className="h-4 w-4 mr-1" />
                   Create a request
                 </Link>
               </Button>
@@ -908,8 +909,7 @@ export function AppNavbar() {
           ) : (
             <>
               <Link href="/signup">
-                <Button variant="outline" size="sm" className="border-0  text-[#212733] hover:bg-gray-50">
-                  <Plus className="h-4 w-4 mr-1.5" />
+                <Button className="hidden sm:flex h-11 rounded-full bg-transparent text-gray-900 hover:bg-gray-50 border border-gray-900 font-medium w-full">
                   Create a request
                 </Button>
               </Link>
