@@ -1,171 +1,141 @@
 "use client";
 
 import * as React from "react";
-import { Check, ChevronDown, X, Package, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Dialog,
-  DialogContent,
-} from "@/components/ui/dialog";
 import { MAIN_CATEGORIES, SUBCATEGORIES } from "@/lib/categories";
+import { 
+  Check, 
+  X
+} from "lucide-react";
 
-// Common item types for quick selection
-const QUICK_ITEMS = [
-  "Watch", "Car", "Laptop", "Smartphone", "Headphones", "Camera", "Drone", "Monitor", "Tablet", 
-  "Console", "TV", "Speakers", "Furniture", "Sneakers", "Handbag", "Fragrance", "Makeup", 
-  "Baby Gear", "Toys", "Bike", "Coffee Machine", "Air Fryer", "Vacuum", "Tools"
+// Flatten all subcategories from the catalog and map them to their main categories
+const SEARCH_DATABASE = Object.entries(SUBCATEGORIES).flatMap(([main, subs]) => 
+  subs.map(sub => ({ label: sub, parent: main }))
+);
+
+// Map common brands/keywords to categories
+const BRAND_MAPPING = [
+  { keywords: ["mercedes", "benz", "merc", "bmw", "audi", "tesla"], parent: "Auto" },
+  { keywords: ["iphone", "apple", "smartphone", "phone", "samsung", "pixel"], parent: "Tech" },
+  { keywords: ["macbook", "laptop", "pc", "computer", "dell", "hp"], parent: "Tech" },
+  { keywords: ["rolex", "watch", "omega", "cartier"], parent: "Fashion" },
+  { keywords: ["nike", "jordan", "shoes", "sneakers", "adidas"], parent: "Fashion" },
+  { keywords: ["sony", "canon", "camera", "nikon"], parent: "Tech" },
+  { keywords: ["gamer", "ps5", "xbox", "nintendo"], parent: "Tech" },
 ];
 
-// Flatten all subcategories from the catalog
-const CATALOG_SUBCATEGORIES = Array.from(new Set(Object.values(SUBCATEGORIES).flat()));
-
-// Final list of suggestions
-const ALL_SUGGESTIONS = Array.from(new Set([...QUICK_ITEMS, ...CATALOG_SUBCATEGORIES])).sort();
-
 export function CategoryCombobox({
-  value,
-  onChange,
-  placeholder = "Select an item type...",
+  title,
+  category,
+  onTitleChange,
+  onCategoryChange,
+  placeholder = "e.g. Mercedes-Benz, iPhone 15, Rolex...",
   className,
 }: {
-  value?: string | null;
-  onChange: (value: string) => void;
+  title: string;
+  category: string;
+  onTitleChange: (value: string) => void;
+  onCategoryChange: (value: string) => void;
   placeholder?: string;
   className?: string;
 }) {
-  const [open, setOpen] = React.useState(false);
-  const [searchQuery, setSearchQuery] = React.useState("");
+  const inputRef = React.useRef<HTMLInputElement>(null);
 
-  // Filter based on search query
-  const filteredItems = React.useMemo(() => {
-    const lowerQuery = searchQuery.toLowerCase();
-    if (!searchQuery) return ALL_SUGGESTIONS;
-    
-    return ALL_SUGGESTIONS.filter((item) =>
-      item.toLowerCase().includes(lowerQuery)
-    );
-  }, [searchQuery]);
+  // Suggest categories based on title
+  const suggestions = React.useMemo(() => {
+    if (!title || title.length < 2) return [];
+    const lowerTitle = title.toLowerCase();
 
-  // Handle selection
-  const handleSelect = (item: string) => {
-    onChange(item);
-    setOpen(false);
-  };
+    const matches = new Set<string>();
 
-  const handleClear = () => {
-    onChange("");
-    setOpen(false);
-  };
+    // 1. Check brand mapping
+    BRAND_MAPPING.forEach(bm => {
+      if (bm.keywords.some(k => lowerTitle.includes(k))) {
+        matches.add(bm.parent);
+      }
+    });
 
-    const hasResults = filteredItems.length > 0;
+    // 2. Check search database
+    SEARCH_DATABASE.forEach(item => {
+      if (item.label.toLowerCase().includes(lowerTitle)) {
+        matches.add(item.parent);
+      }
+    });
+
+    // 3. Fallback to main categories if any match
+    MAIN_CATEGORIES.forEach(cat => {
+      if (cat.toLowerCase().includes(lowerTitle)) {
+        matches.add(cat);
+      }
+    });
+
+    return Array.from(matches).slice(0, 4);
+  }, [title]);
+
+  const hasSuggestions = suggestions.length > 0;
 
   return (
-    <>
-      <div className={cn("relative w-full", className)}>
-        <div className="relative">
-          <div
-            onClick={() => setOpen(true)}
-            className={cn(
-              "flex items-center gap-3 w-full h-11 rounded-lg border px-4 pr-20 cursor-pointer transition-colors bg-white",
-              value ? "border-black border-2" : "border-[#e5e7eb] hover:border-gray-300"
-            )}
-          >
-            <span className={cn(
-              "flex-1 text-sm truncate",
-              !value && "text-gray-500"
-            )}>
-              {value || placeholder}
-            </span>
-          </div>
-          {value && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleClear();
-              }}
-              className="absolute right-8 top-1/2 -translate-y-1/2 h-6 w-6 rounded-full"
-            >
-              <X className="h-3 w-3" />
-            </Button>
+    <div className={cn("w-full space-y-6 pt-2", className)}>
+      {/* Primary Input (Name) */}
+      <div className="relative group">
+        <Input
+          ref={inputRef}
+          type="text"
+          placeholder={placeholder}
+          value={title}
+          onChange={(e) => onTitleChange(e.target.value)}
+          autoFocus={true}
+          className={cn(
+            "px-6 h-14 bg-white border-[#e5e7eb] rounded-xl focus-visible:ring-[#222234] text-base font-bold transition-all shadow-none",
+            "hover:border-gray-300 focus:border-[#222234] placeholder:text-gray-400"
           )}
+        />
+        {title && (
           <Button
             type="button"
             variant="ghost"
             size="icon"
-            onClick={() => setOpen(true)}
-            className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 opacity-50"
+            onClick={() => onTitleChange("")}
+            className="absolute right-4 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full hover:bg-gray-100"
           >
-            <ChevronDown className="h-4 w-4" />
+            <X className="h-4 w-4 text-gray-400" />
           </Button>
-        </div>
+        )}
       </div>
 
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-md max-h-[70vh] flex flex-col p-4 sm:p-6 sm:rounded-2xl">
-          <div className="flex flex-col h-full min-h-0">
-            <h3 className="text-lg font-semibold mb-1">What are you looking for?</h3>
-            <p className="text-sm text-gray-500 mb-4">Select the type of item you want to find</p>
-
-            {/* Search Input */}
-            <div className="relative mb-4">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input
-                type="text"
-                placeholder="Search items (e.g. Watch, Car)..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 h-11"
-                autoFocus
-              />
+      {/* Reactive Category Suggestions */}
+      {title && (
+        <div className="animate-in fade-in slide-in-from-top-2 duration-500">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between px-1">
+              <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400">
+                {category ? "Selected Category" : "Suggested Category"}
+              </h3>
             </div>
 
-            {/* Suggestions List */}
-            <div className="flex-1 overflow-y-auto pr-1">
-              {hasResults ? (
-                <div className="grid grid-cols-1 gap-1">
-                  {filteredItems.map((item) => {
-                    const isSelected = value === item;
-                    return (
-                      <button
-                        key={item}
-                        type="button"
-                        onClick={() => handleSelect(item)}
-                        className={cn(
-                          "w-full flex items-center justify-between px-3 py-2.5 text-sm rounded-lg transition-colors text-left",
-                          "hover:bg-gray-100 cursor-pointer",
-                          isSelected ? "bg-[#7755FF]/5 text-[#7755FF] font-medium" : "text-gray-700"
-                        )}
-                      >
-                        <span>{item}</span>
-                        {isSelected && <Check className="h-4 w-4" />}
-                      </button>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center py-10 px-4 text-center">
-                  <div className="h-12 w-12 rounded-full bg-gray-50 flex items-center justify-center mb-3">
-                    <Package className="h-6 w-6 text-gray-300" />
-                  </div>
-                  <p className="text-sm text-gray-500 font-medium">No matches found</p>
-                  <button 
-                    type="button"
-                    onClick={() => handleSelect(searchQuery)}
-                    className="mt-2 text-sm text-[#7755FF] font-semibold hover:underline"
-                  >
-                    Add "{searchQuery}" as category
-                  </button>
-                </div>
-              )}
+            <div className="flex flex-wrap gap-2">
+              {(hasSuggestions ? suggestions : Array.from(MAIN_CATEGORIES)).map((cat) => (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => onCategoryChange(cat)}
+                  className={cn(
+                    "flex items-center gap-2 px-4 py-2 rounded-full border transition-all duration-300 active:scale-95 text-xs font-bold",
+                    category === cat
+                      ? "bg-[#222234] border-[#222234] text-white shadow-md shadow-[#222234]/10"
+                      : "bg-white border-[#e5e7eb] text-gray-500 hover:border-[#222234] hover:text-[#222234] hover:bg-gray-50"
+                  )}
+                >
+                  {cat}
+                  {category === cat && <Check className="h-3.5 w-3.5 text-green-400" />}
+                </button>
+              ))}
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
-    </>
+        </div>
+      )}
+    </div>
   );
 }

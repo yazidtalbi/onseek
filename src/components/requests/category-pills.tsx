@@ -138,7 +138,7 @@ export function CategoryPills() {
                 key={category}
                 onClick={() => handleCategorySelect(category)}
                 className={cn(
-                  "px-4 py-1.5 rounded-full text-[15px] whitespace-nowrap transition-colors",
+                  "px-4 py-1.5 rounded-none text-[15px] whitespace-nowrap transition-colors",
                   isActive
                     ? "bg-white text-black border-black border-2 font-bold px-3.5"
                     : "bg-white text-gray-500 hover:text-gray-700 border border-transparent font-semibold"

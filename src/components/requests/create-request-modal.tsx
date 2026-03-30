@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { cn } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -22,6 +23,7 @@ export function CreateRequestModal({
   onOpenChange,
   userCountry,
 }: CreateRequestModalProps) {
+  const [currentStep, setCurrentStep] = React.useState(1);
   const handleSuccess = () => {
     onOpenChange(false);
   };
@@ -29,20 +31,28 @@ export function CreateRequestModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[620px] p-0 overflow-hidden rounded-3xl border-none shadow-2xl bg-white">
-        <DialogHeader className="p-8 pb-4 flex flex-row items-center justify-between space-y-0 text-foreground">
-          <div className="flex items-center gap-4">
-            <div>
-              <DialogTitle className="text-2xl font-bold tracking-tight" style={{ fontFamily: 'var(--font-expanded)' }}>
-                Create a request
-              </DialogTitle>
-              <p className="text-sm text-gray-500 font-medium">Fast, simple, and exactly what you need.</p>
-            </div>
-          </div>
+        <DialogHeader className="p-8 flex flex-row items-center justify-between space-y-0 text-foreground border-none">
+          {currentStep === 1 && (
+            <h2 className="text-xl text-black animate-in fade-in slide-in-from-left-4 duration-500" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>
+              First, what are you looking for?
+            </h2>
+          )}
+          {currentStep === 2 && (
+            <h2 className="text-xl text-black animate-in fade-in slide-in-from-left-4 duration-500" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>
+              Next, set your budget & condition.
+            </h2>
+          )}
+          {currentStep === 3 && (
+            <h2 className="text-xl text-black animate-in fade-in slide-in-from-left-4 duration-500" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>
+              Now, add your preferences & dealbreakers.
+            </h2>
+          )}
+          <div className={cn("flex-1", currentStep !== 1 && "hidden")} /> {/* Spacer for Step 1 if needed, but justify-between handles it */}
           <Button
             variant="ghost"
             size="icon"
             onClick={() => onOpenChange(false)}
-            className="rounded-full hover:bg-gray-100 h-10 w-10"
+            className="rounded-full hover:bg-gray-100 h-10 w-10 shrink-0"
           >
             <X className="h-5 w-5 text-gray-400" />
           </Button>
@@ -53,6 +63,7 @@ export function CreateRequestModal({
             isModal={true} 
             userCountry={userCountry} 
             onSuccess={handleSuccess} 
+            onStepChange={setCurrentStep}
           />
         </div>
       </DialogContent>
