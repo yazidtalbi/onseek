@@ -131,8 +131,12 @@ export function RequestForm({
     const fieldsToValidate = currentStep === 1 ? ["title", "category"] : currentStep === 2 ? ["budgetMax"] : [];
     const isValid = fieldsToValidate.length > 0 ? await form.trigger(fieldsToValidate as any) : true;
     if (isValid) {
+      if (currentStep === 7 && user) {
+        form.handleSubmit(onSubmit)();
+        return;
+      }
       const maxStep = user ? 7 : 8;
-      setCurrentStep((prev) => Math.min(prev + 1, maxStep));
+      setCurrentStep((prev) => Math.min(prev + 1, 8));
       setShowEditSummary(false); // Reset summary view on step change
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
@@ -395,11 +399,13 @@ export function RequestForm({
           return;
         } else {
           if (onSuccess) {
-            // Request was created successfully (redirect will happen, but call onSuccess to close modal)
             onSuccess();
           }
-          // Note: createRequestAction redirects on success, so this code may not execute
-          router.refresh();
+          if (res.url) {
+            router.push(res.url);
+          } else {
+            router.refresh();
+          }
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : "An unexpected error occurred");
@@ -1091,18 +1097,19 @@ export function RequestForm({
                 </Button>
               )}
 
-              {currentStep < (user ? 7 : 8) && (
+              {(currentStep < 8) && (
                 <Button
                   type="button"
                   onClick={proceedToNextStep}
-                  disabled={(currentStep === 1 && (!titleValue?.trim() || !categoryValue)) || (currentStep === 2 && !form.watch("budgetMax"))}
+                  disabled={(currentStep === 1 && (!titleValue?.trim() || !categoryValue)) || (currentStep === 2 && !form.watch("budgetMax")) || isAutoSubmitting}
                   className={cn(
                     "h-12 px-10 rounded-full font-semibold text-base min-w-[140px] shadow-lg shadow-gray-200/50 transition-all",
-                    ((currentStep === 1 && (!titleValue?.trim() || !categoryValue)) || (currentStep === 2 && !form.watch("budgetMax")))
+                    ((currentStep === 1 && (!titleValue?.trim() || !categoryValue)) || (currentStep === 2 && !form.watch("budgetMax")) || isAutoSubmitting)
                       ? "bg-gray-100 text-gray-400 cursor-not-allowed shadow-none"
                       : "bg-[#222234] hover:bg-[#2a2a3f] text-white",
                     currentStep === 3 && "hidden", // Hide next button on condition step
-                    showEditSummary && "hidden" // Hide next button on edit summary screen
+                    showEditSummary && "hidden", // Hide next button on edit summary screen
+                    (currentStep === 8 && user) && "hidden" // Hide next button on auth step if user already logged in
                   )}
                 >
                   {currentStep === 1 ? "Next: Budget" :
@@ -1111,7 +1118,7 @@ export function RequestForm({
                         currentStep === 4 ? "Next: Dealbreakers" :
                           currentStep === 5 ? "Next: Details" :
                             currentStep === 6 ? "Next: Review" :
-                              currentStep === 7 ? (user ? "Submit Request" : "Finalise") :
+                              currentStep === 7 ? (user ? "Publish" : "Finalize") :
                                 "Next"}
                 </Button>
               )}

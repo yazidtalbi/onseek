@@ -140,12 +140,51 @@ function RequestCardComponent({
   const visibleDealbreakers = dealbreakers.slice(0, maxDealbreakers);
   const remainingPreferences = preferences.length - maxPreferences;
   const remainingDealbreakers = dealbreakers.length - maxDealbreakers;
+  const isInline = (preferences.length + dealbreakers.length) <= 2;
+  const hasAttributes = visiblePreferences.length > 0 || visibleDealbreakers.length > 0;
+  const hasContent = hasAttributes || !!request.description || (variant === "feed" && !!request.matchReason);
+
+  const footerSection = (variant === "feed" || smallImages) && (
+    <div
+      className={cn(
+        "flex items-center justify-between gap-2 flex-wrap",
+        !smallImages && "pt-4 mt-auto border-t border-gray-100/60"
+      )}
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      }}
+    >
+      <span className="text-sm text-gray-400 font-medium">
+        {request.submissionCount !== undefined && request.submissionCount > 0
+          ? `${formatSubmissionCount(request.submissionCount)} proposals`
+          : "No proposals yet"}
+      </span>
+      {!isPreview && (
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          <FavoriteButton
+            requestId={request.id}
+            isFavorite={isFavorite}
+          />
+          <RequestMenu
+            requestId={request.id}
+            requestUserId={request.user_id}
+            status={request.status}
+            categories={request.categories}
+          />
+        </div>
+      )}
+    </div>
+  );
 
   const cardContent = (
-    <CardContent className={cn("flex flex-col h-full", isFeed ? "p-5" : variant === "detail" ? (smallImages ? "p-5 sm:p-6" : "p-6 sm:p-8 pb-24") : "p-6")}>
+    <CardContent className={cn(
+      "flex flex-col h-full",
+      isFeed ? "p-5" : variant === "detail" ? (smallImages ? (hasContent ? "px-5 py-4 sm:px-6 sm:py-5" : "px-5 py-3.5 sm:px-6 sm:py-4") : "p-6 sm:p-8 pb-24") : "p-6"
+    )}>
       {/* Header Section */}
       <section>
-        <div className="flex items-start gap-4 pb-5">
+        <div className="flex items-start gap-4">
           {/* Content - Left side */}
           <div className="flex-1 min-w-0">
             <div className="flex-1 min-w-0">
@@ -164,7 +203,7 @@ function RequestCardComponent({
               {/* Title: Truncated to one line in preview modes */}
               <h3
                 className={cn(
-                  "font-bold leading-snug text-[18px] text-foreground transition-colors font-[family-name:var(--font-inter-display)]",
+                  "font-semibold leading-snug text-[18px] text-foreground transition-colors font-[family-name:var(--font-inter-display)]",
                   (isFeed || smallImages) && "line-clamp-1"
                 )}
               >
@@ -173,12 +212,12 @@ function RequestCardComponent({
               {/* Concise preview metadata: Condition - Location */}
               <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                 {(isFeed || smallImages) && shortMetadata && (
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[13px] font-bold bg-gray-100 text-gray-500 shrink-0 tracking-tight">
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[13px] font-medium border border-gray-200 text-gray-500 shrink-0 tracking-tight">
                     {shortMetadata}
                   </span>
                 )}
                 {(isFeed || smallImages) && budgetDisplay && (
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[13px] font-bold bg-[#785ffe]/10 text-[#785ffe] shrink-0 tracking-tight">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[13px] font-medium border border-[#785ffe] text-[#785ffe] shrink-0 tracking-tight">
                     {parsedPrefs.priceLock === "locked" && <LockKeyhole className="h-3.5 w-3.5" />}
                     {budgetDisplay}
                   </span>
@@ -261,12 +300,9 @@ function RequestCardComponent({
       </section>
 
       {/* Separator between header and preferences */}
-      {(preferences.length > 0 || dealbreakers.length > 0) && (
-        <div className="border-t border-gray-100/60 my-1 mx-[-5px]" />
-      )}
 
       {/* Main Content Section */}
-      <section className="flex-1 flex flex-col justify-center">
+      <section className={cn("flex flex-col justify-center", hasContent && "flex-1")}>
         {/* Match Indicator - only show on feed variant if matched */}
         {variant === "feed" && request.matchReason && (
           <div className="mb-2 flex items-center gap-2 text-xs text-[#7755FF] bg-[#7755FF]/10 px-3 py-1.5 rounded-full w-fit">
@@ -279,8 +315,10 @@ function RequestCardComponent({
 
         {/* Preferences and Dealbreakers - only show on feed variant */}
         {variant === "feed" && (visiblePreferences.length > 0 || visibleDealbreakers.length > 0) && (
-          <div className="flex flex-col gap-3 mb-3 mt-3">
-            {/* Preferences */}
+          <div className={cn(
+            "border-l border-dashed border-neutral-300/60 pl-4 mt-2 mb-3 flex gap-2",
+            isInline ? "flex-wrap items-center" : "flex-col gap-3"
+          )}>
             {visiblePreferences.length > 0 && (
               <div className="flex flex-wrap gap-2">
                 {visiblePreferences.map((pref: { label: string }, idx: number) => (
@@ -300,7 +338,6 @@ function RequestCardComponent({
               </div>
             )}
 
-            {/* Dealbreakers */}
             {visibleDealbreakers.length > 0 && (
               <div className="flex flex-wrap gap-2">
                 {visibleDealbreakers.map((deal: { label: string }, idx: number) => (
@@ -355,65 +392,47 @@ function RequestCardComponent({
               </div>
             )}
 
-            {/* Preferences */}
-            {(preferences.length > 0 || smallImages) && (
-              <div className="pt-2">
+            <div className={cn(
+              "border-l border-dashed border-neutral-300/60 pl-5 mt-3 mb-4",
+              isInline ? "flex flex-wrap gap-2" : "space-y-4"
+            )}>
+              {preferences.length > 0 && (
                 <div className="flex flex-wrap gap-2">
-                  {preferences.length > 0 ? (
-                    <>
-                      {visiblePreferences.map((pref: { label: string }, idx: number) => (
-                        <span
-                          key={idx}
-                          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-green-50 text-sm text-[#015a25]"
-                        >
-                          <Check className="h-4 w-4 text-green-500" />
-                          <span>{pref.label}</span>
-                        </span>
-                      ))}
-                      {remainingPreferences > 0 && (
-                        <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-green-50 text-sm text-[#015a25]">
-                          +{remainingPreferences} more
-                        </span>
-                      )}
-                    </>
-                  ) : (
-                    <span className="inline-flex items-center px-3.5 py-1.5 rounded-full bg-gray-100/60 text-sm text-gray-500/80">
-                      No preferences
+                  {visiblePreferences.map((pref: { label: string }, idx: number) => (
+                    <span
+                      key={idx}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-green-50 text-sm text-[#015a25]"
+                    >
+                      <Check className="h-4 w-4 text-green-500" />
+                      <span>{pref.label}</span>
+                    </span>
+                  ))}
+                  {remainingPreferences > 0 && (
+                    <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-green-50 text-sm text-[#015a25]">
+                      +{remainingPreferences} more
                     </span>
                   )}
                 </div>
-              </div>
-            )}
-
-            {/* Dealbreakers */}
-            {(dealbreakers.length > 0 || smallImages) && (
-              <div className="pt-2">
+              )}
+              {dealbreakers.length > 0 && (
                 <div className="flex flex-wrap gap-2">
-                  {dealbreakers.length > 0 ? (
-                    <>
-                      {visibleDealbreakers.map((deal: { label: string }, idx: number) => (
-                        <span
-                          key={idx}
-                          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-amber-50 text-sm text-amber-700"
-                        >
-                          <X className="h-4 w-4 text-amber-500 opacity-70" />
-                          <span>{deal.label}</span>
-                        </span>
-                      ))}
-                      {remainingDealbreakers > 0 && (
-                        <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-amber-50 text-sm text-amber-700">
-                          +{remainingDealbreakers} more
-                        </span>
-                      )}
-                    </>
-                  ) : (
-                    <span className="inline-flex items-center px-3.5 py-1.5 rounded-full bg-gray-100/60 text-sm text-gray-500/80">
-                      No dealbreakers
+                  {visibleDealbreakers.map((deal: { label: string }, idx: number) => (
+                    <span
+                      key={idx}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-amber-50 text-sm text-amber-700"
+                    >
+                      <X className="h-4 w-4 text-amber-500 opacity-70" />
+                      <span>{deal.label}</span>
+                    </span>
+                  ))}
+                  {remainingDealbreakers > 0 && (
+                    <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-amber-50 text-sm text-amber-700">
+                      +{remainingDealbreakers} more
                     </span>
                   )}
                 </div>
-              </div>
-            )}
+              )}
+            </div>
 
             {/* Reference Images - Hide on home feed if smallImages is true */}
             {images.length > 0 && !smallImages && (
@@ -474,66 +493,43 @@ function RequestCardComponent({
         )}
       </section>
 
-      {/* Footer Section */}
-      <section>
-        {/* Footer: Meta info & actions - show on feed or with smallImages prop */}
-        {(variant === "feed" || smallImages) && (
-          <div className="flex items-center justify-between gap-2 flex-wrap pt-4 mt-auto">
-            <span className="text-sm text-gray-500">
-              {request.submissionCount !== undefined && request.submissionCount > 0
-                ? `${formatSubmissionCount(request.submissionCount)} proposals`
-                : "No proposals yet"}
-            </span>
-            {!isPreview && (
-              <div
-                className="flex items-center gap-1.5 flex-shrink-0 relative z-10"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                }}
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                }}
-              >
-                <FavoriteButton
-                  requestId={request.id}
-                  isFavorite={isFavorite}
-                />
-                <RequestMenu
-                  requestId={request.id}
-                  requestUserId={request.user_id}
-                  status={request.status}
-                  categories={request.categories}
-                />
-              </div>
-            )}
-          </div>
-        )}
-      </section>
+      {/* Footer Section - rendered inside card only if NOT smallImages (detail page) */}
+      {!smallImages && footerSection}
     </CardContent>
   );
 
   return (
-    <div className="relative h-full w-full">
+    <div className="relative group w-full">
       {variant === "detail" ? (
-        <Card
-          ref={cardRef}
-          className={cn(
-            "flex flex-col transition-all duration-300 ease-out relative group h-full w-full rounded-2xl border border-[#e5e7eb] overflow-hidden",
-            "hover:-translate-y-2 hover:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.15)] bg-white"
-          )}
-        >
-          {cardContent}
-
-          {isOverflowing && smallImages && (
-            <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-white via-white/95 to-transparent flex items-end justify-center pb-6 z-10 pointer-events-none rounded-b-2xl">
-              <span className="text-sm font-medium text-[#7755FF] bg-white backdrop-blur-sm px-6 py-2 rounded-full shadow-[0_4px_14px_0_rgba(0,0,0,0.05)] border border-[#e5e7eb]">
-                View more...
-              </span>
+        <div className="flex flex-col gap-3">
+          <Link
+            href={createRequestUrl(request.id)}
+            prefetch={true}
+            className="block h-full group/card"
+          >
+            <Card
+              ref={cardRef}
+              className={cn(
+                "flex flex-col relative h-full w-full rounded-2xl border border-[#e5e7eb] overflow-hidden bg-white shadow-none transition-all duration-300 ease-out",
+                smallImages && "group-hover/card:-translate-y-1 group-hover/card:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.1)]"
+              )}
+            >
+              {cardContent}
+              {isOverflowing && smallImages && (
+                <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-white via-white/95 to-transparent flex items-end justify-center pb-6 z-10 pointer-events-none rounded-b-2xl">
+                  <span className="text-sm font-medium text-[#7755FF] bg-white backdrop-blur-sm px-6 py-2 rounded-full shadow-[0_4px_14px_0_rgba(0,0,0,0.05)] border border-[#e5e7eb]">
+                    View more...
+                  </span>
+                </div>
+              )}
+            </Card>
+          </Link>
+          {smallImages && (
+            <div className="px-1">
+              {footerSection}
             </div>
           )}
-        </Card>
+        </div>
       ) : isPreview ? (
         <Card
           className={cn(
@@ -569,7 +565,7 @@ function RequestCardComponent({
         >
           <Card
             className={cn(
-              " flex flex-col transition-all relative group h-full",
+              "flex flex-col transition-all duration-300 ease-out relative group h-full hover:-translate-y-2 hover:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.15)]",
               !isFeed ? "rounded-2xl" : "",
               isFeed && isFirst && isLast ? "rounded-2xl" : "",
               isFeed && isFirst && !isLast ? "rounded-t-2xl rounded-b-none" : "",

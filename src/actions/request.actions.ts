@@ -186,7 +186,9 @@ export async function createRequestAction(formData: FormData) {
   revalidatePath("/app/requests");
   revalidatePath("/app/submissions");
   revalidatePath("/");
-  redirect(createRequestUrl(request.id, request.title));
+  
+  const url = createRequestUrl(request.id, request.title);
+  return { success: true, url };
 }
 
 export async function updateRequestStatusAction(formData: FormData) {

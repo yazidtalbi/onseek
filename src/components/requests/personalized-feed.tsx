@@ -434,23 +434,24 @@ export function PersonalizedFeed({ initialMode = "for_you", initialData }: Perso
             </div>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 py-4">
+          <div className="columns-1 md:columns-2 xl:columns-3 gap-6 py-4">
             {allItems.map((request: RequestItem) => {
               const requestWithExtras = request as RequestItem & { images?: string[]; links?: string[] };
               return (
-                <Link
-                  href={`/app/requests/${request.id}`}
-                  key={request.id}
-                  className="block w-full h-[380px]"
-                >
-                  <RequestCard
-                    request={request}
-                    variant="detail"
-                    images={requestWithExtras.images || []}
-                    links={requestWithExtras.links || []}
-                    smallImages={true}
-                  />
-                </Link>
+                <div key={request.id} className="break-inside-avoid mb-6">
+                  <Link
+                    href={`/app/requests/${request.id}`}
+                    className="block w-full"
+                  >
+                    <RequestCard
+                      request={request}
+                      variant="detail"
+                      images={requestWithExtras.images || []}
+                      links={requestWithExtras.links || []}
+                      smallImages={true}
+                    />
+                  </Link>
+                </div>
               );
             })}
           </div>

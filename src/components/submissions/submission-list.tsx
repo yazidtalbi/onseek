@@ -81,7 +81,7 @@ export function SubmissionList({
 
   if (!data?.length) {
     return (
-      <div className="rounded-2xl p-12 text-center">
+      <div className="rounded-2xl p-12 text-center border border-dashed border-neutral-100 bg-transparent">
         {/* Illustration with Stars */}
         <div className="relative flex items-center justify-center mb-8">
           <div className="relative z-10">
