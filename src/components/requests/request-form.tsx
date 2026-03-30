@@ -50,11 +50,13 @@ export function RequestForm({
   onSuccess,
   userCountry,
   isModal = false,
+  onCancel,
   onStepChange
 }: {
   onSuccess?: () => void,
   userCountry?: string | null,
   isModal?: boolean,
+  onCancel?: () => void,
   onStepChange?: (step: number) => void
 }) {
   const { user } = useAuth();
@@ -78,6 +80,8 @@ export function RequestForm({
   const [draggedType, setDraggedType] = React.useState<"preference" | "dealbreaker" | null>(null);
   const [triedStep2Next, setTriedStep2Next] = React.useState(false);
   const [currentStep, setCurrentStep] = React.useState(1);
+  const [showEditSummary, setShowEditSummary] = React.useState(false);
+  const [isAutoSubmitting, setIsAutoSubmitting] = React.useState(false);
 
   // Notify parent of step changes
   React.useEffect(() => {
@@ -88,8 +92,11 @@ export function RequestForm({
     { id: 1, title: 'Item & Info' },
     { id: 2, title: 'Budget' },
     { id: 3, title: 'Condition' },
-    { id: 4, title: 'Details' },
-    ...(!user ? [{ id: 5, title: 'Authenticate' }] : [])
+    { id: 4, title: 'Preferences' },
+    { id: 5, title: 'Dealbreakers' },
+    { id: 6, title: 'Details' },
+    { id: 7, title: 'Review' },
+    ...(!user ? [{ id: 8, title: 'Authenticate' }] : [])
   ];
 
   const stepTips = {
@@ -124,8 +131,9 @@ export function RequestForm({
     const fieldsToValidate = currentStep === 1 ? ["title", "category"] : currentStep === 2 ? ["budgetMax"] : [];
     const isValid = fieldsToValidate.length > 0 ? await form.trigger(fieldsToValidate as any) : true;
     if (isValid) {
-      const maxStep = user ? 4 : 5;
+      const maxStep = user ? 7 : 8;
       setCurrentStep((prev) => Math.min(prev + 1, maxStep));
+      setShowEditSummary(false); // Reset summary view on step change
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
@@ -142,17 +150,19 @@ export function RequestForm({
       title: "",
       description: "",
       category: "",
-      budgetMax: 0,
+      budgetMax: null,
       priceLock: "open",
       exactItem: false,
       exactSpecification: false,
       exactPrice: false,
       country: userCountry || "",
-      condition: "New",
+      condition: null,
       urgency: "Standard",
       referenceLinks: "",
     },
   });
+
+
 
   const titleValue = form.watch("title");
   const budgetMax = form.watch("budgetMax") ?? 0;
@@ -289,8 +299,15 @@ export function RequestForm({
   };
 
   const handleBudgetMaxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseFloat(e.target.value) || 0;
-    form.setValue("budgetMax", Math.max(0, value), { shouldValidate: true });
+    const val = e.target.value;
+    if (val === "") {
+      form.setValue("budgetMax", null, { shouldValidate: true });
+      return;
+    }
+    const value = parseFloat(val);
+    if (!isNaN(value)) {
+      form.setValue("budgetMax", Math.max(0, value), { shouldValidate: true });
+    }
   };
 
   // Dynamic CTA label
@@ -419,14 +436,22 @@ export function RequestForm({
     submissionCount: 0,
   };
 
+  // Auto-submit when user logs in on Step 8
+  React.useEffect(() => {
+    if (user && currentStep === 8 && !isAutoSubmitting) {
+      setIsAutoSubmitting(true);
+      form.handleSubmit(onSubmit)();
+    }
+  }, [user, currentStep, isAutoSubmitting, form, onSubmit]);
+
   return (
     <div className={cn(
       "grid grid-cols-1 gap-0 items-start",
       isModal ? "lg:grid-cols-1" : "lg:grid-cols-8"
     )}>
       <div className={cn(
-        "pb-8",
-        isModal ? "lg:col-span-1 pr-0" : "lg:col-span-5 lg:border-r border-[#e5e7eb] pr-12"
+        currentStep === 8 ? "pb-0" : "pb-8",
+        isModal ? "lg:col-span-1 pr-0" : "lg:col-span-1 lg:border-r border-[#e5e7eb] pr-12"
       )}>
         {/* Step-by-Step Navigation - Removed top stepper as per request */}
 
@@ -467,7 +492,7 @@ export function RequestForm({
 
           {/* SECTION 1: What are you looking for? */}
           {currentStep === 1 && (
-            <section className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <section className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
               <div className="space-y-6">
                 <h2 className="text-2xl font-bold tracking-tight text-[#222234]" style={{ fontFamily: 'var(--font-expanded)' }}>
                   What are you looking for?
@@ -494,7 +519,7 @@ export function RequestForm({
 
           {/* SECTION 2: Budget */}
           {currentStep === 2 && (
-            <section className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <section className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
               <div className="space-y-6">
                 <h2 className="text-2xl font-bold tracking-tight text-[#222234]" style={{ fontFamily: 'var(--font-expanded)' }}>
                   What is your budget?
@@ -507,7 +532,7 @@ export function RequestForm({
                       type="number"
                       step="10"
                       min={0}
-                      value={budgetMax}
+                      value={form.watch("budgetMax") ?? ""}
                       onChange={handleBudgetMaxChange}
                       placeholder="Enter amount"
                       className={cn(
@@ -526,7 +551,7 @@ export function RequestForm({
 
           {/* SECTION 3: Condition */}
           {currentStep === 3 && (
-            <section className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <section className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
               <div className="space-y-6">
                 <h2 className="text-2xl font-bold tracking-tight text-[#222234]" style={{ fontFamily: 'var(--font-expanded)' }}>
                   What condition are you looking for?
@@ -563,34 +588,24 @@ export function RequestForm({
             </section>
           )}
 
-          {/* SECTION 4: Requirements */}
+          {/* SECTION 4: Preferences */}
           {currentStep === 4 && (
-            <section className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <section className="space-y-10 animate-in fade-in slide-in-from-right-4 duration-500">
               <div className="space-y-6 mb-2">
                 <h2 className="text-2xl font-bold tracking-tight text-[#222234]" style={{ fontFamily: 'var(--font-expanded)' }}>
-                  Tell us more
+                  What are your preferences?
                 </h2>
               </div>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
-                {/* Left Column: Requirements */}
-                <div className="space-y-10">
+              <div className="grid grid-cols-1 gap-10 items-start">
+                <div className="space-y-4">
                   {/* Preferences Section - Tag Style */}
                   <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <Label className="text-base font-semibold text-gray-500">
-                        Preferences <span className="text-xs font-normal text-gray-400 ml-1">(optional)</span>
-                      </Label>
-                    </div>
-
                     <div className="flex flex-wrap gap-2 p-3.5 rounded-xl border border-[#e5e7eb] bg-white focus-within:border-[#222234] focus-within:ring-1 focus-within:ring-[#222234]/5 transition-all min-h-[56px] items-center">
                       {preferences.map((item, index) => (
                         <div
                           key={`pref-${index}`}
                           className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-50 text-green-700 text-sm font-semibold group animate-in fade-in zoom-in duration-200"
                         >
-                          <div className="flex items-center justify-center h-4 w-4 rounded-full bg-green-100/50">
-                            <Check className="h-2.5 w-2.5 text-green-600" strokeWidth={3} />
-                          </div>
                           <span>{item.label}</span>
                           <button
                             type="button"
@@ -626,25 +641,33 @@ export function RequestForm({
                         }}
                       />
                     </div>
+                    <p className="text-[13px] text-gray-400 font-medium pl-1">
+                      (optional, separate tags by comma or enter)
+                    </p>
                   </div>
+                </div>
+              </div>
+            </section>
+          )}
 
+          {/* SECTION 5: Dealbreakers */}
+          {currentStep === 5 && (
+            <section className="space-y-10 animate-in fade-in slide-in-from-right-4 duration-500">
+              <div className="space-y-6 mb-2">
+                <h2 className="text-2xl font-bold tracking-tight text-[#222234]" style={{ fontFamily: 'var(--font-expanded)' }}>
+                  Any dealbreakers?
+                </h2>
+              </div>
+              <div className="grid grid-cols-1 gap-10 items-start">
+                <div className="space-y-4">
                   {/* Dealbreakers Section - Tag Style */}
                   <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <Label className="text-base font-semibold text-gray-500">
-                        Dealbreakers <span className="text-xs font-normal text-gray-400 ml-1">(optional)</span>
-                      </Label>
-                    </div>
-
                     <div className="flex flex-wrap gap-2 p-3.5 rounded-xl border border-[#e5e7eb] bg-white focus-within:border-[#222234] focus-within:ring-1 focus-within:ring-[#222234]/5 transition-all min-h-[56px] items-center">
                       {dealbreakers.map((item, index) => (
                         <div
                           key={`deal-${index}`}
                           className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-orange-50 text-[#FF5F00] text-sm font-semibold group animate-in fade-in zoom-in duration-200"
                         >
-                          <div className="flex items-center justify-center h-4 w-4 rounded-full bg-orange-100/50">
-                            <X className="h-2.5 w-2.5 text-[#FF5F00]" strokeWidth={3} />
-                          </div>
                           <span>{item.label}</span>
                           <button
                             type="button"
@@ -680,272 +703,416 @@ export function RequestForm({
                         }}
                       />
                     </div>
+                    <p className="text-[13px] text-gray-400 font-medium pl-1">
+                      (optional, separate tags by comma or enter)
+                    </p>
                   </div>
-                </div>
-
-                {/* Right Column: Media, Links & Advanced Matching */}
-                <div className="space-y-6">
-                  {/* Media & Links Accordion */}
-                  <Accordion type="single" collapsible className="w-full">
-                    <AccordionItem value="media-links" className="border-none">
-                      <AccordionTrigger className="px-4 py-4 hover:no-underline bg-gray-50/50 rounded-xl transition-all border border-[#e5e7eb]/40">
-                        <div className="flex items-center gap-2">
-                          <Upload className="h-4 w-4 text-[#222234]" />
-                          <Label className="text-base font-bold text-[#222234] cursor-pointer">Media & Links</Label>
-                        </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="px-6 pb-6 space-y-6 pt-8 bg-gray-50/50 rounded-b-xl border-x border-b border-[#e5e7eb]/40 -mt-2">
-                        {/* Reference Links */}
-                        <div className="space-y-4 px-1">
-                          <div className="flex gap-2">
-                            <Input
-                              placeholder="Paste a reference URL"
-                              value={linkInput}
-                              onChange={(e) => {
-                                setLinkInput(e.target.value);
-                                setErrors((prev) => ({ ...prev, linkInput: "" }));
-                              }}
-                              onKeyDown={handleLinkInputKeyDown}
-                              onBlur={addLink}
-                              className={cn(
-                                "h-12 bg-white border-[#e5e7eb] rounded-xl focus-visible:ring-[#222234] placeholder:text-gray-400",
-                                errors.linkInput && "border-red-500 focus-visible:ring-red-500"
-                              )}
-                            />
-                            <Button
-                              type="button"
-                              variant="outline"
-                              onClick={addLink}
-                              className="shrink-0 h-12 w-12 rounded-xl border flex items-center justify-center p-0"
-                            >
-                              <Plus className="h-5 w-5" strokeWidth={2.5} />
-                            </Button>
-                          </div>
-                          {referenceLinks.length > 0 && (
-                            <div className="flex flex-wrap gap-2">
-                              {referenceLinks.map((link, index) => (
-                                <div
-                                  key={index}
-                                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[#e5e7eb] bg-white text-xs transition-all"
-                                >
-                                  <span className="text-[#222234] truncate max-w-[150px] font-semibold">{link}</span>
-                                  <button
-                                    type="button"
-                                    onClick={() => removeLink(index)}
-                                    className="text-gray-400 hover:text-red-500"
-                                  >
-                                    <X className="h-3.5 w-3.5" />
-                                  </button>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Image Grid Style Upload */}
-                        <div className="space-y-4 px-1">
-                          <div className="grid grid-cols-5 gap-3">
-                            {uploadedImages.map((url, index) => (
-                              <div
-                                key={index}
-                                className="relative aspect-square rounded-xl overflow-hidden border border-gray-100 group shadow-sm bg-white"
-                              >
-                                <img src={url} alt={`Upload ${index}`} className="w-full h-full object-cover" />
-                                <button
-                                  type="button"
-                                  onClick={() => setUploadedImages(uploadedImages.filter((_, i) => i !== index))}
-                                  className="absolute top-1.5 right-1.5 h-6 w-6 rounded-full bg-black/50 text-white flex items-center justify-center backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100"
-                                >
-                                  <X className="h-3.5 w-3.5" />
-                                </button>
-                              </div>
-                            ))}
-                            {uploadedImages.length < 5 && (
-                              <label className="relative aspect-square rounded-xl border-2 border-dashed border-gray-200 hover:border-[#222234]/30 hover:bg-gray-50 flex flex-col items-center justify-center cursor-pointer transition-all group overflow-hidden">
-                                <input
-                                  type="file"
-                                  accept="image/*"
-                                  multiple
-                                  onChange={(e) => handleImageUpload(e.target.files)}
-                                  disabled={isUploading}
-                                  className="hidden"
-                                />
-                                <div className="flex flex-col items-center gap-1">
-                                  <div className="h-8 w-8 rounded-full bg-white shadow-sm border border-gray-100 flex items-center justify-center group-hover:scale-110 transition-transform">
-                                    <Plus className="h-4 w-4 text-[#222234]" />
-                                  </div>
-                                  <span className="text-[10px] font-bold text-gray-400 uppercase">ADD</span>
-                                </div>
-                                {isUploading && (
-                                  <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
-                                    <div className="w-4 h-4 border-2 border-[#222234] border-t-transparent rounded-full animate-spin" />
-                                  </div>
-                                )}
-                              </label>
-                            )}
-                          </div>
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
-                  </Accordion>
-
-                  {/* Advanced Matching Accordion */}
-                  <Accordion type="single" collapsible defaultValue="advanced-matching" className="w-full">
-                    <AccordionItem value="advanced-matching" className="border-none">
-                      <AccordionTrigger className="px-4 py-4 hover:no-underline bg-gray-50/50 rounded-xl transition-all border border-[#e5e7eb]/40">
-                        <div className="flex items-center gap-2">
-                          <ShieldCheck className="h-4 w-4 text-[#222234]" />
-                          <Label className="text-base font-bold text-[#222234] cursor-pointer">Advanced Matching</Label>
-                        </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="px-6 pb-8 space-y-8 pt-8 bg-gray-50/50 rounded-b-xl border-x border-b border-[#e5e7eb]/40 -mt-2">
-                        <div className="space-y-8">
-                          {/* Lock price */}
-                          <div className="flex items-center justify-between">
-                            <div className="space-y-1 flex-1 pr-4">
-                              <Label className="text-sm font-semibold text-gray-700">Lock price</Label>
-                              <p className="text-[11px] text-gray-400 font-medium leading-relaxed">
-                                Proposals above your budget won’t be accepted.
-                              </p>
-                            </div>
-                            <Switch
-                              checked={priceLock === "locked"}
-                              onCheckedChange={(checked) => {
-                                form.setValue("priceLock", checked ? "locked" : "open");
-                              }}
-                            />
-                          </div>
-
-                          {/* Exact Only vs Exact + Similar */}
-                          <div className="flex items-center justify-between pt-6 border-t border-gray-100/60">
-                            <div className="space-y-1 flex-1 pr-4">
-                              <Label className="text-sm font-semibold text-gray-700">Exact match only</Label>
-                              <p className="text-[11px] text-gray-400 font-medium leading-relaxed">
-                                Exclude similar models or variations.
-                              </p>
-                            </div>
-                            <Switch
-                              checked={form.watch("exactItem")}
-                              onCheckedChange={(checked) => {
-                                form.setValue("exactItem", checked);
-                              }}
-                            />
-                          </div>
-
-                          {/* No Alternatives Allowed Switch */}
-                          <div className="flex items-center justify-between pt-6 border-t border-gray-100/60">
-                            <div className="space-y-1 flex-1 pr-4">
-                              <Label htmlFor="exactSpecification" className="text-sm font-semibold text-gray-700">Strict requirements</Label>
-                              <p className="text-[11px] text-gray-400 font-medium leading-relaxed">
-                                Match all preferences and condition exactly.
-                              </p>
-                            </div>
-                            <Switch
-                              id="exactSpecification"
-                              checked={form.watch("exactSpecification")}
-                              onCheckedChange={(checked) => {
-                                form.setValue("exactSpecification", checked);
-                              }}
-                            />
-                          </div>
-
-                          {/* Urgency */}
-                          <div className="space-y-4 pt-6 border-t border-gray-100/60">
-                            <div className="flex items-center gap-1.5 mb-2">
-                              <Label className="text-sm font-semibold text-gray-700">Urgency</Label>
-                              <Crown className="h-4 w-4 text-amber-500 fill-amber-500 opacity-20" />
-                            </div>
-                            <div className="flex flex-row gap-2 w-full">
-                              {["ASAP", "This week", "Standard"].map((option) => {
-                                const isSelected = (form.watch("urgency") || "Standard") === option;
-                                return (
-                                  <Button
-                                    key={option}
-                                    type="button"
-                                    variant="outline"
-                                    className={cn(
-                                      "flex-1 px-2 rounded-xl border h-11 transition-all text-xs font-bold",
-                                      isSelected
-                                        ? "bg-white text-black !border-[#222234] border shadow-sm"
-                                        : "bg-white text-gray-400 border-gray-100 hover:border-gray-200"
-                                    )}
-                                    onClick={() => form.setValue("urgency", option)}
-                                  >
-                                    {option}
-                                  </Button>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
-                  </Accordion>
                 </div>
               </div>
             </section>
           )}
 
-          {/* SECTION 4: Authenticate */}
-          {!user && currentStep === 4 && (
-            <div className="max-w-md mx-auto py-8">
-              <div className="text-center mb-8">
-                <h2 className="text-2xl font-bold text-gray-900 mb-2" style={{ fontFamily: 'var(--font-expanded)' }}>Almost there!</h2>
-                <p className="text-gray-500">Sign in or create an account to publish your request and start receiving offers.</p>
+          {/* SECTION 6: Additional Details */}
+          {currentStep === 6 && (
+            <section className="space-y-10 animate-in fade-in slide-in-from-right-4 duration-500">
+              <div className="space-y-6 mb-2">
+                <h2 className="text-2xl font-bold tracking-tight text-[#222234]" style={{ fontFamily: 'var(--font-expanded)' }}>
+                  Any additional details?
+                </h2>
               </div>
-              <AuthTabs
-                onSuccess={() => {
-                  // Success is handled by useAuth re-render and onSubmit auto-trigger
-                }}
-              />
+              <div className="space-y-6">
+                {/* Media & Links Accordion */}
+                <Accordion type="single" collapsible defaultValue="media-links" className="w-full">
+                  <AccordionItem value="media-links" className="border-none">
+                    <AccordionTrigger className="px-4 py-4 hover:no-underline bg-gray-50/50 rounded-xl transition-all border border-[#e5e7eb]/40">
+                      <div className="flex items-center gap-2">
+                        <Upload className="h-4 w-4 text-[#222234]" />
+                        <Label className="text-base font-bold text-[#222234] cursor-pointer">Media & Links</Label>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="px-6 pb-6 space-y-6 pt-8 bg-gray-50/50 rounded-b-xl border-x border-b border-[#e5e7eb]/40 -mt-2">
+                      {/* Reference Links */}
+                      <div className="space-y-4 px-1">
+                        <div className="flex gap-2">
+                          <Input
+                            placeholder="Paste a reference URL"
+                            value={linkInput}
+                            onChange={(e) => {
+                              setLinkInput(e.target.value);
+                              setErrors((prev) => ({ ...prev, linkInput: "" }));
+                            }}
+                            onKeyDown={handleLinkInputKeyDown}
+                            onBlur={addLink}
+                            className={cn(
+                              "h-12 bg-white border-[#e5e7eb] rounded-xl focus-visible:ring-[#222234] placeholder:text-gray-400",
+                              errors.linkInput && "border-red-500 focus-visible:ring-red-500"
+                            )}
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={addLink}
+                            className="shrink-0 h-12 w-12 rounded-xl border flex items-center justify-center p-0"
+                          >
+                            <Plus className="h-5 w-5" strokeWidth={2.5} />
+                          </Button>
+                        </div>
+                        {referenceLinks.length > 0 && (
+                          <div className="flex flex-wrap gap-2">
+                            {referenceLinks.map((link, index) => (
+                              <div
+                                key={index}
+                                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[#e5e7eb] bg-white text-xs transition-all"
+                              >
+                                <span className="text-[#222234] truncate max-w-[150px] font-semibold">{link}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => removeLink(index)}
+                                  className="text-gray-400 hover:text-red-500"
+                                >
+                                  <X className="h-3.5 w-3.5" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Image Grid Style Upload */}
+                      <div className="space-y-4 px-1">
+                        <div className="grid grid-cols-5 gap-3">
+                          {uploadedImages.map((url, index) => (
+                            <div
+                              key={index}
+                              className="relative aspect-square rounded-xl overflow-hidden border border-gray-100 group shadow-sm bg-white"
+                            >
+                              <img src={url} alt={`Upload ${index}`} className="w-full h-full object-cover" />
+                              <button
+                                type="button"
+                                onClick={() => setUploadedImages(uploadedImages.filter((_, i) => i !== index))}
+                                className="absolute top-1.5 right-1.5 h-6 w-6 rounded-full bg-black/50 text-white flex items-center justify-center backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100"
+                              >
+                                <X className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                          ))}
+                          {uploadedImages.length < 5 && (
+                            <label className="relative aspect-square rounded-xl border-2 border-dashed border-gray-200 hover:border-[#222234]/30 hover:bg-gray-50 flex flex-col items-center justify-center cursor-pointer transition-all group overflow-hidden">
+                              <input
+                                type="file"
+                                accept="image/*"
+                                multiple
+                                onChange={(e) => handleImageUpload(e.target.files)}
+                                disabled={isUploading}
+                                className="hidden"
+                              />
+                              <div className="flex flex-col items-center gap-1">
+                                <div className="h-8 w-8 rounded-full bg-white shadow-sm border border-gray-100 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                  <Plus className="h-4 w-4 text-[#222234]" />
+                                </div>
+                                <span className="text-[10px] font-bold text-gray-400 uppercase">ADD</span>
+                              </div>
+                              {isUploading && (
+                                <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
+                                  <div className="w-4 h-4 border-2 border-[#222234] border-t-transparent rounded-full animate-spin" />
+                                </div>
+                              )}
+                            </label>
+                          )}
+                        </div>
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+
+                {/* Advanced Matching Accordion */}
+                <Accordion type="single" collapsible defaultValue="advanced-matching" className="w-full">
+                  <AccordionItem value="advanced-matching" className="border-none">
+                    <AccordionTrigger className="px-4 py-4 hover:no-underline bg-gray-50/50 rounded-xl transition-all border border-[#e5e7eb]/40">
+                      <div className="flex items-center gap-2">
+                        <ShieldCheck className="h-4 w-4 text-[#222234]" />
+                        <Label className="text-base font-bold text-[#222234] cursor-pointer">Advanced Matching</Label>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="px-6 pb-8 space-y-8 pt-8 bg-gray-50/50 rounded-b-xl border-x border-b border-[#e5e7eb]/40 -mt-2">
+                      <div className="space-y-8">
+                        {/* Lock price */}
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-1 flex-1 pr-4">
+                            <Label className="text-sm font-semibold text-gray-700">Lock price</Label>
+                            <p className="text-[11px] text-gray-400 font-medium leading-relaxed">
+                              Proposals above your budget won’t be accepted.
+                            </p>
+                          </div>
+                          <Switch
+                            checked={priceLock === "locked"}
+                            onCheckedChange={(checked) => {
+                              form.setValue("priceLock", checked ? "locked" : "open");
+                            }}
+                          />
+                        </div>
+
+                        {/* Exact Only vs Exact + Similar */}
+                        <div className="flex items-center justify-between pt-6 border-t border-gray-100/60">
+                          <div className="space-y-1 flex-1 pr-4">
+                            <Label className="text-sm font-semibold text-gray-700">Exact match only</Label>
+                            <p className="text-[11px] text-gray-400 font-medium leading-relaxed">
+                              Exclude similar models or variations.
+                            </p>
+                          </div>
+                          <Switch
+                            checked={form.watch("exactItem")}
+                            onCheckedChange={(checked) => {
+                              form.setValue("exactItem", checked);
+                            }}
+                          />
+                        </div>
+
+                        {/* No Alternatives Allowed Switch */}
+                        <div className="flex items-center justify-between pt-6 border-t border-gray-100/60">
+                          <div className="space-y-1 flex-1 pr-4">
+                            <Label htmlFor="exactSpecification" className="text-sm font-semibold text-gray-700">Strict requirements</Label>
+                            <p className="text-[11px] text-gray-400 font-medium leading-relaxed">
+                              Match all preferences and condition exactly.
+                            </p>
+                          </div>
+                          <Switch
+                            id="exactSpecification"
+                            checked={form.watch("exactSpecification")}
+                            onCheckedChange={(checked) => {
+                              form.setValue("exactSpecification", checked);
+                            }}
+                          />
+                        </div>
+
+                        {/* Urgency */}
+                        <div className="space-y-4 pt-6 border-t border-gray-100/60">
+                          <div className="flex items-center gap-1.5 mb-2">
+                            <Label className="text-sm font-semibold text-gray-700">Urgency</Label>
+                            <Crown className="h-4 w-4 text-amber-500 fill-amber-500 opacity-20" />
+                          </div>
+                          <div className="flex flex-row gap-2 w-full">
+                            {["ASAP", "This week", "Standard"].map((option) => {
+                              const isSelected = (form.watch("urgency") || "Standard") === option;
+                              return (
+                                <Button
+                                  key={option}
+                                  type="button"
+                                  variant="outline"
+                                  className={cn(
+                                    "flex-1 px-2 rounded-xl border h-11 transition-all text-xs font-bold",
+                                    isSelected
+                                      ? "bg-white text-black !border-[#222234] border shadow-sm"
+                                      : "bg-white text-gray-400 border-gray-100 hover:border-gray-200"
+                                  )}
+                                  onClick={() => form.setValue("urgency", option)}
+                                >
+                                  {option}
+                                </Button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+              </div>
+            </section>
+          )}
+
+          {/* SECTION 7: Review your request */}
+          {currentStep === 7 && (
+            <div className="py-6 w-full animate-in fade-in slide-in-from-right-4 duration-500">
+              {showEditSummary ? (
+                <div className="space-y-8">
+                  <div className="text-left mb-8">
+                    <h2 className="text-2xl font-bold text-gray-900 mb-2" style={{ fontFamily: 'var(--font-expanded)' }}>Edit your request</h2>
+                    <p className="text-sm text-gray-500">Review and modify any section of your request before publishing.</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4">
+                    {[
+                      { label: "Item & Info", value: form.watch("title"), step: 1 },
+                      { label: "Budget", value: form.watch("budgetMax") ? `$${form.watch("budgetMax")}` : "Not set", step: 2 },
+                      { label: "Condition", value: form.watch("condition") || "Not set", step: 3 },
+                      { label: "Preferences", value: preferences.length > 0 ? `${preferences.length} tags` : "None", step: 4 },
+                      { label: "Dealbreakers", value: dealbreakers.length > 0 ? `${dealbreakers.length} tags` : "None", step: 5 },
+                      { label: "Links & Media", value: `${referenceLinks.length} links, ${uploadedImages.length} images`, step: 6 },
+                    ].map((item, idx) => (
+                      <div key={idx} className="flex items-center justify-between p-4 rounded-xl border border-gray-100 bg-gray-50/50 hover:bg-gray-50 transition-colors">
+                        <div>
+                          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">{item.label}</p>
+                          <p className="text-sm font-medium text-gray-900 line-clamp-1">{item.value}</p>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-[#7755FF] hover:text-[#6644EE] hover:bg-[#7755FF]/5 font-semibold"
+                          onClick={() => {
+                            setCurrentStep(item.step);
+                            setShowEditSummary(false);
+                          }}
+                        >
+                          Change
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="flex justify-center pt-4">
+                    <Button
+                      variant="ghost"
+                      className="text-gray-500 hover:text-gray-900 font-medium"
+                      onClick={() => setShowEditSummary(false)}
+                    >
+                      Back to preview
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-8 flex flex-col items-center">
+                  <div className="text-center mb-4 w-full">
+                    <h2 className="text-2xl font-bold text-gray-900 mb-1" style={{ fontFamily: 'var(--font-expanded)' }}>Review your request</h2>
+                    <p className="text-sm text-gray-500">This is how sellers will see your request on the feed.</p>
+                  </div>
+
+                  <div className="w-full max-w-[500px] shadow-[0_20px_50px_-12px_rgba(0,0,0,0.1)] rounded-2xl overflow-hidden border border-gray-100">
+                    <RequestCard
+                      request={previewRequest}
+                      variant="feed"
+                      images={uploadedImages}
+                      isPreview={true}
+                      isFirst={true}
+                      isLast={true}
+                    />
+                  </div>
+
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => setShowEditSummary(true)}
+                    className="h-10 px-6 rounded-full font-semibold text-[#7755FF] hover:bg-[#7755FF]/5 border border-[#7755FF]/20"
+                  >
+                    Edit request
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {currentStep === 8 && !user && (
+            <div className="pt-0 pb-2 w-full animate-in fade-in slide-in-from-right-4 duration-500">
+              <div className="flex flex-row gap-12 items-stretch w-full">
+                <div className="w-[400px] shrink-0 space-y-6">
+                  <div className="text-left mb-6">
+                    <h2 className="text-2xl font-bold text-gray-900 mb-1" style={{ fontFamily: 'var(--font-expanded)' }}>Almost there!</h2>
+                    <p className="text-sm text-gray-500 text-pretty mt-4">
+                      <span className="text-green-600 font-bold">Your request is ready.</span> Sign in or create an account to publish your request and start receiving offers.
+                    </p>
+                  </div>
+                  <AuthTabs
+                    onSuccess={() => {
+                      // Success is handled by useAuth re-render and onSubmit auto-trigger
+                    }}
+                  />
+                </div>
+
+                {/* Right column: Perks Section (Wider) */}
+                <div className="flex-1 min-w-0">
+                  <div className="p-8 rounded-[2rem] bg-gray-50 h-full flex flex-col justify-center">
+                    <div className="mb-8 flex items-center gap-3">
+                      <h3 className="text-xl font-bold text-[#222234]" style={{ fontFamily: 'var(--font-expanded)' }}>Join the community</h3>
+                    </div>
+
+                    <div className="space-y-6">
+                      {[
+                        { icon: <ShieldCheck className="h-5 w-5 text-green-500" />, title: "Verified Sellers", desc: "Buy with confidence from vetted professionals." },
+                        { icon: <Sparkles className="h-5 w-5 text-[#7755FF]" />, title: "Private Matches", desc: "Get exclusive offers for your specific request." },
+                        { icon: <LockKeyhole className="h-5 w-5 text-orange-500" />, title: "Secure Deals", desc: "Your data and payments are always protected." },
+                        { icon: <Crown className="h-5 w-5 text-yellow-500" />, title: "Premium Access", desc: "First-look at rare items before they hit the feed." }
+                      ].map((perk, idx) => (
+                        <div key={idx} className="flex gap-4">
+                          <div className="shrink-0 mt-0.5">{perk.icon}</div>
+                          <div>
+                            <p className="font-bold text-[#222234] text-sm mb-0.5" style={{ fontFamily: 'var(--font-expanded)' }}>{perk.title}</p>
+                            <p className="text-xs text-gray-500 leading-relaxed">{perk.desc}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="mt-auto pt-8 border-t border-gray-200/50 flex items-center gap-4">
+                      <div className="flex -space-x-3 items-center">
+                        {[1, 2, 3, 4].map((i) => (
+                          <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-gray-200 overflow-hidden shadow-sm transition-transform hover:scale-110 hover:z-10 bg-cover bg-center" 
+                               style={{ backgroundImage: `url(https://i.pravatar.cc/100?u=user${i + 20})` }} />
+                        ))}
+                        <div className="w-8 h-8 rounded-full border-2 border-white bg-[#7755FF] flex items-center justify-center text-[10px] font-bold text-white shadow-sm">+</div>
+                      </div>
+                      <p className="text-xs text-gray-400 font-medium tracking-tight">Joined by 50,000+ members</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 
 
           {/* Navigation Buttons - Fixed Bottom Layout */}
           <div className={cn(
-            "flex items-center justify-end mt-12 bg-white",
+            "flex items-center justify-between bg-white",
+            currentStep === 8 ? "hidden" : (currentStep === 8 ? "mt-4" : "mt-12"),
             isModal && "sticky bottom-0 -mx-8 px-8 pt-4 pb-2 border-none z-10"
           )}>
+            <div>
+              {isModal && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={onCancel}
+                  className="h-10 px-6 rounded-full font-bold text-[#222234] border border-gray-200 hover:bg-gray-50 transition-all text-sm"
+                >
+                  Cancel
+                </Button>
+              )}
+            </div>
 
             <div className="flex items-center gap-4">
               {currentStep > 1 && (
                 <Button
                   type="button"
-                  variant="outline"
+                  variant="ghost"
                   onClick={goBack}
-                  className="h-12 w-12 rounded-full border-gray-200 p-0 flex items-center justify-center hover:bg-gray-50 bg-white"
+                  className="h-10 px-2 rounded-full font-bold text-[#222234] hover:bg-transparent transition-all flex items-center gap-2 group"
                 >
-                  <ChevronLeft className="h-5 w-5 text-gray-600" />
+                  <ChevronLeft className="h-5 w-5 transition-transform group-hover:-translate-x-1" />
+                  <span>Back</span>
                 </Button>
               )}
 
-              {currentStep < (user ? 4 : 5) ? (
+              {currentStep < (user ? 7 : 8) && (
                 <Button
                   type="button"
                   onClick={proceedToNextStep}
-                  disabled={currentStep === 1 && (!titleValue?.trim() || !categoryValue)}
+                  disabled={(currentStep === 1 && (!titleValue?.trim() || !categoryValue)) || (currentStep === 2 && !form.watch("budgetMax"))}
                   className={cn(
                     "h-12 px-10 rounded-full font-semibold text-base min-w-[140px] shadow-lg shadow-gray-200/50 transition-all",
-                    currentStep === 1 && (!titleValue?.trim() || !categoryValue)
+                    ((currentStep === 1 && (!titleValue?.trim() || !categoryValue)) || (currentStep === 2 && !form.watch("budgetMax")))
                       ? "bg-gray-100 text-gray-400 cursor-not-allowed shadow-none"
                       : "bg-[#222234] hover:bg-[#2a2a3f] text-white",
-                    currentStep === 3 && "hidden" // Hide next button on condition step
+                    currentStep === 3 && "hidden", // Hide next button on condition step
+                    showEditSummary && "hidden" // Hide next button on edit summary screen
                   )}
                 >
                   {currentStep === 1 ? "Next: Budget" :
                     currentStep === 2 ? "Next: Condition" :
-                      currentStep === 3 ? "Next: Details" :
-                        "Next"}
-                </Button>
-              ) : (
-                <Button
-                  type="submit"
-                  variant="accent"
-                  className="h-12 px-10 rounded-full font-semibold text-base min-w-[140px] shadow-lg shadow-gray-200/50 bg-[#222234] hover:bg-[#2a2a3f] text-white whitespace-nowrap"
-                  disabled={isPending}
-                >
-                  {getCTALabel()}
+                      currentStep === 3 ? "Next: Preferences" :
+                        currentStep === 4 ? "Next: Dealbreakers" :
+                          currentStep === 5 ? "Next: Details" :
+                            currentStep === 6 ? "Next: Review" :
+                              currentStep === 7 ? (user ? "Submit Request" : "Finalise") :
+                                "Next"}
                 </Button>
               )}
             </div>

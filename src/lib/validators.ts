@@ -16,13 +16,13 @@ export const requestSchema = z.object({
   description: z.string().optional().default(""), // Description is auto-generated, no validation needed
   category: z.string().min(2, "Category is required").max(40),
   budgetMin: z.number().min(0).nullable().optional(),
-  budgetMax: z.number().min(1, "Budget is required"),
+  budgetMax: z.number().min(1, "Budget is required").nullable(),
   priceLock: z.enum(["open", "locked"]).default("open"),
   exactItem: z.boolean().default(false),
   exactSpecification: z.boolean().default(false),
   exactPrice: z.boolean().default(false),
   country: z.string().max(60).nullable().optional(),
-  condition: z.string().max(20).nullable().optional(),
+  condition: z.string().max(20).nullable().default(null),
   urgency: z.string().max(30).nullable().optional(),
   referenceLinks: z.string().optional(),
 });

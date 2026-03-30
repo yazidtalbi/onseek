@@ -260,6 +260,11 @@ function RequestCardComponent({
         </div>
       </section>
 
+      {/* Separator between header and preferences */}
+      {(preferences.length > 0 || dealbreakers.length > 0) && (
+        <div className="border-t border-gray-100/60 my-1 mx-[-5px]" />
+      )}
+
       {/* Main Content Section */}
       <section className="flex-1 flex flex-col justify-center">
         {/* Match Indicator - only show on feed variant if matched */}
