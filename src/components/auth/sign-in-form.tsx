@@ -14,7 +14,7 @@ import { Loader2 } from "lucide-react";
 
 type SignInValues = z.infer<typeof signInSchema>;
 
-export function SignInForm() {
+export function SignInForm({ onSuccess }: { onSuccess?: () => void }) {
   const [error, setError] = React.useState<string | null>(null);
   const [isPending, setIsPending] = React.useState(false);
   const router = useRouter();
@@ -44,15 +44,23 @@ export function SignInForm() {
 
       // If no error, redirect happened in server action
       // But if we're here, redirect manually as fallback
-      router.push(redirectTo);
-      router.refresh();
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        router.push(redirectTo);
+        router.refresh();
+      }
     } catch (err) {
       // redirect() throws NEXT_REDIRECT - catch it and redirect manually
       if (err && typeof err === "object" && "digest" in err) {
         const digest = String((err as { digest?: unknown }).digest);
         if (digest.includes("NEXT_REDIRECT")) {
-          router.push(redirectTo);
-          router.refresh();
+          if (onSuccess) {
+            onSuccess();
+          } else {
+            router.push(redirectTo);
+            router.refresh();
+          }
           return;
         }
       }

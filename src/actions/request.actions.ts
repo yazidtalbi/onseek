@@ -130,7 +130,7 @@ export async function createRequestAction(formData: FormData) {
     category: parsed.data.category,
     budget_min: parsed.data.budgetMin,
     budget_max: parsed.data.budgetMax,
-    country: userCountry, // Always take from profile
+    country: parsed.data.country || userCountry,
     condition: parsed.data.condition,
     urgency: parsed.data.urgency,
     status: "open" as const,

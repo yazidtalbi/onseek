@@ -13,7 +13,7 @@ import { Loader2 } from "lucide-react";
 
 type SignUpValues = z.infer<typeof signUpSchema>;
 
-export function SignUpForm() {
+export function SignUpForm({ onSuccess }: { onSuccess?: () => void }) {
   const [error, setError] = React.useState<string | null>(null);
   const [isPending, startTransition] = React.useTransition();
   const [usernameManuallyEdited, setUsernameManuallyEdited] = React.useState(false);
@@ -69,7 +69,11 @@ export function SignUpForm() {
     formData.set("username", values.username);
     startTransition(async () => {
       const res = await signUpAction(formData);
-      setError(res?.error || null);
+      if (res?.error) {
+        setError(res.error);
+      } else if (onSuccess) {
+        onSuccess();
+      }
     });
   };
 

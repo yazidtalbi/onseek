@@ -4,6 +4,8 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
+import { useAuth } from "@/components/layout/auth-provider";
+import { AuthTabs } from "@/components/auth/auth-tabs";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { z } from "zod";
 import { requestSchema } from "@/lib/validators";
@@ -35,7 +37,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Upload, X, GripVertical, Info, Plus, Check, Sparkles, Crown, LockKeyhole } from "lucide-react";
+import { Upload, X, GripVertical, Info, Plus, Check, Sparkles, Crown, LockKeyhole, MapPin, ChevronLeft } from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { MAIN_CATEGORIES, SUBCATEGORIES, type MainCategory } from "@/lib/categories";
@@ -44,7 +46,16 @@ import type { RequestItem } from "@/lib/types";
 
 type RequestValues = z.infer<typeof requestSchema>;
 
-export function RequestForm({ onSuccess, userCountry }: { onSuccess?: () => void, userCountry?: string | null }) {
+export function RequestForm({ 
+  onSuccess, 
+  userCountry,
+  isModal = false 
+}: { 
+  onSuccess?: () => void, 
+  userCountry?: string | null,
+  isModal?: boolean
+}) {
+  const { user } = useAuth();
   const router = useRouter();
   const queryClient = useQueryClient();
   const [error, setError] = React.useState<string | null>(null);
@@ -56,18 +67,18 @@ export function RequestForm({ onSuccess, userCountry }: { onSuccess?: () => void
   const [referenceLinks, setReferenceLinks] = React.useState<string[]>([]);
   const [linkInput, setLinkInput] = React.useState("");
   const [draggedIndex, setDraggedIndex] = React.useState<number | null>(null);
-  const [preferencesTab, setPreferencesTab] = React.useState<"preferences" | "dealbreakers">("preferences");
   const [preferences, setPreferences] = React.useState<Array<{ label: string; note?: string }>>([]);
   const [dealbreakers, setDealbreakers] = React.useState<Array<{ label: string; note?: string }>>([]);
-  const [preferenceInput, setPreferenceInput] = React.useState("");
-  const [dealbreakerInput, setDealbreakerInput] = React.useState("");
-  const [preferenceNote, setPreferenceNote] = React.useState("");
+  const [requirementInput, setRequirementInput] = React.useState("");
+  const [requirementType, setRequirementType] = React.useState<"preference" | "dealbreaker">("preference");
+  const [draggedType, setDraggedType] = React.useState<"preference" | "dealbreaker" | null>(null);
   const [currentStep, setCurrentStep] = React.useState(1);
   const [isEnhancedOpen, setIsEnhancedOpen] = React.useState(false);
 
   const steps = [
     { id: 1, title: 'Item & Info' },
-    { id: 2, title: 'Constraints' }
+    { id: 2, title: 'Constraints' },
+    ...(!user ? [{ id: 3, title: 'Authenticate' }] : [])
   ];
 
   const stepTips = {
@@ -92,7 +103,8 @@ export function RequestForm({ onSuccess, userCountry }: { onSuccess?: () => void
     const fieldsToValidate = currentStep === 1 ? ["title", "category"] : ["budgetMax"];
     const isValid = await form.trigger(fieldsToValidate as any);
     if (isValid) {
-      setCurrentStep((prev) => Math.min(prev + 1, 2));
+      const maxStep = user ? 2 : 3;
+      setCurrentStep((prev) => Math.min(prev + 1, maxStep));
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
@@ -162,79 +174,6 @@ export function RequestForm({ onSuccess, userCountry }: { onSuccess?: () => void
 
   const removeLink = (index: number) => {
     setReferenceLinks(referenceLinks.filter((_, i) => i !== index));
-  };
-
-  // Handle preferences/dealbreakers
-  const handlePreferenceInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      addPreferenceOrDealbreaker();
-    }
-  };
-
-  const addPreferenceOrDealbreaker = () => {
-    if (preferencesTab === "preferences") {
-      const trimmed = preferenceInput.trim();
-      if (!trimmed) return;
-
-      if (preferences.length >= 10) {
-        setErrors((prev) => ({ ...prev, preferences: "Maximum 10 preferences allowed" }));
-        return;
-      }
-      if (!preferences.find((p) => p.label === trimmed)) {
-        setPreferences([...preferences, { label: trimmed, note: undefined }]);
-        setPreferenceInput("");
-        setErrors((prev) => ({ ...prev, preferences: "" }));
-      }
-    } else {
-      const trimmed = dealbreakerInput.trim();
-      if (!trimmed) return;
-
-      if (dealbreakers.length >= 10) {
-        setErrors((prev) => ({ ...prev, dealbreakers: "Maximum 10 dealbreakers allowed" }));
-        return;
-      }
-      if (!dealbreakers.find((d) => d.label === trimmed)) {
-        setDealbreakers([...dealbreakers, { label: trimmed, note: undefined }]);
-        setDealbreakerInput("");
-        setErrors((prev) => ({ ...prev, dealbreakers: "" }));
-      }
-    }
-  };
-
-  const removePreferenceOrDealbreaker = (index: number, type: "preferences" | "dealbreakers") => {
-    if (type === "preferences") {
-      setPreferences(preferences.filter((_, i) => i !== index));
-    } else {
-      setDealbreakers(dealbreakers.filter((_, i) => i !== index));
-    }
-  };
-
-  const [draggedPrefIndex, setDraggedPrefIndex] = React.useState<number | null>(null);
-  const [draggedDealIndex, setDraggedDealIndex] = React.useState<number | null>(null);
-
-  const handlePrefDragStart = (index: number) => setDraggedPrefIndex(index);
-  const handlePrefDragOver = (e: React.DragEvent, index: number) => {
-    e.preventDefault();
-    if (draggedPrefIndex === null || draggedPrefIndex === index) return;
-    const newPrefs = [...preferences];
-    const draggedItem = newPrefs[draggedPrefIndex];
-    newPrefs.splice(draggedPrefIndex, 1);
-    newPrefs.splice(index, 0, draggedItem);
-    setPreferences(newPrefs);
-    setDraggedPrefIndex(index);
-  };
-
-  const handleDealDragStart = (index: number) => setDraggedDealIndex(index);
-  const handleDealDragOver = (e: React.DragEvent, index: number) => {
-    e.preventDefault();
-    if (draggedDealIndex === null || draggedDealIndex === index) return;
-    const newDeals = [...dealbreakers];
-    const draggedItem = newDeals[draggedDealIndex];
-    newDeals.splice(draggedDealIndex, 1);
-    newDeals.splice(index, 0, draggedItem);
-    setDealbreakers(newDeals);
-    setDraggedDealIndex(index);
   };
 
   // Handle image upload
@@ -336,9 +275,17 @@ export function RequestForm({ onSuccess, userCountry }: { onSuccess?: () => void
     return "Publish";
   };
 
-  const onSubmit = (values: RequestValues) => {
-    console.log("=== onSubmit called ===");
-    console.log("Form values:", values);
+  const onSubmit = async (values: RequestValues) => {
+    if (currentStep === 1) {
+      proceedToNextStep();
+      return;
+    }
+
+    if (currentStep === 2 && !user) {
+      proceedToNextStep();
+      return;
+    }
+
     setErrors({});
     setError(null);
     setIsEnhancedOpen(false); // Close modal on submit
@@ -351,9 +298,6 @@ export function RequestForm({ onSuccess, userCountry }: { onSuccess?: () => void
       ? `Dealbreakers: ${dealbreakers.map(d => d.label).join(", ")}`
       : "";
     const description = [prefText, dealText].filter(Boolean).join(". ") || "Looking for the requested item.";
-    console.log("Auto-generated description:", description);
-
-    console.log("Proceeding to submit...");
 
     const formData = new FormData();
     formData.set("title", values.title);
@@ -388,37 +332,18 @@ export function RequestForm({ onSuccess, userCountry }: { onSuccess?: () => void
     startTransition(async () => {
       queryClient.invalidateQueries({ queryKey: ["requests"] });
 
-      // Log what we're sending
-      console.log("=== Form Submission Debug ===");
-      console.log("Form values:", values);
-      console.log("Auto-generated description:", description);
-      console.log("Description length:", description.length);
-      console.log("Preferences:", preferences);
-      console.log("Dealbreakers:", dealbreakers);
-      console.log("FormData entries:");
-      for (const [key, value] of formData.entries()) {
-        console.log(`  ${key}:`, value);
-      }
-
       try {
         const res = await createRequestAction(formData);
-        console.log("Server response:", res);
-        console.log("Response has error?", !!res?.error);
-        console.log("Response has fieldErrors?", !!res?.fieldErrors);
 
         if (res?.error) {
-          console.error("Request creation error:", res.error);
-          console.error("Field errors:", res.fieldErrors);
           setError(res.error);
           // If there are field-specific errors, set them
           if (res.fieldErrors) {
-            console.log("Setting field errors:", res.fieldErrors);
             setErrors(res.fieldErrors);
           } else {
             // Try to parse field errors from the error message
             const fieldErrorMatch = res.error.match(/(\w+):\s*(.+?)(?:\.|$)/g);
             if (fieldErrorMatch) {
-              console.log("Parsing field errors from error message:", fieldErrorMatch);
               const parsedErrors: Record<string, string> = {};
               fieldErrorMatch.forEach((match: string) => {
                 const parsed = match.match(/(\w+):\s*(.+?)(?:\.|$)/);
@@ -427,14 +352,12 @@ export function RequestForm({ onSuccess, userCountry }: { onSuccess?: () => void
                 }
               });
               if (Object.keys(parsedErrors).length > 0) {
-                console.log("Parsed errors:", parsedErrors);
                 setErrors(parsedErrors);
               }
             }
           }
           return;
         } else {
-          console.log("Request created successfully! Response:", res);
           if (onSuccess) {
             // Request was created successfully (redirect will happen, but call onSuccess to close modal)
             onSuccess();
@@ -443,7 +366,6 @@ export function RequestForm({ onSuccess, userCountry }: { onSuccess?: () => void
           router.refresh();
         }
       } catch (err) {
-        console.error("Unexpected error during request creation:", err);
         setError(err instanceof Error ? err.message : "An unexpected error occurred");
       }
     });
@@ -451,23 +373,6 @@ export function RequestForm({ onSuccess, userCountry }: { onSuccess?: () => void
 
   // Check if there are any validation errors
   const hasValidationErrors = Object.keys(errors).length > 0 || error !== null;
-
-  // Debug: Log current error state
-  React.useEffect(() => {
-    if (hasValidationErrors) {
-      console.log("=== Error State Debug ===");
-      console.log("error state:", error);
-      console.log("errors object:", errors);
-      console.log("hasValidationErrors:", hasValidationErrors);
-    }
-  }, [error, errors, hasValidationErrors]);
-
-  // Also log form errors from react-hook-form
-  React.useEffect(() => {
-    if (Object.keys(form.formState.errors).length > 0) {
-      console.log("React Hook Form errors:", form.formState.errors);
-    }
-  }, [form.formState.errors]);
 
   // Construct preview data
   const previewRequest: RequestItem = {
@@ -495,54 +400,23 @@ export function RequestForm({ onSuccess, userCountry }: { onSuccess?: () => void
     submissionCount: 0,
   };
 
-  // Log whenever country changes or arrives
-  React.useEffect(() => {
-    if (userCountry || form.watch("country")) {
-      console.log("=== Country Debug ===");
-      console.log("Prop userCountry:", userCountry);
-      console.log("Form country value:", form.getValues("country"));
-      console.log("Initial defaultCountry used:", userCountry || "");
-    }
-  }, [form.watch("country"), userCountry]);
-
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-0">
-      <div className="lg:col-span-2 lg:border-r border-[#e5e7eb] pr-12 pb-24">
-        {/* Step-by-Step Navigation - Hidden as requested */}
-        <div className="hidden mb-12">
-          <div className="flex items-center justify-between relative max-w-md mx-auto">
-            <div className="absolute left-0 top-1/2 -mt-px w-full h-0.5 bg-gray-200 -z-10" />
-            {steps.map((step, idx) => {
-              const isActive = step.id === currentStep;
-              const isCompleted = step.id < currentStep;
-              return (
-                <div key={step.id} className="relative flex flex-col items-center bg-background px-4">
-                  <div className={cn(
-                    "w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-colors border-2 z-10",
-                    isActive || isCompleted ? "bg-[#7755FF] text-white border-[#7755FF]" : "bg-white text-gray-400 border-gray-200"
-                  )}>
-                    {isCompleted ? <Check className="w-5 h-5" /> : step.id}
-                  </div>
-                  <span className={cn(
-                    "absolute top-12 text-xs font-semibold whitespace-nowrap hidden sm:block",
-                    isActive || isCompleted ? "text-foreground" : "text-gray-400"
-                  )}>
-                    {step.title}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+    <div className={cn(
+      "grid grid-cols-1 gap-0 items-start",
+      isModal ? "lg:grid-cols-1" : "lg:grid-cols-8"
+    )}>
+      <div className={cn(
+        "pb-24",
+        isModal ? "lg:col-span-1 pr-0" : "lg:col-span-5 lg:border-r border-[#e5e7eb] pr-12"
+      )}>
+        {/* Step-by-Step Navigation - Removed top stepper as per request */}
 
         <form
           onSubmit={form.handleSubmit(
             (data) => {
-              console.log("React Hook Form validation passed, calling onSubmit");
               onSubmit(data);
             },
             (errors) => {
-              console.log("React Hook Form validation failed:", errors);
               // Convert react-hook-form errors to our format
               const formErrors: Record<string, string> = {};
               Object.entries(errors).forEach(([key, value]) => {
@@ -558,30 +432,45 @@ export function RequestForm({ onSuccess, userCountry }: { onSuccess?: () => void
           className="space-y-12"
           noValidate
         >
-          {/* SECTION 1: What are you looking for? */}
-          {currentStep === 1 && (
-            <section className="space-y-6">
-  <div className="mb-8 flex items-center justify-between">
-                <div>
-                  <h1 className="text-3xl font-bold tracking-tight mb-2 text-foreground">
-                    Create a new request
-                  </h1>
-                  <p className="text-gray-500">Fast, simple, and exactly what you need.</p>
-                </div>
+          {/* Persistent Header */}
+          {!isModal && (
+            <div className="mb-12 flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold tracking-tight mb-2 text-foreground">
+                  Create a new request
+                </h1>
+                <p className="text-gray-500">Fast, simple, and exactly what you need.</p>
+              </div>
+              <div className="flex items-center gap-2">
                 <Button 
                   type="button" 
                   variant="outline" 
                   onClick={() => setIsEnhancedOpen(true)}
                   className="rounded-full px-8 h-12 font-medium border transition-all hover:bg-[#222234] hover:text-white hover:border-[#222234]"
                 >
-                  <Sparkles className="mr-2 h-4 w-4" />
-                  Enhance
+                  <Upload className="mr-2 h-4 w-4" />
+                  Media & Links
+                  {(uploadedImages.length + referenceLinks.length) > 0 && (
+                    <span className="ml-2 bg-gray-100 text-gray-600 rounded-full px-1.5 py-0.5 text-[10px] font-bold min-w-[20px] h-5 flex items-center justify-center">
+                      {uploadedImages.length + referenceLinks.length}
+                    </span>
+                  )}
                 </Button>
               </div>
+            </div>
+          )}
 
-              {/* What type of item? (Category) - Now First */}
-              <div className="space-y-2">
-                <Label>What type of item? (e.g. Watch, Car, Laptop)</Label>
+          {/* SECTION 1: What are you looking for? */}
+          {currentStep === 1 && (
+            <section className="space-y-6">
+
+              {/* What are you looking for? (Category) - Clean Style */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <Label className="text-base font-semibold">
+                    What exactly are you looking for? <span className="text-red-500">*</span>
+                  </Label>
+                </div>
                 <CategoryCombobox
                   value={form.watch("category") || ""}
                   onChange={(value) => {
@@ -596,10 +485,12 @@ export function RequestForm({ onSuccess, userCountry }: { onSuccess?: () => void
                 )}
               </div>
 
-              {/* Title - Now Second */}
-              <div className="space-y-2">
+              {/* Title - Clean Style */}
+              <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="title">The item</Label>
+                  <Label htmlFor="title" className="text-base font-semibold">
+                    Name of the item <span className="text-red-500">*</span>
+                  </Label>
                   <span className={cn(
                     "text-xs text-gray-600",
                     titleLength > titleMaxLength && "text-red-600"
@@ -609,10 +500,10 @@ export function RequestForm({ onSuccess, userCountry }: { onSuccess?: () => void
                 </div>
                 <Input
                   id="title"
-                  placeholder="Rolex Submariner 126610LN"
+                  placeholder="Brand, Model or specific SKU (e.g. Sony A7IV)"
                   {...form.register("title")}
                   className={cn(
-                    "placeholder:text-gray-400",
+                    "h-11 bg-white border-[#e5e7eb] rounded-lg focus-visible:ring-[#222234] placeholder:text-gray-400",
                     form.formState.errors.title && "border-red-500 focus-visible:ring-red-500"
                   )}
                 />
@@ -621,146 +512,203 @@ export function RequestForm({ onSuccess, userCountry }: { onSuccess?: () => void
                 )}
               </div>
 
-              {/* Preferences and Dealbreakers - Two Columns */}
-              <div className="grid gap-4 md:grid-cols-2">
-                {/* Preferences */}
-                <div className="space-y-3">
-                  <Label htmlFor="preferences">Preferences (Optional)</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="preferences"
-                      placeholder="e.g., Good Battery"
-                      className="flex-1 placeholder:text-gray-400"
-                      value={preferenceInput}
-                      onChange={(e) => {
-                        setPreferenceInput(e.target.value);
-                        setPreferencesTab("preferences");
-                        setErrors((prev) => ({ ...prev, preferences: "" }));
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && preferenceInput.trim()) {
-                          e.preventDefault();
-                          if (preferencesTab === "preferences") {
-                            addPreferenceOrDealbreaker();
-                          }
-                        }
-                      }}
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      className="text-gray-900 hover:text-gray-900 font-bold"
-                      onClick={() => {
-                        setPreferencesTab("preferences");
-                        addPreferenceOrDealbreaker();
-                      }}
-                      disabled={!preferenceInput.trim() || preferences.length >= 10}
-                    >
-                      Add
-                    </Button>
-                  </div>
-                  {preferences.length > 0 && (
-                    <div className="flex flex-col gap-2">
-                      {preferences.map((item, index) => (
-                        <div
-                          key={index}
-                          draggable
-                          onDragStart={() => handlePrefDragStart(index)}
-                          onDragOver={(e) => handlePrefDragOver(e, index)}
-                          onDragEnd={() => setDraggedPrefIndex(null)}
-                          className={cn(
-                            "group flex items-center gap-3 px-3 py-2 rounded-lg border border-[#e5e7eb] bg-[#F5F6F9] text-sm transition-all",
-                            draggedPrefIndex === index && "opacity-50 cursor-move"
-                          )}
-                        >
-                          <GripVertical className="h-4 w-4 text-gray-400 cursor-move opacity-50 group-hover:opacity-100" />
-                          <div className="flex-1 flex items-center gap-2">
-                            <span className="text-lime-500 font-bold">+</span>
-                            <span>{item.label}</span>
-                            {item.note && (
-                              <span className="text-xs text-gray-500">({item.note})</span>
-                            )}
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => removePreferenceOrDealbreaker(index, "preferences")}
-                            className="text-gray-400 hover:text-red-500 transition-colors"
-                          >
-                            <X className="h-4 w-4" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+              {/* Unified Requirements Section - Clean Style */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between mb-2">
+                  <Label className="text-base font-semibold">Requirements</Label>
                 </div>
-
-                {/* Dealbreakers */}
-                <div className="space-y-3">
-                  <Label htmlFor="dealbreakers">Dealbreakers (Optional)</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="dealbreakers"
-                      placeholder="e.g., No defects"
-                      className="flex-1 placeholder:text-gray-400"
-                      value={dealbreakerInput}
-                      onChange={(e) => {
-                        setDealbreakerInput(e.target.value);
-                        setPreferencesTab("dealbreakers");
-                        setErrors((prev) => ({ ...prev, dealbreakers: "" }));
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && dealbreakerInput.trim()) {
-                          e.preventDefault();
-                          if (preferencesTab === "dealbreakers") {
-                            addPreferenceOrDealbreaker();
+                
+                <div className="space-y-4">
+                  <div className="flex flex-col gap-3">
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="Type a requirement..."
+                        className="h-11 flex-1 bg-white border-[#e5e7eb] rounded-xl focus-visible:ring-[#222234] placeholder:text-gray-400"
+                        value={requirementInput}
+                        onChange={(e) => {
+                          setRequirementInput(e.target.value);
+                          setErrors((prev) => ({ ...prev, requirements: "" }));
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && requirementInput.trim()) {
+                            setPreferences([...preferences, { label: requirementInput.trim() }]);
+                            setRequirementInput("");
                           }
-                        }
-                      }}
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      className="text-gray-900 hover:text-gray-900 font-bold"
-                      onClick={() => {
-                        setPreferencesTab("dealbreakers");
-                        addPreferenceOrDealbreaker();
-                      }}
-                      disabled={!dealbreakerInput.trim() || dealbreakers.length >= 10}
-                    >
-                      Add
-                    </Button>
+                        }}
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        onClick={() => {
+                          if (!requirementInput.trim()) return;
+                          setPreferences([...preferences, { label: requirementInput.trim() }]);
+                          setRequirementInput("");
+                        }}
+                        variant="outline"
+                        className="flex-1 h-11 px-4 border-none bg-green-50 text-[#015a25] hover:bg-green-100/80 rounded-xl font-medium transition-all shadow-none"
+                        disabled={!requirementInput.trim() || preferences.length >= 10}
+                      >
+                        <Check className="mr-2 h-4 w-4 text-green-500" />
+                        Add as Preference
+                      </Button>
+                      <Button
+                        type="button"
+                        onClick={() => {
+                          if (!requirementInput.trim()) return;
+                          setDealbreakers([...dealbreakers, { label: requirementInput.trim() }]);
+                          setRequirementInput("");
+                        }}
+                        variant="outline"
+                        className="flex-1 h-11 px-4 border-none bg-amber-50 text-amber-700 hover:bg-amber-100/80 rounded-xl font-medium transition-all shadow-none"
+                        disabled={!requirementInput.trim() || dealbreakers.length >= 10}
+                      >
+                        <X className="mr-2 h-4 w-4 text-amber-500" />
+                        Add as Dealbreaker
+                      </Button>
+                    </div>
                   </div>
-                  {dealbreakers.length > 0 && (
-                    <div className="flex flex-col gap-2">
-                      {dealbreakers.map((item, index) => (
-                        <div
-                          key={index}
-                          draggable
-                          onDragStart={() => handleDealDragStart(index)}
-                          onDragOver={(e) => handleDealDragOver(e, index)}
-                          onDragEnd={() => setDraggedDealIndex(null)}
-                          className={cn(
-                            "group flex items-center gap-3 px-3 py-2 rounded-lg border border-[#e5e7eb] bg-[#F5F6F9] text-sm transition-all",
-                            draggedDealIndex === index && "opacity-50 cursor-move"
-                          )}
-                        >
-                          <GripVertical className="h-4 w-4 text-gray-400 cursor-move opacity-50 group-hover:opacity-100" />
-                          <div className="flex-1 flex items-center gap-2">
-                            <span className="text-[#FF5F00] font-bold">-</span>
-                            <span>{item.label}</span>
-                            {item.note && (
-                              <span className="text-xs text-gray-500">({item.note})</span>
-                            )}
+
+                  {/* Unified List with Subheaders */}
+                  {(preferences.length > 0 || dealbreakers.length > 0) && (
+                    <div className="space-y-6 pt-4 border-t border-[#e5e7eb]/50 mt-4">
+                      {/* Render Preferences */}
+                      {preferences.length > 0 && (
+                        <div className="space-y-3">
+                          <h4 className="text-[10px] font-bold tracking-wider text-gray-400 ml-1">Preferences</h4>
+                          <div className="space-y-2">
+                            {preferences.map((item, index) => (
+                              <div
+                                key={`pref-${index}`}
+                                draggable
+                                onDragStart={() => {
+                                  setDraggedIndex(index);
+                                  setDraggedType("preference");
+                                }}
+                                onDragOver={(e) => {
+                                  e.preventDefault();
+                                  if (draggedIndex === null || draggedType === null) return;
+                                  
+                                  if (draggedType === "preference") {
+                                    if (draggedIndex === index) return;
+                                    const newPrefs = [...preferences];
+                                    const draggedItem = newPrefs[draggedIndex];
+                                    newPrefs.splice(draggedIndex, 1);
+                                    newPrefs.splice(index, 0, draggedItem);
+                                    setPreferences(newPrefs);
+                                    setDraggedIndex(index);
+                                  } else {
+                                    // Move from dealbreakers to preferences
+                                    const dealbreakerItem = dealbreakers[draggedIndex];
+                                    if (!dealbreakerItem) return;
+                                    
+                                    const newDeals = dealbreakers.filter((_, i) => i !== draggedIndex);
+                                    const newPrefs = [...preferences];
+                                    newPrefs.splice(index, 0, dealbreakerItem);
+                                    
+                                    setDealbreakers(newDeals);
+                                    setPreferences(newPrefs);
+                                    setDraggedType("preference");
+                                    setDraggedIndex(index);
+                                  }
+                                }}
+                                onDragEnd={() => {
+                                  setDraggedIndex(null);
+                                  setDraggedType(null);
+                                }}
+                                className={cn(
+                                  "group flex items-center gap-3 px-3 py-2.5 rounded-xl border border-[#e5e7eb]/50 bg-white hover:border-[#222234]/20 transition-all",
+                                  draggedIndex === index && "opacity-50 cursor-move"
+                                )}
+                              >
+                                <GripVertical className="h-4 w-4 text-gray-300 cursor-move opacity-0 group-hover:opacity-100 transition-opacity" />
+                                <div className="flex-1 flex items-center gap-3">
+                                  <div className="flex items-center justify-center h-6 w-6 rounded-full bg-green-50">
+                                    <Check className="h-3.5 w-3.5 text-green-600" />
+                                  </div>
+                                  <span className="text-sm text-gray-700">{item.label}</span>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => setPreferences(preferences.filter((_, i) => i !== index))}
+                                  className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                                >
+                                  <X className="h-4 w-4" />
+                                </button>
+                              </div>
+                            ))}
                           </div>
-                          <button
-                            type="button"
-                            onClick={() => removePreferenceOrDealbreaker(index, "dealbreakers")}
-                            className="text-gray-400 hover:text-red-500 transition-colors"
-                          >
-                            <X className="h-4 w-4" />
-                          </button>
                         </div>
-                      ))}
+                      )}
+                      
+                      {/* Render Dealbreakers */}
+                      {dealbreakers.length > 0 && (
+                        <div className="space-y-3">
+                          <h4 className="text-[10px] font-bold tracking-wider text-gray-400 ml-1">Dealbreakers</h4>
+                          <div className="space-y-2">
+                            {dealbreakers.map((item, index) => (
+                              <div
+                                key={`deal-${index}`}
+                                draggable
+                                onDragStart={() => {
+                                  setDraggedIndex(index);
+                                  setDraggedType("dealbreaker");
+                                }}
+                                onDragOver={(e) => {
+                                  e.preventDefault();
+                                  if (draggedIndex === null || draggedType === null) return;
+                                  
+                                  if (draggedType === "dealbreaker") {
+                                    if (draggedIndex === index) return;
+                                    const newDeals = [...dealbreakers];
+                                    const draggedItem = newDeals[draggedIndex];
+                                    newDeals.splice(draggedIndex, 1);
+                                    newDeals.splice(index, 0, draggedItem);
+                                    setDealbreakers(newDeals);
+                                    setDraggedIndex(index);
+                                  } else {
+                                    // Move from preferences to dealbreakers
+                                    const preferenceItem = preferences[draggedIndex];
+                                    if (!preferenceItem) return;
+                                    
+                                    const newPrefs = preferences.filter((_, i) => i !== draggedIndex);
+                                    const newDeals = [...dealbreakers];
+                                    newDeals.splice(index, 0, preferenceItem);
+                                    
+                                    setPreferences(newPrefs);
+                                    setDealbreakers(newDeals);
+                                    setDraggedType("dealbreaker");
+                                    setDraggedIndex(index);
+                                  }
+                                }}
+                                onDragEnd={() => {
+                                  setDraggedIndex(null);
+                                  setDraggedType(null);
+                                }}
+                                className={cn(
+                                  "group flex items-center gap-3 px-3 py-2.5 rounded-xl border border-[#e5e7eb]/50 bg-white hover:border-[#222234]/20 transition-all",
+                                  draggedIndex === index && "opacity-50 cursor-move"
+                                )}
+                              >
+                                <GripVertical className="h-4 w-4 text-gray-300 cursor-move opacity-0 group-hover:opacity-100 transition-opacity" />
+                                <div className="flex-1 flex items-center gap-3">
+                                  <div className="flex items-center justify-center h-6 w-6 rounded-full bg-orange-50">
+                                    <X className="h-3.5 w-3.5 text-[#FF5F00]" />
+                                  </div>
+                                  <span className="text-sm text-gray-700">{item.label}</span>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => setDealbreakers(dealbreakers.filter((_, i) => i !== index))}
+                                  className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                                >
+                                  <X className="h-4 w-4" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -768,111 +716,96 @@ export function RequestForm({ onSuccess, userCountry }: { onSuccess?: () => void
             </section>
           )}
 
-          {/* SECTION 2: Constraints (Optional) */}
+          {/* Step 3: Authentication (Only for Guests) */}
+          {currentStep === 3 && !user && (
+            <div className="max-w-md mx-auto py-8">
+              <div className="text-center mb-8">
+                <h2 className="text-2xl font-bold text-gray-900 mb-2" style={{ fontFamily: 'var(--font-expanded)' }}>Almost there!</h2>
+                <p className="text-gray-500">Sign in or create an account to publish your request and start receiving offers.</p>
+              </div>
+              <AuthTabs 
+                onSuccess={() => {
+                  // Success is handled by useAuth re-render and onSubmit auto-trigger
+                }} 
+              />
+            </div>
+          )}
+
+          {/* SECTION 2: Constraints */}
           {currentStep === 2 && (
             <section className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-xl font-semibold mb-1">Constraints</h2>
-                  <p className="text-sm text-gray-600">Optional filters to help find better matches</p>
-                </div>
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => setIsEnhancedOpen(true)}
-                  className="rounded-full px-8 h-12 font-medium border transition-all hover:bg-[#222234] hover:text-white hover:border-[#222234]"
-                >
-                  <Sparkles className="mr-2 h-4 w-4" />
-                  Enhance
-                </Button>
-              </div>
 
-              {/* Budget First */}
-              <div className="space-y-4 p-4 rounded-lg border border-[#e5e7eb]/30">
+              {/* Budget First - Clean Style */}
+              <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <Label className="text-base font-semibold">Budget</Label>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <button type="button" className="text-gray-600 hover:text-foreground">
-                          <Info className="h-4 w-4" />
-                        </button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Set your maximum budget. Submissions above this amount won't be shown.</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                  <Label className="text-base font-semibold">
+                    Budget <span className="text-red-500">*</span>
+                  </Label>
                 </div>
 
-                <div className="space-y-4">
-                  <Slider
-                    value={[budgetMax]}
-                    onValueChange={handleBudgetChange}
+                <div className="space-y-4 pt-2">
+                  <Input
+                    id="budgetMax"
+                    type="number"
+                    step="10"
                     min={0}
-                    max={5000}
-                    step={10}
-                    className="w-full"
+                    value={budgetMax}
+                    onChange={handleBudgetMaxChange}
+                    placeholder="Enter your maximum budget"
+                    className={cn(
+                      "h-12 bg-white border-[#e5e7eb] rounded-lg focus-visible:ring-[#222234] placeholder:text-gray-400 text-base font-medium",
+                      form.formState.errors.budgetMax && "border-red-500 focus-visible:ring-red-500"
+                    )}
                   />
-                  <div className="space-y-1">
-                    <Label htmlFor="budgetMax" className="text-xs text-gray-600">Max ($)</Label>
-                    <Input
-                      id="budgetMax"
-                      type="number"
-                      step="10"
-                      min={0}
-                      value={budgetMax}
-                      onChange={handleBudgetMaxChange}
-                      className={cn(
-                        "h-9 placeholder:text-gray-400",
-                        form.formState.errors.budgetMax && "border-red-500"
-                      )}
-                    />
-                  </div>
                 </div>
-                {form.formState.errors.budgetMax && (
+                {(form.formState.isSubmitted || form.formState.submitCount > 0) && form.formState.errors.budgetMax && (
                   <p className="text-xs text-red-600 font-medium mt-1">{form.formState.errors.budgetMax.message}</p>
                 )}
 
-                {/* Lock Price Toggle */}
-                <div className="flex items-center justify-between pt-2 border-t border-[#e5e7eb]">
-                  <div className="space-y-0.5 flex-1">
-                    <Label className="text-sm font-medium flex items-center gap-1.5">
-                      Lock price
-                    </Label>
-                    <p className="text-xs text-gray-600">
-                      Proposals above your budget won’t be accepted
-                    </p>
-                  </div>
-                  <Switch
-                    checked={priceLock === "locked"}
-                    onCheckedChange={(checked) => {
-                      form.setValue("priceLock", checked ? "locked" : "open");
-                    }}
-                  />
-                </div>
+                {/* Lock price moved to Advanced */}
               </div>
 
-              {/* Condition Second - New Style */}
-              <div className="space-y-4 p-4 rounded-lg border border-[#e5e7eb]/30">
+              {/* Condition Second - Clean Style */}
+              <div className="space-y-4">
                 <div className="flex items-center justify-between mb-2">
                   <Label className="text-base font-semibold">Condition</Label>
                 </div>
                 <div className="flex flex-row gap-2 w-full">
-                  {["New", "Used", "Either"].map((option) => {
-                    const isSelected = form.watch("condition") === option;
+                  {["Brand New", "Used"].map((option) => {
+                    const currentValue = form.watch("condition");
+                    const isNewSelected = currentValue === "New" || currentValue === "Either";
+                    const isUsedSelected = currentValue === "Used" || currentValue === "Either";
+                    const isSelected = option === "Brand New" ? isNewSelected : isUsedSelected;
+
+                    const handleToggle = () => {
+                      if (option === "Brand New") {
+                        if (isNewSelected) {
+                          if (!isUsedSelected) return; // Prevent deselecting last one
+                          form.setValue("condition", "Used");
+                        } else {
+                          form.setValue("condition", isUsedSelected ? "Either" : "New");
+                        }
+                      } else {
+                        if (isUsedSelected) {
+                          if (!isNewSelected) return; // Prevent deselecting last one
+                          form.setValue("condition", "New");
+                        } else {
+                          form.setValue("condition", isNewSelected ? "Either" : "Used");
+                        }
+                      }
+                    };
                     return (
                       <Button
                         key={option}
                         type="button"
-                        variant={isSelected ? "default" : "outline"}
+                        variant="outline"
                         className={cn(
-                          "flex-1 px-4 rounded-lg border h-10 transition-all font-medium",
+                          "flex-1 px-4 rounded-lg border h-10 transition-all font-medium hover:bg-white",
                           isSelected 
-                            ? "bg-[#222234] text-white border-[#222234] hover:bg-[#2a2a3f]" 
-                            : "border-gray-200 hover:border-[#222234] hover:text-[#222234] hover:bg-white text-gray-600"
+                            ? "bg-white text-black border-black border-2 font-bold" 
+                            : "bg-white text-gray-600 border-gray-200 hover:border-gray-300"
                         )}
-                        onClick={() => form.setValue("condition", option)}
+                        onClick={handleToggle}
                       >
                         {option}
                       </Button>
@@ -881,91 +814,118 @@ export function RequestForm({ onSuccess, userCountry }: { onSuccess?: () => void
                 </div>
               </div>
 
-              {/* Urgency Last - Condition Style */}
-              <div className="space-y-4 p-4 rounded-lg border border-[#e5e7eb]/30">
-                <div className="flex items-center gap-1.5 mb-2">
-                  <Label className="text-base font-semibold">Urgency</Label>
-                  <Crown className="h-4 w-4 text-amber-500 fill-amber-500" />
-                </div>
-                <div className="flex flex-row gap-2 w-full">
-                  {["ASAP", "This week", "Standard"].map((option) => {
-                    const isSelected = (form.watch("urgency") || "Standard") === option;
-                    return (
-                      <Button
-                        key={option}
-                        type="button"
-                        variant={isSelected ? "default" : "outline"}
-                        className={cn(
-                          "flex-1 px-4 rounded-lg border h-10 transition-all font-medium",
-                          isSelected 
-                            ? "bg-[#222234] text-white border-[#222234] hover:bg-[#2a2a3f]" 
-                            : "border-gray-200 hover:border-[#222234] hover:text-[#222234] hover:bg-white text-gray-600"
-                        )}
-                        onClick={() => form.setValue("urgency", option)}
-                      >
-                        {option}
-                      </Button>
-                    );
-                  })}
-                </div>
-              </div>
 
 
-              {/* Advanced Matching Rules - Boxed Radio Style */}
-              <div className="space-y-4 p-4 rounded-lg border border-[#e5e7eb]/30">
-                <div className="flex items-center justify-between mb-2">
-                  <Label className="text-base font-semibold text-[#222234]">Advanced Matching</Label>
-                </div>
-                
-                <div className="space-y-6">
-                  {/* Exact Only vs Exact + Similar */}
-                  <div className="space-y-3">
-                    <Label className="text-sm font-medium text-gray-700">Item specificity</Label>
-                    <div className="flex flex-row gap-2 w-full">
-                      {[
-                        { label: "Exact only", value: true },
-                        { label: "Exact + similar", value: false }
-                      ].map((option) => {
-                        const isSelected = form.watch("exactItem") === option.value;
-                        return (
-                          <Button
-                            key={option.label}
-                            type="button"
-                            variant={isSelected ? "default" : "outline"}
-                            className={cn(
-                              "flex-1 px-4 rounded-lg border h-10 transition-all font-medium",
-                              isSelected 
-                                ? "bg-[#222234] text-white border-[#222234] hover:bg-[#2a2a3f]" 
-                                : "border-gray-200 hover:border-[#222234] hover:text-[#222234] hover:bg-white text-gray-600"
-                            )}
-                            onClick={() => form.setValue("exactItem", option.value)}
-                          >
-                            {option.label}
-                          </Button>
-                        );
-                      })}
-                    </div>
+              {/* Location Hidden for now */}
+              {false && (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-1.5 mb-2">
+                    <Label className="text-base font-semibold">Location</Label>
+                    <MapPin className="h-4 w-4 text-gray-500" />
                   </div>
-
-                  {/* No Alternatives Allowed Switch */}
-                  <div className="flex items-center justify-between pt-4 border-t border-[#e5e7eb]">
-                    <div className="space-y-0.5 flex-1">
-                      <Label htmlFor="exactSpecification" className="text-sm font-medium">
-                        Strict requirements
-                      </Label>
-                      <p className="text-xs text-gray-600">
-                        Item must match all specified preferences exactly
-                      </p>
-                    </div>
-                    <Switch
-                      id="exactSpecification"
-                      checked={form.watch("exactSpecification")}
-                      onCheckedChange={(checked) => {
-                        form.setValue("exactSpecification", checked);
-                      }}
-                    />
-                  </div>
+                  <CountryCombobox
+                    value={form.watch("country") || ""}
+                    onChange={(value) => form.setValue("country", value)}
+                    className="w-full"
+                  />
                 </div>
+              )}
+
+
+              {/* Advanced Matching Rules - Collapsible Section */}
+              <div className="rounded-lg border border-[#e5e7eb]/30">
+                <Accordion type="single" collapsible className="w-full">
+                  <AccordionItem value="advanced-matching" className="border-none">
+                    <AccordionTrigger className="px-4 py-4 hover:no-underline">
+                      <Label className="text-base font-semibold text-[#222234] cursor-pointer">Advanced</Label>
+                    </AccordionTrigger>
+                    <AccordionContent className="px-4 pb-6 space-y-8">
+                      <div className="space-y-8">
+                        {/* Lock price moved here */}
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-1 flex-1">
+                            <Label className="text-base font-semibold flex items-center gap-1.5">
+                              Lock price
+                            </Label>
+                            <p className="text-sm text-gray-500">
+                              Proposals above your budget won’t be accepted
+                            </p>
+                          </div>
+                          <Switch
+                            checked={priceLock === "locked"}
+                            onCheckedChange={(checked) => {
+                              form.setValue("priceLock", checked ? "locked" : "open");
+                            }}
+                          />
+                        </div>
+
+                        {/* Urgency moved here */}
+                        <div className="space-y-4">
+                          <div className="flex items-center gap-1.5 mb-2">
+                            <Label className="text-base font-semibold">Urgency</Label>
+                            <Crown className="h-4 w-4 text-amber-500 fill-amber-500" />
+                          </div>
+                          <div className="flex flex-row gap-2 w-full">
+                            {["ASAP", "This week", "Standard"].map((option) => {
+                              const isSelected = (form.watch("urgency") || "Standard") === option;
+                              return (
+                                <Button
+                                  key={option}
+                                  type="button"
+                                  variant="outline"
+                                  className={cn(
+                                    "flex-1 px-4 rounded-lg border h-10 transition-all font-medium hover:bg-white",
+                                    isSelected 
+                                      ? "bg-white text-black border-black border-2 font-bold" 
+                                      : "bg-white text-gray-600 border-gray-200 hover:border-gray-300"
+                                  )}
+                                  onClick={() => form.setValue("urgency", option)}
+                                >
+                                  {option}
+                                </Button>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        {/* Exact Only vs Exact + Similar - Toggle Version */}
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-1 flex-1">
+                            <Label className="text-base font-semibold">Exact match only</Label>
+                            <p className="text-sm text-gray-500">
+                              Only show items that match your title exactly, excluding similar models
+                            </p>
+                          </div>
+                          <Switch
+                            checked={form.watch("exactItem")}
+                            onCheckedChange={(checked) => {
+                              form.setValue("exactItem", checked);
+                            }}
+                          />
+                        </div>
+
+                        {/* No Alternatives Allowed Switch */}
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-1 flex-1">
+                            <Label htmlFor="exactSpecification" className="text-base font-semibold">
+                              Strict requirements
+                            </Label>
+                            <p className="text-sm text-gray-500">
+                              Item must match all specified preferences exactly
+                            </p>
+                          </div>
+                          <Switch
+                            id="exactSpecification"
+                            checked={form.watch("exactSpecification")}
+                            onCheckedChange={(checked) => {
+                              form.setValue("exactSpecification", checked);
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
               </div>
             </section>
           )}
@@ -975,10 +935,10 @@ export function RequestForm({ onSuccess, userCountry }: { onSuccess?: () => void
               <DialogHeader className="p-8 bg-gray-50/50 border-b border-[#e5e7eb]/50">
                 <div className="flex items-center gap-2 mb-1">
                   <Sparkles className="h-5 w-5 text-[#222234]" />
-                  <DialogTitle className="text-2xl font-bold tracking-tight">References & visibility</DialogTitle>
+                  <DialogTitle className="text-2xl font-bold tracking-tight">Media & Links</DialogTitle>
                 </div>
                 <DialogDescription className="text-base text-gray-500">
-                  Add more details to help sellers bring you exactly what you want.
+                  Share images and links to get better offers.
                 </DialogDescription>
               </DialogHeader>
 
@@ -1007,7 +967,7 @@ export function RequestForm({ onSuccess, userCountry }: { onSuccess?: () => void
                       onClick={addLink}
                       className="shrink-0 h-12 w-12 rounded-xl border flex items-center justify-center"
                     >
-                      <Plus className="h-7 w-7" />
+                      <Plus className="h-8 w-8" strokeWidth={2.5} />
                     </Button>
                   </div>
                   {errors.linkInput && (
@@ -1018,7 +978,7 @@ export function RequestForm({ onSuccess, userCountry }: { onSuccess?: () => void
                       {referenceLinks.map((link, index) => (
                         <div
                           key={index}
-                          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-[#e5e7eb] bg-white text-sm shadow-sm transition-all hover:shadow-md"
+                          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-[#e5e7eb] bg-white text-sm transition-all"
                         >
                           <a
                             href={link}
@@ -1149,66 +1109,83 @@ export function RequestForm({ onSuccess, userCountry }: { onSuccess?: () => void
           </Dialog>
 
 
-          {/* Navigation Buttons */}
-          <div className="flex flex-col-reverse sm:flex-row gap-3 sm:justify-between items-center mt-12 bg-transparent">
-            {currentStep > 1 ? (
-              <Button type="button" variant="outline" onClick={goBack} className="w-full sm:w-auto h-12 px-8 rounded-full border-2 font-medium">
-                Back
-              </Button>
-            ) : (
-              <div className="hidden sm:block" />
-            )}
+          {/* Navigation Buttons - Fixed Bottom Layout */}
+          <div className={cn(
+            "flex items-center justify-between mt-12 bg-white",
+            isModal && "sticky bottom-0 -mx-8 px-8 py-6 border-t border-gray-100 z-10"
+          )}>
+            <div className="text-[11px] font-bold tracking-[0.2em] text-gray-400 uppercase">
+              Step {currentStep} of {user ? 2 : 3}
+            </div>
 
-            {currentStep < 2 ? (
-              <div className="flex items-center gap-4 w-full sm:w-auto">
-                <span className="text-sm font-medium text-gray-400">1 / 2</span>
-                <Button type="button" onClick={proceedToNextStep} className="w-full sm:w-auto h-12 px-8 rounded-full bg-[#222234] hover:bg-[#2a2a3f] text-white font-medium shadow-sm transition-all hover:shadow whitespace-nowrap">
-                  Next: Budget & Condition
+            <div className="flex items-center gap-4">
+              {currentStep > 1 && (
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={goBack} 
+                  className="h-12 w-12 rounded-full border-gray-200 p-0 flex items-center justify-center hover:bg-gray-50 bg-white"
+                >
+                  <ChevronLeft className="h-5 w-5 text-gray-600" />
                 </Button>
-              </div>
-            ) : (
-              <div className="flex items-center gap-4 w-full sm:w-auto">
-                <span className="text-sm font-medium text-gray-400">2 / 2</span>
-                <Button type="submit" variant="accent" className="w-full sm:w-auto h-12 px-8 rounded-full font-medium shadow-sm transition-all hover:shadow bg-[#222234] hover:bg-[#2a2a3f] text-white whitespace-nowrap" disabled={isPending}>
+              )}
+
+              {currentStep < (user ? 2 : 3) ? (
+                <Button 
+                  type="button" 
+                  onClick={proceedToNextStep} 
+                  className="h-12 px-10 rounded-full bg-[#222234] hover:bg-[#2a2a3f] text-white font-semibold text-base min-w-[140px] shadow-lg shadow-gray-200/50"
+                >
+                  Next
+                </Button>
+              ) : (
+                <Button 
+                  type="submit" 
+                  variant="accent" 
+                  className="h-12 px-10 rounded-full font-semibold text-base min-w-[140px] shadow-lg shadow-gray-200/50 bg-[#222234] hover:bg-[#2a2a3f] text-white whitespace-nowrap" 
+                  disabled={isPending}
+                >
                   {getCTALabel()}
                 </Button>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </form>
       </div>
 
-      {/* Right Sidebar - Preview */}
-      <div className="lg:col-span-1 hidden lg:block pl-12 h-fit sticky top-24">
-        <div className="space-y-4 max-w-[460px]">
-          <div className="flex items-center gap-2 text-foreground px-1">
-            <Sparkles className="h-5 w-5 text-[#7755FF]" />
-            <h3 className="text-lg font-semibold tracking-tight">Live Preview</h3>
-          </div>
-          
-          <div className="pointer-events-none">
-            <RequestCard 
-              request={previewRequest}
-              variant="feed"
-              images={uploadedImages}
-              isPreview={true}
-              isFirst={true}
-              isLast={true}
-            />
-          </div>
-
-          <div className="rounded-2xl border border-dashed border-gray-200 p-6 bg-gray-50/30">
-            <div className="flex items-center gap-2 text-gray-500 mb-3">
-              <Info className="h-4 w-4" />
-              <h4 className="text-sm font-medium">Why a preview?</h4>
+      {/* Live Preview Sidebar - Hidden in Modal */}
+      {!isModal && (
+        <div className="lg:col-span-3 lg:pl-12 lg:sticky lg:top-8 mt-12 lg:mt-0">
+          <div className="space-y-4 max-w-[460px]">
+            <div className="flex items-center gap-2 text-foreground px-1">
+              <Sparkles className="h-5 w-5 text-[#7755FF]" />
+              <h3 className="text-lg font-semibold tracking-tight">Live Preview</h3>
             </div>
-            <p className="text-xs text-gray-400 leading-relaxed">
-              This is exactly how sellers will see your request in their feed. 
-              Make sure your title and preferences are clear to get the best offers.
-            </p>
+          
+            <div className="pointer-events-none shadow-[0_20px_50px_-12px_rgba(0,0,0,0.15)] rounded-2xl">
+              <RequestCard 
+                request={previewRequest}
+                variant="feed"
+                images={uploadedImages}
+                isPreview={true}
+                isFirst={true}
+                isLast={true}
+              />
+            </div>
+
+            <div className="rounded-2xl border border-dashed border-gray-200 p-6 bg-gray-50/30">
+              <div className="flex items-center gap-2 text-gray-500 mb-3">
+                <Info className="h-4 w-4" />
+                <h4 className="text-sm font-medium">Why a preview?</h4>
+              </div>
+              <p className="text-xs text-gray-400 leading-relaxed">
+                This is exactly how sellers will see your request in their feed. 
+                Make sure your title and preferences are clear to get the best offers.
+              </p>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

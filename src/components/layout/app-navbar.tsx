@@ -10,6 +10,7 @@ import { useAuth } from "@/components/layout/auth-provider";
 import { useTheme } from "@/components/layout/theme-provider";
 import { signOutAction } from "@/actions/auth.actions";
 import { LoginDropdown } from "@/components/auth/login-dropdown";
+import { CreateRequestModal } from "@/components/requests/create-request-modal";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -229,6 +230,7 @@ export function AppNavbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchSheetOpen, setSearchSheetOpen] = useState(false);
   const [exploreOpen, setExploreOpen] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const isHomePage = pathname === "/";
 
   const handleSignOut = () => {
@@ -363,16 +365,12 @@ export function AppNavbar() {
         <div className="flex items-center gap-2">
           {/* Create Request Button */}
           {user ? (
-            <Button asChild size="icon" className="rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300">
-              <Link href="/app/new">
-                <Plus className="h-4 w-4" />
-              </Link>
+            <Button onClick={() => setIsCreateModalOpen(true)} size="icon" className="rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300">
+              <Plus className="h-4 w-4" />
             </Button>
           ) : (
-            <Button asChild size="icon" className="rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300">
-              <Link href="/signup">
-                <Plus className="h-4 w-4" />
-              </Link>
+            <Button onClick={() => setIsCreateModalOpen(true)} size="icon" className="rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300">
+              <Plus className="h-4 w-4" />
             </Button>
           )}
 
@@ -809,10 +807,8 @@ export function AppNavbar() {
           )}
           {user ? (
             <>
-              <Button asChild className="hidden sm:flex h-11 rounded-full bg-transparent text-gray-900 hover:bg-gray-50 border border-gray-900 font-medium">
-                <Link href="/app/new">
-                  Create a request
-                </Link>
+              <Button onClick={() => setIsCreateModalOpen(true)} className="hidden sm:flex h-11 rounded-full bg-transparent text-gray-900 hover:bg-gray-50 border border-gray-900 font-medium whitespace-nowrap">
+                Create a request
               </Button>
               <Button variant="ghost" size="icon" className="relative" asChild>
                 <Link href="/app/notifications">
@@ -908,11 +904,9 @@ export function AppNavbar() {
             </>
           ) : (
             <>
-              <Link href="/signup">
-                <Button className="hidden sm:flex h-11 rounded-full bg-transparent text-gray-900 hover:bg-gray-50 border border-gray-900 font-medium w-full">
-                  Create a request
-                </Button>
-              </Link>
+              <Button onClick={() => setIsCreateModalOpen(true)} className="hidden sm:flex h-11 rounded-full bg-transparent text-gray-900 hover:bg-gray-50 border border-gray-900 font-medium w-full whitespace-nowrap">
+                Create a request
+              </Button>
               <Link href="/signup">
                 <Button variant="default" size="sm" className="bg-[#222234] text-white hover:bg-[#222234]/90">
                   Sign Up
@@ -925,6 +919,11 @@ export function AppNavbar() {
           )}
         </div>
       </div>
+      <CreateRequestModal 
+        open={isCreateModalOpen} 
+        onOpenChange={setIsCreateModalOpen}
+        userCountry={searchParams.get("country")}
+      />
     </header>
   );
 }

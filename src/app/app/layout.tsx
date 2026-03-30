@@ -59,7 +59,7 @@ export default async function AppLayout({
     <AuthProvider user={serializedUser} profile={resolvedProfile ?? null}>
       <div className="flex flex-col min-h-screen bg-background pb-20 md:pb-0">
         <AppNavbar />
-        <main className="flex-1 w-full overflow-hidden flex flex-col">
+        <main className="flex-1 w-full flex flex-col">
           <PageLayout>{children}</PageLayout>
         </main>
         <BottomNav />

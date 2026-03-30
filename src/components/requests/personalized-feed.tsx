@@ -330,23 +330,30 @@ export function PersonalizedFeed({ initialMode = "for_you", initialData }: Perso
             className="mx-auto text-3xl leading-tight tracking-tight text-foreground sm:text-5xl sm:leading-[1.1]"
             style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}
           >
-            Stop searching, start <span className="text-[#7860fe] bg-[#f0edff] px-3 py-1 rounded-l-lg pb-1.5 align-baseline border-solid border-r-[3px]" style={{ borderRightColor: "#7860fe" }}>seeking</span>
+            Stop searching, start <span className="text-[#7860fe] bg-[#f0edff] px-3 py-1 rounded-l-lg pb-1.5 align-baseline border-solid border-r-[3px]" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600, borderRightColor: "#7860fe" }}>seeking</span>
           </h1>
           <p className="mx-auto mt-4 max-w-xl text-base text-gray-500 sm:text-lg">
             Post a request, receive offers, compare deals,<br />and connect with the right seller.
           </p>
 
-          <div className="mx-auto mt-8 w-full max-w-xl relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-100/60 via-indigo-50/60 to-purple-100/60 blur-3xl rounded-full scale-[1.1] -z-10 pointer-events-none" />
+          <div className={cn(
+            "mx-auto w-full max-w-xl relative transition-all duration-500",
+            tradeMode === "buy" ? "mt-8" : "mt-2"
+          )}>
+            <div className="relative w-full h-[130px]">
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-100/60 via-indigo-50/60 to-purple-100/60 blur-3xl rounded-full scale-[1.1] -z-10 pointer-events-none" />
 
-            {tradeMode === "buy" ? (
+              {/* BUY Panel */}
               <div
                 onClick={() => router.push('/app/new')}
                 role="button"
                 tabIndex={0}
-                className="relative w-full rounded-2xl bg-white border border-[#e6e7eb] shadow-[0_8px_30px_rgb(0,0,0,0.06)] transition-all hover:bg-white hover:border-gray-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.1)] h-[130px] flex flex-col p-5 cursor-pointer group"
+                className={cn(
+                  "absolute inset-0 w-full rounded-2xl bg-white border border-[#e6e7eb] shadow-[0_8px_30px_rgb(0,0,0,0.06)] transition-all duration-500 ease-out hover:bg-white hover:border-gray-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.1)] h-[130px] flex flex-col p-5 cursor-pointer group",
+                  tradeMode === 'buy' ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4 pointer-events-none"
+                )}
               >
-                <span className="text-[#a5abb7] text-[16px] font-medium text-left flex-1 pl-1 pt-1">
+                <span className="text-[#a5abb7] text-[16px] font-medium text-left flex-1 pl-1 pt-1 font-sans">
                   I'm looking for a smartphone with 8gb..
                 </span>
                 <div className="absolute bottom-4 right-4">
@@ -355,16 +362,22 @@ export function PersonalizedFeed({ initialMode = "for_you", initialData }: Perso
                   </div>
                 </div>
               </div>
-            ) : (
-              <div className="flex justify-center h-[64px] items-center">
+
+              {/* SELL Panel */}
+              <div
+                className={cn(
+                  "absolute inset-0 w-full h-[130px] flex items-center justify-center transition-all duration-500 ease-out",
+                  tradeMode === 'sell' ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"
+                )}
+              >
                 <Button
                   asChild
-                  className="rounded-full bg-[#1e2330] hover:bg-[#2a303f] text-white px-10 py-6 text-[16px] font-medium"
+                  className="rounded-full bg-[#1e2330] hover:bg-[#2a303f] text-white px-10 py-6 text-[16px] font-medium shadow-lg hover:shadow-xl transition-all"
                 >
                   <Link href="/app/new">Sell your item</Link>
                 </Button>
               </div>
-            )}
+            </div>
           </div>
         </div>
       </section>
