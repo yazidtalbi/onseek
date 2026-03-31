@@ -71,7 +71,7 @@ export function LoginDropdown() {
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
-        <button className="text-sm text-neutral-700 hover:text-neutral-900 transition-colors hidden sm:block">
+        <button className="h-11 flex items-center px-4 text-sm font-semibold text-neutral-700 hover:text-neutral-900 transition-colors hidden sm:block whitespace-nowrap shrink-0">
           Log In
         </button>
       </DropdownMenuTrigger>

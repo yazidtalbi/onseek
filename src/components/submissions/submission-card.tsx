@@ -155,9 +155,9 @@ export function SubmissionCard({
         isOnlyOne
           ? "rounded-2xl"
           : isFirst
-          ? "rounded-t-2xl rounded-b-none border-b-0"
+          ? "rounded-t-2xl rounded-b-none"
           : isLast
-          ? "rounded-b-2xl border-t-0"
+          ? "rounded-b-2xl rounded-t-none border-t-0"
           : "rounded-none border-t-0"
       )}
     >

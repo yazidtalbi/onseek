@@ -250,22 +250,11 @@ export function AppNavbar() {
 
   const handleCategorySelect = (category: string) => {
     if (category === "All") {
-      router.push("/");
+      router.push("/app/popular");
     } else {
-      // Map category names to URL slugs
-      const slugMap: Record<string, string> = {
-        "Tech": "tech",
-        "Gaming": "gaming",
-        "Fashion": "fashion",
-        "Health & Cosmetics": "health-cosmetics",
-        "Family & Children": "family-children",
-        "Home & Living": "home-living",
-        "Garden & DIY": "garden-diy",
-        "Auto": "auto",
-        "Grocery": "grocery",
-      };
-      const slug = slugMap[category] || category.toLowerCase();
-      router.push(`/app/category/${slug}`);
+      const { getCategorySlug } = require("@/lib/utils/category-routing");
+      const slug = getCategorySlug(category);
+      router.push(`/app/popular/${slug}`);
     }
   };
 
@@ -473,11 +462,11 @@ export function AppNavbar() {
                         <AccordionContent>
                           <div className="px-4 pb-2 space-y-0.5">
                             <Link
-                              href="/"
+                              href="/app/popular"
                               onClick={() => setMobileMenuOpen(false)}
                               className={cn(
                                 "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
-                                pathname === "/"
+                                pathname.startsWith("/app/popular")
                                   ? "bg-gray-100 text-foreground font-medium"
                                   : "text-muted-foreground hover:text-foreground hover:bg-gray-50"
                               )}
@@ -486,18 +475,21 @@ export function AppNavbar() {
                               Popular
                             </Link>
                             <Link
-                              href="/?sort=newest"
+                              href="/app/latest"
                               onClick={() => setMobileMenuOpen(false)}
                               className={cn(
                                 "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
-                                "text-muted-foreground hover:text-foreground hover:bg-gray-50"
+                                pathname.startsWith("/app/latest")
+                                  ? "bg-gray-100 text-foreground font-medium"
+                                  : "text-muted-foreground hover:text-foreground hover:bg-gray-50"
                               )}
                             >
                               <Sparkles className="h-5 w-5 shrink-0" />
                               New and Noteworthy
                             </Link>
                             {categories.map((category) => {
-                              const categoryPath = `/app/category/${category.toLowerCase()}`;
+                              const { getCategorySlug } = require("@/lib/utils/category-routing");
+                              const categoryPath = `/app/popular/${getCategorySlug(category)}`;
                               const isActive = pathname === categoryPath;
                               return (
                                 <Link
@@ -904,11 +896,11 @@ export function AppNavbar() {
             </>
           ) : (
             <>
-              <Button onClick={() => setIsCreateModalOpen(true)} className="hidden sm:flex h-11 rounded-full bg-transparent text-gray-900 hover:bg-gray-50 border border-gray-900 font-medium w-full whitespace-nowrap">
+              <Button onClick={() => setIsCreateModalOpen(true)} className="hidden sm:flex h-11 rounded-full bg-transparent text-gray-900 hover:bg-gray-50 border border-gray-900 font-semibold shrink-0 whitespace-nowrap px-6">
                 Create a request
               </Button>
-              <Link href="/signup">
-                <Button variant="default" size="sm" className="bg-[#222234] text-white hover:bg-[#222234]/90">
+              <Link href="/signup" className="shrink-0">
+                <Button variant="default" className="h-11 rounded-full px-6 bg-[#222234] text-white hover:bg-[#222234]/90 shrink-0 whitespace-nowrap text-sm font-semibold">
                   Sign Up
                 </Button>
               </Link>

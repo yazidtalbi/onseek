@@ -78,7 +78,7 @@ export function RequestForm({
   const [showDbInput, setShowDbInput] = React.useState(false);
   const [inlinePrefValue, setInlinePrefValue] = React.useState("");
   const [inlineDbValue, setInlineDbValue] = React.useState("");
-  const [authMode, setAuthMode] = React.useState < 'signup' | 'login' > ('signup');
+  const [authMode, setAuthMode] = React.useState<'signup' | 'login'>('signup');
   const [draggedType, setDraggedType] = React.useState<"preference" | "dealbreaker" | null>(null);
   const [triedStep2Next, setTriedStep2Next] = React.useState(false);
   const [currentStep, setCurrentStep] = React.useState(1);
@@ -463,26 +463,8 @@ export function RequestForm({
       )}>
         {/* Step-by-Step Navigation - Removed top stepper as per request */}
 
-        <form
-          onSubmit={form.handleSubmit(
-            (data) => {
-              onSubmit(data);
-            },
-            (errors) => {
-              // Convert react-hook-form errors to our format
-              const formErrors: Record<string, string> = {};
-              Object.entries(errors).forEach(([key, value]) => {
-                if (value && typeof value === 'object' && 'message' in value) {
-                  formErrors[key] = value.message as string;
-                }
-              });
-              if (Object.keys(formErrors).length > 0) {
-                setErrors(formErrors);
-              }
-            }
-          )}
-          className="space-y-12"
-          noValidate
+        <div
+          className={cn(currentStep === 1 ? "space-y-0" : "space-y-12")}
         >
           {/* Persistent Header */}
           {!isModal && (
@@ -500,7 +482,7 @@ export function RequestForm({
 
           {/* SECTION 1: What are you looking for? */}
           {currentStep === 1 && (
-            <section className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
+            <section className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500 pb-2">
               <div className="space-y-6">
                 <h2 className="text-2xl font-bold tracking-tight text-[#222234] text-center" style={{ fontFamily: 'var(--font-expanded)' }}>
                   What are you looking for?
@@ -533,7 +515,7 @@ export function RequestForm({
                   What is your budget?
                 </h2>
                 <div className="space-y-4">
-                  <div className="relative">
+                  <div className="relative group p-1 -m-1">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-semibold text-lg">$</span>
                     <Input
                       id="budgetMax"
@@ -544,7 +526,7 @@ export function RequestForm({
                       onChange={handleBudgetMaxChange}
                       placeholder="Enter amount"
                       className={cn(
-                        "h-14 bg-white border-[#e5e7eb] rounded-xl focus-visible:ring-[#222234] placeholder:text-gray-400 placeholder:font-normal text-base font-bold pl-8",
+                        "h-14 bg-white border-[#e5e7eb] rounded-xl focus-visible:ring-[#222234] placeholder:text-gray-400 placeholder:font-normal text-base font-semibold pl-8",
                         ((triedStep2Next || form.formState.submitCount > 0) && form.formState.errors.budgetMax) && "border-red-500 focus-visible:ring-red-500"
                       )}
                     />
@@ -577,7 +559,7 @@ export function RequestForm({
                         type="button"
                         variant="outline"
                         className={cn(
-                          "flex-1 px-4 rounded-xl border h-20 transition-all font-bold text-sm",
+                          "flex-1 px-4 rounded-xl border h-16 transition-all font-medium text-sm",
                           isSelected
                             ? "bg-white text-black !border-[#222234] border-2 shadow-sm scale-[1.02]"
                             : "bg-white text-gray-500 border-gray-100 hover:border-gray-200"
@@ -599,9 +581,9 @@ export function RequestForm({
           {/* SECTION 4: Preferences */}
           {currentStep === 4 && (
             <section className="space-y-10 animate-in fade-in slide-in-from-right-4 duration-500">
-              <div className="space-y-6 mb-2">
+              <div className="space-y-6 mb-10">
                 <h2 className="text-2xl font-bold tracking-tight text-[#222234] text-center" style={{ fontFamily: 'var(--font-expanded)' }}>
-                  Any specific preferences?
+                  Tell sellers your preferences
                 </h2>
               </div>
               <div className="grid grid-cols-1 gap-10 items-start">
@@ -612,7 +594,7 @@ export function RequestForm({
                       {preferences.map((item, index) => (
                         <div
                           key={`pref-${index}`}
-                          className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-50 text-green-700 text-sm font-semibold group animate-in fade-in zoom-in duration-200"
+                          className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-50 text-green-700 text-sm font-medium group animate-in fade-in zoom-in duration-200"
                         >
                           <span>{item.label}</span>
                           <button
@@ -626,30 +608,30 @@ export function RequestForm({
                       ))}
                       <Input
                         placeholder={preferences.length === 0 ? "Brand, model, or specific preference" : ""}
-                        className="flex-1 min-w-[200px] h-8 border-none focus-visible:ring-0 px-0 text-base font-bold placeholder:text-gray-400 placeholder:font-normal bg-transparent"
+                        className="flex-1 min-w-[200px] h-8 border-none focus-visible:ring-0 px-0 text-base font-medium placeholder:text-gray-400 placeholder:font-normal bg-transparent"
                         value={inlinePrefValue}
                         onChange={(e) => setInlinePrefValue(e.target.value)}
                         onKeyDown={(e) => {
                           if ((e.key === "Enter" || e.key === ",") && inlinePrefValue.trim()) {
                             e.preventDefault();
-                             const newTags = inlinePrefValue.split(",").map(t => t.trim()).filter(Boolean);
-                             if (newTags.length > 0) {
-                               const capitalizedTags = newTags.map(label => ({ 
-                                 label: label.charAt(0).toUpperCase() + label.slice(1) 
-                               }));
-                               setPreferences([...preferences, ...capitalizedTags]);
-                             }
+                            const newTags = inlinePrefValue.split(",").map(t => t.trim()).filter(Boolean);
+                            if (newTags.length > 0) {
+                              const capitalizedTags = newTags.map(label => ({
+                                label: label.charAt(0).toUpperCase() + label.slice(1)
+                              }));
+                              setPreferences([...preferences, ...capitalizedTags]);
+                            }
                             setInlinePrefValue("");
                           } else if (e.key === "Backspace" && !inlinePrefValue && preferences.length > 0) {
                             setPreferences(preferences.slice(0, -1));
                           }
                         }}
                         onBlur={() => {
-                           if (inlinePrefValue.trim()) {
-                             const capitalized = inlinePrefValue.trim().charAt(0).toUpperCase() + inlinePrefValue.trim().slice(1);
-                             setPreferences([...preferences, { label: capitalized }]);
-                             setInlinePrefValue("");
-                           }
+                          if (inlinePrefValue.trim()) {
+                            const capitalized = inlinePrefValue.trim().charAt(0).toUpperCase() + inlinePrefValue.trim().slice(1);
+                            setPreferences([...preferences, { label: capitalized }]);
+                            setInlinePrefValue("");
+                          }
                         }}
                       />
                     </div>
@@ -665,9 +647,9 @@ export function RequestForm({
           {/* SECTION 5: Dealbreakers */}
           {currentStep === 5 && (
             <section className="space-y-10 animate-in fade-in slide-in-from-right-4 duration-500">
-              <div className="space-y-6 mb-2">
-                <h2 className="text-2xl font-bold tracking-tight text-[#222234]" style={{ fontFamily: 'var(--font-expanded)' }}>
-                  Any dealbreakers?
+              <div className="space-y-6 mb-10">
+                <h2 className="text-2xl font-bold tracking-tight text-[#222234] text-center" style={{ fontFamily: 'var(--font-expanded)' }}>
+                  Next, share your dealbreakers
                 </h2>
               </div>
               <div className="grid grid-cols-1 gap-10 items-start">
@@ -678,7 +660,7 @@ export function RequestForm({
                       {dealbreakers.map((item, index) => (
                         <div
                           key={`deal-${index}`}
-                          className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-orange-50 text-[#FF5F00] text-sm font-semibold group animate-in fade-in zoom-in duration-200"
+                          className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-orange-50 text-[#FF5F00] text-sm font-medium group animate-in fade-in zoom-in duration-200"
                         >
                           <span>{item.label}</span>
                           <button
@@ -692,30 +674,30 @@ export function RequestForm({
                       ))}
                       <Input
                         placeholder={dealbreakers.length === 0 ? "No scratches, no repairs, etc." : ""}
-                        className="flex-1 min-w-[200px] h-8 border-none focus-visible:ring-0 px-0 text-base font-bold placeholder:text-gray-400 placeholder:font-normal bg-transparent"
+                        className="flex-1 min-w-[200px] h-8 border-none focus-visible:ring-0 px-0 text-base font-medium placeholder:text-gray-400 placeholder:font-normal bg-transparent"
                         value={inlineDbValue}
                         onChange={(e) => setInlineDbValue(e.target.value)}
                         onKeyDown={(e) => {
                           if ((e.key === "Enter" || e.key === ",") && inlineDbValue.trim()) {
                             e.preventDefault();
-                             const newTags = inlineDbValue.split(",").map(t => t.trim()).filter(Boolean);
-                             if (newTags.length > 0) {
-                               const capitalizedTags = newTags.map(label => ({ 
-                                 label: label.charAt(0).toUpperCase() + label.slice(1) 
-                               }));
-                               setDealbreakers([...dealbreakers, ...capitalizedTags]);
-                             }
+                            const newTags = inlineDbValue.split(",").map(t => t.trim()).filter(Boolean);
+                            if (newTags.length > 0) {
+                              const capitalizedTags = newTags.map(label => ({
+                                label: label.charAt(0).toUpperCase() + label.slice(1)
+                              }));
+                              setDealbreakers([...dealbreakers, ...capitalizedTags]);
+                            }
                             setInlineDbValue("");
                           } else if (e.key === "Backspace" && !inlineDbValue && dealbreakers.length > 0) {
                             setDealbreakers(dealbreakers.slice(0, -1));
                           }
                         }}
                         onBlur={() => {
-                           if (inlineDbValue.trim()) {
-                             const capitalized = inlineDbValue.trim().charAt(0).toUpperCase() + inlineDbValue.trim().slice(1);
-                             setDealbreakers([...dealbreakers, { label: capitalized }]);
-                             setInlineDbValue("");
-                           }
+                          if (inlineDbValue.trim()) {
+                            const capitalized = inlineDbValue.trim().charAt(0).toUpperCase() + inlineDbValue.trim().slice(1);
+                            setDealbreakers([...dealbreakers, { label: capitalized }]);
+                            setInlineDbValue("");
+                          }
                         }}
                       />
                     </div>
@@ -731,16 +713,71 @@ export function RequestForm({
           {/* SECTION 6: Additional Details */}
           {currentStep === 6 && (
             <section className="space-y-10 animate-in fade-in slide-in-from-right-4 duration-500">
-              <div className="space-y-6 mb-10">
-                <h2 className="text-2xl font-bold tracking-tight text-[#222234] text-center" style={{ fontFamily: 'var(--font-expanded)' }}>
-                  Any additional details?
+              <div className="space-y-2 mb-10 text-left">
+                <h2 className="text-2xl font-bold tracking-tight text-[#222234]" style={{ fontFamily: 'var(--font-expanded)' }}>
+                  Then, add final details to your request
                 </h2>
+                <p className="text-sm text-gray-400 font-medium leading-relaxed">
+                  Help sellers give you the best offer by adding links and images.
+                </p>
               </div>
               <div className="space-y-12">
+                {/* Reference Links Section */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Label className="text-sm font-semibold text-gray-500">Share a link of a similar item or inspiration</Label>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="Paste a reference URL"
+                        value={linkInput}
+                        onChange={(e) => {
+                          setLinkInput(e.target.value);
+                          setErrors((prev) => ({ ...prev, linkInput: "" }));
+                        }}
+                        onKeyDown={handleLinkInputKeyDown}
+                        onBlur={addLink}
+                        className={cn(
+                          "h-14 bg-white border-[#e5e7eb] rounded-xl focus-visible:ring-[#222234] placeholder:text-gray-400 placeholder:font-normal",
+                          errors.linkInput && "border-red-500 focus-visible:ring-red-500"
+                        )}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={addLink}
+                        className="shrink-0 h-14 w-14 rounded-xl border flex items-center justify-center p-0"
+                      >
+                        <Plus className="h-5 w-5" strokeWidth={2.5} />
+                      </Button>
+                    </div>
+                    {referenceLinks.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {referenceLinks.map((link, index) => (
+                          <div
+                            key={index}
+                            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[#e5e7eb] bg-white text-xs transition-all"
+                          >
+                            <span className="text-[#222234] truncate max-w-[150px] font-medium">{link}</span>
+                            <button
+                              type="button"
+                              onClick={() => removeLink(index)}
+                              className="text-gray-400 hover:text-red-500"
+                            >
+                              <X className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
                 {/* Reference Images Section */}
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 mb-2">
-                    <Label className="text-sm font-semibold text-gray-500">Add a few images of what you're looking for</Label>
+                    <Label className="text-sm font-semibold text-gray-500">Add a few example images</Label>
                   </div>
                   <div className="grid grid-cols-4 sm:grid-cols-5 gap-3">
                     {uploadedImages.map((url, index) => (
@@ -778,58 +815,6 @@ export function RequestForm({
                           </div>
                         )}
                       </label>
-                    )}
-                  </div>
-                </div>
-
-                {/* Reference Links Section */}
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Label className="text-sm font-semibold text-gray-500">Share a link of a similar item or inspiration</Label>
-                  </div>
-                  <div className="space-y-4">
-                    <div className="flex gap-2">
-                      <Input
-                        placeholder="Paste a reference URL"
-                        value={linkInput}
-                        onChange={(e) => {
-                          setLinkInput(e.target.value);
-                          setErrors((prev) => ({ ...prev, linkInput: "" }));
-                        }}
-                        onKeyDown={handleLinkInputKeyDown}
-                        onBlur={addLink}
-                        className={cn(
-                          "h-12 bg-white border-[#e5e7eb] rounded-xl focus-visible:ring-[#222234] placeholder:text-gray-400 placeholder:font-normal",
-                          errors.linkInput && "border-red-500 focus-visible:ring-red-500"
-                        )}
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={addLink}
-                        className="shrink-0 h-12 w-12 rounded-xl border flex items-center justify-center p-0"
-                      >
-                        <Plus className="h-5 w-5" strokeWidth={2.5} />
-                      </Button>
-                    </div>
-                    {referenceLinks.length > 0 && (
-                      <div className="flex flex-wrap gap-2">
-                        {referenceLinks.map((link, index) => (
-                          <div
-                            key={index}
-                            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[#e5e7eb] bg-white text-xs transition-all"
-                          >
-                            <span className="text-[#222234] truncate max-w-[150px] font-semibold">{link}</span>
-                            <button
-                              type="button"
-                              onClick={() => removeLink(index)}
-                              className="text-gray-400 hover:text-red-500"
-                            >
-                              <X className="h-3.5 w-3.5" />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
                     )}
                   </div>
                 </div>
@@ -909,7 +894,7 @@ export function RequestForm({
                                     type="button"
                                     variant="outline"
                                     className={cn(
-                                      "flex-1 px-2 rounded-xl border h-11 transition-all text-xs font-bold",
+                                      "flex-1 px-2 rounded-xl border h-11 transition-all text-xs font-medium",
                                       isSelected
                                         ? "bg-white text-black !border-[#222234] border shadow-sm"
                                         : "bg-white text-gray-400 border-gray-100 hover:border-gray-200"
@@ -987,7 +972,7 @@ export function RequestForm({
                     <p className="text-sm text-gray-500">This is how sellers will see your request on the feed.</p>
                   </div>
 
-                  <div className="w-full max-w-[500px] shadow-[0_20px_50px_-12px_rgba(0,0,0,0.1)] rounded-2xl overflow-hidden border border-gray-100">
+                  <div className="w-full max-w-[500px]">
                     <RequestCard
                       request={previewRequest}
                       variant="feed"
@@ -1016,18 +1001,18 @@ export function RequestForm({
               <div className="flex flex-row gap-12 items-stretch w-full">
                 <div className="w-[400px] shrink-0 space-y-6">
                   <div className="text-left mb-6">
-                    <h2 className="text-2xl font-bold text-gray-900 mb-1 text-center" style={{ fontFamily: 'var(--font-expanded)' }}>Almost there!</h2>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-1 text-left" style={{ fontFamily: 'var(--font-expanded)' }}>Almost there!</h2>
                     <p className="text-sm text-gray-500 text-pretty mt-4">
                       <span className="text-green-600 font-bold">Your request is ready.</span> Sign in or create an account to publish your request and start receiving offers.
                     </p>
                   </div>
                   {authMode === 'signup' ? (
                     <div className="space-y-6">
-                      <SignUpForm onSuccess={() => {}} />
+                      <SignUpForm onSuccess={() => { setIsAutoSubmitting(true); form.handleSubmit(onSubmit)(); }} />
                       <p className="text-sm text-center text-gray-500">
                         Already using Onseek?{" "}
-                        <button 
-                          onClick={() => setAuthMode('login')} 
+                        <button
+                          onClick={() => setAuthMode('login')}
                           className="text-[#7755FF] font-semibold hover:underline"
                         >
                           Log in
@@ -1036,11 +1021,11 @@ export function RequestForm({
                     </div>
                   ) : (
                     <div className="space-y-6">
-                      <SignInForm onSuccess={() => {}} />
+                      <SignInForm onSuccess={() => { setIsAutoSubmitting(true); form.handleSubmit(onSubmit)(); }} />
                       <p className="text-sm text-center text-gray-500">
                         Don't have an account?{" "}
-                        <button 
-                          onClick={() => setAuthMode('signup')} 
+                        <button
+                          onClick={() => setAuthMode('signup')}
                           className="text-[#7755FF] font-semibold hover:underline"
                         >
                           Sign up
@@ -1052,7 +1037,7 @@ export function RequestForm({
 
                 {/* Right column: Perks Section (Wider) */}
                 <div className="flex-1 min-w-0">
-                  <div className="p-8 rounded-[2rem] bg-gray-50 h-full flex flex-col justify-center">
+                  <div className="p-8 rounded-[1.5rem] bg-gray-50 h-full flex flex-col justify-center">
                     <div className="mb-8 flex items-center gap-3">
                       <h3 className="text-xl font-semibold text-[#222234]" style={{ fontFamily: 'var(--font-expanded)' }}>Join the community</h3>
                     </div>
@@ -1094,16 +1079,16 @@ export function RequestForm({
           {/* Navigation Buttons - Fixed Bottom Layout */}
           <div className={cn(
             "flex items-center justify-between bg-white",
-            currentStep === 8 ? "hidden" : (currentStep === 8 ? "mt-4" : "mt-12"),
+            currentStep === 8 ? "hidden" : (currentStep === 1 ? "mt-0" : "mt-12"),
             isModal && "sticky bottom-0 -mx-8 px-8 pt-4 pb-2 border-none z-10"
           )}>
             <div>
-              {isModal && (
+              {isModal && currentStep > 1 && (
                 <Button
                   type="button"
                   variant="ghost"
                   onClick={onCancel}
-                  className="h-10 px-6 rounded-full font-bold text-[#222234] border border-gray-200 hover:bg-gray-50 transition-all text-sm"
+                  className="h-10 px-6 rounded-full font-semibold text-[#222234] border-none hover:bg-gray-50 transition-all text-sm"
                 >
                   Cancel
                 </Button>
@@ -1116,7 +1101,7 @@ export function RequestForm({
                   type="button"
                   variant="ghost"
                   onClick={goBack}
-                  className="h-10 px-2 rounded-full font-bold text-[#222234] hover:bg-transparent transition-all flex items-center gap-2 group"
+                  className="h-12 px-6 rounded-full font-semibold text-[#222234] border border-gray-100 hover:bg-transparent transition-all flex items-center gap-2 group"
                 >
                   <ChevronLeft className="h-5 w-5 transition-transform group-hover:-translate-x-1" />
                   <span>Back</span>
@@ -1133,6 +1118,7 @@ export function RequestForm({
                     ((currentStep === 1 && (!titleValue?.trim() || !categoryValue)) || (currentStep === 2 && !form.watch("budgetMax")) || isAutoSubmitting)
                       ? "bg-gray-100 text-gray-400 cursor-not-allowed shadow-none"
                       : "bg-[#222234] hover:bg-[#2a2a3f] text-white",
+                    (currentStep === 1 && titleValue.length < 3) && "hidden", // Hide next button on step 1 until categories are displayed
                     currentStep === 3 && "hidden", // Hide next button on condition step
                     showEditSummary && "hidden", // Hide next button on edit summary screen
                     (currentStep === 8 && user) && "hidden" // Hide next button on auth step if user already logged in
@@ -1150,7 +1136,7 @@ export function RequestForm({
               )}
             </div>
           </div>
-        </form>
+        </div>
       </div>
 
       {/* Live Preview Sidebar - Hidden in Modal */}

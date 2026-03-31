@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import * as React from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Filter, LayoutList, Grid3x3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import type { FeedMode } from "@/lib/types";
 import {
   Select,
   SelectContent,
@@ -24,14 +25,19 @@ const categories = ["All", ...MAIN_CATEGORIES];
 export function RequestFilters({ 
   viewMode, 
   onViewModeChange,
-  hideViewToggle = false
+  hideViewToggle = false,
+  mode,
+  category
 }: { 
   viewMode?: "list" | "grid";
   onViewModeChange?: (mode: "list" | "grid") => void;
   hideViewToggle?: boolean;
+  mode?: FeedMode;
+  category?: string | null;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const pathname = usePathname();
   const currentCategory = searchParams.get("category") || "All";
   const sort = searchParams.get("sort") || "newest";
   const priceMin = searchParams.get("priceMin") || "";
@@ -62,9 +68,9 @@ export function RequestFilters({
     if (key === "category") {
       params.delete("page");
     }
-    // Navigate to search page if there's a search query, otherwise app home
+    // Navigate to search page if there's a search query, otherwise current path
     const hasQuery = searchParams.get("q");
-    const path = hasQuery ? "/search" : "/app";
+    const path = hasQuery ? "/search" : pathname;
     router.push(`${path}?${params.toString()}`);
   };
 
@@ -82,7 +88,7 @@ export function RequestFilters({
       params.delete("priceMax");
     }
     const hasQuery = searchParams.get("q");
-    const path = hasQuery ? "/search" : "/app";
+    const path = hasQuery ? "/search" : pathname;
     router.push(`${path}?${params.toString()}`);
   };
 

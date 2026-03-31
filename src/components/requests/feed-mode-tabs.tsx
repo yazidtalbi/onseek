@@ -23,7 +23,7 @@ export function FeedModeTabs({
   ];
 
   return (
-    <div className="flex items-center gap-6 overflow-x-auto">
+    <div className="flex items-center gap-6 overflow-x-auto justify-center w-full">
       {tabs.map((tab) => {
         const isActive = mode === tab.value;
         return (

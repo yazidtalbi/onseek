@@ -332,7 +332,7 @@ export function SubmissionForm({ requestId, requestBudgetMax, requestDescription
         <Button
           type="button"
           id="submission-form-trigger"
-          className="h-11 rounded-full bg-[#212733] text-white hover:bg-[#212733]/90"
+          className="w-full h-11 rounded-full bg-[#212733] text-white hover:bg-[#212733]/90"
           onClick={() => handleOpenChange(true)}
         >
           Submit a proposal

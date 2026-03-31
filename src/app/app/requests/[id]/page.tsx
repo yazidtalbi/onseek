@@ -160,7 +160,7 @@ export default async function RequestDetailPage({
   const shouldShowAnnouncement = hasNoSubmissions && daysOld >= 7; // Show if 7+ days old with no proposals
 
   return (
-    <div className="space-y-6 w-full px-4 md:px-6">
+    <div className="mx-auto max-w-6xl w-full space-y-6 px-4 md:px-6">
       {/* Back Button and Breadcrumbs */}
       <div className="flex items-center gap-4">
         <BackButton />
@@ -184,28 +184,32 @@ export default async function RequestDetailPage({
       </div>
 
       {/* Two Column Layout: Request on Left, Submissions on Right */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-        {/* Left Column: Request Details */}
-        <div className="lg:col-span-2 space-y-6">
-          <div className="sticky top-24 space-y-6">
-            <RequestCard
-              request={request}
-              variant="detail"
-              isFavorite={isFavorite}
-              images={images?.map((img: any) => img.image_url) || []}
-              links={links?.map((link: any) => link.url) || []}
-              proposalCount={proposalCount}
-            />
-
-          </div>
+      <div className="flex flex-col lg:flex-row gap-8 lg:gap-14 items-start">
+        {/* Left Column: Request Details - Sticky on scroll */}
+        <div className="w-full lg:w-[45%] space-y-6 flex-shrink-0 sticky top-24 self-start">
+          <RequestCard
+            request={request}
+            variant="detail"
+            isFavorite={isFavorite}
+            images={images?.map((img: any) => img.image_url) || []}
+            links={links?.map((link: any) => link.url) || []}
+            proposalCount={proposalCount}
+            noBorder={true}
+            noPadding={true}
+            noRounding={true}
+            headerActions={<ShareButton requestId={request.id} />}
+          />
         </div>
 
+        {/* Desktop Vertical Separator - more prominent */}
+        <div className="hidden lg:block w-[1px] bg-neutral-200 self-stretch shrink-0" />
+
         {/* Right Column: Proposals */}
-        <div className="lg:col-span-3 space-y-6">
+        <div className="flex-1 space-y-6 min-w-0">
           {shouldShowAnnouncement && (
             <AnnouncementBanner />
           )}
-          <div className="flex items-center gap-2">
+          <div className="space-y-4">
             {showSubmissionForm ? (
               <SubmissionForm 
                 requestId={request.id} 
@@ -214,7 +218,6 @@ export default async function RequestDetailPage({
                 hideButton={proposalCount === 0}
               />
             ) : null}
-            <ShareButton requestId={request.id} />
           </div>
           <SubmissionList
             requestId={request.id}
@@ -233,17 +236,17 @@ export default async function RequestDetailPage({
           <h2 className="text-2xl font-semibold text-foreground">Similar requests</h2>
           <div className="columns-1 sm:columns-2 lg:columns-3 gap-4">
             {similarRequests.map((similarRequest) => (
-              <div key={similarRequest.id} className="break-inside-avoid mb-4">
+              <div key={similarRequest.id} className="break-inside-avoid mb-6 bg-[#f5f6f9] rounded-[20px] p-[6px] transition-all duration-300 ease-out hover:-translate-y-1.5 shadow-none hover:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.12)]">
                 <RequestCard
                   request={{
                     ...similarRequest,
                     submissionCount: similarRequestSubmissionCounts[similarRequest.id] || 0,
                   }}
-                  variant="feed"
+                  variant="detail"
+                  smallImages={true}
                   images={similarRequestImages[similarRequest.id] || []}
                   isFavorite={similarRequestFavorites.has(similarRequest.id)}
-                  isFirst={true}
-                  isLast={true}
+                  noBorder={true}
                 />
               </div>
             ))}

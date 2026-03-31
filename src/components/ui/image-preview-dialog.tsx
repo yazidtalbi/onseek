@@ -77,10 +77,10 @@ export function ImagePreviewDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogOverlay className="bg-black/80 !z-[10]" />
+      <DialogOverlay className="bg-black/80 !z-[100]" />
       <DialogContent
         className={cn(
-          "max-w-[95vw] max-h-[95vh] w-auto h-auto p-0 border-0 bg-transparent shadow-none",
+          "max-w-[95vw] max-h-[95vh] w-auto h-auto p-0 border-0 bg-transparent shadow-none !z-[101]",
           "left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
         )}
         onInteractOutside={(e) => {

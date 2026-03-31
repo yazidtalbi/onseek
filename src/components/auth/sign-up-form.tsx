@@ -68,11 +68,22 @@ export function SignUpForm({ onSuccess }: { onSuccess?: () => void }) {
     formData.set("password", values.password);
     formData.set("username", values.username);
     startTransition(async () => {
-      const res = await signUpAction(formData);
-      if (res?.error) {
-        setError(res.error);
-      } else if (onSuccess) {
-        onSuccess();
+      try {
+        const res = await signUpAction(formData);
+        if (res?.error) {
+          setError(res.error);
+        } else if (onSuccess) {
+          onSuccess();
+        }
+      } catch (err) {
+        // Handle NEXT_REDIRECT error from server action
+        if (err && typeof err === "object" && "digest" in err) {
+          if (String((err as { digest?: unknown }).digest).includes("NEXT_REDIRECT")) {
+            if (onSuccess) onSuccess();
+            return;
+          }
+        }
+        setError("An unexpected error occurred. Please try again.");
       }
     });
   };
@@ -113,7 +124,7 @@ export function SignUpForm({ onSuccess }: { onSuccess?: () => void }) {
           <div className="w-full border-t border-gray-300"></div>
         </div>
         <div className="relative flex justify-center text-xs uppercase">
-          <span className=" px-2 text-gray-500">OR SIGN UP WITH</span>
+          <span className=" px-2 text-gray-500 bg-white">OR SIGN UP WITH</span>
         </div>
       </div>
 

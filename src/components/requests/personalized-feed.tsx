@@ -8,6 +8,8 @@ import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { CategoryPills } from "@/components/requests/category-pills";
 import { RequestFilters } from "@/components/requests/request-filters";
 import { RequestCard } from "@/components/requests/request-card";
+import { FeedModeTabs } from "@/components/requests/feed-mode-tabs";
+import { REVERSE_MODE_MAP, getCategorySlug } from "@/lib/utils/category-routing";
 import type { RequestItem, FeedMode } from "@/lib/types";
 import { useAuth } from "@/components/layout/auth-provider";
 import { usePathname } from "next/navigation";
@@ -20,16 +22,26 @@ import { cn } from "@/lib/utils";
 
 interface PersonalizedFeedProps {
   initialMode?: FeedMode;
+  initialCategory?: string | null;
   initialData?: { items: RequestItem[]; nextCursor: string | null };
 }
 
-export function PersonalizedFeed({ initialMode = "for_you", initialData }: PersonalizedFeedProps) {
+export function PersonalizedFeed({ 
+  initialMode = "for_you", 
+  initialCategory = null,
+  initialData 
+}: PersonalizedFeedProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const { user } = useAuth();
   const isHomePage = pathname === "/app" || pathname === "/";
   const [mode, setMode] = useState<FeedMode>(() => {
+    // Determine mode from pathname first
+    if (pathname.includes("/app/popular")) return "trending";
+    if (pathname.includes("/app/latest")) return "latest";
+    if (pathname.includes("/app/for-you")) return "for_you";
+    
     const modeParam = searchParams.get("mode");
     return (modeParam === "for_you" || modeParam === "latest" || modeParam === "trending"
       ? modeParam
@@ -97,7 +109,7 @@ export function PersonalizedFeed({ initialMode = "for_you", initialData }: Perso
   }, [mode, hasPreferences]);
 
   // Get filter params from URL
-  const category = searchParams.get("category") || null;
+  const category = initialCategory || searchParams.get("category") || null;
   const priceMin = searchParams.get("priceMin") || null;
   const priceMax = searchParams.get("priceMax") || null;
   const country = searchParams.get("country") || null;
@@ -261,6 +273,12 @@ export function PersonalizedFeed({ initialMode = "for_you", initialData }: Perso
 
   const handleModeChange = (newMode: FeedMode) => {
     setMode(newMode);
+    
+    // Build path based on new mode and current category
+    const modePath = REVERSE_MODE_MAP[newMode] || "for-you";
+    const categoryPath = category && category !== "All" ? `/${getCategorySlug(category)}` : "";
+    
+    router.push(`/app/${modePath}${categoryPath}`);
   };
 
   // Infinite scroll: load more when user scrolls near bottom
@@ -285,106 +303,127 @@ export function PersonalizedFeed({ initialMode = "for_you", initialData }: Perso
 
   return (
     <div className="flex flex-col w-full">
-      <section className="relative mx-auto w-full max-w-[1360px] mb-8 rounded-[32px] bg-white px-6 py-12 sm:px-10 sm:py-16 overflow-hidden flex items-center justify-center min-h-[440px]">
-        {/* Left Hero Image */}
-        <div className="hidden lg:block absolute -left-6 xl:-left-10 top-[40%] -translate-y-1/2 w-[260px] xl:w-[320px] h-[260px] xl:h-[320px] pointer-events-none z-0">
-          <Image src="/hero/left.png" alt="Microphone composition" fill className="object-contain mix-blend-multiply" priority />
-        </div>
+      <section className={cn(
+        "relative mx-auto w-full max-w-[1360px] flex items-center justify-center transition-all duration-500",
+        isHomePage ? "rounded-[32px] bg-white overflow-hidden px-6 py-12 sm:px-10 sm:py-16 min-h-[440px] mb-8" : "px-4 md:px-6 py-2 min-h-[80px] mb-0"
+      )}>
+        {/* Hero background images - only show on home page for impact */}
+        {isHomePage && (
+          <>
+            <div className="hidden lg:block absolute -left-6 xl:-left-10 top-[40%] -translate-y-1/2 w-[260px] xl:w-[320px] h-[260px] xl:h-[320px] pointer-events-none z-0">
+              <Image src="/hero/left.png" alt="Microphone composition" fill className="object-contain mix-blend-multiply" priority />
+            </div>
+            <div className="hidden lg:block absolute -right-6 xl:-right-10 top-[40%] -translate-y-1/2 w-[260px] xl:w-[320px] h-[260px] xl:h-[320px] pointer-events-none z-0">
+              <Image src="/hero/right.png" alt="Gadgets composition" fill className="object-contain mix-blend-multiply" priority />
+            </div>
+          </>
+        )}
 
-        {/* Right Hero Image */}
-        <div className="hidden lg:block absolute -right-6 xl:-right-10 top-[40%] -translate-y-1/2 w-[260px] xl:w-[320px] h-[260px] xl:h-[320px] pointer-events-none z-0">
-          <Image src="/hero/right.png" alt="Gadgets composition" fill className="object-contain mix-blend-multiply" priority />
-        </div>
+        <div className={cn(
+          "mx-auto w-full text-center flex flex-col items-center relative z-10",
+          isHomePage ? "max-w-3xl" : "max-w-5xl"
+        )}>
+          {isHomePage ? (
+            <>
+              <div className="relative flex items-center p-1.5 bg-[#f4f5f8] rounded-2xl mb-6 w-fit mx-auto">
+                <div
+                  className="absolute inset-y-1.5 w-[calc(50%-6px)] bg-white rounded-xl transition-all duration-300 ease-out"
+                  style={{
+                    left: tradeMode === "buy" ? '6px' : 'calc(50%)'
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setTradeMode("buy")}
+                  className={cn(
+                    "relative z-10 px-8 py-2.5 min-w-[120px] text-[13px] font-bold tracking-widest transition-colors duration-300 outline-none",
+                    tradeMode === "buy" ? "text-[#1e2330]" : "text-[#8e95a5] hover:text-[#6a7282]"
+                  )}
+                >
+                  BUY
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTradeMode("sell")}
+                  className={cn(
+                    "relative z-10 px-8 py-2.5 min-w-[120px] text-[13px] font-bold tracking-widest transition-colors duration-300 outline-none",
+                    tradeMode === "sell" ? "text-[#1e2330]" : "text-[#8e95a5] hover:text-[#6a7282]"
+                  )}
+                >
+                  SELL
+                </button>
+              </div>
 
-        <div className="mx-auto w-full text-center flex flex-col items-center max-w-3xl relative z-10">
-          <div className="relative flex items-center p-1.5 bg-[#f4f5f8] rounded-2xl mb-6 w-fit mx-auto">
-            <div
-              className="absolute inset-y-1.5 w-[calc(50%-6px)] bg-white rounded-xl transition-all duration-300 ease-out"
-              style={{
-                left: tradeMode === "buy" ? '6px' : 'calc(50%)'
-              }}
-            />
-            <button
-              type="button"
-              onClick={() => setTradeMode("buy")}
-              className={cn(
-                "relative z-10 px-8 py-2.5 min-w-[120px] text-[13px] font-bold tracking-widest transition-colors duration-300 outline-none",
-                tradeMode === "buy" ? "text-[#1e2330]" : "text-[#8e95a5] hover:text-[#6a7282]"
-              )}
-            >
-              BUY
-            </button>
-            <button
-              type="button"
-              onClick={() => setTradeMode("sell")}
-              className={cn(
-                "relative z-10 px-8 py-2.5 min-w-[120px] text-[13px] font-bold tracking-widest transition-colors duration-300 outline-none",
-                tradeMode === "sell" ? "text-[#1e2330]" : "text-[#8e95a5] hover:text-[#6a7282]"
-              )}
-            >
-              SELL
-            </button>
-          </div>
-
-          <h1 
-            className="mx-auto text-3xl leading-[1.1] tracking-tight text-foreground sm:text-5xl font-medium"
-            style={{ fontFamily: 'var(--font-expanded)' }}
-          >
-            Stop searching,<br />start <span className="text-[#7860fe] bg-[#f0edff] px-3 py-1 rounded-l-lg pb-1.5 align-baseline border-solid border-r-[3px]" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600, borderRightColor: "#7860fe" }}>seeking</span>
-          </h1>
-          <p className="mx-auto mt-4 max-w-xl text-base text-gray-500 sm:text-lg">
-            Post a request, receive offers, compare deals,<br />and connect with the right seller.
-          </p>
-
-          <div className={cn(
-            "mx-auto w-full max-w-xl relative transition-all duration-500",
-            tradeMode === "buy" ? "mt-8" : "mt-2"
-          )}>
-            <div className="relative w-full h-[130px]">
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-100/60 via-indigo-50/60 to-purple-100/60 blur-3xl rounded-full scale-[1.1] -z-10 pointer-events-none" />
-
-              {/* BUY Panel */}
-              <div
-                role="article"
-                className={cn(
-                  "absolute inset-0 w-full rounded-2xl bg-white border border-[#e6e7eb] shadow-[0_8px_30px_rgb(0,0,0,0.06)] transition-all duration-500 ease-out h-[130px] flex flex-col p-5 group",
-                  tradeMode === 'buy' ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4 pointer-events-none"
-                )}
+              <h1 
+                className="mx-auto text-3xl leading-[1.25] tracking-tight text-foreground sm:text-5xl font-medium"
+                style={{ fontFamily: 'var(--font-expanded)' }}
               >
-                <span className="text-[#a5abb7] text-[16px] font-medium text-left flex-1 pl-1 pt-1 font-sans">
-                  I'm looking for a smartphone with 8gb..
-                </span>
-                <div className="absolute bottom-4 right-4">
-                  <div className="rounded-full bg-gray-100 text-gray-400 px-6 py-2.5 text-[15px] font-medium flex items-center justify-center transition-colors cursor-not-allowed">
-                    Request
+                Stop searching<br />& start <span className="text-[#7860fe] bg-[#f0edff] px-3 py-1 rounded-l-lg pb-1.5 align-baseline border-solid border-r-[3px]" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 500, borderRightColor: "#7860fe" }}>seeking</span>
+              </h1>
+              <p className="mx-auto mt-4 max-w-xl text-base text-gray-500 sm:text-lg">
+                Post a request, receive offers, compare deals,<br />and connect with the right seller.
+              </p>
+
+              <div className={cn(
+                "mx-auto w-full max-w-xl relative transition-all duration-500",
+                tradeMode === "buy" ? "mt-8" : "mt-2"
+              )}>
+                <div className="relative w-full h-[130px]">
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-100/60 via-indigo-50/60 to-purple-100/60 blur-3xl rounded-full scale-[1.1] -z-10 pointer-events-none" />
+
+                  {/* BUY Panel */}
+                  <div
+                    role="article"
+                    className={cn(
+                      "absolute inset-0 w-full rounded-2xl bg-white border border-[#e6e7eb] shadow-[0_8px_30px_rgb(0,0,0,0.06)] transition-all duration-500 ease-out h-[130px] flex flex-col p-5 group",
+                      tradeMode === 'buy' ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4 pointer-events-none"
+                    )}
+                  >
+                    <span className="text-[#a5abb7] text-[16px] font-medium text-left flex-1 pl-1 pt-1 font-sans">
+                      I'm looking for a smartphone with 8gb..
+                    </span>
+                    <div className="absolute bottom-4 right-4">
+                      <div className="rounded-full bg-gray-100 text-gray-400 px-6 py-2.5 text-[15px] font-medium flex items-center justify-center transition-colors cursor-not-allowed">
+                        Request
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* SELL Panel */}
+                  <div
+                    className={cn(
+                      "absolute inset-0 w-full h-[130px] flex items-center justify-center transition-all duration-500 ease-out",
+                      tradeMode === 'sell' ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"
+                    )}
+                  >
+                    <Button
+                      asChild
+                      className="rounded-full bg-[#1e2330] hover:bg-[#2a303f] text-white px-10 py-6 text-[16px] font-medium shadow-lg hover:shadow-xl transition-all"
+                    >
+                      <Link href="/app/new">Sell your item</Link>
+                    </Button>
                   </div>
                 </div>
               </div>
-
-              {/* SELL Panel */}
-              <div
-                className={cn(
-                  "absolute inset-0 w-full h-[130px] flex items-center justify-center transition-all duration-500 ease-out",
-                  tradeMode === 'sell' ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"
-                )}
-              >
-                <Button
-                  asChild
-                  className="rounded-full bg-[#1e2330] hover:bg-[#2a303f] text-white px-10 py-6 text-[16px] font-medium shadow-lg hover:shadow-xl transition-all"
-                >
-                  <Link href="/app/new">Sell your item</Link>
-                </Button>
-              </div>
+            </>
+          ) : (
+            <div className="w-full flex flex-col items-stretch gap-4">
+              <CategoryPills mode={mode} hasPreferences={hasPreferences} />
+              <RequestFilters hideViewToggle={true} mode={mode} category={category} />
             </div>
-          </div>
+          )}
         </div>
       </section>
 
-      <div className="shrink-0 mb-2">
-        <CategoryPills />
-      </div>
+      {isHomePage && (
+        <>
+          <div className="shrink-0 mb-2">
+            <CategoryPills mode={mode} hasPreferences={hasPreferences} />
+          </div>
 
-      <RequestFilters hideViewToggle={true} />
+          <RequestFilters hideViewToggle={true} mode={mode} category={category} />
+        </>
+      )}
 
       {/* Error state */}
       {isError ? (
@@ -436,7 +475,7 @@ export function PersonalizedFeed({ initialMode = "for_you", initialData }: Perso
             {allItems.map((request: RequestItem) => {
               const requestWithExtras = request as RequestItem & { images?: string[]; links?: string[] };
               return (
-                <div key={request.id} className="break-inside-avoid mb-6">
+                <div key={request.id} className="break-inside-avoid mb-6 bg-[#f5f6f9] rounded-[20px] p-[6px] transition-all duration-300 ease-out hover:-translate-y-1.5 shadow-none hover:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.12)]">
                   <Link
                     href={`/app/requests/${request.id}`}
                     className="block w-full"
@@ -447,6 +486,7 @@ export function PersonalizedFeed({ initialMode = "for_you", initialData }: Perso
                       images={requestWithExtras.images || []}
                       links={requestWithExtras.links || []}
                       smallImages={true}
+                      noBorder={true}
                     />
                   </Link>
                 </div>

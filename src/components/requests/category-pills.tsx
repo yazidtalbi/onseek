@@ -1,11 +1,13 @@
 "use client";
 
 import * as React from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { ChevronRight, ChevronLeft, ListFilter } from "lucide-react";
 import { MAIN_CATEGORIES } from "@/lib/categories";
 import { cn } from "@/lib/utils";
 import { FiltersModal } from "@/components/requests/filters-modal";
+import { getCategorySlug, getCategoryName, REVERSE_MODE_MAP } from "@/lib/utils/category-routing";
+import type { FeedMode } from "@/lib/types";
 import {
   Select,
   SelectContent,
@@ -14,25 +16,44 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-export function CategoryPills() {
+export function CategoryPills({ 
+  mode = "for_you",
+  hasPreferences = false 
+}: { 
+  mode?: FeedMode;
+  hasPreferences?: boolean;
+}) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const pathname = usePathname();
   const scrollContainerRef = React.useRef<HTMLDivElement>(null);
   const [canScrollCategoriesRight, setCanScrollCategoriesRight] = React.useState(true);
   const [canScrollCategoriesLeft, setCanScrollCategoriesLeft] = React.useState(false);
 
-  const selectedCategory = searchParams.get("category") || "All";
-  const sort = searchParams.get("sort") || "newest";
-
-  const updateParam = (key: string, value: string) => {
+  // Detect selected category from pathname or search params
+  const pathParts = pathname.split('/');
+  const lastPart = pathParts[pathParts.length - 1];
+  const isCategoryInPath = pathname.includes('/app/popular/') || pathname.includes('/app/latest/') || pathname.includes('/app/for-you/');
+  const pathCategory = isCategoryInPath ? getCategoryName(lastPart) : null;
+  const isHomePage = pathname === "/app";
+  
+  const selectedCategory = isHomePage ? "Discover" : (pathCategory || searchParams.get("category") || "All");
+  
+  const handleModeChange = (newMode: string) => {
     const params = new URLSearchParams(searchParams.toString());
-    if (value === "" || value === "newest") {
-      params.delete(key);
-    } else {
-      params.set(key, value);
-    }
     params.delete("page");
-    router.push(`/app?${params.toString()}`);
+    
+    const modePath = REVERSE_MODE_MAP[newMode as FeedMode] || "for-you";
+    
+    // Maintain current category slug if present
+    const categorySlug = pathname.split('/').pop();
+    const isCategoryPath = pathname.includes('/app/popular/') || pathname.includes('/app/latest/') || pathname.includes('/app/for-you/');
+    
+    if (isCategoryPath && categorySlug && categorySlug !== modePath) {
+      router.push(`/app/${modePath}/${categorySlug}?${params.toString()}`);
+    } else {
+      router.push(`/app/${modePath}?${params.toString()}`);
+    }
   };
 
   // Check scroll position for categories
@@ -62,13 +83,21 @@ export function CategoryPills() {
 
   const handleCategorySelect = (category: string) => {
     const params = new URLSearchParams(searchParams.toString());
-    if (category === "All") {
-      params.delete("category");
-    } else {
-      params.set("category", category);
-    }
     params.delete("page");
-    router.push(`/app?${params.toString()}`);
+    
+    if (category === "Discover") {
+      router.push("/app" + (params.toString() ? `?${params.toString()}` : ""));
+      return;
+    }
+
+    const modePath = REVERSE_MODE_MAP[mode] || "for-you";
+    
+    if (category === "All") {
+      router.push(`/app/${modePath}?${params.toString()}`);
+    } else {
+      const slug = getCategorySlug(category);
+      router.push(`/app/${modePath}/${slug}?${params.toString()}`);
+    }
   };
 
   const scrollRight = () => {
@@ -89,23 +118,26 @@ export function CategoryPills() {
     }
   };
 
-  const categories = ["All", ...MAIN_CATEGORIES];
+  const categories = ["Discover", "All", ...MAIN_CATEGORIES];
   const [filtersOpen, setFiltersOpen] = React.useState(false);
   const hasActiveFilters = searchParams.get("priceMin") || searchParams.get("priceMax") || searchParams.get("country");
 
   return (
     <div className="flex items-center w-full gap-3">
-      {/* Sort Dropdown - NOW ON THE FAR LEFT */}
+      {/* Mode Dropdown - Replacing Sort Dropdown */}
       <div className="flex-shrink-0">
-        <Select value={sort} onValueChange={(val) => updateParam("sort", val)}>
-          <SelectTrigger className="w-[100px] border-none shadow-none font-medium h-9 px-2 hover:bg-gray-50 rounded-full transition-colors text-gray-600 focus:ring-0">
+        <Select value={mode} onValueChange={handleModeChange}>
+          <SelectTrigger className="w-[110px] border-none shadow-none font-medium h-9 px-2 hover:bg-gray-100 rounded-full transition-colors text-black focus:ring-0">
             <div className="flex items-center gap-2">
-              <span className="truncate">{sort === "active" ? "Active" : "Newest"}</span>
+              <span className="truncate">
+                {mode === "for_you" ? "For you" : mode === "trending" ? "Trending" : "Latest"}
+              </span>
             </div>
           </SelectTrigger>
           <SelectContent className="bg-white min-w-[150px]">
-            <SelectItem value="newest">Newest first</SelectItem>
-            <SelectItem value="active">Most active</SelectItem>
+            <SelectItem value="for_you" disabled={!hasPreferences}>For you</SelectItem>
+            <SelectItem value="latest">Latest</SelectItem>
+            <SelectItem value="trending">Trending</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -114,7 +146,7 @@ export function CategoryPills() {
       <div className="relative flex-1 flex items-center min-w-0 group">
         {/* Left gradient overlay */}
         {canScrollCategoriesLeft && (
-          <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-[#f5f6f9] to-transparent pointer-events-none z-10" />
+          <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-white via-white/80 to-transparent pointer-events-none z-10" />
         )}
         
         {/* Left chevron button (Categories) */}
@@ -152,7 +184,7 @@ export function CategoryPills() {
 
         {/* Right gradient overlay */}
         {canScrollCategoriesRight && (
-          <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-[#f5f6f9] to-transparent pointer-events-none z-10" />
+          <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-white via-white/80 to-transparent pointer-events-none z-10" />
         )}
         
         {/* Right chevron button (Categories) */}

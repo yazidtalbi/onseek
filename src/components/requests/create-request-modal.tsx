@@ -47,6 +47,16 @@ export function CreateRequestModal({
           "p-0 overflow-hidden rounded-[1.5rem] border-none shadow-2xl bg-white flex flex-col transition-all duration-500 ease-in-out",
           (currentStep === 7 || currentStep === 8) ? "sm:max-w-[880px] w-full" : "sm:max-w-[620px] w-full"
         )}>
+          {/* Contextual Close Button for Step 8 */}
+          {currentStep === 8 && (
+            <button
+              onClick={() => handleOpenChange(false)}
+              className="absolute top-6 right-6 z-[60] p-2 rounded-full text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-all"
+              aria-label="Close"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          )}
           {/* Top Progress Bar */}
           <div className="absolute top-0 left-0 right-0 h-1.5 bg-gray-100/50 z-50 overflow-hidden">
             <div 
