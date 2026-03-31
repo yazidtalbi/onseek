@@ -30,6 +30,15 @@ function getNotificationContent(type: string, payload: any) {
         color: "text-blue-600",
         bgColor: "bg-blue-50",
       };
+    case "new_message":
+      return {
+        icon: MessageSquare,
+        title: "New message",
+        message: "You received a new private message",
+        link: "/messages",
+        color: "text-[#7755FF]",
+        bgColor: "bg-[#7755FF]/10",
+      };
     case "winner":
     case "winner_selected":
       return {

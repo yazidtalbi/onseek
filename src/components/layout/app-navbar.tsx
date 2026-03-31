@@ -5,7 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Bell, Plus, ChevronDown, TrendingUp, Sparkles, Moon, Sun, LogOut, Bookmark, User, Send, Settings, ClipboardList, Package, Menu, X, Home, Trophy, Globe } from "lucide-react";
+import { Search, Bell, Plus, ChevronDown, TrendingUp, Sparkles, Moon, Sun, LogOut, Bookmark, User, Send, Settings, ClipboardList, Package, Menu, X, Home, Trophy, Globe, MessageCircle } from "lucide-react";
 import { useAuth } from "@/components/layout/auth-provider";
 import { useTheme } from "@/components/layout/theme-provider";
 import { signOutAction } from "@/actions/auth.actions";
@@ -545,6 +545,19 @@ export function AppNavbar() {
                           Proposals
                         </Link>
                         <Link
+                          href="/messages"
+                          onClick={() => setMobileMenuOpen(false)}
+                          className={cn(
+                            "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
+                            pathname === "/messages" || pathname.startsWith("/messages/")
+                              ? "bg-gray-100 text-foreground font-medium"
+                              : "text-muted-foreground hover:text-foreground hover:bg-gray-50"
+                          )}
+                        >
+                          <MessageCircle className="h-5 w-5 shrink-0" />
+                          Messages
+                        </Link>
+                        <Link
                           href="/app/personal-items"
                           onClick={() => setMobileMenuOpen(false)}
                           className={cn(
@@ -810,6 +823,11 @@ export function AppNavbar() {
                       {unreadCount > 9 ? "9+" : unreadCount}
                     </span>
                   )}
+                </Link>
+              </Button>
+              <Button variant="ghost" size="icon" className="relative" asChild>
+                <Link href="/messages">
+                  <MessageCircle className="h-5 w-5" />
                 </Link>
               </Button>
               <DropdownMenu>

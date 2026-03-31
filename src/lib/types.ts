@@ -88,14 +88,28 @@ export type PersonalizedFeedResponse = {
   };
 };
 
-// Personal items types
-export type PersonalItem = {
+// Messaging system types
+export type Conversation = {
   id: string;
-  user_id: string;
-  article_name: string;
-  description: string | null;
-  price: number | null;
-  image_url: string | null;
+  request_id: string;
+  seeker_id: string;
+  proposer_id: string;
   created_at: string;
   updated_at: string;
+  // Included fields
+  request?: {
+    title: string;
+  };
+  seeker?: Profile;
+  proposer?: Profile;
+  last_message?: Message;
+};
+
+export type Message = {
+  id: string;
+  conversation_id: string;
+  sender_id: string;
+  content: string;
+  is_read: boolean;
+  created_at: string;
 };

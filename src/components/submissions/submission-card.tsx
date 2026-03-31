@@ -25,6 +25,7 @@ import { useAuth } from "@/components/layout/auth-provider";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import type { Profile } from "@/lib/types";
 import { createRequestUrl } from "@/lib/utils/slug";
+import { MessageProposerDialog } from "@/components/messaging/message-proposer-dialog";
 
 function getHost(url: string) {
   try {
@@ -67,6 +68,7 @@ export function SubmissionCard({
   const [reportOpen, setReportOpen] = React.useState(false);
   const [previewOpen, setPreviewOpen] = React.useState(false);
   const [contactDialogOpen, setContactDialogOpen] = React.useState(false);
+  const [messageDialogOpen, setMessageDialogOpen] = React.useState(false);
   const [submitterProfile, setSubmitterProfile] = React.useState<Profile | null>(null);
   const { user } = useAuth();
   const submittedAt = formatTimeAgo(submission.created_at);
@@ -298,6 +300,20 @@ export function SubmissionCard({
 
           {/* Far-right: View item button and Voting control next to each other */}
           <div className="flex items-center gap-2 flex-shrink-0 ml-auto">
+            {isRequestOwner && user?.id !== submission.user_id && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setMessageDialogOpen(true);
+                }}
+                className="flex-shrink-0 border-neutral-200 text-neutral-600 hover:bg-neutral-50 px-3"
+              >
+                <MessageCircle className="h-4 w-4 mr-1.5" />
+                Message
+              </Button>
+            )}
             <Button
               size="sm"
               onClick={(e) => {
@@ -349,6 +365,18 @@ export function SubmissionCard({
           itemName={storeName}
           description={description}
           price={submission.price}
+        />
+      )}
+
+      {/* Message proposer dialog */}
+      {isRequestOwner && (
+        <MessageProposerDialog
+          open={messageDialogOpen}
+          onOpenChange={setMessageDialogOpen}
+          requestId={requestId}
+          requestTitle={requestTitle || storeName}
+          proposerId={submission.user_id}
+          proposerName={username || "Proposer"}
         />
       )}
     </Card>
