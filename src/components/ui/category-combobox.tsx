@@ -89,7 +89,7 @@ export function CategoryCombobox({
           autoFocus={true}
           className={cn(
             "px-6 h-14 bg-white border-[#e5e7eb] rounded-xl focus-visible:ring-[#222234] text-base font-bold transition-all shadow-none",
-            "hover:border-gray-300 focus:border-[#222234] placeholder:text-gray-400"
+            "hover:border-gray-300 focus:border-[#222234] placeholder:text-gray-400 placeholder:font-normal"
           )}
         />
         {title && (
@@ -110,8 +110,8 @@ export function CategoryCombobox({
         <div className="animate-in fade-in slide-in-from-top-2 duration-500">
           <div className="space-y-4">
             <div className="flex items-center justify-between px-1">
-              <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400">
-                {category ? "Selected Category" : "Suggested Category"}
+              <h3 className="text-sm font-medium text-gray-500">
+                Which category fits best your item?
               </h3>
             </div>
 

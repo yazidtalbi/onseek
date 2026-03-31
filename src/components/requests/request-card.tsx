@@ -131,7 +131,7 @@ function RequestCardComponent({
 
 
   // Limit display for feed variant
-  const maxImages = 3;
+  const maxImages = 4;
   const maxPreferences = isFeed || smallImages ? 3 : preferences.length;
   const maxDealbreakers = isFeed || smallImages ? 3 : dealbreakers.length;
 
@@ -203,8 +203,7 @@ function RequestCardComponent({
               {/* Title: Truncated to one line in preview modes */}
               <h3
                 className={cn(
-                  "font-semibold leading-snug text-[18px] text-foreground transition-colors font-[family-name:var(--font-inter-display)]",
-                  (isFeed || smallImages) && "line-clamp-1"
+                  "font-semibold leading-snug text-[18px] text-foreground transition-colors font-[family-name:var(--font-inter-display)] pr-24"
                 )}
               >
                 {request.title}
@@ -243,59 +242,6 @@ function RequestCardComponent({
           </div>
 
           {/* Image / Category placeholder - Right side (shown in feed or with smallImages prop) */}
-          {(isFeed || smallImages) && (
-            <div className="flex-shrink-0">
-              {images.length > 0 ? (
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setPreviewImage(images[0]);
-                  }}
-                  className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-lg bg-gray-50 overflow-hidden cursor-pointer hover:opacity-80 transition-opacity"
-                >
-                  <Image
-                    src={images[0]}
-                    alt={`${request.title} - Image 1`}
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 640px) 48px, 56px"
-                    unoptimized
-                  />
-                </button>
-              ) : (
-                <div className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-lg bg-gray-100/60 flex items-center justify-center">
-                  {(() => {
-                    const iconProps = { className: "w-6 h-6 sm:w-7 sm:h-7 text-gray-400" };
-                    const lower = primaryCategoryName.toLowerCase();
-
-                    // High-priority specific items
-                    if (lower.includes("watch")) return <Watch {...iconProps} />;
-                    if (lower.includes("car") || lower.includes("auto")) return <Car {...iconProps} />;
-                    if (lower.includes("laptop") || lower.includes("comput")) return <Laptop {...iconProps} />;
-                    if (lower.includes("phone") || lower.includes("smartphone") || lower.includes("telephony")) return <Smartphone {...iconProps} />;
-                    if (lower.includes("game") || lower.includes("gaming") || lower.includes("console")) return <Gamepad2 {...iconProps} />;
-                    if (lower.includes("tv") || lower.includes("video")) return <Tv {...iconProps} />;
-                    if (lower.includes("headphone") || lower.includes("audio")) return <Headphones {...iconProps} />;
-                    if (lower.includes("camera") || lower.includes("photo")) return <Camera {...iconProps} />;
-                    if (lower.includes("sneaker") || lower.includes("shoes") || lower.includes("footwear")) return <Footprints {...iconProps} />;
-                    if (lower.includes("jewelry") || lower.includes("gem")) return <Gem {...iconProps} />;
-
-                    // Category fallbacks
-                    if (lower.includes("tech")) return <Laptop {...iconProps} />;
-                    if (lower.includes("fashion")) return <ShoppingBag {...iconProps} />;
-                    if (lower.includes("health") || lower.includes("cosmetic") || lower.includes("beauty")) return <HeartPulse {...iconProps} />;
-                    if (lower.includes("family") || lower.includes("child")) return <Baby {...iconProps} />;
-                    if (lower.includes("home") || lower.includes("living") || lower.includes("furniture")) return <Home {...iconProps} />;
-                    if (lower.includes("garden") || lower.includes("diy")) return <Shovel {...iconProps} />;
-                    if (lower.includes("grocer") || lower.includes("food")) return <Apple {...iconProps} />;
-
-                    return <Package {...iconProps} />;
-                  })()}
-                </div>
-              )}
-            </div>
-          )}
         </div>
       </section>
 
@@ -322,13 +268,9 @@ function RequestCardComponent({
             {visiblePreferences.length > 0 && (
               <div className="flex flex-wrap gap-2">
                 {visiblePreferences.map((pref: { label: string }, idx: number) => (
-                  <span
-                    key={idx}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-green-50 text-sm text-[#015a25]"
-                  >
-                    <Check className="h-4 w-4 text-green-500" />
-                    <span>{pref.label}</span>
-                  </span>
+                  <div key={idx} className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-600 text-[11px] font-medium border border-blue-100/50">
+                    {pref.label.charAt(0).toUpperCase() + pref.label.slice(1)}
+                  </div>
                 ))}
                 {remainingPreferences > 0 && (
                   <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-green-50 text-sm text-[#015a25]">
@@ -341,13 +283,9 @@ function RequestCardComponent({
             {visibleDealbreakers.length > 0 && (
               <div className="flex flex-wrap gap-2">
                 {visibleDealbreakers.map((deal: { label: string }, idx: number) => (
-                  <span
-                    key={idx}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-amber-50 text-sm text-amber-700"
-                  >
-                    <X className="h-4 w-4 text-amber-500 opacity-70" />
-                    <span>{deal.label}</span>
-                  </span>
+                  <div key={idx} className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-50 text-[#FF5F00] text-[11px] font-medium border border-[#FF5F00]/10">
+                    {deal.label.charAt(0).toUpperCase() + deal.label.slice(1)}
+                  </div>
                 ))}
                 {remainingDealbreakers > 0 && (
                   <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-amber-50 text-sm text-amber-700">
@@ -392,47 +330,41 @@ function RequestCardComponent({
               </div>
             )}
 
-            <div className={cn(
-              "border-l border-dashed border-neutral-300/60 pl-5 mt-3 mb-4",
-              isInline ? "flex flex-wrap gap-2" : "space-y-4"
-            )}>
-              {preferences.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {visiblePreferences.map((pref: { label: string }, idx: number) => (
-                    <span
-                      key={idx}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-green-50 text-sm text-[#015a25]"
-                    >
-                      <Check className="h-4 w-4 text-green-500" />
-                      <span>{pref.label}</span>
-                    </span>
-                  ))}
-                  {remainingPreferences > 0 && (
-                    <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-green-50 text-sm text-[#015a25]">
-                      +{remainingPreferences} more
-                    </span>
-                  )}
-                </div>
-              )}
-              {dealbreakers.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {visibleDealbreakers.map((deal: { label: string }, idx: number) => (
-                    <span
-                      key={idx}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-amber-50 text-sm text-amber-700"
-                    >
-                      <X className="h-4 w-4 text-amber-500 opacity-70" />
-                      <span>{deal.label}</span>
-                    </span>
-                  ))}
-                  {remainingDealbreakers > 0 && (
-                    <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-amber-50 text-sm text-amber-700">
-                      +{remainingDealbreakers} more
-                    </span>
-                  )}
-                </div>
-              )}
-            </div>
+            {(preferences.length > 0 || dealbreakers.length > 0) && (
+              <div className={cn(
+                "border-l border-dashed border-neutral-300/60 pl-5 mt-3 mb-4",
+                isInline ? "flex flex-wrap gap-2" : "space-y-4"
+              )}>
+                {preferences.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {visiblePreferences.map((pref: { label: string }, idx: number) => (
+                      <div key={idx} className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-600 text-[11px] font-medium border border-blue-100/50">
+                        {pref.label.charAt(0).toUpperCase() + pref.label.slice(1)}
+                      </div>
+                    ))}
+                    {remainingPreferences > 0 && (
+                      <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-green-50 text-sm text-[#015a25]">
+                        +{remainingPreferences} more
+                      </span>
+                    )}
+                  </div>
+                )}
+                {dealbreakers.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {visibleDealbreakers.map((deal: { label: string }, idx: number) => (
+                      <div key={idx} className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-50 text-[#FF5F00] text-[11px] font-medium border border-[#FF5F00]/10">
+                        {deal.label.charAt(0).toUpperCase() + deal.label.slice(1)}
+                      </div>
+                    ))}
+                    {remainingDealbreakers > 0 && (
+                      <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-amber-50 text-sm text-amber-700">
+                        +{remainingDealbreakers} more
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Reference Images - Hide on home feed if smallImages is true */}
             {images.length > 0 && !smallImages && (
@@ -493,6 +425,33 @@ function RequestCardComponent({
         )}
       </section>
 
+      {/* Images at the absolute bottom for feed cards */}
+      {(isFeed || smallImages) && visibleImages.length > 0 && (
+        <div className="mt-auto pt-4 flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
+          {visibleImages.map((imgUrl, index) => (
+            <button
+              key={index}
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setPreviewImageIndex(index);
+                setPreviewImage(imgUrl);
+              }}
+              className="relative w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0 rounded-md bg-gray-50 overflow-hidden cursor-pointer hover:opacity-90 transition-opacity border border-gray-100"
+            >
+              <Image
+                src={imgUrl}
+                alt={`${request.title} - Image ${index + 1}`}
+                fill
+                className="object-cover"
+                sizes="(max-width: 640px) 40px, 48px"
+                unoptimized
+              />
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Footer Section - rendered inside card only if NOT smallImages (detail page) */}
       {!smallImages && footerSection}
     </CardContent>
@@ -510,7 +469,8 @@ function RequestCardComponent({
             <Card
               ref={cardRef}
               className={cn(
-                "flex flex-col relative h-full w-full rounded-2xl border border-[#e5e7eb] overflow-hidden bg-white shadow-none transition-all duration-300 ease-out",
+                "flex flex-col relative w-full rounded-2xl border border-[#e5e7eb] overflow-hidden bg-white shadow-none transition-all duration-300 ease-out",
+                hasContent ? "h-full" : "h-fit",
                 smallImages && "group-hover/card:-translate-y-1 group-hover/card:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.1)]"
               )}
             >
@@ -533,7 +493,8 @@ function RequestCardComponent({
       ) : isPreview ? (
         <Card
           className={cn(
-            "flex flex-col relative group h-full",
+            "flex flex-col relative group",
+            hasContent ? "h-full" : "h-fit",
             !isFeed ? "rounded-2xl" : "",
             isFeed && isFirst && isLast ? "rounded-2xl" : "",
             isFeed && isFirst && !isLast ? "rounded-t-2xl rounded-b-none" : "",
@@ -565,7 +526,8 @@ function RequestCardComponent({
         >
           <Card
             className={cn(
-              "flex flex-col transition-all duration-300 ease-out relative group h-full hover:-translate-y-2 hover:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.15)]",
+              "flex flex-col transition-all duration-300 ease-out relative group hover:-translate-y-2 hover:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.15)]",
+              hasContent ? "h-full" : "h-fit",
               !isFeed ? "rounded-2xl" : "",
               isFeed && isFirst && isLast ? "rounded-2xl" : "",
               isFeed && isFirst && !isLast ? "rounded-t-2xl rounded-b-none" : "",

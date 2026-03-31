@@ -327,10 +327,10 @@ export function PersonalizedFeed({ initialMode = "for_you", initialData }: Perso
           </div>
 
           <h1 
-            className="mx-auto text-3xl leading-tight tracking-tight text-foreground sm:text-5xl sm:leading-[1.1]"
-            style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}
+            className="mx-auto text-3xl leading-[1.1] tracking-tight text-foreground sm:text-5xl font-medium"
+            style={{ fontFamily: 'var(--font-expanded)' }}
           >
-            Stop searching, start <span className="text-[#7860fe] bg-[#f0edff] px-3 py-1 rounded-l-lg pb-1.5 align-baseline border-solid border-r-[3px]" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600, borderRightColor: "#7860fe" }}>seeking</span>
+            Stop searching,<br />start <span className="text-[#7860fe] bg-[#f0edff] px-3 py-1 rounded-l-lg pb-1.5 align-baseline border-solid border-r-[3px]" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600, borderRightColor: "#7860fe" }}>seeking</span>
           </h1>
           <p className="mx-auto mt-4 max-w-xl text-base text-gray-500 sm:text-lg">
             Post a request, receive offers, compare deals,<br />and connect with the right seller.
@@ -345,11 +345,9 @@ export function PersonalizedFeed({ initialMode = "for_you", initialData }: Perso
 
               {/* BUY Panel */}
               <div
-                onClick={() => router.push('/app/new')}
-                role="button"
-                tabIndex={0}
+                role="article"
                 className={cn(
-                  "absolute inset-0 w-full rounded-2xl bg-white border border-[#e6e7eb] shadow-[0_8px_30px_rgb(0,0,0,0.06)] transition-all duration-500 ease-out hover:bg-white hover:border-gray-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.1)] h-[130px] flex flex-col p-5 cursor-pointer group",
+                  "absolute inset-0 w-full rounded-2xl bg-white border border-[#e6e7eb] shadow-[0_8px_30px_rgb(0,0,0,0.06)] transition-all duration-500 ease-out h-[130px] flex flex-col p-5 group",
                   tradeMode === 'buy' ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4 pointer-events-none"
                 )}
               >
@@ -357,7 +355,7 @@ export function PersonalizedFeed({ initialMode = "for_you", initialData }: Perso
                   I'm looking for a smartphone with 8gb..
                 </span>
                 <div className="absolute bottom-4 right-4">
-                  <div className="rounded-full bg-[#222234] group-hover:bg-[#1a1a27] text-white px-6 py-2.5 text-[15px] font-medium flex items-center justify-center transition-colors">
+                  <div className="rounded-full bg-gray-100 text-gray-400 px-6 py-2.5 text-[15px] font-medium flex items-center justify-center transition-colors cursor-not-allowed">
                     Request
                   </div>
                 </div>
@@ -481,7 +479,7 @@ export function PersonalizedFeed({ initialMode = "for_you", initialData }: Perso
 
           {isHomePage && (
             <div className="w-full bg-[#785ffe] rounded-[32px] px-8 py-24 sm:px-16 mt-16 mb-8 flex flex-col items-center text-center justify-center min-h-[400px]">
-              <h2 className="text-4xl lg:text-6xl tracking-tight text-white mb-10 max-w-2xl" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>
+              <h2 className="text-4xl lg:text-6xl tracking-tight text-white mb-10 max-w-2xl" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 500 }}>
                 Let your item come fiiind you
               </h2>
               <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">

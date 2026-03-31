@@ -119,11 +119,12 @@ export function SignUpForm({ onSuccess }: { onSuccess?: () => void }) {
 
       {/* Form */}
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" noValidate>
-        <div className="space-y-2">
-          <Label htmlFor="username">Username</Label>
+        <div className="space-y-1">
           <Input 
             id="username" 
+            placeholder="Username"
             {...form.register("username")}
+            className="h-12 bg-white border-[#e5e7eb] rounded-xl focus-visible:ring-[#222234] placeholder:text-gray-400 placeholder:font-normal"
             onChange={(e) => {
               form.register("username").onChange(e);
               handleUsernameChange(e);
@@ -135,20 +136,18 @@ export function SignUpForm({ onSuccess }: { onSuccess?: () => void }) {
             </p>
           ) : null}
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
-          <Input id="email" type="email" {...form.register("email")} />
+        <div className="space-y-1">
+          <Input id="email" type="email" placeholder="Email" {...form.register("email")} className="h-12 bg-white border-[#e5e7eb] rounded-xl focus-visible:ring-[#222234] placeholder:text-gray-400 placeholder:font-normal" />
           {form.formState.errors.email ? (
-            <p className="text-xs text-red-600">
+            <p className="text-xs text-red-600 pl-1">
               {form.formState.errors.email.message}
             </p>
           ) : null}
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="password">Password</Label>
-          <Input id="password" type="password" {...form.register("password")} />
+        <div className="space-y-1">
+          <Input id="password" type="password" placeholder="Password" {...form.register("password")} className="h-12 bg-white border-[#e5e7eb] rounded-xl focus-visible:ring-[#222234] placeholder:text-gray-400 placeholder:font-normal" />
           {form.formState.errors.password ? (
-            <p className="text-xs text-red-600">
+            <p className="text-xs text-red-600 pl-1">
               {form.formState.errors.password.message}
             </p>
           ) : null}

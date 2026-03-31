@@ -124,18 +124,16 @@ export function SignInForm({ onSuccess }: { onSuccess?: () => void }) {
 
       {/* Form */}
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" noValidate>
-        <div className="space-y-2">
-          <Label htmlFor="email">Email or Username</Label>
-          <Input id="email" type="text" placeholder="Enter your email or username" {...form.register("emailOrUsername")} />
+        <div className="space-y-1">
+          <Input id="email" type="text" placeholder="Email or Username" {...form.register("emailOrUsername")} className="h-12 bg-white border-[#e5e7eb] rounded-xl focus-visible:ring-[#222234] placeholder:text-gray-400 placeholder:font-normal" />
           {form.formState.errors.emailOrUsername && (
-            <p className="text-xs text-red-600">{form.formState.errors.emailOrUsername.message}</p>
+            <p className="text-xs text-red-600 pl-1">{form.formState.errors.emailOrUsername.message}</p>
           )}
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="password">Password</Label>
-          <Input id="password" type="password" {...form.register("password")} />
+        <div className="space-y-1">
+          <Input id="password" type="password" placeholder="Password" {...form.register("password")} className="h-12 bg-white border-[#e5e7eb] rounded-xl focus-visible:ring-[#222234] placeholder:text-gray-400 placeholder:font-normal" />
           {form.formState.errors.password && (
-            <p className="text-xs text-red-600">{form.formState.errors.password.message}</p>
+            <p className="text-xs text-red-600 pl-1">{form.formState.errors.password.message}</p>
           )}
         </div>
         {error && <p className="text-sm text-red-600">{error}</p>}

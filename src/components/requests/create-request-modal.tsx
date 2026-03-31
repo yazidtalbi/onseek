@@ -44,7 +44,7 @@ export function CreateRequestModal({
     <>
       <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogContent className={cn(
-          "p-0 overflow-hidden rounded-[2.5rem] border-none shadow-2xl bg-white flex flex-col transition-all duration-500 ease-in-out",
+          "p-0 overflow-hidden rounded-[1.5rem] border-none shadow-2xl bg-white flex flex-col transition-all duration-500 ease-in-out",
           (currentStep === 7 || currentStep === 8) ? "sm:max-w-[880px] w-full" : "sm:max-w-[620px] w-full"
         )}>
           {/* Top Progress Bar */}
@@ -72,7 +72,7 @@ export function CreateRequestModal({
 
       {/* Close Confirmation Dialog */}
       <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
-        <DialogContent className="sm:max-w-[400px] p-8 rounded-[2rem] gap-6 border-none shadow-2xl">
+        <DialogContent className="sm:max-w-[400px] p-8 rounded-[1.25rem] gap-6 border-none shadow-2xl">
           <div className="space-y-3 text-center">
             <h3 className="text-xl font-bold text-[#222234]" style={{ fontFamily: 'var(--font-expanded)' }}>Discard request?</h3>
             <p className="text-sm text-gray-500 leading-relaxed">You'll lose all the information you've entered so far. This action cannot be undone.</p>

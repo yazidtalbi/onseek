@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowDown } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const faqs = [
@@ -27,41 +27,52 @@ export function FaqSection() {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
-    <div className="w-full mx-auto py-12 mb-8">
-      <h2 className="text-2xl md:text-4xl font-bold tracking-tight text-gray-900 mb-10 text-center" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>
-        Frequently Asked Questions
-      </h2>
-      <div className="flex flex-col gap-3 max-w-3xl mx-auto">
-        {faqs.map((faq, index) => {
-          const isOpen = openIndex === index;
-          return (
-            <div 
-              key={index} 
-              className={cn(
-                "rounded-3xl transition-all duration-300 overflow-hidden",
-                isOpen ? "bg-white border border-[#e6e7eb]" : "bg-[#f9fafb] hover:bg-[#f3f4f6]"
-              )}
-            >
-              <button
-                onClick={() => setOpenIndex(isOpen ? null : index)}
-                className="w-full flex items-center justify-between px-6 py-5 text-left focus:outline-none"
-              >
-                <span className="text-[16px] font-semibold text-gray-900">{faq.question}</span>
-                <ArrowDown className={cn("w-4 h-4 text-[#7860fe] transition-transform duration-300", isOpen && "rotate-180")} />
-              </button>
-              <div 
-                className={cn(
-                  "overflow-hidden transition-all duration-300 ease-in-out",
-                  isOpen ? "max-h-40 opacity-100" : "max-h-0 opacity-0"
-                )}
-              >
-                <div className="px-6 pb-6 pt-0 text-[15px] text-gray-500 leading-relaxed font-medium">
-                  {faq.answer}
+    <div className="w-full mx-auto py-24 mb-12">
+      <div className="max-w-[1240px] mx-auto px-6">
+        <div className="flex flex-col lg:flex-row gap-12 lg:gap-24 items-start">
+          {/* Left: Title */}
+          <div className="lg:w-[40%]">
+            <h2 className="text-[40px] md:text-[56px] leading-[1.05] font-medium tracking-[-0.03em] text-foreground" style={{ fontFamily: 'var(--font-expanded)' }}>
+              Frequently asked<br />questions
+            </h2>
+          </div>
+
+          {/* Right: Accordion */}
+          <div className="flex-1 border-t border-gray-100 w-full">
+            {faqs.map((faq, index) => {
+              const isOpen = openIndex === index;
+              return (
+                <div 
+                  key={index} 
+                  className="border-b border-gray-100"
+                >
+                  <button
+                    onClick={() => setOpenIndex(isOpen ? null : index)}
+                    className="w-full flex items-center justify-between py-5 text-left focus:outline-none group"
+                  >
+                    <span 
+                      className="text-[18px] md:text-[20px] font-medium text-foreground tracking-[-0.01em] pr-8 transition-colors group-hover:text-gray-600"
+                      style={{ fontFamily: 'var(--font-expanded)' }}
+                    >
+                      {faq.question}
+                    </span>
+                    <ChevronDown className={cn("w-5 h-5 text-foreground transition-transform duration-300 shrink-0", isOpen && "rotate-180")} />
+                  </button>
+                  <div 
+                    className={cn(
+                      "overflow-hidden transition-all duration-300 ease-in-out",
+                      isOpen ? "max-h-[200px] opacity-100 pb-8" : "max-h-0 opacity-0"
+                    )}
+                  >
+                    <div className="text-[16px] md:text-[17px] text-gray-500 leading-relaxed font-normal max-w-xl">
+                      {faq.answer}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          );
-        })}
+              );
+            })}
+          </div>
+        </div>
       </div>
     </div>
   );

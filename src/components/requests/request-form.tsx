@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { useAuth } from "@/components/layout/auth-provider";
-import { AuthTabs } from "@/components/auth/auth-tabs";
+import { SignInForm } from "@/components/auth/sign-in-form";
+import { SignUpForm } from "@/components/auth/sign-up-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { z } from "zod";
 import { requestSchema } from "@/lib/validators";
@@ -77,6 +78,7 @@ export function RequestForm({
   const [showDbInput, setShowDbInput] = React.useState(false);
   const [inlinePrefValue, setInlinePrefValue] = React.useState("");
   const [inlineDbValue, setInlineDbValue] = React.useState("");
+  const [authMode, setAuthMode] = React.useState < 'signup' | 'login' > ('signup');
   const [draggedType, setDraggedType] = React.useState<"preference" | "dealbreaker" | null>(null);
   const [triedStep2Next, setTriedStep2Next] = React.useState(false);
   const [currentStep, setCurrentStep] = React.useState(1);
@@ -500,7 +502,7 @@ export function RequestForm({
           {currentStep === 1 && (
             <section className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
               <div className="space-y-6">
-                <h2 className="text-2xl font-bold tracking-tight text-[#222234]" style={{ fontFamily: 'var(--font-expanded)' }}>
+                <h2 className="text-2xl font-bold tracking-tight text-[#222234] text-center" style={{ fontFamily: 'var(--font-expanded)' }}>
                   What are you looking for?
                 </h2>
                 <div className="space-y-4">
@@ -527,7 +529,7 @@ export function RequestForm({
           {currentStep === 2 && (
             <section className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
               <div className="space-y-6">
-                <h2 className="text-2xl font-bold tracking-tight text-[#222234]" style={{ fontFamily: 'var(--font-expanded)' }}>
+                <h2 className="text-2xl font-bold tracking-tight text-[#222234] text-center" style={{ fontFamily: 'var(--font-expanded)' }}>
                   What is your budget?
                 </h2>
                 <div className="space-y-4">
@@ -542,7 +544,7 @@ export function RequestForm({
                       onChange={handleBudgetMaxChange}
                       placeholder="Enter amount"
                       className={cn(
-                        "h-14 bg-white border-[#e5e7eb] rounded-xl focus-visible:ring-[#222234] placeholder:text-gray-400 text-base font-bold pl-8",
+                        "h-14 bg-white border-[#e5e7eb] rounded-xl focus-visible:ring-[#222234] placeholder:text-gray-400 placeholder:font-normal text-base font-bold pl-8",
                         ((triedStep2Next || form.formState.submitCount > 0) && form.formState.errors.budgetMax) && "border-red-500 focus-visible:ring-red-500"
                       )}
                     />
@@ -559,7 +561,7 @@ export function RequestForm({
           {currentStep === 3 && (
             <section className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
               <div className="space-y-6">
-                <h2 className="text-2xl font-bold tracking-tight text-[#222234]" style={{ fontFamily: 'var(--font-expanded)' }}>
+                <h2 className="text-2xl font-bold tracking-tight text-[#222234] text-center" style={{ fontFamily: 'var(--font-expanded)' }}>
                   What condition are you looking for?
                 </h2>
                 <div className="flex flex-row gap-3 w-full">
@@ -598,8 +600,8 @@ export function RequestForm({
           {currentStep === 4 && (
             <section className="space-y-10 animate-in fade-in slide-in-from-right-4 duration-500">
               <div className="space-y-6 mb-2">
-                <h2 className="text-2xl font-bold tracking-tight text-[#222234]" style={{ fontFamily: 'var(--font-expanded)' }}>
-                  What are your preferences?
+                <h2 className="text-2xl font-bold tracking-tight text-[#222234] text-center" style={{ fontFamily: 'var(--font-expanded)' }}>
+                  Any specific preferences?
                 </h2>
               </div>
               <div className="grid grid-cols-1 gap-10 items-start">
@@ -624,26 +626,30 @@ export function RequestForm({
                       ))}
                       <Input
                         placeholder={preferences.length === 0 ? "Brand, model, or specific preference" : ""}
-                        className="flex-1 min-w-[200px] h-8 border-none focus-visible:ring-0 px-0 text-base font-bold placeholder:text-gray-400 bg-transparent"
+                        className="flex-1 min-w-[200px] h-8 border-none focus-visible:ring-0 px-0 text-base font-bold placeholder:text-gray-400 placeholder:font-normal bg-transparent"
                         value={inlinePrefValue}
                         onChange={(e) => setInlinePrefValue(e.target.value)}
                         onKeyDown={(e) => {
                           if ((e.key === "Enter" || e.key === ",") && inlinePrefValue.trim()) {
                             e.preventDefault();
-                            const newTags = inlinePrefValue.split(",").map(t => t.trim()).filter(Boolean);
-                            if (newTags.length > 0) {
-                              setPreferences([...preferences, ...newTags.map(label => ({ label }))]);
-                            }
+                             const newTags = inlinePrefValue.split(",").map(t => t.trim()).filter(Boolean);
+                             if (newTags.length > 0) {
+                               const capitalizedTags = newTags.map(label => ({ 
+                                 label: label.charAt(0).toUpperCase() + label.slice(1) 
+                               }));
+                               setPreferences([...preferences, ...capitalizedTags]);
+                             }
                             setInlinePrefValue("");
                           } else if (e.key === "Backspace" && !inlinePrefValue && preferences.length > 0) {
                             setPreferences(preferences.slice(0, -1));
                           }
                         }}
                         onBlur={() => {
-                          if (inlinePrefValue.trim()) {
-                            setPreferences([...preferences, { label: inlinePrefValue.trim() }]);
-                            setInlinePrefValue("");
-                          }
+                           if (inlinePrefValue.trim()) {
+                             const capitalized = inlinePrefValue.trim().charAt(0).toUpperCase() + inlinePrefValue.trim().slice(1);
+                             setPreferences([...preferences, { label: capitalized }]);
+                             setInlinePrefValue("");
+                           }
                         }}
                       />
                     </div>
@@ -686,26 +692,30 @@ export function RequestForm({
                       ))}
                       <Input
                         placeholder={dealbreakers.length === 0 ? "No scratches, no repairs, etc." : ""}
-                        className="flex-1 min-w-[200px] h-8 border-none focus-visible:ring-0 px-0 text-base font-bold placeholder:text-gray-400 bg-transparent"
+                        className="flex-1 min-w-[200px] h-8 border-none focus-visible:ring-0 px-0 text-base font-bold placeholder:text-gray-400 placeholder:font-normal bg-transparent"
                         value={inlineDbValue}
                         onChange={(e) => setInlineDbValue(e.target.value)}
                         onKeyDown={(e) => {
                           if ((e.key === "Enter" || e.key === ",") && inlineDbValue.trim()) {
                             e.preventDefault();
-                            const newTags = inlineDbValue.split(",").map(t => t.trim()).filter(Boolean);
-                            if (newTags.length > 0) {
-                              setDealbreakers([...dealbreakers, ...newTags.map(label => ({ label }))]);
-                            }
+                             const newTags = inlineDbValue.split(",").map(t => t.trim()).filter(Boolean);
+                             if (newTags.length > 0) {
+                               const capitalizedTags = newTags.map(label => ({ 
+                                 label: label.charAt(0).toUpperCase() + label.slice(1) 
+                               }));
+                               setDealbreakers([...dealbreakers, ...capitalizedTags]);
+                             }
                             setInlineDbValue("");
                           } else if (e.key === "Backspace" && !inlineDbValue && dealbreakers.length > 0) {
                             setDealbreakers(dealbreakers.slice(0, -1));
                           }
                         }}
                         onBlur={() => {
-                          if (inlineDbValue.trim()) {
-                            setDealbreakers([...dealbreakers, { label: inlineDbValue.trim() }]);
-                            setInlineDbValue("");
-                          }
+                           if (inlineDbValue.trim()) {
+                             const capitalized = inlineDbValue.trim().charAt(0).toUpperCase() + inlineDbValue.trim().slice(1);
+                             setDealbreakers([...dealbreakers, { label: capitalized }]);
+                             setInlineDbValue("");
+                           }
                         }}
                       />
                     </div>
@@ -721,208 +731,202 @@ export function RequestForm({
           {/* SECTION 6: Additional Details */}
           {currentStep === 6 && (
             <section className="space-y-10 animate-in fade-in slide-in-from-right-4 duration-500">
-              <div className="space-y-6 mb-2">
-                <h2 className="text-2xl font-bold tracking-tight text-[#222234]" style={{ fontFamily: 'var(--font-expanded)' }}>
+              <div className="space-y-6 mb-10">
+                <h2 className="text-2xl font-bold tracking-tight text-[#222234] text-center" style={{ fontFamily: 'var(--font-expanded)' }}>
                   Any additional details?
                 </h2>
               </div>
-              <div className="space-y-6">
-                {/* Media & Links Accordion */}
-                <Accordion type="single" collapsible defaultValue="media-links" className="w-full">
-                  <AccordionItem value="media-links" className="border-none">
-                    <AccordionTrigger className="px-4 py-4 hover:no-underline bg-gray-50/50 rounded-xl transition-all border border-[#e5e7eb]/40">
-                      <div className="flex items-center gap-2">
-                        <Upload className="h-4 w-4 text-[#222234]" />
-                        <Label className="text-base font-bold text-[#222234] cursor-pointer">Media & Links</Label>
+              <div className="space-y-12">
+                {/* Reference Images Section */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Label className="text-sm font-semibold text-gray-500">Add a few images of what you're looking for</Label>
+                  </div>
+                  <div className="grid grid-cols-4 sm:grid-cols-5 gap-3">
+                    {uploadedImages.map((url, index) => (
+                      <div
+                        key={index}
+                        className="relative aspect-square rounded-xl overflow-hidden border border-gray-100 group bg-white"
+                      >
+                        <img src={url} alt={`Upload ${index}`} className="w-full h-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => setUploadedImages(uploadedImages.filter((_, i) => i !== index))}
+                          className="absolute top-1.5 right-1.5 h-6 w-6 rounded-full bg-black/50 text-white flex items-center justify-center backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
                       </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="px-6 pb-6 space-y-6 pt-8 bg-gray-50/50 rounded-b-xl border-x border-b border-[#e5e7eb]/40 -mt-2">
-                      {/* Reference Links */}
-                      <div className="space-y-4 px-1">
-                        <div className="flex gap-2">
-                          <Input
-                            placeholder="Paste a reference URL"
-                            value={linkInput}
-                            onChange={(e) => {
-                              setLinkInput(e.target.value);
-                              setErrors((prev) => ({ ...prev, linkInput: "" }));
-                            }}
-                            onKeyDown={handleLinkInputKeyDown}
-                            onBlur={addLink}
-                            className={cn(
-                              "h-12 bg-white border-[#e5e7eb] rounded-xl focus-visible:ring-[#222234] placeholder:text-gray-400",
-                              errors.linkInput && "border-red-500 focus-visible:ring-red-500"
-                            )}
-                          />
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={addLink}
-                            className="shrink-0 h-12 w-12 rounded-xl border flex items-center justify-center p-0"
-                          >
-                            <Plus className="h-5 w-5" strokeWidth={2.5} />
-                          </Button>
+                    ))}
+                    {uploadedImages.length < 5 && (
+                      <label className="relative aspect-square rounded-xl border-2 border-dashed border-gray-200 hover:border-[#222234]/30 hover:bg-gray-50 flex flex-col items-center justify-center cursor-pointer transition-all group overflow-hidden">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          onChange={(e) => handleImageUpload(e.target.files)}
+                          disabled={isUploading}
+                          className="hidden"
+                        />
+                        <div className="flex flex-col items-center gap-1.5">
+                          <Plus className="h-5 w-5 text-[#222234] group-hover:scale-110 transition-transform" />
+                          <span className="text-[11px] font-bold text-gray-400">Add</span>
                         </div>
-                        {referenceLinks.length > 0 && (
-                          <div className="flex flex-wrap gap-2">
-                            {referenceLinks.map((link, index) => (
-                              <div
-                                key={index}
-                                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[#e5e7eb] bg-white text-xs transition-all"
-                              >
-                                <span className="text-[#222234] truncate max-w-[150px] font-semibold">{link}</span>
-                                <button
-                                  type="button"
-                                  onClick={() => removeLink(index)}
-                                  className="text-gray-400 hover:text-red-500"
-                                >
-                                  <X className="h-3.5 w-3.5" />
-                                </button>
-                              </div>
-                            ))}
+                        {isUploading && (
+                          <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
+                            <div className="w-4 h-4 border-2 border-[#222234] border-t-transparent rounded-full animate-spin" />
                           </div>
                         )}
-                      </div>
+                      </label>
+                    )}
+                  </div>
+                </div>
 
-                      {/* Image Grid Style Upload */}
-                      <div className="space-y-4 px-1">
-                        <div className="grid grid-cols-5 gap-3">
-                          {uploadedImages.map((url, index) => (
-                            <div
-                              key={index}
-                              className="relative aspect-square rounded-xl overflow-hidden border border-gray-100 group shadow-sm bg-white"
+                {/* Reference Links Section */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Label className="text-sm font-semibold text-gray-500">Share a link of a similar item or inspiration</Label>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="Paste a reference URL"
+                        value={linkInput}
+                        onChange={(e) => {
+                          setLinkInput(e.target.value);
+                          setErrors((prev) => ({ ...prev, linkInput: "" }));
+                        }}
+                        onKeyDown={handleLinkInputKeyDown}
+                        onBlur={addLink}
+                        className={cn(
+                          "h-12 bg-white border-[#e5e7eb] rounded-xl focus-visible:ring-[#222234] placeholder:text-gray-400 placeholder:font-normal",
+                          errors.linkInput && "border-red-500 focus-visible:ring-red-500"
+                        )}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={addLink}
+                        className="shrink-0 h-12 w-12 rounded-xl border flex items-center justify-center p-0"
+                      >
+                        <Plus className="h-5 w-5" strokeWidth={2.5} />
+                      </Button>
+                    </div>
+                    {referenceLinks.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {referenceLinks.map((link, index) => (
+                          <div
+                            key={index}
+                            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[#e5e7eb] bg-white text-xs transition-all"
+                          >
+                            <span className="text-[#222234] truncate max-w-[150px] font-semibold">{link}</span>
+                            <button
+                              type="button"
+                              onClick={() => removeLink(index)}
+                              className="text-gray-400 hover:text-red-500"
                             >
-                              <img src={url} alt={`Upload ${index}`} className="w-full h-full object-cover" />
-                              <button
-                                type="button"
-                                onClick={() => setUploadedImages(uploadedImages.filter((_, i) => i !== index))}
-                                className="absolute top-1.5 right-1.5 h-6 w-6 rounded-full bg-black/50 text-white flex items-center justify-center backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100"
-                              >
-                                <X className="h-3.5 w-3.5" />
-                              </button>
+                              <X className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Advanced Matching Accordion - Collapsed by default */}
+                <div className="border border-gray-200 rounded-xl p-4 bg-white mt-10">
+                  <Accordion type="single" collapsible className="w-full">
+                    <AccordionItem value="advanced-matching" className="border-none">
+                      <AccordionTrigger className="py-2 hover:no-underline transition-all px-2">
+                        <div className="flex items-center gap-2">
+                          <Label className="text-base font-semibold text-[#222234] cursor-pointer">Advanced Matching</Label>
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent className="pb-8 space-y-10 pt-8 px-4 text-left">
+                        <div className="space-y-8">
+                          {/* Lock price */}
+                          <div className="flex items-center justify-between">
+                            <div className="space-y-1 flex-1 pr-4">
+                              <Label className="text-base font-semibold text-gray-700">Lock price</Label>
+                              <p className="text-sm text-gray-400 font-medium leading-relaxed">
+                                Proposals above your budget won’t be accepted.
+                              </p>
                             </div>
-                          ))}
-                          {uploadedImages.length < 5 && (
-                            <label className="relative aspect-square rounded-xl border-2 border-dashed border-gray-200 hover:border-[#222234]/30 hover:bg-gray-50 flex flex-col items-center justify-center cursor-pointer transition-all group overflow-hidden">
-                              <input
-                                type="file"
-                                accept="image/*"
-                                multiple
-                                onChange={(e) => handleImageUpload(e.target.files)}
-                                disabled={isUploading}
-                                className="hidden"
-                              />
-                              <div className="flex flex-col items-center gap-1">
-                                <div className="h-8 w-8 rounded-full bg-white shadow-sm border border-gray-100 flex items-center justify-center group-hover:scale-110 transition-transform">
-                                  <Plus className="h-4 w-4 text-[#222234]" />
-                                </div>
-                                <span className="text-[10px] font-bold text-gray-400 uppercase">ADD</span>
-                              </div>
-                              {isUploading && (
-                                <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
-                                  <div className="w-4 h-4 border-2 border-[#222234] border-t-transparent rounded-full animate-spin" />
-                                </div>
-                              )}
-                            </label>
-                          )}
-                        </div>
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
+                            <Switch
+                              checked={priceLock === "locked"}
+                              onCheckedChange={(checked) => {
+                                form.setValue("priceLock", checked ? "locked" : "open");
+                              }}
+                            />
+                          </div>
 
-                {/* Advanced Matching Accordion */}
-                <Accordion type="single" collapsible defaultValue="advanced-matching" className="w-full">
-                  <AccordionItem value="advanced-matching" className="border-none">
-                    <AccordionTrigger className="px-4 py-4 hover:no-underline bg-gray-50/50 rounded-xl transition-all border border-[#e5e7eb]/40">
-                      <div className="flex items-center gap-2">
-                        <ShieldCheck className="h-4 w-4 text-[#222234]" />
-                        <Label className="text-base font-bold text-[#222234] cursor-pointer">Advanced Matching</Label>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="px-6 pb-8 space-y-8 pt-8 bg-gray-50/50 rounded-b-xl border-x border-b border-[#e5e7eb]/40 -mt-2">
-                      <div className="space-y-8">
-                        {/* Lock price */}
-                        <div className="flex items-center justify-between">
-                          <div className="space-y-1 flex-1 pr-4">
-                            <Label className="text-sm font-semibold text-gray-700">Lock price</Label>
-                            <p className="text-[11px] text-gray-400 font-medium leading-relaxed">
-                              Proposals above your budget won’t be accepted.
-                            </p>
+                          {/* Exact Only vs Exact + Similar */}
+                          <div className="flex items-center justify-between pt-6 border-t border-gray-100/60">
+                            <div className="space-y-1 flex-1 pr-4">
+                              <Label className="text-base font-semibold text-gray-700">Exact match only</Label>
+                              <p className="text-sm text-gray-400 font-medium leading-relaxed">
+                                Exclude similar models or variations.
+                              </p>
+                            </div>
+                            <Switch
+                              checked={form.watch("exactItem")}
+                              onCheckedChange={(checked) => {
+                                form.setValue("exactItem", checked);
+                              }}
+                            />
                           </div>
-                          <Switch
-                            checked={priceLock === "locked"}
-                            onCheckedChange={(checked) => {
-                              form.setValue("priceLock", checked ? "locked" : "open");
-                            }}
-                          />
-                        </div>
 
-                        {/* Exact Only vs Exact + Similar */}
-                        <div className="flex items-center justify-between pt-6 border-t border-gray-100/60">
-                          <div className="space-y-1 flex-1 pr-4">
-                            <Label className="text-sm font-semibold text-gray-700">Exact match only</Label>
-                            <p className="text-[11px] text-gray-400 font-medium leading-relaxed">
-                              Exclude similar models or variations.
-                            </p>
+                          {/* No Alternatives Allowed Switch */}
+                          <div className="flex items-center justify-between pt-6 border-t border-gray-100/60">
+                            <div className="space-y-1 flex-1 pr-4">
+                              <Label htmlFor="exactSpecification" className="text-base font-semibold text-gray-700">Strict requirements</Label>
+                              <p className="text-sm text-gray-400 font-medium leading-relaxed">
+                                Match all preferences and condition exactly.
+                              </p>
+                            </div>
+                            <Switch
+                              id="exactSpecification"
+                              checked={form.watch("exactSpecification")}
+                              onCheckedChange={(checked) => {
+                                form.setValue("exactSpecification", checked);
+                              }}
+                            />
                           </div>
-                          <Switch
-                            checked={form.watch("exactItem")}
-                            onCheckedChange={(checked) => {
-                              form.setValue("exactItem", checked);
-                            }}
-                          />
-                        </div>
 
-                        {/* No Alternatives Allowed Switch */}
-                        <div className="flex items-center justify-between pt-6 border-t border-gray-100/60">
-                          <div className="space-y-1 flex-1 pr-4">
-                            <Label htmlFor="exactSpecification" className="text-sm font-semibold text-gray-700">Strict requirements</Label>
-                            <p className="text-[11px] text-gray-400 font-medium leading-relaxed">
-                              Match all preferences and condition exactly.
-                            </p>
-                          </div>
-                          <Switch
-                            id="exactSpecification"
-                            checked={form.watch("exactSpecification")}
-                            onCheckedChange={(checked) => {
-                              form.setValue("exactSpecification", checked);
-                            }}
-                          />
-                        </div>
-
-                        {/* Urgency */}
-                        <div className="space-y-4 pt-6 border-t border-gray-100/60">
-                          <div className="flex items-center gap-1.5 mb-2">
-                            <Label className="text-sm font-semibold text-gray-700">Urgency</Label>
-                            <Crown className="h-4 w-4 text-amber-500 fill-amber-500 opacity-20" />
-                          </div>
-                          <div className="flex flex-row gap-2 w-full">
-                            {["ASAP", "This week", "Standard"].map((option) => {
-                              const isSelected = (form.watch("urgency") || "Standard") === option;
-                              return (
-                                <Button
-                                  key={option}
-                                  type="button"
-                                  variant="outline"
-                                  className={cn(
-                                    "flex-1 px-2 rounded-xl border h-11 transition-all text-xs font-bold",
-                                    isSelected
-                                      ? "bg-white text-black !border-[#222234] border shadow-sm"
-                                      : "bg-white text-gray-400 border-gray-100 hover:border-gray-200"
-                                  )}
-                                  onClick={() => form.setValue("urgency", option)}
-                                >
-                                  {option}
-                                </Button>
-                              );
-                            })}
+                          {/* Urgency */}
+                          <div className="space-y-4 pt-6 border-t border-gray-100/60">
+                            <div className="flex items-center gap-1.5 mb-2">
+                              <Label className="text-base font-semibold text-gray-700">Urgency</Label>
+                              <Crown className="h-4 w-4 text-amber-500 fill-amber-500 opacity-20" />
+                            </div>
+                            <div className="flex flex-row gap-2 w-full">
+                              {["ASAP", "This week", "Standard"].map((option) => {
+                                const isSelected = (form.watch("urgency") || "Standard") === option;
+                                return (
+                                  <Button
+                                    key={option}
+                                    type="button"
+                                    variant="outline"
+                                    className={cn(
+                                      "flex-1 px-2 rounded-xl border h-11 transition-all text-xs font-bold",
+                                      isSelected
+                                        ? "bg-white text-black !border-[#222234] border shadow-sm"
+                                        : "bg-white text-gray-400 border-gray-100 hover:border-gray-200"
+                                    )}
+                                    onClick={() => form.setValue("urgency", option)}
+                                  >
+                                    {option}
+                                  </Button>
+                                );
+                              })}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
+                </div>
               </div>
             </section>
           )}
@@ -933,7 +937,7 @@ export function RequestForm({
               {showEditSummary ? (
                 <div className="space-y-8">
                   <div className="text-left mb-8">
-                    <h2 className="text-2xl font-bold text-gray-900 mb-2" style={{ fontFamily: 'var(--font-expanded)' }}>Edit your request</h2>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-2 text-center" style={{ fontFamily: 'var(--font-expanded)' }}>Edit your request</h2>
                     <p className="text-sm text-gray-500">Review and modify any section of your request before publishing.</p>
                   </div>
 
@@ -979,7 +983,7 @@ export function RequestForm({
               ) : (
                 <div className="space-y-8 flex flex-col items-center">
                   <div className="text-center mb-4 w-full">
-                    <h2 className="text-2xl font-bold text-gray-900 mb-1" style={{ fontFamily: 'var(--font-expanded)' }}>Review your request</h2>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-1 text-center" style={{ fontFamily: 'var(--font-expanded)' }}>Review your request</h2>
                     <p className="text-sm text-gray-500">This is how sellers will see your request on the feed.</p>
                   </div>
 
@@ -1012,23 +1016,45 @@ export function RequestForm({
               <div className="flex flex-row gap-12 items-stretch w-full">
                 <div className="w-[400px] shrink-0 space-y-6">
                   <div className="text-left mb-6">
-                    <h2 className="text-2xl font-bold text-gray-900 mb-1" style={{ fontFamily: 'var(--font-expanded)' }}>Almost there!</h2>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-1 text-center" style={{ fontFamily: 'var(--font-expanded)' }}>Almost there!</h2>
                     <p className="text-sm text-gray-500 text-pretty mt-4">
                       <span className="text-green-600 font-bold">Your request is ready.</span> Sign in or create an account to publish your request and start receiving offers.
                     </p>
                   </div>
-                  <AuthTabs
-                    onSuccess={() => {
-                      // Success is handled by useAuth re-render and onSubmit auto-trigger
-                    }}
-                  />
+                  {authMode === 'signup' ? (
+                    <div className="space-y-6">
+                      <SignUpForm onSuccess={() => {}} />
+                      <p className="text-sm text-center text-gray-500">
+                        Already using Onseek?{" "}
+                        <button 
+                          onClick={() => setAuthMode('login')} 
+                          className="text-[#7755FF] font-semibold hover:underline"
+                        >
+                          Log in
+                        </button>
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-6">
+                      <SignInForm onSuccess={() => {}} />
+                      <p className="text-sm text-center text-gray-500">
+                        Don't have an account?{" "}
+                        <button 
+                          onClick={() => setAuthMode('signup')} 
+                          className="text-[#7755FF] font-semibold hover:underline"
+                        >
+                          Sign up
+                        </button>
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Right column: Perks Section (Wider) */}
                 <div className="flex-1 min-w-0">
                   <div className="p-8 rounded-[2rem] bg-gray-50 h-full flex flex-col justify-center">
                     <div className="mb-8 flex items-center gap-3">
-                      <h3 className="text-xl font-bold text-[#222234]" style={{ fontFamily: 'var(--font-expanded)' }}>Join the community</h3>
+                      <h3 className="text-xl font-semibold text-[#222234]" style={{ fontFamily: 'var(--font-expanded)' }}>Join the community</h3>
                     </div>
 
                     <div className="space-y-6">
@@ -1041,7 +1067,7 @@ export function RequestForm({
                         <div key={idx} className="flex gap-4">
                           <div className="shrink-0 mt-0.5">{perk.icon}</div>
                           <div>
-                            <p className="font-bold text-[#222234] text-sm mb-0.5" style={{ fontFamily: 'var(--font-expanded)' }}>{perk.title}</p>
+                            <p className="font-semibold text-[#222234] text-sm mb-0.5" style={{ fontFamily: 'var(--font-expanded)' }}>{perk.title}</p>
                             <p className="text-xs text-gray-500 leading-relaxed">{perk.desc}</p>
                           </div>
                         </div>
@@ -1051,8 +1077,8 @@ export function RequestForm({
                     <div className="mt-auto pt-8 border-t border-gray-200/50 flex items-center gap-4">
                       <div className="flex -space-x-3 items-center">
                         {[1, 2, 3, 4].map((i) => (
-                          <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-gray-200 overflow-hidden shadow-sm transition-transform hover:scale-110 hover:z-10 bg-cover bg-center" 
-                               style={{ backgroundImage: `url(https://i.pravatar.cc/100?u=user${i + 20})` }} />
+                          <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-gray-200 overflow-hidden shadow-sm transition-transform hover:scale-110 hover:z-10 bg-cover bg-center"
+                            style={{ backgroundImage: `url(https://i.pravatar.cc/100?u=user${i + 20})` }} />
                         ))}
                         <div className="w-8 h-8 rounded-full border-2 border-white bg-[#7755FF] flex items-center justify-center text-[10px] font-bold text-white shadow-sm">+</div>
                       </div>
