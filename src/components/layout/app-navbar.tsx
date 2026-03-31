@@ -11,6 +11,7 @@ import { useTheme } from "@/components/layout/theme-provider";
 import { signOutAction } from "@/actions/auth.actions";
 import { LoginDropdown } from "@/components/auth/login-dropdown";
 import { CreateRequestModal } from "@/components/requests/create-request-modal";
+import { NotificationsDrawer } from "@/components/notifications/notifications-drawer";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -586,24 +587,25 @@ export function AppNavbar() {
                           )} />
                           Saved
                         </Link>
-                        <Link
-                          href="/app/notifications"
-                          onClick={() => setMobileMenuOpen(false)}
-                          className={cn(
-                            "flex items-center gap-3 px-3 py-2 rounded-md transition-colors relative",
-                            pathname === "/app/notifications"
-                              ? "bg-gray-100 text-foreground font-medium"
-                              : "text-muted-foreground hover:text-foreground hover:bg-gray-50"
-                          )}
-                        >
-                          <Bell className="h-5 w-5 shrink-0" />
-                          Notifications
-                          {unreadCount > 0 && (
-                            <span className="ml-auto h-5 w-5 rounded-full bg-[#7755FF] text-white text-[10px] font-semibold flex items-center justify-center shrink-0">
-                              {unreadCount > 9 ? "9+" : unreadCount}
-                            </span>
-                          )}
-                        </Link>
+                        <NotificationsDrawer>
+                          <button
+                            onClick={() => setMobileMenuOpen(false)}
+                            className={cn(
+                              "flex w-full items-center gap-3 px-3 py-2 rounded-md transition-colors relative text-left",
+                              pathname === "/app/notifications"
+                                ? "bg-gray-100 text-foreground font-medium"
+                                : "text-muted-foreground hover:text-foreground hover:bg-gray-50"
+                            )}
+                          >
+                            <Bell className="h-5 w-5 shrink-0" />
+                            Notifications
+                            {unreadCount > 0 && (
+                              <span className="ml-auto h-5 w-5 rounded-full bg-[#7755FF] text-white text-[10px] font-semibold flex items-center justify-center shrink-0">
+                                {unreadCount > 9 ? "9+" : unreadCount}
+                              </span>
+                            )}
+                          </button>
+                        </NotificationsDrawer>
                         <Link
                           href="/app/leaderboard"
                           onClick={() => setMobileMenuOpen(false)}
@@ -684,7 +686,7 @@ export function AppNavbar() {
       </div>
 
       {/* Desktop Navbar */}
-      <div className="hidden md:flex w-full items-center gap-4 py-3 px-4 md:px-6 max-w-[1360px] mx-auto">
+      <div className="hidden md:flex w-full items-center gap-4 py-3 px-4 md:px-6">
         {/* Brand */}
         <Link href="/app" prefetch={true} className="shrink-0 flex items-center gap-2">
           <Image
@@ -815,16 +817,16 @@ export function AppNavbar() {
               <Button onClick={() => setIsCreateModalOpen(true)} className="hidden sm:flex h-11 rounded-full bg-transparent text-gray-900 hover:bg-gray-50 border border-gray-900 font-medium whitespace-nowrap">
                 Create a request
               </Button>
-              <Button variant="ghost" size="icon" className="relative" asChild>
-                <Link href="/app/notifications">
+              <NotificationsDrawer>
+                <Button variant="ghost" size="icon" className="relative">
                   <Bell className="h-5 w-5" />
                   {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-[#7755FF] text-white text-[10px] font-semibold flex items-center justify-center">
+                    <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-[#7755FF] text-white text-[10px] font-semibold flex items-center justify-center shadow-sm">
                       {unreadCount > 9 ? "9+" : unreadCount}
                     </span>
                   )}
-                </Link>
-              </Button>
+                </Button>
+              </NotificationsDrawer>
               <Button variant="ghost" size="icon" className="relative" asChild>
                 <Link href="/messages">
                   <MessageCircle className="h-5 w-5" />
