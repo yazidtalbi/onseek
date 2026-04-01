@@ -5,6 +5,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { getLandingPageContent } from "@/lib/strapi/content";
 import { PromotionalSidebar } from "@/components/requests/promotional-sidebar";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { cn } from "@/lib/utils";
 
 // Default fallback content
 const defaultContent = {
@@ -48,6 +50,9 @@ const defaultContent = {
 };
 
 export default async function LandingPage() {
+  const supabase = await createServerSupabaseClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
   // Try to fetch content from Strapi, fallback to default
   let content = defaultContent;
   try {
@@ -107,39 +112,56 @@ export default async function LandingPage() {
     <div className="min-h-screen bg-background">
       <PublicNavbar />
       <main className="mx-auto w-full max-w-6xl px-6 pb-24 pt-14">
-        <div className="grid gap-10 lg:grid-cols-[1.2fr_0.8fr] lg:items-start">
-          <div className="space-y-6">
-            <Badge variant="muted" className="w-fit">
-              {content.heroBadge}
-            </Badge>
-            <h1 className="text-4xl font-semibold leading-tight text-foreground sm:text-5xl">
-              {content.heroTitle}
-            </h1>
-            <p className="max-w-xl text-lg text-muted-foreground">
-              {content.heroDescription}
-            </p>
-            <div className="flex flex-wrap gap-4">
+        <div className={cn(
+          "grid gap-10 lg:grid-cols-[1.2fr_0.8fr] lg:items-start",
+          user && "lg:grid-cols-1"
+        )}>
+          {!user && (
+            <div className="space-y-6">
+              <Badge variant="muted" className="w-fit">
+                {content.heroBadge}
+              </Badge>
+              <h1 className="text-4xl font-semibold leading-tight text-foreground sm:text-5xl">
+                {content.heroTitle}
+              </h1>
+              <p className="max-w-xl text-lg text-muted-foreground">
+                {content.heroDescription}
+              </p>
+              <div className="flex flex-wrap gap-4">
+                <Button asChild variant="accent" size="lg">
+                  <Link href={content.ctaPrimaryLink}>{content.ctaPrimaryText}</Link>
+                </Button>
+                <Button asChild variant="outline" size="lg">
+                  <Link href={content.ctaSecondaryLink}>
+                    {content.ctaSecondaryText}
+                  </Link>
+                </Button>
+              </div>
+              <div className="grid gap-3 text-sm text-muted-foreground sm:grid-cols-3">
+                {content.features.map((feature) => (
+                  <div key={feature.id}>
+                    <span className="text-lg font-semibold text-foreground">
+                      {feature.title}
+                    </span>
+                    <p>{feature.description}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          {!user && <PromotionalSidebar />}
+          
+          {user && (
+            <div className="py-12 flex flex-col items-center justify-center text-center space-y-6">
+              <h1 className="text-3xl font-semibold">Welcome back to Onseek</h1>
+              <p className="text-muted-foreground max-w-md">
+                Explore the latest requests and submissions from the community.
+              </p>
               <Button asChild variant="accent" size="lg">
-                <Link href={content.ctaPrimaryLink}>{content.ctaPrimaryText}</Link>
-              </Button>
-              <Button asChild variant="outline" size="lg">
-                <Link href={content.ctaSecondaryLink}>
-                  {content.ctaSecondaryText}
-                </Link>
+                <Link href="/app">Go to Dashboard</Link>
               </Button>
             </div>
-            <div className="grid gap-3 text-sm text-muted-foreground sm:grid-cols-3">
-              {content.features.map((feature) => (
-                <div key={feature.id}>
-                  <span className="text-lg font-semibold text-foreground">
-                    {feature.title}
-                  </span>
-                  <p>{feature.description}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-          <PromotionalSidebar />
+          )}
         </div>
       </main>
       <footer className="border-t border-border bg-background/80">

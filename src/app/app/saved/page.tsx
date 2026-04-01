@@ -99,11 +99,11 @@ export default async function SavedRequestsPage({
   };
 
   return (
-    <div className="space-y-6">
-      <div className="max-w-2xl mx-auto w-full">
+    <div className="space-y-6 w-full max-w-3xl mx-auto">
+      <div className="w-full">
         <div className="flex flex-col gap-4">
           <div>
-            <h1 className="text-3xl font-semibold">
+            <h1 className="text-3xl text-foreground" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>
               Saved Requests
             </h1>
             <p className="text-sm text-muted-foreground mt-2">
@@ -114,7 +114,7 @@ export default async function SavedRequestsPage({
       </div>
 
       {requests.length > 0 ? (
-        <div className="max-w-2xl mx-auto w-full">
+        <div className="w-full">
           <RequestFeedWrapper
             initialRequests={requests}
             filters={filters}
@@ -125,7 +125,7 @@ export default async function SavedRequestsPage({
           />
         </div>
       ) : (
-        <div className="max-w-2xl mx-auto w-full">
+        <div className="w-full">
           <div className="rounded-lg border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
             <Bookmark className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
             <p className="text-base font-medium mb-2">No saved requests yet</p>

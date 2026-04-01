@@ -8,6 +8,7 @@ import type { RequestItem } from "@/lib/types";
 import { RequestCard } from "@/components/requests/request-card";
 import { Button } from "@/components/ui/button";
 import { LayoutList, Grid3x3, ChevronLeft, ChevronRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 type Filters = {
   category?: string | null;
@@ -30,6 +31,8 @@ export function RequestFeed({
   viewMode: externalViewMode,
   onViewModeChange,
   allFavorited = false, // If true, all requests are marked as favorited
+  useHomeStyle = false,
+  disableHover = false,
 }: {
   initialRequests: RequestItem[];
   filters: Filters;
@@ -39,6 +42,8 @@ export function RequestFeed({
   viewMode?: "list" | "grid";
   onViewModeChange?: (mode: "list" | "grid") => void;
   allFavorited?: boolean;
+  useHomeStyle?: boolean;
+  disableHover?: boolean;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -227,19 +232,29 @@ export function RequestFeed({
 
   return (
     <div className="space-y-4">
-
-      <div className="mx-auto w-full">
+      <div className={viewMode === "grid" ? "columns-1 md:columns-2 xl:columns-3 gap-6 line-masonry" : "flex flex-col gap-4 w-full"}>
         {data.map((request: any, index: number) => (
-          <RequestCard 
+          <div 
             key={request.id} 
-            request={request} 
-            variant="feed" 
-            images={request.images || []}
-            links={request.links || []}
-            isFavorite={allFavorited}
-            isFirst={index === 0}
-            isLast={index === data.length - 1}
-          />
+            className={cn(
+              "break-inside-avoid mb-6",
+              useHomeStyle && "bg-[#f5f6f9] rounded-[20px] p-[6px] transition-all duration-300 ease-out",
+              useHomeStyle && !disableHover && "hover:scale-[1.02]"
+            )}
+          >
+            <RequestCard 
+              request={request} 
+              variant={useHomeStyle ? "detail" : "feed"} 
+              images={request.images || []}
+              links={request.links || []}
+              isFavorite={allFavorited}
+              isFirst={viewMode === "grid" ? true : index === 0}
+              isLast={viewMode === "grid" ? true : index === data.length - 1}
+              smallImages={useHomeStyle ? true : false}
+              noBorder={useHomeStyle ? true : false}
+              disableHover={disableHover}
+            />
+          </div>
         ))}
       </div>
 

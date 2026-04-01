@@ -9,7 +9,7 @@ import { WinnerButton } from "@/components/submissions/winner-button";
 import { ReportDialog } from "@/components/reports/report-dialog";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
-import { MoreHorizontal, Link as LinkIcon, MessageCircle } from "lucide-react";
+import { Link as LinkIcon, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatTimeAgo } from "@/lib/utils/time";
 import { ImagePreviewDialog } from "@/components/ui/image-preview-dialog";
@@ -189,22 +189,6 @@ export function SubmissionCard({
               </>
             )}
           </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                type="button"
-                className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-neutral-100 transition-colors text-neutral-400 hover:text-neutral-600"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <MoreHorizontal className="h-4 w-4" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setReportOpen(true)}>
-                Report
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
           <ReportDialog
             type="submission"
             targetId={submission.id}
@@ -240,7 +224,7 @@ export function SubmissionCard({
           {/* Center: Content stack */}
           <div className="flex-1 min-w-0 space-y-1">
             <div className="flex items-center gap-2 flex-wrap">
-                  <h3 className="font-medium text-neutral-900 line-clamp-1">
+                  <h3 className="font-medium text-neutral-900 line-clamp-1 text-base">
                 {storeName}
               </h3>
               {isPersonalItem ? (
@@ -273,7 +257,7 @@ export function SubmissionCard({
           {/* Right: Price aligned top-right */}
           {submission.price && (
             <div className="flex-shrink-0 text-right">
-              <span className="font-semibold text-neutral-900 text-base sm:text-lg">
+              <span className="font-semibold text-neutral-900 text-lg sm:text-lg">
                 ${submission.price.toFixed(2)}
               </span>
             </div>
@@ -304,7 +288,7 @@ export function SubmissionCard({
               <Button
                 size="sm"
                 variant="outline"
-                onClick={(e) => {
+                onClick={(e: React.MouseEvent) => {
                   e.stopPropagation();
                   setMessageDialogOpen(true);
                 }}
@@ -316,7 +300,7 @@ export function SubmissionCard({
             )}
             <Button
               size="sm"
-              onClick={(e) => {
+              onClick={(e: React.MouseEvent) => {
                 e.stopPropagation();
                 if (isPersonalItem && hasImage) {
                   // For personal items, show contact dialog
@@ -325,7 +309,7 @@ export function SubmissionCard({
                   window.open(submission.url, "_blank", "noopener,noreferrer");
                 }
               }}
-              className="flex-shrink-0 bg-[#F2F3F5] text-[#363B40] hover:bg-[#F2F3F5]/90 cursor-pointer"
+              className="flex-shrink-0 bg-[#F2F3F5] text-[#363B40] hover:bg-[#F2F3F5]/90 cursor-pointer text-sm px-4 py-2"
               disabled={isPersonalItem && !hasImage}
             >
               View item

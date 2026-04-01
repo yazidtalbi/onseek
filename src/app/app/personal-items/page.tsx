@@ -29,7 +29,7 @@ export default async function PersonalItemsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full max-w-3xl mx-auto">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-3xl font-semibold flex items-center gap-2">
@@ -40,10 +40,10 @@ export default async function PersonalItemsPage() {
             Manage your saved personal items. Use them when submitting to requests.
           </p>
         </div>
-        <Button asChild className="bg-[#7755FF] hover:bg-[#6644EE]">
+        <Button asChild className="h-11 rounded-full bg-[#212133] hover:bg-[#212133]/90 text-white px-8 font-bold transition-colors">
           <Link href="/app/new">
             <Plus className="h-4 w-4 mr-2" />
-            New Submission
+            New item
           </Link>
         </Button>
       </div>

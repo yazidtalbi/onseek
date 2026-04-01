@@ -14,10 +14,10 @@ export default async function LeaderboardPage() {
     .limit(20);
 
   return (
-    <div className="space-y-6">
-      <div className="rounded-3xl border border-[#e5e7eb]  p-6">
-        <h1 className="text-3xl font-semibold">Top hunters</h1>
-        <p className="text-sm text-muted-foreground">
+    <div className="space-y-6 w-full max-w-3xl mx-auto">
+      <div>
+        <h1 className="text-3xl text-foreground" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>Top hunters</h1>
+        <p className="text-sm text-muted-foreground mt-2">
           Recognize the community members with the most accepted links.
         </p>
       </div>

@@ -1,8 +1,7 @@
-import Link from "next/link";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { RequestFeed } from "@/components/requests/request-feed";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+// Removed NewRequestButton import as the button has been removed from this page.
 
 export const dynamic = "force-dynamic";
 
@@ -47,33 +46,32 @@ export default async function MyRequestsPage({
     .eq("status", "solved");
 
   return (
-    <div className="space-y-6 w-full">
+    <div className="space-y-6 w-full max-w-3xl mx-auto">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-semibold">My requests</h1>
-          <p className="text-sm text-muted-foreground">
+          <h1 className="text-3xl text-foreground" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>Requests</h1>
+          <p className="text-sm text-muted-foreground mt-2">
             Track your open requests and mark winning submissions.
           </p>
         </div>
-        <Button asChild variant="accent">
-          <Link href="/app/new">New request</Link>
-        </Button>
       </div>
 
+      <hr className="border-[#e5e7eb] my-2" />
+
       <div className="grid gap-4 md:grid-cols-3">
-        <Card className="border-[#e5e7eb] ">
+        <Card className="border-none shadow-none bg-white">
           <CardContent className="p-5">
             <p className="text-xs text-muted-foreground">Total</p>
             <p className="text-2xl font-semibold">{totalCount ?? 0}</p>
           </CardContent>
         </Card>
-        <Card className="border-[#e5e7eb] ">
+        <Card className="border-none shadow-none bg-white">
           <CardContent className="p-5">
             <p className="text-xs text-muted-foreground">Open</p>
             <p className="text-2xl font-semibold">{openCount ?? 0}</p>
           </CardContent>
         </Card>
-        <Card className="border-[#e5e7eb] ">
+        <Card className="border-none shadow-none bg-white">
           <CardContent className="p-5">
             <p className="text-xs text-muted-foreground">Solved</p>
             <p className="text-2xl font-semibold">{solvedCount ?? 0}</p>
@@ -81,11 +79,15 @@ export default async function MyRequestsPage({
         </Card>
       </div>
 
-      <RequestFeed
-        initialRequests={requests ?? []}
-        filters={{ mine: true, status: status === "all" ? null : status }}
-      />
+      <div className="mt-10">
+        <RequestFeed
+          initialRequests={requests ?? []}
+          filters={{ mine: true, status: status === "all" ? null : status }}
+          useHomeStyle={true}
+          disableHover={true}
+          forceListView={true}
+        />
+      </div>
     </div>
   );
 }
-

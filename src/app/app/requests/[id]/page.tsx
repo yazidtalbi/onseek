@@ -160,33 +160,24 @@ export default async function RequestDetailPage({
   const shouldShowAnnouncement = hasNoSubmissions && daysOld >= 7; // Show if 7+ days old with no proposals
 
   return (
-    <div className="mx-auto max-w-6xl w-full space-y-6 px-4 md:px-6">
+    <div className="mx-auto w-full space-y-6 px-4 md:px-6">
       {/* Back Button and Breadcrumbs */}
       <div className="flex items-center gap-4">
         <BackButton />
         <nav className="flex items-center gap-2 text-sm text-gray-600">
           <Link 
-            href="/app"
-            className="hover:text-foreground transition-colors"
-          >
-            Home
-          </Link>
-          <ChevronRight className="h-4 w-4" />
-          <Link 
             href={`/app/category/${request.category.toLowerCase()}`} 
-            className="hover:text-foreground transition-colors"
+            className="hover:text-foreground transition-colors text-foreground font-medium"
           >
             {request.category}
           </Link>
-          <ChevronRight className="h-4 w-4" />
-          <span className="text-foreground">{request.title}</span>
         </nav>
       </div>
 
       {/* Two Column Layout: Request on Left, Submissions on Right */}
       <div className="flex flex-col lg:flex-row gap-8 lg:gap-14 items-start">
         {/* Left Column: Request Details - Sticky on scroll */}
-        <div className="w-full lg:w-[45%] space-y-6 flex-shrink-0 sticky top-24 self-start">
+        <div className="w-full lg:w-[55%] space-y-6 flex-shrink-0 lg:sticky lg:top-24 self-start">
           <RequestCard
             request={request}
             variant="detail"
@@ -201,8 +192,6 @@ export default async function RequestDetailPage({
           />
         </div>
 
-        {/* Desktop Vertical Separator - more prominent */}
-        <div className="hidden lg:block w-[1px] bg-neutral-200 self-stretch shrink-0" />
 
         {/* Right Column: Proposals */}
         <div className="flex-1 space-y-6 min-w-0">

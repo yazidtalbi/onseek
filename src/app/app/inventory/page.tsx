@@ -28,11 +28,10 @@ export default async function InventoryPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full max-w-3xl mx-auto">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-semibold flex items-center gap-2">
-            <Package className="h-8 w-8" />
+          <h1 className="text-3xl text-foreground flex items-center gap-2" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>
             Inventory
           </h1>
           <p className="text-sm text-muted-foreground mt-2">

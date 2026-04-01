@@ -5,7 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Bell, Plus, ChevronDown, TrendingUp, Sparkles, Moon, Sun, LogOut, Bookmark, User, Send, Settings, ClipboardList, Package, Menu, X, Home, Trophy, Globe, MessageCircle } from "lucide-react";
+import { Search, Bell, Plus, ChevronDown, TrendingUp, Sparkles, Moon, Sun, LogOut, Bookmark, User, Send, Settings, ClipboardList, Package, Menu, X, Home, Trophy, Globe, MessageCircle, MessageCircleMore, SquarePlus } from "lucide-react";
 import { useAuth } from "@/components/layout/auth-provider";
 import { useTheme } from "@/components/layout/theme-provider";
 import { signOutAction } from "@/actions/auth.actions";
@@ -234,6 +234,22 @@ export function AppNavbar() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const isHomePage = pathname === "/";
 
+  useEffect(() => {
+    const handleOpenCreateModal = () => setIsCreateModalOpen(true);
+    window.addEventListener('open-create-request-modal', handleOpenCreateModal);
+    
+    // Fallback for direct URL access
+    if (searchParams.get("new") === "true") {
+      setIsCreateModalOpen(true);
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete("new");
+      const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
+      router.replace(newUrl, { scroll: false });
+    }
+    
+    return () => window.removeEventListener('open-create-request-modal', handleOpenCreateModal);
+  }, [searchParams, pathname, router]);
+
   const handleSignOut = () => {
     startTransition(async () => {
       await signOutAction();
@@ -333,7 +349,7 @@ export function AppNavbar() {
   }, [isHomePage]);
 
   return (
-    <header className="sticky top-0 z-20 w-full bg-white">
+    <header className="sticky top-0 z-20 w-full bg-white border-b border-[#e5e7eb]">
       {/* Mobile Navbar */}
       <div className="md:hidden flex items-center justify-between py-3 px-4 md:px-6 max-w-[1360px] mx-auto w-full">
         {/* Brand */}
@@ -686,249 +702,166 @@ export function AppNavbar() {
       </div>
 
       {/* Desktop Navbar */}
-      <div className="hidden md:flex w-full items-center gap-4 py-3 px-4 md:px-6">
-        {/* Brand */}
-        <Link href="/app" prefetch={true} className="shrink-0 flex items-center gap-2">
-          <Image
-            src="/logo.png"
-            alt="onseek"
-            width={120}
-            height={32}
-            className="h-8 w-auto"
-            priority
-          />
-          <span className="text-xl text-black" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>
-            onseek
-          </span>
-        </Link>
-        
-        {/* Navigation Links */}
-        <nav className="flex items-center gap-1 overflow-x-auto">
-          {navItems.map((item) => {
-            const active = isActive(item.href);
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                prefetch={true}
-                className={cn(
-                  "px-3 py-2 text-sm font-medium transition-colors whitespace-nowrap",
-                  active 
-                    ? "text-[#7755FF]" 
-                    : "text-gray-600 hover:text-[#7755FF]"
-                )}
-              >
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
-
-        {/* Explore Dropdown - Desktop */}
-        {false && (
-        <DropdownMenu open={exploreOpen} onOpenChange={setExploreOpen}>
-          <DropdownMenuTrigger asChild>
-            <button
-              className={cn(
-                "px-3 py-2 text-sm font-medium transition-colors whitespace-nowrap flex items-center gap-1",
-                pathname === "/" || pathname.startsWith("/app/category") || pathname.startsWith("/app/requests")
-                  ? "text-foreground"
-                  : "text-gray-600"
-              )}
-            >
-              Explore
-              <ChevronDown className="h-4 w-4" />
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent 
-            align="start" 
-            className="w-56 bg-white shadow-lg shadow-gray-200/50"
-          >
-            <DropdownMenuItem onClick={() => router.push("/")}>
-              <TrendingUp className="h-4 w-4 mr-2" />
-              Popular
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => router.push("/?sort=newest")}>
-              <Sparkles className="h-4 w-4 mr-2" />
-              New and Noteworthy
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            {categories.map((category) => {
-              const categoryPath = `/app/category/${category.toLowerCase()}`;
-              const isActive = pathname === categoryPath;
-              return (
-                <DropdownMenuItem
-                  key={category}
-                  onClick={() => handleCategorySelect(category)}
-                  className={isActive ? "bg-muted/30" : ""}
+      <div className="w-full px-4 h-16 flex items-center relative">
+        {/* Left Side: Space for sidebar on desktop */}
+        <div className="flex items-center shrink-0 gap-6">
+          <Link href="/app" className="hidden md:flex items-center gap-2">
+            <Image src="/logo.png" alt="onseek" width={24} height={24} className="h-6 w-auto" priority />
+            <span className="text-xl text-black" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>
+              onseek
+            </span>
+          </Link>
+          {/* Explore Dropdown */}
+          <div className="hidden lg:block shrink-0">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className="flex items-center gap-1.5 px-4 py-2 text-sm font-bold text-[#222222] hover:bg-gray-100 rounded-full transition-colors whitespace-nowrap"
                 >
-                  {category}
+                  Explore
+                  <ChevronDown className="h-4 w-4" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-56 bg-white shadow-lg overflow-y-auto max-h-[70vh] z-[100]">
+                <DropdownMenuItem onClick={() => router.push("/app/popular")} className="font-medium">
+                  <TrendingUp className="h-4 w-4 mr-2" />
+                  Popular
                 </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => router.push("/app/latest")} className="font-medium">
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  New and Noteworthy
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                {categories.map((category) => (
+                  <DropdownMenuItem
+                    key={category}
+                    onClick={() => handleCategorySelect(category)}
+                    className="font-medium"
+                  >
+                    {category}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+
+        {/* Center Side: Search Bar - Centered Absolutely */}
+        <div className="absolute left-1/2 -translate-x-1/2 hidden lg:flex items-center w-full max-w-sm justify-center z-10 pointer-events-none">
+          <div className={cn(
+            "w-full transition-all duration-300 pointer-events-auto",
+            showSearch ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4 pointer-events-none"
+          )}>
+            <form action="/search" method="get" className="relative flex items-center w-full bg-white border border-gray-200 rounded-full h-11">
+              <Search className="ml-4 h-5 w-5 text-gray-900 shrink-0" strokeWidth={1.5} />
+              <Input
+                name="q"
+                placeholder="What are you looking for today?"
+                className="flex-1 bg-transparent border-none focus-visible:ring-0 text-sm h-full pl-2 shadow-none placeholder:text-slate-500"
+              />
+            </form>
+          </div>
+        </div>
+
+        {/* Right Side: Navigation & Actions */}
+        <div className="flex items-center gap-6 ml-auto shrink-0 relative z-20">
+          <nav className="hidden lg:flex items-center gap-1 overflow-x-auto">
+            {navItems.map((item) => {
+              const active = isActive(item.href);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  prefetch={true}
+                  className={cn(
+                    "px-3 py-2 text-sm font-medium transition-colors whitespace-nowrap",
+                    active 
+                      ? "text-[#7755FF]" 
+                      : "text-gray-600 hover:text-[#7755FF]"
+                  )}
+                >
+                  {item.label}
+                </Link>
               );
             })}
-          </DropdownMenuContent>
-        </DropdownMenu>
-        )}
+          </nav>
 
-        {/* Right Actions */}
-        <div className="flex items-center gap-2 shrink-0 ml-auto">
-          {/* Search Bar - Medium Width (hidden on home page when hero is visible) */}
-          {false && (
-            <div className="flex mr-2">
-              <form action="/search" method="get" className="relative flex items-center">
-                <div className="relative w-64">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    name="q"
-                    placeholder="Search..."
-                    className="pl-9 pr-32  border w-full rounded-l-full rounded-r-none"
-                  />
+          <div className="flex items-center gap-2">
+            {user ? (
+              <>
+                <Button onClick={() => setIsCreateModalOpen(true)} className="hidden sm:flex h-11 rounded-full bg-transparent text-gray-900 hover:bg-gray-50 border border-gray-900 font-bold whitespace-nowrap px-6 items-center gap-2">
+                  <SquarePlus className="h-4 w-4" />
+                  Request
+                </Button>
+                <NotificationsDrawer>
+                  <Button variant="ghost" size="icon" className="relative">
+                    <Bell className="h-5 w-5" />
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-[#7755FF] text-white text-[10px] font-semibold flex items-center justify-center shadow-sm">
+                        {unreadCount > 9 ? "9+" : unreadCount}
+                      </span>
+                    )}
+                  </Button>
+                </NotificationsDrawer>
+                <div className="flex lg:hidden items-center">
+                  <Button variant="ghost" size="icon" className="relative" onClick={() => setSearchSheetOpen(true)}>
+                    <Search className="h-5 w-5" />
+                  </Button>
                 </div>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button
-                      type="button"
-                      className="h-11 flex items-center gap-1.5 px-3 text-sm font-medium text-foreground hover:bg-gray-50 rounded-r-full  border border-l-0 shrink-0"
-                    >
-                      {searchType === "requests" ? "Requests" : "Items"}
-                      <ChevronDown className="h-4 w-4" />
+                    <button className="flex items-center gap-2 pl-2 pr-1 h-10 hover:bg-gray-100 rounded-full transition-colors outline-none shrink-0">
+                      <div className="flex items-center justify-center h-8 w-8 rounded-full bg-gray-200 text-foreground font-medium text-sm shrink-0">
+                        {profile?.username?.charAt(0).toUpperCase() || "U"}
+                      </div>
+                      <ChevronDown className="h-4 w-4 text-gray-500 shrink-0" />
                     </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuItem onClick={() => setSearchType("requests")}>
-                      <div className="flex flex-col">
-                        <span className="font-medium">Requests</span>
-                        <span className="text-xs text-muted-foreground">Search community requests</span>
+                  <DropdownMenuContent align="end" className="w-56 p-2 bg-white shadow-lg border border-border mt-2">
+                    <div className="flex items-center gap-3 p-2 mb-2">
+                      <div className="flex items-center justify-center h-10 w-10 rounded-full bg-gray-200 text-foreground font-medium shrink-0">
+                        {profile?.username?.charAt(0).toUpperCase() || "U"}
                       </div>
+                      <div className="flex-1 overflow-hidden">
+                        <p className="text-sm font-medium truncate">{profile?.username || "User"}</p>
+                        <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                      </div>
+                    </div>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => router.push(profile?.username ? `/app/profile/${profile.username}` : "/app/settings")} className="cursor-pointer font-medium py-2">
+                      <User className="h-4 w-4 mr-2 text-muted-foreground" />
+                      Profile
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setSearchType("items")}>
-                      <div className="flex flex-col">
-                        <span className="font-medium">Items</span>
-                        <span className="text-xs text-muted-foreground">Search products and items</span>
-                      </div>
+                    <DropdownMenuItem onClick={() => router.push("/app/saved")} className="cursor-pointer font-medium py-2">
+                      <Bookmark className="h-4 w-4 mr-2 text-muted-foreground" />
+                      Saved
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleSignOut} disabled={isPending} className="cursor-pointer font-medium py-2 text-red-600 focus:text-red-600 focus:bg-red-50">
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Sign out
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
-              </form>
-            </div>
-          )}
-          {user ? (
-            <>
-              <Button onClick={() => setIsCreateModalOpen(true)} className="hidden sm:flex h-11 rounded-full bg-transparent text-gray-900 hover:bg-gray-50 border border-gray-900 font-medium whitespace-nowrap">
-                Create a request
-              </Button>
-              <NotificationsDrawer>
-                <Button variant="ghost" size="icon" className="relative">
-                  <Bell className="h-5 w-5" />
-                  {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-[#7755FF] text-white text-[10px] font-semibold flex items-center justify-center shadow-sm">
-                      {unreadCount > 9 ? "9+" : unreadCount}
-                    </span>
-                  )}
+              </>
+            ) : (
+              <>
+                <Button onClick={() => setIsCreateModalOpen(true)} className="hidden sm:flex h-11 rounded-full bg-transparent text-gray-900 hover:bg-gray-50 border border-gray-900 font-bold shrink-0 whitespace-nowrap px-6 items-center gap-2">
+                  <SquarePlus className="h-4 w-4" />
+                  Request
                 </Button>
-              </NotificationsDrawer>
-              <Button variant="ghost" size="icon" className="relative" asChild>
-                <Link href="/messages">
-                  <MessageCircle className="h-5 w-5" />
+                <Link href="/signup" className="shrink-0">
+                  <Button variant="default" className="h-11 rounded-full px-6 bg-[#222234] text-white hover:bg-[#222234]/90 shrink-0 whitespace-nowrap text-sm font-semibold">
+                    Sign Up
+                  </Button>
                 </Link>
-              </Button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="flex items-center px-2 py-1.5 rounded-md hover:bg-gray-100 transition-colors">
-                    <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-foreground font-medium text-sm">
-                      {profile?.username?.charAt(0).toUpperCase() || "U"}
-                    </div>
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 bg-white">
-                  <div className="px-2 py-2 border-b border-[#e5e7eb]">
-                    <div className="flex items-center gap-2">
-                      <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-foreground font-medium text-sm">
-                        {profile?.username?.charAt(0).toUpperCase() || "U"}
-                      </div>
-                      <span className="text-sm font-medium">
-                        {profile?.username || "User"}
-                      </span>
-                    </div>
-                  </div>
-                  
-                  {/* My Content */}
-                  <DropdownMenuItem asChild>
-                    <Link href="/app/requests" className="flex items-center">
-                      <ClipboardList className="h-4 w-4 mr-2" />
-                      Requests
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/app/submissions" className="flex items-center">
-                      <Send className="h-4 w-4 mr-2" />
-                      Proposals
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/app/inventory" className="flex items-center">
-                      <Package className="h-4 w-4 mr-2" />
-                      Inventory
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/app/saved" className="flex items-center">
-                      <Bookmark className={cn(
-                        "h-4 w-4 mr-2",
-                        pathname === "/app/saved" && "fill-current"
-                      )} />
-                      Saved
-                    </Link>
-                  </DropdownMenuItem>
-                  
-                  <DropdownMenuItem asChild>
-                    <Link href="/app/leaderboard" className="flex items-center">
-                      <Trophy className="h-4 w-4 mr-2" />
-                      Leaderboard
-                    </Link>
-                  </DropdownMenuItem>
-                  
-                  <DropdownMenuSeparator />
-                  
-                  {/* Account */}
-                  <DropdownMenuItem asChild>
-                    <Link href={profile?.username ? `/app/profile/${profile.username}` : "/app/settings"} className="flex items-center">
-                      <User className="h-4 w-4 mr-2" />
-                      Profile
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/app/settings" className="flex items-center">
-                      <Settings className="h-4 w-4 mr-2" />
-                      Settings
-                    </Link>
-                  </DropdownMenuItem>
-                  
-                  <DropdownMenuSeparator />
-                  
-                  {/* Actions */}
-                  <DropdownMenuItem onClick={handleSignOut} disabled={isPending} className="flex items-center">
-                    <LogOut className="h-4 w-4 mr-2" />
-                    Sign out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </>
-          ) : (
-            <>
-              <Button onClick={() => setIsCreateModalOpen(true)} className="hidden sm:flex h-11 rounded-full bg-transparent text-gray-900 hover:bg-gray-50 border border-gray-900 font-semibold shrink-0 whitespace-nowrap px-6">
-                Create a request
-              </Button>
-              <Link href="/signup" className="shrink-0">
-                <Button variant="default" className="h-11 rounded-full px-6 bg-[#222234] text-white hover:bg-[#222234]/90 shrink-0 whitespace-nowrap text-sm font-semibold">
-                  Sign Up
-                </Button>
-              </Link>
-              <div className="ml-3">
-                <LoginDropdown />
-              </div>
-            </>
-          )}
+                <div className="ml-3">
+                  <LoginDropdown />
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </div>
       <CreateRequestModal 

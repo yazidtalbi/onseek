@@ -61,8 +61,8 @@ export function ProfileTabs({
             className={cn(
               "px-4 py-2 text-sm font-semibold transition-colors rounded-full",
               activeTab === tab.id
-                ? "bg-foreground text-background"
-                : "bg-gray-100 text-muted-foreground hover:text-foreground"
+                ? "bg-gray-100 text-foreground"
+                : "bg-transparent text-muted-foreground hover:text-foreground hover:bg-gray-50"
             )}
           >
             {tab.label}

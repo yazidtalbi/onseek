@@ -6,6 +6,7 @@ import { AuthProvider } from "@/components/layout/auth-provider";
 import { OnboardingModal } from "@/components/auth/onboarding-modal";
 
 import { PageLayout } from "@/components/layout/page-layout";
+import { AppSidebar, SidebarProvider } from "@/components/layout/app-sidebar";
 
 export const dynamic = "force-dynamic";
 
@@ -58,15 +59,21 @@ export default async function AppLayout({
 
   return (
     <AuthProvider user={serializedUser} profile={resolvedProfile ?? null}>
-      <div className="flex flex-col min-h-screen bg-background pb-20 md:pb-0">
-        <AppNavbar />
-        <main className="flex-1 w-full flex flex-col">
-          <PageLayout>{children}</PageLayout>
-        </main>
-        <BottomNav />
-        <ScrollToTop />
-      </div>
-      <OnboardingModal />
+      <SidebarProvider>
+        <div className="flex flex-col min-h-screen bg-background pb-20 md:pb-0 overflow-x-clip">
+          <AppNavbar />
+          <div className="flex-1 flex min-h-0 w-full relative">
+            <AppSidebar>
+              <main className="flex-1 w-full flex flex-col min-w-0">
+                <PageLayout>{children}</PageLayout>
+              </main>
+            </AppSidebar>
+          </div>
+          <BottomNav />
+          <ScrollToTop />
+        </div>
+        <OnboardingModal />
+      </SidebarProvider>
     </AuthProvider>
   );
 }

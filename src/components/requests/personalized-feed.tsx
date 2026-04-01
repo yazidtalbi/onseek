@@ -19,6 +19,7 @@ import { Loader2, Search, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import { AuthModal } from "@/components/auth/auth-modal";
 
 interface PersonalizedFeedProps {
   initialMode?: FeedMode;
@@ -26,22 +27,23 @@ interface PersonalizedFeedProps {
   initialData?: { items: RequestItem[]; nextCursor: string | null };
 }
 
-export function PersonalizedFeed({ 
-  initialMode = "for_you", 
+export function PersonalizedFeed({
+  initialMode = "for_you",
   initialCategory = null,
-  initialData 
+  initialData
 }: PersonalizedFeedProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const isHomePage = pathname === "/app" || pathname === "/";
+  const showHero = isHomePage && !user;
   const [mode, setMode] = useState<FeedMode>(() => {
     // Determine mode from pathname first
     if (pathname.includes("/app/popular")) return "trending";
     if (pathname.includes("/app/latest")) return "latest";
     if (pathname.includes("/app/for-you")) return "for_you";
-    
+
     const modeParam = searchParams.get("mode");
     return (modeParam === "for_you" || modeParam === "latest" || modeParam === "trending"
       ? modeParam
@@ -50,6 +52,8 @@ export function PersonalizedFeed({
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const [hasPreferences, setHasPreferences] = useState<boolean | undefined>(undefined);
   const [tradeMode, setTradeMode] = useState<"buy" | "sell">("buy");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const hasUpdatedUrlRef = useRef(false);
 
   // Load user preferences to check if they have any
@@ -273,11 +277,11 @@ export function PersonalizedFeed({
 
   const handleModeChange = (newMode: FeedMode) => {
     setMode(newMode);
-    
+
     // Build path based on new mode and current category
     const modePath = REVERSE_MODE_MAP[newMode] || "for-you";
     const categoryPath = category && category !== "All" ? `/${getCategorySlug(category)}` : "";
-    
+
     router.push(`/app/${modePath}${categoryPath}`);
   };
 
@@ -286,7 +290,7 @@ export function PersonalizedFeed({
     const handleScroll = () => {
       // Check if we're near the bottom of the page (within 200px)
       if (
-        !isHomePage &&
+        (user || !isHomePage) &&
         window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 200 &&
         hasNextPage &&
         !isFetchingNextPage &&
@@ -305,10 +309,10 @@ export function PersonalizedFeed({
     <div className="flex flex-col w-full">
       <section className={cn(
         "relative mx-auto w-full max-w-[1360px] flex items-center justify-center transition-all duration-500",
-        isHomePage ? "rounded-[32px] bg-white overflow-hidden px-6 py-12 sm:px-10 sm:py-16 min-h-[440px] mb-8" : "px-4 md:px-6 py-2 min-h-[80px] mb-0"
+        showHero ? "rounded-[32px] bg-white overflow-hidden px-6 py-12 sm:px-10 sm:py-16 min-h-[440px] mb-8" : "py-2 min-h-[80px] mb-0"
       )}>
         {/* Hero background images - only show on home page for impact */}
-        {isHomePage && (
+        {showHero && (
           <>
             <div className="hidden lg:block absolute -left-6 xl:-left-10 top-[40%] -translate-y-1/2 w-[260px] xl:w-[320px] h-[260px] xl:h-[320px] pointer-events-none z-0">
               <Image src="/hero/left.png" alt="Microphone composition" fill className="object-contain mix-blend-multiply" priority />
@@ -321,9 +325,9 @@ export function PersonalizedFeed({
 
         <div className={cn(
           "mx-auto w-full text-center flex flex-col items-center relative z-10",
-          isHomePage ? "max-w-3xl" : "max-w-5xl"
+          showHero ? "max-w-3xl" : "max-w-full px-0"
         )}>
-          {isHomePage ? (
+          {showHero ? (
             <>
               <div className="relative flex items-center p-1.5 bg-[#f4f5f8] rounded-2xl mb-6 w-fit mx-auto">
                 <div
@@ -354,7 +358,7 @@ export function PersonalizedFeed({
                 </button>
               </div>
 
-              <h1 
+              <h1
                 className="mx-auto text-3xl leading-[1.25] tracking-tight text-foreground sm:text-5xl font-medium"
                 style={{ fontFamily: 'var(--font-expanded)' }}
               >
@@ -368,14 +372,24 @@ export function PersonalizedFeed({
                 "mx-auto w-full max-w-xl relative transition-all duration-500",
                 tradeMode === "buy" ? "mt-8" : "mt-2"
               )}>
+                {/* Panels Container */}
                 <div className="relative w-full h-[130px]">
                   <div className="absolute inset-0 bg-gradient-to-r from-blue-100/60 via-indigo-50/60 to-purple-100/60 blur-3xl rounded-full scale-[1.1] -z-10 pointer-events-none" />
 
                   {/* BUY Panel */}
                   <div
-                    role="article"
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => {
+                      window.dispatchEvent(new CustomEvent('open-create-request-modal'));
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        window.dispatchEvent(new CustomEvent('open-create-request-modal'));
+                      }
+                    }}
                     className={cn(
-                      "absolute inset-0 w-full rounded-2xl bg-white border border-[#e6e7eb] shadow-[0_8px_30px_rgb(0,0,0,0.06)] transition-all duration-500 ease-out h-[130px] flex flex-col p-5 group",
+                      "absolute inset-0 w-full rounded-2xl bg-white border border-[#e6e7eb] shadow-[0_8px_30px_rgb(0,0,0,0.06)] transition-all duration-500 ease-out h-[130px] flex flex-col p-5 group cursor-pointer hover:border-[#7755FF]/30",
                       tradeMode === 'buy' ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4 pointer-events-none"
                     )}
                   >
@@ -397,32 +411,45 @@ export function PersonalizedFeed({
                     )}
                   >
                     <Button
-                      asChild
+                      onClick={() => {
+                        if (user) {
+                          router.push('/app/personal-items');
+                        } else {
+                          setIsAuthModalOpen(true);
+                        }
+                      }}
                       className="rounded-full bg-[#1e2330] hover:bg-[#2a303f] text-white px-10 py-6 text-[16px] font-medium shadow-lg hover:shadow-xl transition-all"
                     >
-                      <Link href="/app/new">Sell your item</Link>
+                      Sell your item
                     </Button>
                   </div>
                 </div>
               </div>
             </>
           ) : (
-            <div className="w-full flex flex-col items-stretch gap-4">
-              <CategoryPills mode={mode} hasPreferences={hasPreferences} />
-              <RequestFilters hideViewToggle={true} mode={mode} category={category} />
+            <div className="w-full flex flex-col items-stretch">
+              <CategoryPills 
+                mode={mode} 
+                hasPreferences={hasPreferences} 
+                viewMode={viewMode}
+                onViewModeChange={setViewMode}
+                hideViewToggle={false}
+              />
             </div>
           )}
         </div>
       </section>
 
-      {isHomePage && (
-        <>
-          <div className="shrink-0 mb-2">
-            <CategoryPills mode={mode} hasPreferences={hasPreferences} />
-          </div>
-
-          <RequestFilters hideViewToggle={true} mode={mode} category={category} />
-        </>
+      {showHero && (
+        <div className="w-full mb-4">
+          <CategoryPills 
+            mode={mode} 
+            hasPreferences={hasPreferences} 
+            viewMode={viewMode}
+            onViewModeChange={setViewMode}
+            hideViewToggle={false}
+          />
+        </div>
       )}
 
       {/* Error state */}
@@ -471,11 +498,39 @@ export function PersonalizedFeed({
             </div>
           )}
 
-          <div className="columns-1 md:columns-2 xl:columns-3 gap-6 py-4">
+          <div className={cn("py-4 w-full", viewMode === "grid" ? "columns-1 md:columns-2 xl:columns-3 gap-6" : "flex flex-col gap-4 max-w-2xl mx-auto")}>
+            {/* Inject textarea for creation at top of masonry if logged in */}
+            {user && isHomePage && (
+              <div className="break-inside-avoid mb-6">
+                <div
+                  role="button"
+                  tabIndex={-1}
+                  onClick={() => {
+                    window.dispatchEvent(new CustomEvent('open-create-request-modal'));
+                  }}
+                  className="w-full rounded-2xl bg-white border border-[#e6e7eb] shadow-none transition-all duration-300 min-h-[140px] flex flex-col p-4 cursor-pointer"
+                >
+                  <div className="flex items-center gap-3 flex-1 mb-2">
+                    <div className="flex items-center justify-center h-10 w-10 rounded-full bg-gray-200 text-foreground font-medium text-base shrink-0">
+                      {profile?.username?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase() || "U"}
+                    </div>
+                    <span className="text-[#a5abb7] text-[16px] font-medium font-sans">
+                      What are you looking for, {profile?.username || "Guest"}?
+                    </span>
+                  </div>
+                  <div className="flex justify-end mt-auto">
+                    <div className="rounded-full bg-[#1e2330] hover:bg-[#2a303f] text-white px-6 py-2.5 text-[15px] font-medium flex items-center justify-center transition-colors shadow-sm">
+                      Request
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {allItems.map((request: RequestItem) => {
               const requestWithExtras = request as RequestItem & { images?: string[]; links?: string[] };
               return (
-                <div key={request.id} className="break-inside-avoid mb-6 bg-[#f5f6f9] rounded-[20px] p-[6px] transition-all duration-300 ease-out hover:-translate-y-1.5 shadow-none hover:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.12)]">
+                <div key={request.id} className="break-inside-avoid mb-6 bg-[#f5f6f9] rounded-[20px] p-[6px] transition-all duration-300 ease-out hover:scale-[1.02] shadow-none hover:shadow-none">
                   <Link
                     href={`/app/requests/${request.id}`}
                     className="block w-full"
@@ -495,29 +550,22 @@ export function PersonalizedFeed({
           </div>
 
           <div className="w-full flex justify-center py-8">
-            <Button
-              onClick={() => {
-                if (!user) {
-                  router.push("/login");
-                } else {
-                  if (isHomePage) {
-                    router.push("/search"); // Or another route, but let's just fetch next page if they want infinite load here
-                  }
-                  fetchNextPage();
-                }
-              }}
-              disabled={isFetchingNextPage && !!user}
-              variant="outline"
-              className="rounded-full font-medium h-10 px-6 border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 flex items-center shadow-sm"
-            >
-              {isFetchingNextPage && user ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-              {isFetchingNextPage && user ? "Loading..." : "Explore projects"}
-            </Button>
+            {(!user && isHomePage) ? (
+              <Button
+                onClick={() => router.push("/login")}
+                variant="outline"
+                className="rounded-full font-medium h-10 px-6 border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 flex items-center shadow-sm"
+              >
+                Explore projects
+              </Button>
+            ) : (
+              isFetchingNextPage && <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+            )}
           </div>
 
-          {isHomePage && <FaqSection />}
+          {showHero && <FaqSection />}
 
-          {isHomePage && (
+          {showHero && (
             <div className="w-full bg-[#785ffe] rounded-[32px] px-8 py-24 sm:px-16 mt-16 mb-8 flex flex-col items-center text-center justify-center min-h-[400px]">
               <h2 className="text-4xl lg:text-6xl tracking-tight text-white mb-10 max-w-2xl" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 500 }}>
                 Let your item come fiiind you
@@ -535,6 +583,14 @@ export function PersonalizedFeed({
           </div>
         </div>
       ) : null}
+      {isAuthModalOpen && (
+        <AuthModal
+          open={isAuthModalOpen}
+          onOpenChange={setIsAuthModalOpen}
+          title="Sell your items to the world"
+          description="Sign in or create an account to start selling and track your inventory on Onseek."
+        />
+      )}
     </div>
   );
 }

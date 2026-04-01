@@ -61,16 +61,16 @@ export default async function MySubmissionsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="max-w-2xl mx-auto w-full">
+      <div className="max-w-3xl mx-auto w-full">
         <div>
-          <h1 className="text-3xl font-semibold">Proposals</h1>
-          <p className="text-sm text-muted-foreground">
+          <h1 className="text-3xl text-foreground" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>Proposals</h1>
+          <p className="text-sm text-muted-foreground mt-2">
             Track every link you have shared with the community.
           </p>
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto w-full space-y-4">
+      <div className="max-w-3xl mx-auto w-full space-y-4">
         {submissions.length > 0 ? (
           submissions.map((submission, index) => {
             const request = (submission as any).requests;
@@ -96,8 +96,9 @@ export default async function MySubmissionsPage() {
                   submission={submission}
                   requestId={requestId || ""}
                   requestTitle={requestTitle}
-                  isFirst={index === 0}
-                  isLast={index === submissions.length - 1}
+                  isFirst={false}
+                  isLast={false}
+                  isOnlyOne={true}
                   requestOwnerId={requestId ? requestOwnerIds[requestId] : undefined}
                   hideVotes={true}
                 />

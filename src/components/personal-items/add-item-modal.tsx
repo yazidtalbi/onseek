@@ -135,11 +135,14 @@ export function AddItemModal({ onSuccess }: { onSuccess?: () => void }) {
           Add Item
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>Add Personal Item</DialogTitle>
+      <DialogContent className="sm:max-w-[620px] p-0 overflow-hidden rounded-[1.5rem] border-none shadow-2xl bg-white">
+        <DialogHeader className="px-8 pt-12 pb-6">
+          <DialogTitle className="text-2xl font-bold tracking-tight text-[#222234] text-center" style={{ fontFamily: 'var(--font-expanded)' }}>
+            What are you listing?
+          </DialogTitle>
         </DialogHeader>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <div className="px-8 pb-10">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           {error && (
             <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-600">
               {error}
@@ -147,10 +150,10 @@ export function AddItemModal({ onSuccess }: { onSuccess?: () => void }) {
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="articleName">Article name *</Label>
             <Input
               id="articleName"
-              placeholder="e.g., iPhone 15 Pro, Nike Air Max..."
+              placeholder="Article name (e.g. iPhone 15 Pro, Nike Air Max...)"
+              className="h-14 bg-white border-[#e5e7eb] rounded-xl focus-visible:ring-[#222234] placeholder:text-gray-400 placeholder:font-normal text-base font-semibold"
               {...form.register("articleName")}
             />
             {form.formState.errors.articleName && (
@@ -160,8 +163,7 @@ export function AddItemModal({ onSuccess }: { onSuccess?: () => void }) {
             )}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="imageUpload">Item image (optional)</Label>
+          <div className="space-y-4">
             <div className="flex items-center gap-2">
               <input
                 id="imageUpload"
@@ -209,29 +211,32 @@ export function AddItemModal({ onSuccess }: { onSuccess?: () => void }) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">Description (optional)</Label>
             <Textarea
               id="description"
-              placeholder="Describe the item..."
+              placeholder="Description (Describe the item...)"
+              className="min-h-[120px] bg-white border-[#e5e7eb] rounded-xl focus-visible:ring-[#222234] placeholder:text-gray-400 placeholder:font-normal text-base resize-none"
               {...form.register("description")}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="price">Price (optional)</Label>
-            <Input
-              id="price"
-              type="number"
-              step="0.01"
-              placeholder="0.00"
-              {...form.register("price", { valueAsNumber: true })}
-            />
+            <div className="relative group">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-semibold text-lg">$</span>
+              <Input
+                id="price"
+                type="number"
+                step="0.01"
+                placeholder="Price (0.00)"
+                className="h-14 bg-white border-[#e5e7eb] rounded-xl focus-visible:ring-[#222234] placeholder:text-gray-400 placeholder:font-normal text-base font-semibold pl-8"
+                {...form.register("price", { valueAsNumber: true })}
+              />
+            </div>
           </div>
 
-          <div className="flex gap-3 pt-4">
+          <div className="flex gap-4 pt-4">
             <Button
               type="button"
-              variant="outline"
+              variant="ghost"
               onClick={() => {
                 setOpen(false);
                 form.reset();
@@ -239,14 +244,14 @@ export function AddItemModal({ onSuccess }: { onSuccess?: () => void }) {
                 setUploadedImageFile(null);
                 setError(null);
               }}
-              className="flex-1"
+              className="flex-1 h-12 rounded-full font-bold text-gray-500 hover:bg-gray-50"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={isPending || isUploading}
-              className="flex-1 bg-[#7755FF] hover:bg-[#6644EE]"
+              className="flex-1 h-12 rounded-full font-bold bg-[#222234] hover:bg-[#2a2a4f] text-white shadow-lg shadow-gray-200"
             >
               {isPending ? (
                 <>
@@ -259,6 +264,7 @@ export function AddItemModal({ onSuccess }: { onSuccess?: () => void }) {
             </Button>
           </div>
         </form>
+        </div>
       </DialogContent>
     </Dialog>
   );

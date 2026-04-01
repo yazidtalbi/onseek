@@ -1,4 +1,6 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { ProfileTabs } from "@/components/profile/profile-tabs";
 import { Card, CardContent } from "@/components/ui/card";
@@ -268,83 +270,94 @@ export default async function ProfilePage({
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      {/* Left Column: Profile Card with Stats */}
-      <div className="lg:col-span-1 space-y-4">
-        <Card className="border-[#e5e7eb] ">
-          <CardContent className="p-6 space-y-4">
-            <div className="flex items-start gap-4">
-              {/* Avatar */}
-              <div className="flex-shrink-0">
-                {profile.avatar_url ? (
-                  <div className="relative w-16 h-16 rounded-full overflow-hidden border border-[#e5e7eb]">
-                    <Image
-                      src={profile.avatar_url}
-                      alt={profile.display_name || profile.username}
-                      fill
-                      className="object-cover"
-                      unoptimized
-                    />
-                  </div>
-                ) : (
-                  <div className="w-16 h-16 rounded-full bg-gray-100 border border-[#e5e7eb] flex items-center justify-center">
-                    <span className="text-lg font-semibold text-gray-600">
-                      {(profile.display_name || profile.username)[0].toUpperCase()}
-                    </span>
-                  </div>
-                )}
+    <div className="max-w-4xl mx-auto w-full">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left Column: Profile Card with Stats */}
+        <div className="lg:col-span-1 space-y-4">
+          <Card className="border-[#e5e7eb] ">
+            <CardContent className="p-6 space-y-4">
+              <div className="flex items-start gap-4">
+                {/* Avatar */}
+                <div className="flex-shrink-0">
+                  {profile.avatar_url ? (
+                    <div className="relative w-16 h-16 rounded-full overflow-hidden border border-[#e5e7eb]">
+                      <Image
+                        src={profile.avatar_url}
+                        alt={profile.display_name || profile.username}
+                        fill
+                        className="object-cover"
+                        unoptimized
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-16 h-16 rounded-full bg-gray-100 border border-[#e5e7eb] flex items-center justify-center">
+                      <span className="text-lg font-semibold text-gray-600">
+                        {(profile.display_name || profile.username)[0].toUpperCase()}
+                      </span>
+                    </div>
+                  )}
+                </div>
+                {/* Profile Info */}
+                <div className="flex-1 min-w-0">
+                  <h1 className="text-2xl font-semibold">@{profile.username}</h1>
+                  {profile.display_name && profile.display_name !== profile.username && (
+                    <p className="text-base text-muted-foreground mt-1">{profile.display_name}</p>
+                  )}
+                  {profile.bio && (
+                    <p className="text-sm text-muted-foreground mt-2">{profile.bio}</p>
+                  )}
+                  <p className="text-xs text-muted-foreground mt-3">
+                    Member since {new Date(profile.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                  </p>
+                </div>
               </div>
-              {/* Profile Info */}
-              <div className="flex-1 min-w-0">
-                <h1 className="text-2xl font-semibold">@{profile.username}</h1>
-                {profile.display_name && profile.display_name !== profile.username && (
-                  <p className="text-base text-muted-foreground mt-1">{profile.display_name}</p>
-                )}
-                {profile.bio && (
-                  <p className="text-sm text-muted-foreground mt-2">{profile.bio}</p>
-                )}
-                <p className="text-xs text-muted-foreground mt-3">
-                  Member since {new Date(profile.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-                </p>
-              </div>
-            </div>
 
-            {/* Stats */}
-            <div className="grid grid-cols-2 gap-4 pt-4 border-t border-[#e5e7eb]">
-              <div>
-                <p className="text-xs text-muted-foreground">Points</p>
-                <p className="text-xl font-semibold">{points}</p>
+              {/* Stats */}
+              <div className="grid grid-cols-2 gap-4 py-4 border-y border-[#e5e7eb]">
+                <div>
+                  <p className="text-xs text-muted-foreground">Points</p>
+                  <p className="text-xl font-semibold">{points}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Requests</p>
+                  <p className="text-xl font-semibold">{requestsCount}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Submissions</p>
+                  <p className="text-xl font-semibold">{submissionsCount}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Winners</p>
+                  <p className="text-xl font-semibold">{winnersCount}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Requests</p>
-                <p className="text-xl font-semibold">{requestsCount}</p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Submissions</p>
-                <p className="text-xl font-semibold">{submissionsCount}</p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Winners</p>
-                <p className="text-xl font-semibold">{winnersCount}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
 
-      {/* Right Column: Tabs for Activity, Requests, Submissions, Winners */}
-      <div className="lg:col-span-2">
-        <ProfileTabs
-          requests={requestsWithCounts}
-          submissions={submissionsWithScores}
-          winners={winningSubmissionsWithScores}
-          requestImages={requestImages}
-          requestLinks={requestLinks}
-          requestFavorites={requestFavorites}
-          submissionRequests={submissionRequests}
-          winningRequestIds={winningRequests?.map((r) => r.id) || []}
-          activities={activities}
-        />
+              {/* Edit Profile Button for Owner */}
+              {user?.id === profile.id && (
+                <Link href="/app/settings" className="block w-full">
+                  <Button variant="outline" className="w-full text-sm font-medium">
+                    Edit Profile
+                  </Button>
+                </Link>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Right Column: Tabs for Activity, Requests, Submissions, Winners */}
+        <div className="lg:col-span-2">
+          <ProfileTabs
+            requests={requestsWithCounts}
+            submissions={submissionsWithScores}
+            winners={winningSubmissionsWithScores}
+            requestImages={requestImages}
+            requestLinks={requestLinks}
+            requestFavorites={requestFavorites}
+            submissionRequests={submissionRequests}
+            winningRequestIds={winningRequests?.map((r) => r.id) || []}
+            activities={activities}
+          />
+        </div>
       </div>
     </div>
   );

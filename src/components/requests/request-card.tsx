@@ -62,6 +62,7 @@ interface RequestCardProps {
   noPadding?: boolean;
   noRounding?: boolean;
   headerActions?: React.ReactNode;
+  disableHover?: boolean;
 }
 
 function RequestCardComponent({
@@ -82,6 +83,7 @@ function RequestCardComponent({
   noPadding = false,
   noRounding = false,
   headerActions,
+  disableHover = false,
 }: RequestCardProps) {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [previewImageIndex, setPreviewImageIndex] = useState<number>(0);
@@ -226,7 +228,7 @@ function RequestCardComponent({
                   <h3
                     className={cn(
                       "font-semibold leading-snug text-foreground transition-colors font-[family-name:var(--font-inter-display)]",
-                      variant === "detail" ? "text-2xl" : "text-[18px]",
+                      variant === "detail" && !smallImages ? "text-4xl max-w-[75%]" : "text-[18px]",
                       !headerActions && "pr-24"
                     )}
                   >
@@ -518,7 +520,7 @@ function RequestCardComponent({
                 noRounding && "rounded-none",
                 noBorder ? "!border-none !shadow-none bg-white" : "border border-[#e5e7eb]",
                 hasContent ? "h-full" : "h-fit",
-                smallImages && !noBorder && "group-hover/card:-translate-y-1 group-hover/card:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.1)]"
+                smallImages && !noBorder && !disableHover && "group-hover/card:-translate-y-1 group-hover/card:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.1)]"
               )}
             >
               {cardContent}
@@ -571,7 +573,7 @@ function RequestCardComponent({
           <Card
             className={cn(
               "flex flex-col transition-all duration-300 ease-out relative group",
-              !noBorder && "hover:-translate-y-2 hover:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.15)]",
+              !noBorder && !disableHover && "hover:-translate-y-2 hover:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.15)]",
               hasContent ? "h-full" : "h-fit",
               !noBorder && !isFeed && !noRounding ? "rounded-2xl" : "",
               !noBorder && isFeed && isFirst && isLast && !noRounding ? "rounded-2xl" : "",

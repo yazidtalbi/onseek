@@ -115,7 +115,7 @@ export function SubmissionList({
         
         {/* CTA Button */}
         <Button 
-          className="bg-[#212733] text-white hover:bg-[#212733]/90 rounded-full px-6"
+          className="bg-[#212733] text-white hover:bg-[#212733]/90 rounded-full px-8 py-6 text-lg"
           onClick={() => {
             // Find and click the submission form button by ID
             const submitButton = document.getElementById('submission-form-trigger') as HTMLButtonElement;

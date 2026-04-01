@@ -13,15 +13,25 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { CountryCombobox } from "@/components/ui/country-combobox";
+import { Rows3, LayoutGrid } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
-export function CategoryPills({ 
+export function CategoryPills({
   mode = "for_you",
-  hasPreferences = false 
-}: { 
+  hasPreferences = false,
+  viewMode,
+  onViewModeChange,
+  hideViewToggle = false
+}: {
   mode?: FeedMode;
   hasPreferences?: boolean;
+  viewMode?: "list" | "grid";
+  onViewModeChange?: (mode: "list" | "grid") => void;
+  hideViewToggle?: boolean;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -36,19 +46,19 @@ export function CategoryPills({
   const isCategoryInPath = pathname.includes('/app/popular/') || pathname.includes('/app/latest/') || pathname.includes('/app/for-you/');
   const pathCategory = isCategoryInPath ? getCategoryName(lastPart) : null;
   const isHomePage = pathname === "/app";
-  
+
   const selectedCategory = isHomePage ? "Discover" : (pathCategory || searchParams.get("category") || "All");
-  
+
   const handleModeChange = (newMode: string) => {
     const params = new URLSearchParams(searchParams.toString());
     params.delete("page");
-    
+
     const modePath = REVERSE_MODE_MAP[newMode as FeedMode] || "for-you";
-    
+
     // Maintain current category slug if present
     const categorySlug = pathname.split('/').pop();
     const isCategoryPath = pathname.includes('/app/popular/') || pathname.includes('/app/latest/') || pathname.includes('/app/for-you/');
-    
+
     if (isCategoryPath && categorySlug && categorySlug !== modePath) {
       router.push(`/app/${modePath}/${categorySlug}?${params.toString()}`);
     } else {
@@ -84,14 +94,14 @@ export function CategoryPills({
   const handleCategorySelect = (category: string) => {
     const params = new URLSearchParams(searchParams.toString());
     params.delete("page");
-    
+
     if (category === "Discover") {
       router.push("/app" + (params.toString() ? `?${params.toString()}` : ""));
       return;
     }
 
     const modePath = REVERSE_MODE_MAP[mode] || "for-you";
-    
+
     if (category === "All") {
       router.push(`/app/${modePath}?${params.toString()}`);
     } else {
@@ -118,102 +128,162 @@ export function CategoryPills({
     }
   };
 
+  const priceMax = searchParams.get("priceMax") || "";
+  const country = searchParams.get("country") || "";
   const categories = ["Discover", "All", ...MAIN_CATEGORIES];
   const [filtersOpen, setFiltersOpen] = React.useState(false);
   const hasActiveFilters = searchParams.get("priceMin") || searchParams.get("priceMax") || searchParams.get("country");
 
+  const updateParam = (key: string, value: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (value === "All" || value === "" || value === "0") {
+      params.delete(key);
+    } else {
+      params.set(key, value);
+    }
+    if (key === "category") params.delete("page");
+    const hasQuery = searchParams.get("q");
+    const path = hasQuery ? "/search" : pathname;
+    router.push(`${path}?${params.toString()}`);
+  };
+
   return (
-    <div className="flex items-center w-full gap-3">
-      {/* Mode Dropdown - Replacing Sort Dropdown */}
-      <div className="flex-shrink-0">
-        <Select value={mode} onValueChange={handleModeChange}>
-          <SelectTrigger className="w-[110px] border-none shadow-none font-medium h-9 px-2 hover:bg-gray-100 rounded-full transition-colors text-black focus:ring-0">
-            <div className="flex items-center gap-2">
+    <div className="w-full flex flex-col gap-3">
+      <div className="flex items-center justify-between w-full">
+        {/* Categories Scroller - far left */}
+        <div className="flex-1 min-w-0 pr-4 flex items-center relative group max-w-[720px]">
+          {/* Left gradient overlay */}
+          {canScrollCategoriesLeft && (
+            <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-white via-white/80 to-transparent pointer-events-none z-10" />
+          )}
+
+          {/* Left chevron button */}
+          {canScrollCategoriesLeft && (
+            <button
+              onClick={scrollLeft}
+              className="absolute left-0 flex items-center justify-center w-7 h-7 rounded-full bg-white/90 hover:bg-gray-100 transition-all z-20"
+            >
+              <ChevronLeft className="h-3 w-3 text-gray-600" />
+            </button>
+          )}
+
+          <div
+            ref={scrollContainerRef}
+            className="flex items-center gap-2 overflow-x-auto scrollbar-hide scroll-smooth w-full px-2 justify-start"
+          >
+            {categories.map((category) => {
+              const isActive = selectedCategory === category || (selectedCategory === null && category === "All");
+              return (
+                <button
+                  key={category}
+                  onClick={() => handleCategorySelect(category)}
+                  className={cn(
+                    "px-4 py-2 text-[15px] whitespace-nowrap transition-all duration-200",
+                    isActive
+                      ? "bg-gray-100 text-black rounded-full font-bold"
+                      : "bg-transparent text-gray-400 hover:text-gray-600 font-medium"
+                  )}
+                >
+                  {category}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Right gradient overlay */}
+          {canScrollCategoriesRight && (
+            <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-white via-white/80 to-transparent pointer-events-none z-10" />
+          )}
+
+          {/* Right chevron button */}
+          {canScrollCategoriesRight && (
+            <button
+              onClick={scrollRight}
+              className="absolute right-0 flex items-center justify-center w-7 h-7 rounded-full bg-white/90 hover:bg-gray-100 transition-all z-20"
+            >
+              <ChevronRight className="h-3 w-3 text-gray-600" />
+            </button>
+          )}
+        </div>
+
+        {/* Far Right Nav - View, Sort, Filter */}
+        <div className="shrink-0 flex items-center gap-2">
+          {/* Filter Button */}
+          <button
+            onClick={() => setFiltersOpen(!filtersOpen)}
+            className={cn(
+              "w-9 h-9 p-0 flex items-center justify-center rounded-full text-sm font-medium transition-colors border",
+              hasActiveFilters || filtersOpen
+                ? "bg-gray-100 text-gray-900 border-gray-300"
+                : "bg-white border-transparent text-gray-600 hover:text-gray-900"
+            )}
+            title="Filters"
+          >
+            <ListFilter className="h-4 w-4" />
+          </button>
+
+          {/* Sort (Latest) */}
+          <Select value={mode} onValueChange={handleModeChange}>
+            <SelectTrigger className="px-3 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors flex items-center gap-2 border-transparent bg-white text-gray-600 hover:text-gray-900 h-9 shadow-none focus:ring-0 w-auto">
               <span className="truncate">
                 {mode === "for_you" ? "For you" : mode === "trending" ? "Trending" : "Latest"}
               </span>
-            </div>
-          </SelectTrigger>
-          <SelectContent className="bg-white min-w-[150px]">
-            <SelectItem value="for_you" disabled={!hasPreferences}>For you</SelectItem>
-            <SelectItem value="latest">Latest</SelectItem>
-            <SelectItem value="trending">Trending</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+            </SelectTrigger>
+            <SelectContent className="bg-white min-w-[150px]">
+              <SelectItem value="for_you" disabled={!hasPreferences}>For you</SelectItem>
+              <SelectItem value="latest">Latest</SelectItem>
+              <SelectItem value="trending">Trending</SelectItem>
+            </SelectContent>
+          </Select>
 
-      {/* Categories Scroller */}
-      <div className="relative flex-1 flex items-center min-w-0 group">
-        {/* Left gradient overlay */}
-        {canScrollCategoriesLeft && (
-          <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-white via-white/80 to-transparent pointer-events-none z-10" />
-        )}
-        
-        {/* Left chevron button (Categories) */}
-        {canScrollCategoriesLeft && (
-          <button
-            onClick={scrollLeft}
-            className="absolute left-0 flex items-center justify-center w-7 h-7 rounded-full bg-white/90 hover:bg-gray-100 transition-all z-20"
-          >
-            <ChevronLeft className="h-3 w-3 text-gray-600" />
-          </button>
-        )}
-
-        <div
-          ref={scrollContainerRef}
-          className="flex items-center gap-2 overflow-x-auto scrollbar-hide scroll-smooth w-full px-2 justify-center"
-        >
-          {categories.map((category) => {
-            const isActive = selectedCategory === category || (selectedCategory === null && category === "All");
-            return (
-              <button
-                key={category}
-                onClick={() => handleCategorySelect(category)}
-                className={cn(
-                  "px-4 py-2 text-[15px] whitespace-nowrap transition-all duration-200",
-                  isActive
-                    ? "bg-gray-100 text-black rounded-full font-bold"
-                    : "bg-transparent text-gray-400 hover:text-gray-600 font-medium"
-                )}
+          {/* View Toggle */}
+          {!hideViewToggle && viewMode !== undefined && onViewModeChange && (
+            <div className="flex items-center gap-1 rounded-full bg-gray-100 p-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onViewModeChange("list")}
+                className={cn("h-7 w-7 p-0 rounded-full", viewMode === "list" ? "bg-white text-gray-900" : "bg-transparent text-gray-500 hover:text-gray-900")}
+                title="List view"
               >
-                {category}
-              </button>
-            );
-          })}
+                <Rows3 className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onViewModeChange("grid")}
+                className={cn("h-7 w-7 p-0 rounded-full", viewMode === "grid" ? "bg-white text-gray-900" : "bg-transparent text-gray-500 hover:text-gray-900")}
+                title="Grid view"
+              >
+                <LayoutGrid className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
         </div>
-
-        {/* Right gradient overlay */}
-        {canScrollCategoriesRight && (
-          <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-white via-white/80 to-transparent pointer-events-none z-10" />
-        )}
-        
-        {/* Right chevron button (Categories) */}
-        {canScrollCategoriesRight && (
-          <button
-            onClick={scrollRight}
-            className="absolute right-0 flex items-center justify-center w-7 h-7 rounded-full bg-white/90 hover:bg-gray-100 transition-all z-20"
-          >
-            <ChevronRight className="h-3 w-3 text-gray-600" />
-          </button>
-        )}
       </div>
 
-      {/* Filters Button - NOW ON THE FAR RIGHT */}
-      <div className="flex-shrink-0">
-        <FiltersModal open={filtersOpen} onOpenChange={setFiltersOpen}>
-          <button
-            className={cn(
-              "px-3 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors flex items-center gap-2 border border-gray-200",
-              hasActiveFilters
-                ? "bg-gray-100 text-gray-900 border-gray-300"
-                : "bg-white text-gray-500 hover:text-gray-700"
-            )}
-          >
-            <ListFilter className="h-4 w-4" />
-            <span className="hidden sm:inline">Filters</span>
-          </button>
-        </FiltersModal>
-      </div>
+      {/* Expanded Inline Filters */}
+      {filtersOpen && (
+        <div className="w-full flex items-center justify-end gap-6 p-4 bg-[#f8f9fa] border border-[#e5e7eb] rounded-[16px] transition-all">
+          <div className="flex-1 max-w-[240px]">
+            <Label className="text-[13px] font-semibold text-gray-700 mb-1.5 block">Max Budget ($)</Label>
+            <Input 
+              type="number" 
+              placeholder="No limit" 
+              value={priceMax || ""} 
+              onChange={(e) => updateParam("priceMax", e.target.value)}
+              className="h-10 rounded-xl bg-white"
+            />
+          </div>
+          <div className="flex-1 max-w-[240px]">
+            <Label className="text-[13px] font-semibold text-gray-700 mb-1.5 block">Country</Label>
+            <CountryCombobox
+              value={country}
+              onChange={(val) => updateParam("country", val)}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
