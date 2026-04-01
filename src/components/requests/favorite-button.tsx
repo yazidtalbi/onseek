@@ -17,7 +17,10 @@ export function FavoriteButton({
 }) {
   const { user } = useAuth();
   const router = useRouter();
-  const [isFavorite, setIsFavorite] = React.useState(initialIsFavorite || false);
+  const [optimisticFavorite, addOptimisticFavorite] = React.useOptimistic(
+    initialIsFavorite || false,
+    (state, newState: boolean) => newState
+  );
   const [isPending, startTransition] = useTransition();
 
   const handleToggle = (e: React.MouseEvent) => {
@@ -30,13 +33,16 @@ export function FavoriteButton({
     }
 
     startTransition(async () => {
+      // Toggle optimistic state immediately
+      addOptimisticFavorite(!optimisticFavorite);
+      
       const formData = new FormData();
       formData.set("requestId", requestId);
-      const result = await toggleFavoriteAction(formData);
+      await toggleFavoriteAction(formData);
       
-      if (result?.success) {
-        setIsFavorite(result.isFavorite);
-      }
+      // We don't strictly need to set state here because router.refresh() 
+      // or the optimistic state handling will take care of it,
+      // but adding optimistic favorite helps the UI feel instant.
     });
   };
 
@@ -47,16 +53,16 @@ export function FavoriteButton({
       disabled={isPending}
       className={cn(
         "flex items-center justify-center rounded-full p-2 transition-colors",
-        isFavorite
+        optimisticFavorite
           ? "text-amber-600 hover:text-amber-700"
           : "text-gray-600 hover:text-gray-400"
       )}
-      aria-label={isFavorite ? "Remove from saved" : "Save request"}
+      aria-label={optimisticFavorite ? "Remove from saved" : "Save request"}
     >
       <Bookmark
         className={cn(
           "h-5 w-5 transition-all",
-          isFavorite && "fill-current"
+          optimisticFavorite && "fill-current"
         )}
       />
     </button>

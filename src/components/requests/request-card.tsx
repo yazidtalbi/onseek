@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { memo, useState, useRef, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -63,6 +64,7 @@ interface RequestCardProps {
   noRounding?: boolean;
   headerActions?: React.ReactNode;
   disableHover?: boolean;
+  priority?: boolean;
 }
 
 function RequestCardComponent({
@@ -84,7 +86,9 @@ function RequestCardComponent({
   noRounding = false,
   headerActions,
   disableHover = false,
+  priority = false,
 }: RequestCardProps) {
+  const router = useRouter();
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [previewImageIndex, setPreviewImageIndex] = useState<number>(0);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -434,7 +438,7 @@ function RequestCardComponent({
                         fill
                         className="object-cover"
                         sizes="48px"
-                        unoptimized
+                        priority={priority && index === 0}
                       />
                     </button>
                   ))}
@@ -491,7 +495,7 @@ function RequestCardComponent({
                 fill
                 className="object-cover"
                 sizes="(max-width: 640px) 40px, 48px"
-                unoptimized
+                priority={priority && index === 0}
               />
             </button>
           ))}
@@ -551,24 +555,24 @@ function RequestCardComponent({
           {cardContent}
         </Card>
       ) : (
-        <Link
-          href={createRequestUrl(request.id)}
-          prefetch={true}
-          className="block focus:outline-none cursor-pointer"
+        <div
           onClick={(e) => {
             // Don't navigate if clicking on favorite button or menu
             const target = e.target as HTMLElement;
-            // Check if click is on favorite button (has aria-label with "favorite")
             if (target.closest('button[aria-label*="favorite"]')) {
-              e.preventDefault();
               return;
             }
-            // Check if click is on menu or menu items
             if (target.closest('[role="menu"]') || target.closest('[role="menuitem"]')) {
-              e.preventDefault();
               return;
             }
+            // Also stop if clicking on the profile link specifically
+            if (target.closest('a')) {
+              return;
+            }
+            
+            router.push(createRequestUrl(request.id));
           }}
+          className="block focus:outline-none cursor-pointer"
         >
           <Card
             className={cn(
@@ -585,7 +589,7 @@ function RequestCardComponent({
           >
             {cardContent}
           </Card>
-        </Link>
+        </div>
       )}
       {previewImage && (
         <ImagePreviewDialog
