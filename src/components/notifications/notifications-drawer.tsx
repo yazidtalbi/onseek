@@ -4,11 +4,15 @@ import * as React from "react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, Bell, Check } from "lucide-react";
+import { MoreHorizontal, Bell, Check, Trash2 } from "lucide-react";
 import { useAuth } from "@/components/layout/auth-provider";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { NotificationItem } from "./notification-item";
-import { markAllNotificationsReadAction } from "@/actions/notification.actions";
+import { 
+  markAllNotificationsReadAction,
+  deleteNotificationAction,
+  markNotificationReadAction 
+} from "@/actions/notification.actions";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -66,6 +70,20 @@ export function NotificationsDrawer({ children }: NotificationsDrawerProps) {
     // Optimistic UI update
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
     await markAllNotificationsReadAction();
+  };
+
+  const handleMarkRead = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+    await markNotificationReadAction(id);
+  };
+
+  const handleRemove = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    setNotifications(prev => prev.filter(n => n.id !== id));
+    await deleteNotificationAction(id);
   };
 
   return (
@@ -136,7 +154,7 @@ export function NotificationsDrawer({ children }: NotificationsDrawerProps) {
         </div>
 
         {/* List */}
-        <div className="flex-1 overflow-y-auto px-4 py-2 space-y-1 pb-10">
+        <div className="flex-1 overflow-y-auto w-full pb-10">
           {loading ? (
             <div className="flex justify-center p-8">
               <div className="animate-spin h-6 w-6 border-2 border-neutral-300 border-t-[#7755FF] rounded-full" />
@@ -153,13 +171,34 @@ export function NotificationsDrawer({ children }: NotificationsDrawerProps) {
             filteredNotifications.map((item) => (
               <div key={item.id} className="relative group">
                 <NotificationItem notification={item} />
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="absolute top-4 right-2 opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 text-neutral-400 hover:text-neutral-900 bg-white"
-                >
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}
+                      className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 text-neutral-400 hover:text-neutral-900 bg-white outline-none border-0 ring-0 focus-visible:ring-0"
+                    >
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48 bg-white border border-neutral-200">
+                    <DropdownMenuItem 
+                      onClick={(e) => handleMarkRead(item.id, e as any)}
+                      className="cursor-pointer text-sm font-medium text-neutral-700 hover:text-neutral-900 hover:bg-neutral-50 px-3 py-2 outline-none"
+                    >
+                      <Check className="mr-2 h-4 w-4" />
+                      Mark as read
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={(e) => handleRemove(item.id, e as any)}
+                      className="cursor-pointer text-sm font-medium text-rose-600 hover:text-rose-700 hover:bg-rose-50 px-3 py-2 outline-none focus:text-rose-700 focus:bg-rose-50"
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Remove notification
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             ))
           )}

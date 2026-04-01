@@ -3,6 +3,7 @@ import { AppNavbar } from "@/components/layout/app-navbar";
 import { BottomNav } from "@/components/layout/bottom-nav";
 import { ScrollToTop } from "@/components/layout/scroll-to-top";
 import { AuthProvider } from "@/components/layout/auth-provider";
+import { OnboardingModal } from "@/components/auth/onboarding-modal";
 
 import { PageLayout } from "@/components/layout/page-layout";
 
@@ -65,6 +66,7 @@ export default async function AppLayout({
         <BottomNav />
         <ScrollToTop />
       </div>
+      <OnboardingModal />
     </AuthProvider>
   );
 }

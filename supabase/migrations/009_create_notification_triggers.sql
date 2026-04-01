@@ -3,11 +3,26 @@ create or replace function notify_request_owner_on_submission()
 returns trigger as $$
 declare
   request_owner_id uuid;
+  req_title text;
+  sender_name text;
+  sender_avatar text;
 begin
-  -- Get the request owner's user_id
-  select user_id into request_owner_id
+  -- Get the request owner's user_id and request title
+  select user_id, title into request_owner_id, req_title
   from requests
   where id = new.request_id;
+
+  -- Get the submitter's profile details
+  select display_name, avatar_url into sender_name, sender_avatar
+  from profiles
+  where id = new.user_id;
+
+  -- Fallback to username if display_name is null
+  if sender_name is null then
+    select username into sender_name
+    from profiles
+    where id = new.user_id;
+  end if;
 
   -- Only create notification if owner exists and is not the submitter
   if request_owner_id is not null and request_owner_id != new.user_id then
@@ -19,8 +34,12 @@ begin
       'new_submission',
       jsonb_build_object(
         'request_id', new.request_id,
+        'request_title', req_title,
         'submission_id', new.id,
-        'submission_title', coalesce(new.article_name, 'New submission')
+        'submission_title', coalesce(new.article_name, 'New submission'),
+        'sender_id', new.user_id,
+        'sender_name', coalesce(sender_name, 'Someone'),
+        'sender_avatar', sender_avatar
       )
     );
   end if;

@@ -53,3 +53,27 @@ export async function markAllNotificationsReadAction() {
   return { success: true };
 }
 
+export async function deleteNotificationAction(notificationId: string) {
+  const supabase = await createServerSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: "Unauthorized" };
+  }
+
+  const { error } = await supabase
+    .from("notifications")
+    .delete()
+    .eq("id", notificationId)
+    .eq("user_id", user.id);
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  revalidatePath("/app/notifications");
+  revalidatePath("/app"); // Also revalidate the navbar
+  return { success: true };
+}

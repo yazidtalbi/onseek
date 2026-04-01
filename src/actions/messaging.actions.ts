@@ -48,11 +48,18 @@ export async function createConversationAction(requestId: string, proposerId: st
 
   // Notify the other participant
   if (!msgError) {
-    // Fetch conversation participants
+    // Fetch conversation participants and request info
     const { data: conv } = await supabase
       .from("conversations")
-      .select("seeker_id, proposer_id")
+      .select("seeker_id, proposer_id, request:requests(title)")
       .eq("id", conversationId)
+      .single();
+    
+    // Fetch sender profile info
+    const { data: senderProfile } = await supabase
+      .from("profiles")
+      .select("username, display_name, avatar_url")
+      .eq("id", user.id)
       .single();
     
     if (conv) {
@@ -60,7 +67,14 @@ export async function createConversationAction(requestId: string, proposerId: st
       await supabase.from("notifications").insert({
         user_id: recipientId,
         type: "new_message",
-        payload: { conversation_id: conversationId },
+        payload: { 
+          conversation_id: conversationId,
+          request_title: (conv.request as any)?.title || "a request",
+          sender_id: user.id,
+          sender_name: senderProfile?.display_name || senderProfile?.username || "Someone",
+          sender_avatar: senderProfile?.avatar_url,
+          message_snippet: content.length > 50 ? content.substring(0, 50) + "..." : content
+        },
         read: false
       });
     }
@@ -90,15 +104,30 @@ export async function sendMessageAction(conversationId: string, content: string)
   if (!msgError) {
     const { data: conv } = await supabase
       .from("conversations")
-      .select("seeker_id, proposer_id")
+      .select("seeker_id, proposer_id, request:requests(title)")
       .eq("id", conversationId)
       .single();
+      
+    // Fetch sender profile info
+    const { data: senderProfile } = await supabase
+      .from("profiles")
+      .select("username, display_name, avatar_url")
+      .eq("id", user.id)
+      .single();
+      
     if (conv) {
       const recipientId = user.id === conv.seeker_id ? conv.proposer_id : conv.seeker_id;
       await supabase.from("notifications").insert({
         user_id: recipientId,
         type: "new_message",
-        payload: { conversation_id: conversationId },
+        payload: { 
+          conversation_id: conversationId,
+          request_title: (conv.request as any)?.title || "a request",
+          sender_id: user.id,
+          sender_name: senderProfile?.display_name || senderProfile?.username || "Someone",
+          sender_avatar: senderProfile?.avatar_url,
+          message_snippet: content.length > 50 ? content.substring(0, 50) + "..." : content
+        },
         read: false,
       });
     }

@@ -12,6 +12,7 @@ export type Profile = {
   contact_whatsapp?: string | null;
   contact_telegram?: string | null;
   contact_preferred?: "email" | "phone" | "whatsapp" | "telegram" | null;
+  onboarding_completed?: boolean;
 };
 
 export type RequestStatus = "open" | "closed" | "solved";
