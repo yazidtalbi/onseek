@@ -58,6 +58,17 @@ export type Submission = {
   has_voted?: number | null;
 };
 
+export type PersonalItem = {
+  id: string;
+  user_id: string;
+  article_name: string;
+  description: string | null;
+  price: number | null;
+  image_url: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 // Personalization types
 export type Category = {
   id: string;
