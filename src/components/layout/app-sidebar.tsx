@@ -18,7 +18,8 @@ import {
   Library,
   Hand,
   Handshake,
-  MessageCircleMore
+  MessageCircleMore,
+  FileText
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/components/layout/auth-provider";
@@ -111,7 +112,7 @@ function MobileSidebarContent({ onClose }: { onClose?: () => void }) {
   const mainNavItems = [
     { href: "/app", label: "Home", icon: Home },
     { href: "/app/requests", label: "Requests", icon: Hand },
-    { href: "/app/submissions", label: "Proposals", icon: Handshake },
+    { href: "/app/submissions", label: "Proposals", icon: FileText },
     { href: "/app/inventory", label: "Inventory", icon: Library },
     { href: "/messages", label: "Messages", icon: MessageCircleMore },
     { href: "/app/leaderboard", label: "Leaderboard", icon: Trophy },
@@ -198,7 +199,7 @@ function DesktopSidebarContent() {
   const mainNavItems = [
     { href: "/app", label: "Home", icon: Home },
     { href: "/app/requests", label: "Requests", icon: Hand },
-    { href: "/app/submissions", label: "Proposals", icon: Handshake },
+    { href: "/app/submissions", label: "Proposals", icon: FileText },
     { href: "/app/inventory", label: "Inventory", icon: Library },
     { href: "/messages", label: "Messages", icon: MessageCircleMore },
     { href: "/app/leaderboard", label: "Leaderboard", icon: Trophy },

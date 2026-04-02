@@ -2,22 +2,52 @@
 
 import * as React from "react";
 import { useAuth } from "@/components/layout/auth-provider";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Loader2, Upload, User, MapPin } from "lucide-react";
+import { Loader2, Upload, User, Check, Globe, Search } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { completeOnboardingAction } from "@/actions/onboarding.actions";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
+// @ts-ignore - react-select-country-list doesn't have type definitions
+import countryListFactory from "react-select-country-list";
+
+// Initialize country list
+const countryList = countryListFactory();
+const countryLabels: string[] = countryList.getLabels();
+
+// Get country code from country name
+function getCountryCode(countryName: string): string | null {
+  try {
+    const code = countryList.getValueByLabel(countryName);
+    return code ? code.toUpperCase() : null;
+  } catch {
+    return null;
+  }
+}
+
+// Popular countries to show at the top
+const POPULAR_COUNTRIES = [
+  "Morocco",
+  "France",
+  "United States",
+  "United Kingdom",
+  "Canada",
+  "Australia",
+  "Germany",
+  "Spain",
+  "Italy",
+];
 
 export function OnboardingModal() {
   const { user, profile } = useAuth();
+  const [mounted, setMounted] = React.useState(false);
   const [step, setStep] = React.useState(1);
   const [isOpen, setIsOpen] = React.useState(false);
   
-  const [username, setUsername] = React.useState("");
   const [country, setCountry] = React.useState("");
+  const [searchQuery, setSearchQuery] = React.useState("");
   const [avatarUrl, setAvatarUrl] = React.useState("");
   
   const [isUploading, setIsUploading] = React.useState(false);
@@ -25,34 +55,52 @@ export function OnboardingModal() {
   const [error, setError] = React.useState("");
 
   React.useEffect(() => {
-    // Determine if we need to show the modal
-    if (user && profile && profile.onboarding_completed === false) {
-      setIsOpen(true);
-      if (!username) setUsername(profile.username || "");
-    } else {
-      setIsOpen(false);
+    if (profile?.avatar_url) {
+      setAvatarUrl(profile.avatar_url);
+    } else if (user?.user_metadata?.avatar_url || user?.user_metadata?.picture) {
+      setAvatarUrl(user.user_metadata.avatar_url || user.user_metadata.picture);
     }
-  }, [user, profile]);
+  }, [profile?.avatar_url, user?.user_metadata]);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  React.useEffect(() => {
+    // Only automatically OPEN the modal if not completed.
+    // We don't automatically CLOSE it here because we want to let the user see the success step
+    // even after the profile has been updated in the background.
+    if (user && (!profile || profile?.onboarding_completed !== true)) {
+      setIsOpen(true);
+    }
+  }, [user?.id, profile?.onboarding_completed]);
+
+  // Filter countries based on search query
+  const { popularCountries, otherCountries } = React.useMemo(() => {
+    const lowerQuery = searchQuery.toLowerCase();
+    const allFiltered = searchQuery
+      ? countryLabels.filter((c) => c.toLowerCase().includes(lowerQuery))
+      : countryLabels;
+
+    const popular = allFiltered.filter((c) => POPULAR_COUNTRIES.includes(c));
+    const other = allFiltered.filter((c) => !POPULAR_COUNTRIES.includes(c));
+
+    return { popularCountries: popular, otherCountries: other };
+  }, [searchQuery]);
 
   const handleNextStep = () => {
     setError("");
     if (step === 1) {
-      if (!username.trim() || username.length < 3) {
-        setError("Le pseudo doit contenir au moins 3 caractères.");
+      if (!country.trim()) {
+        setError("Please select your country.");
         return;
       }
       setStep(2);
     } else if (step === 2) {
-      if (!country.trim()) {
-        setError("Veuillez entrer votre pays.");
-        return;
-      }
-      setStep(3);
-    } else if (step === 3) {
       submitOnboarding();
-    } else if (step === 4) {
+    } else if (step === 3) {
       setIsOpen(false);
-      window.location.reload(); // Hard reload to clear caching safely
+      window.location.reload();
     }
   };
 
@@ -64,7 +112,7 @@ export function OnboardingModal() {
     setIsSubmitting(true);
     setError("");
     const res = await completeOnboardingAction({
-      username,
+      username: profile?.username || user?.email?.split("@")[0] || "user",
       country,
       avatar_url: avatarUrl || undefined,
     });
@@ -72,13 +120,9 @@ export function OnboardingModal() {
     if (res.error) {
       setError(res.error);
       setIsSubmitting(false);
-      // Go back to the step that caused the error (usually username)
-      if (res.error.toLowerCase().includes("pseudo") || res.error.toLowerCase().includes("nom d'utilisateur")) {
-        setStep(1);
-      }
     } else {
       setIsSubmitting(false);
-      setStep(4);
+      setStep(3);
     }
   };
 
@@ -87,7 +131,7 @@ export function OnboardingModal() {
     if (!file) return;
 
     if (file.size > 5 * 1024 * 1024) {
-      setError("Limité à 5MB max.");
+      setError("File size limited to 5MB.");
       return;
     }
 
@@ -117,123 +161,132 @@ export function OnboardingModal() {
     }
   };
 
-  // Prevent closing the modal before completion by disabling outside clicks and esc key.
   const handleOpenChange = (open: boolean) => {
-    if (step === 4) {
+    if (step === 3) {
       setIsOpen(open);
       if (!open) window.location.reload();
     }
   };
 
-  if (!isOpen) return null;
+  if (!mounted || !isOpen) return null;
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent 
-        className="sm:max-w-[480px] p-0 overflow-hidden outline-none bg-white gap-0 border-0 shadow-2xl rounded-2xl"
+        className="sm:max-w-[480px] p-0 overflow-hidden outline-none bg-white border-0 shadow-2xl rounded-[1.5rem]"
         onInteractOutside={(e) => e.preventDefault()}
-        onEscapeKeyDown={(e) => step !== 4 && e.preventDefault()}
+        onEscapeKeyDown={(e) => step !== 3 && e.preventDefault()}
       >
-        {step < 4 && (
-          <div className="px-6 py-4 border-b border-neutral-100 flex items-center justify-between">
-            <h2 className="text-[15px] font-medium text-neutral-500">
-              Étape {step} / 3 — {step === 3 ? "Avatar" : "Terminez la création de votre compte"}
-            </h2>
-          </div>
-        )}
-        
-        {step === 4 && (
-          <div className="px-6 py-4 border-b border-neutral-100 flex items-center justify-between">
-            <h2 className="text-[15px] font-medium text-neutral-500">Configuration terminée</h2>
-          </div>
-        )}
-
-        {/* Step 1: Username */}
+        {/* Step 1: Location Selection */}
         {step === 1 && (
-          <div className="p-6">
-            <h1 className="text-2xl font-bold text-neutral-900 mb-2">On y est presque !</h1>
-            <p className="text-sm text-neutral-600 mb-6">Nous avons juste besoin de votre consentement pour continuer, et vous aurez besoin d'un pseudo.</p>
+          <div className="p-8 pb-6 flex flex-col h-[580px]">
+            <div className="mb-6">
+              <h1 
+                className="text-2xl font-bold text-[#222234] mb-2"
+                style={{ fontFamily: 'var(--font-expanded)' }}
+              >
+                Where are you located?
+              </h1>
+              <p className="text-sm text-gray-500 leading-relaxed">
+                This helps us show you the most relevant requests in your area. You can change this later in settings.
+              </p>
+            </div>
             
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="username" className="font-semibold text-neutral-900 text-sm">Nom d'utilisateur</Label>
-                <Input 
-                  id="username" 
-                  value={username} 
-                  onChange={(e) => setUsername(e.target.value)} 
-                  placeholder="Choisissez un pseudo"
-                  className="h-11 rounded-xl bg-white focus-visible:ring-1 focus-visible:ring-neutral-300"
-                  autoFocus
-                  onKeyDown={(e) => e.key === 'Enter' && handleNextStep()}
-                />
-              </div>
+            <div className="relative mb-4 group">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-[#7755FF] transition-colors" />
+              <Input 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="e.g., Morocco, France..."
+                className="h-12 pl-10 bg-gray-50 border-gray-100 rounded-xl focus-visible:ring-[#7755FF]/20 focus-visible:border-[#7755FF] transition-all"
+              />
+            </div>
 
-              {error && <p className="text-sm text-rose-500">{error}</p>}
-
-              <div className="pt-2">
-                <p className="text-[13px] text-neutral-500 mb-4 leading-relaxed">
-                  En sélectionnant Accepter et continuer, j'accepte les <a href="#" className="text-[#00B2A9] hover:underline">Conditions générales d'utilisation</a> et la <a href="#" className="text-[#00B2A9] hover:underline">Politique de confidentialité</a> de Onseek.
-                </p>
-                <div className="flex justify-end">
-                  <Button 
-                    onClick={handleNextStep}
-                    className="bg-[#00B2A9] hover:bg-[#009a92] text-white rounded-full px-6 h-10 font-medium"
+            <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-1">
+              {popularCountries.length > 0 && !searchQuery && (
+                <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2 ml-1">Popular</p>
+              )}
+              
+              {[...popularCountries, ...otherCountries].map((c) => {
+                const code = getCountryCode(c);
+                const isSelected = country === c;
+                return (
+                  <button
+                    key={c}
+                    onClick={() => setCountry(c)}
+                    className={cn(
+                      "w-full flex items-center gap-3 p-3 rounded-xl transition-all text-left",
+                      isSelected 
+                        ? "bg-[#7755FF]/5 text-[#7755FF] ring-1 ring-[#7755FF]/20" 
+                        : "hover:bg-gray-50 text-gray-600"
+                    )}
                   >
-                    Accepter et continuer →
-                  </Button>
+                    {code ? (
+                      <div className="w-5 h-5 relative rounded-sm overflow-hidden border border-gray-100 shrink-0">
+                        <Image
+                          src={`https://flagcdn.com/w20/${code.toLowerCase()}.png`}
+                          alt={c}
+                          fill
+                          className="object-cover"
+                          unoptimized
+                        />
+                      </div>
+                    ) : (
+                      <Globe className="h-4 w-4 shrink-0 text-gray-400" />
+                    )}
+                    <span className="flex-1 text-sm font-medium">{c}</span>
+                    {isSelected && <Check className="h-4 w-4" />}
+                  </button>
+                );
+              })}
+
+              {popularCountries.length === 0 && otherCountries.length === 0 && (
+                <div className="py-12 text-center">
+                  <Globe className="h-8 w-8 text-gray-200 mx-auto mb-3" />
+                  <p className="text-sm text-gray-400">No countries found</p>
                 </div>
-              </div>
+              )}
+            </div>
+
+            {error && <p className="text-sm text-rose-500 mt-4">{error}</p>}
+
+            <div className="pt-6 flex justify-end bg-gradient-to-t from-white via-white to-transparent">
+              <Button 
+                onClick={handleNextStep}
+                disabled={!country}
+                className={cn(
+                  "h-12 px-10 rounded-full font-bold transition-all shadow-lg",
+                  country 
+                    ? "bg-[#222234] hover:bg-[#2a2a4f] text-white shadow-[#222234]/10" 
+                    : "bg-gray-100 text-gray-400 shadow-none cursor-not-allowed"
+                )}
+              >
+                Continue
+              </Button>
             </div>
           </div>
         )}
 
-        {/* Step 2: Country */}
+        {/* Step 2: Avatar Upload */}
         {step === 2 && (
-          <div className="p-6">
-            <h1 className="text-2xl font-bold text-neutral-900 mb-2">D'où venez-vous ?</h1>
-            <p className="text-sm text-neutral-600 mb-6">Cela nous aide à personnaliser votre expérience et les requêtes locales.</p>
-            
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="country" className="font-semibold text-neutral-900 text-sm">Pays de résidence</Label>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-neutral-400" />
-                  <Input 
-                    id="country" 
-                    value={country} 
-                    onChange={(e) => setCountry(e.target.value)} 
-                    placeholder="Ex: France, Canada..."
-                    className="h-11 pl-10 rounded-xl bg-white focus-visible:ring-1 focus-visible:ring-neutral-300"
-                    autoFocus
-                    onKeyDown={(e) => e.key === 'Enter' && handleNextStep()}
-                  />
-                </div>
-              </div>
-
-              {error && <p className="text-sm text-rose-500">{error}</p>}
-
-              <div className="flex justify-between items-center pt-2">
-                <Button variant="ghost" className="text-neutral-500" onClick={() => setStep(1)}>Retour</Button>
-                <Button 
-                  onClick={handleNextStep}
-                  className="bg-[#00B2A9] hover:bg-[#009a92] text-white rounded-full px-6 h-10 font-medium"
-                >
-                  Continuer
-                </Button>
-              </div>
+          <div className="p-8 flex flex-col items-center text-center">
+            <div className="mb-8">
+              <h1 
+                className="text-2xl font-bold text-[#222234] mb-3"
+                style={{ fontFamily: 'var(--font-expanded)' }}
+              >
+                Show your personality!
+              </h1>
+              <p className="text-[15px] text-gray-500 leading-relaxed">
+                Add a personal touch to your profile by uploading a photo. We recommend using a square image.
+              </p>
             </div>
-          </div>
-        )}
-
-        {/* Step 3: Avatar */}
-        {step === 3 && (
-          <div className="p-6 flex flex-col sm:flex-row gap-6">
-            {/* Left side: Avatar Preview */}
-            <div className="shrink-0 flex justify-center sm:justify-start">
-              <div className="relative group">
-                <Avatar className="h-28 w-28 border border-neutral-200">
+            
+            <div className="relative mb-6">
+              <div className="w-[120px] h-[120px] rounded-full border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden bg-gray-50">
+                <Avatar className="w-full h-full">
                   <AvatarImage src={avatarUrl} className="object-cover" />
-                  <AvatarFallback className="bg-neutral-100 text-neutral-400">
+                  <AvatarFallback className="bg-gray-100 text-gray-400">
                     <User className="h-12 w-12" />
                   </AvatarFallback>
                 </Avatar>
@@ -243,90 +296,93 @@ export function OnboardingModal() {
                   </div>
                 )}
               </div>
+              {avatarUrl && !isUploading && (
+                <div className="absolute -bottom-1 -right-1 bg-[#00B2A9] text-white rounded-full p-1 border-2 border-white">
+                  <Check className="w-4 h-4" />
+                </div>
+              )}
             </div>
-            
-            {/* Right side: Instructions and actions */}
-            <div className="flex-1 space-y-4">
-              <div>
-                <h1 className="text-2xl font-bold text-neutral-900 mb-2">Montrez votre personnalité !</h1>
-                <p className="text-sm text-neutral-600">Ajoutez une touche personnelle à votre profil en téléchargeant une photo de profil. Nous vous recommandons d'utiliser une image carrée.</p>
-              </div>
-              
-              <div>
-                <input 
-                  type="file" 
-                  id="avatar-upload" 
-                  accept="image/*" 
-                  className="hidden" 
-                  onChange={handleFileChange}
-                />
-                <Button 
-                  variant="outline" 
-                  className="text-[#00B2A9] border-[#00B2A9] hover:bg-[#00B2A9]/5 rounded-full px-5 h-9 font-medium"
-                  onClick={() => document.getElementById("avatar-upload")?.click()}
-                  disabled={isUploading || isSubmitting}
-                >
-                  {avatarUrl ? "Remplacer l'image" : "Télécharger l'image"}
-                </Button>
-              </div>
 
-              {error && <p className="text-sm text-rose-500">{error}</p>}
+            <div className="flex flex-col items-center gap-4 w-full">
+              <input 
+                type="file" 
+                id="avatar-upload" 
+                accept="image/*" 
+                className="hidden" 
+                onChange={handleFileChange}
+              />
+              <Button 
+                variant="outline" 
+                className="h-11 px-8 rounded-full border-[#222234] text-[#222234] font-bold hover:bg-gray-50 w-fit"
+                onClick={() => document.getElementById("avatar-upload")?.click()}
+                disabled={isUploading || isSubmitting}
+              >
+                {isUploading ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                ) : (
+                  <Upload className="h-4 w-4 mr-2" />
+                )}
+                {avatarUrl ? "Change Image" : "Upload Image"}
+              </Button>
+            </div>
 
-              <div className="flex justify-end gap-3 pt-6">
-                <Button 
-                  variant="ghost" 
-                  className="text-neutral-600 hover:bg-neutral-100 rounded-full h-10 px-5 font-medium"
-                  onClick={handleSkipAvatar}
-                  disabled={isUploading || isSubmitting}
-                >
-                  Passer
-                </Button>
-                <Button 
-                  onClick={handleNextStep}
-                  disabled={isUploading || isSubmitting}
-                  className="bg-[#00B2A9] hover:bg-[#009a92] text-white rounded-full px-6 h-10 font-medium"
-                >
-                  {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Sauvegarder"}
-                </Button>
-              </div>
+            {error && <p className="text-sm text-rose-500 mt-4">{error}</p>}
+
+            <div className="mt-12 w-full flex items-center justify-between">
+              <Button 
+                variant="ghost" 
+                className="text-gray-400 hover:text-gray-600 font-medium px-0"
+                onClick={handleSkipAvatar}
+                disabled={isUploading || isSubmitting}
+              >
+                Skip (Passer)
+              </Button>
+              <Button 
+                onClick={handleNextStep}
+                disabled={isUploading || isSubmitting || !avatarUrl}
+                className={cn(
+                  "h-12 px-10 rounded-full font-bold transition-all shadow-lg",
+                  avatarUrl 
+                    ? "bg-[#222234] hover:bg-[#2a2a4f] text-white shadow-[#222234]/10" 
+                    : "bg-gray-100 text-gray-400 shadow-none cursor-not-allowed"
+                )}
+              >
+                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Next Step"}
+              </Button>
             </div>
           </div>
         )}
 
-        {/* Step 4: Welcome */}
-        {step === 4 && (
-          <div className="p-6 flex flex-col sm:flex-row gap-6">
-            {/* Left side: Avatar Preview */}
-            <div className="shrink-0 flex justify-center sm:justify-start">
-              <Avatar className="h-28 w-28 border border-neutral-200">
+        {/* Step 3: Success / Welcome */}
+        {step === 3 && (
+          <div className="p-8 flex flex-col items-center text-center">
+            <div className="w-[120px] h-[120px] rounded-full border-4 border-[#00B2A9]/10 p-1 mb-6">
+              <Avatar className="w-full h-full">
                 <AvatarImage src={avatarUrl} className="object-cover" />
-                <AvatarFallback className="bg-neutral-100 text-neutral-400">
+                <AvatarFallback className="bg-gray-100 text-gray-400">
                   <User className="h-12 w-12" />
                 </AvatarFallback>
               </Avatar>
             </div>
-               
-            {/* Right side */}
-            <div className="flex-1 space-y-4">
-              <div>
-                <h1 className="text-2xl font-bold text-neutral-900 mb-4">Bienvenue {username} !</h1>
-                <p className="text-[15px] text-neutral-900 mb-4">
-                  Vous pourrez changer votre pseudo et votre avatar plus tard dans les paramètres de votre compte.
-                </p>
-                <p className="text-[15px] text-neutral-900">
-                  C'est tout bon. Bienvenue parmi nous ! L'équipe de Onseek est là si vous avez des questions.
-                </p>
-              </div>
 
-              <div className="flex justify-end pt-4">
-                <Button 
-                  onClick={handleNextStep}
-                  className="bg-[#00B2A9] hover:bg-[#009a92] text-white rounded-full px-6 h-10 font-medium"
-                >
-                  Terminé !
-                </Button>
-              </div>
+            <div className="mb-8">
+              <h1 
+                className="text-2xl font-bold text-[#222234] mb-4"
+                style={{ fontFamily: 'var(--font-expanded)' }}
+              >
+                Welcome to Onseek, {profile?.username || user?.email?.split("@")[0] || "User"}!
+              </h1>
+              <p className="text-[15px] text-gray-500 leading-relaxed px-4">
+                You're all set. Welcome to the community! The Onseek team is here if you have any questions.
+              </p>
             </div>
+
+            <Button 
+              onClick={handleNextStep}
+              className="w-full h-14 rounded-full bg-[#7a61ff] hover:bg-[#6c51ef] text-white text-base font-bold shadow-xl shadow-[#7a61ff]/20 transition-all transform hover:scale-[1.02] active:scale-[0.98]"
+            >
+              Get started
+            </Button>
           </div>
         )}
       </DialogContent>

@@ -34,16 +34,42 @@ export default async function AppLayout({
 
     resolvedProfile = profile;
     if (!resolvedProfile) {
-      await supabase.from("profiles").upsert({
-        id: user.id,
-        username: user.email?.split("@")[0] || `user-${user.id.slice(0, 6)}`,
-      });
-      const { data } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .single();
-      resolvedProfile = data ?? null;
+      try {
+        const baseUsername = user.email?.split("@")[0] || `user-${user.id.slice(0, 6)}`;
+        const avatarUrl = user.user_metadata?.avatar_url || user.user_metadata?.picture;
+        
+        // Try initial upsert
+        const { data: newProfile, error: upsertError } = await supabase
+          .from("profiles")
+          .upsert({
+            id: user.id,
+            username: baseUsername,
+            avatar_url: avatarUrl,
+          })
+          .select("*")
+          .single();
+
+        if (upsertError) {
+          // If duplicate username, try with random suffix
+          const randomSuffix = Math.floor(Math.random() * 10000);
+          const { data: retryProfile } = await supabase
+            .from("profiles")
+            .upsert({
+              id: user.id,
+              username: `${baseUsername}-${randomSuffix}`,
+              avatar_url: avatarUrl,
+            })
+            .select("*")
+            .single();
+          resolvedProfile = retryProfile;
+        } else {
+          resolvedProfile = newProfile;
+        }
+      } catch (err) {
+        console.error("Profile creation failed:", err);
+        // Fallback to a minimal profile object to avoid crashing the whole app
+        resolvedProfile = { id: user.id, username: user.email?.split("@")[0], reputation: 0 } as any;
+      }
     }
   }
 
@@ -61,23 +87,20 @@ export default async function AppLayout({
     : null;
 
   return (
-    <AuthProvider user={serializedUser} profile={resolvedProfile ?? null}>
-      <SidebarProvider>
-        <div className="flex flex-col min-h-screen bg-background pb-20 md:pb-0 overflow-x-clip">
-          <AppNavbar />
-          <div className="flex-1 flex min-h-0 w-full relative">
-            <AppSidebar>
-              <main className="flex-1 w-full flex flex-col min-w-0">
-                {modal}
-                <PageLayout>{children}</PageLayout>
-              </main>
-            </AppSidebar>
-          </div>
-          <BottomNav />
-          <ScrollToTop />
+    <SidebarProvider>
+      <div className="flex flex-col min-h-screen bg-background pb-20 md:pb-0 overflow-x-clip">
+        <AppNavbar />
+        <div className="flex-1 flex min-h-0 w-full relative">
+          <AppSidebar>
+            <main className="flex-1 w-full flex flex-col min-w-0">
+              {modal}
+              <PageLayout>{children}</PageLayout>
+            </main>
+          </AppSidebar>
         </div>
-        <OnboardingModal />
-      </SidebarProvider>
-    </AuthProvider>
+        <BottomNav />
+        <ScrollToTop />
+      </div>
+    </SidebarProvider>
   );
 }
