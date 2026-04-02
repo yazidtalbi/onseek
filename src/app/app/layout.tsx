@@ -33,43 +33,35 @@ export default async function AppLayout({
       .single();
 
     resolvedProfile = profile;
-    if (!resolvedProfile) {
-      try {
-        const baseUsername = user.email?.split("@")[0] || `user-${user.id.slice(0, 6)}`;
-        const avatarUrl = user.user_metadata?.avatar_url || user.user_metadata?.picture;
-        
-        // Try initial upsert
-        const { data: newProfile, error: upsertError } = await supabase
-          .from("profiles")
-          .upsert({
-            id: user.id,
-            username: baseUsername,
-            avatar_url: avatarUrl,
-          })
-          .select("*")
-          .single();
 
-        if (upsertError) {
-          // If duplicate username, try with random suffix
-          const randomSuffix = Math.floor(Math.random() * 10000);
-          const { data: retryProfile } = await supabase
-            .from("profiles")
-            .upsert({
-              id: user.id,
-              username: `${baseUsername}-${randomSuffix}`,
-              avatar_url: avatarUrl,
-            })
-            .select("*")
-            .single();
-          resolvedProfile = retryProfile;
-        } else {
-          resolvedProfile = newProfile;
-        }
-      } catch (err) {
-        console.error("Profile creation failed:", err);
-        // Fallback to a minimal profile object to avoid crashing the whole app
-        resolvedProfile = { id: user.id, username: user.email?.split("@")[0], reputation: 0 } as any;
-      }
+    // Background sync for missing avatars (for users created before trigger fix)
+    const googleAvatar = user.user_metadata?.avatar_url || user.user_metadata?.picture;
+    if (resolvedProfile && !resolvedProfile.avatar_url && googleAvatar) {
+      let sanitizedAvatar = googleAvatar.trim();
+      if (sanitizedAvatar.startsWith("//")) sanitizedAvatar = `https:${sanitizedAvatar}`;
+
+      const { data: updatedProfile } = await supabase
+        .from("profiles")
+        .upsert({
+          id: user.id,
+          username: resolvedProfile.username,
+          avatar_url: sanitizedAvatar,
+        })
+        .select("*")
+        .single();
+
+      if (updatedProfile) resolvedProfile = updatedProfile;
+    }
+
+    // In the rare case profile is still missing (e.g. manual bypass of callback), 
+    // provide a minimal fallback to avoid crashes
+    if (!resolvedProfile) {
+      resolvedProfile = {
+        id: user.id,
+        username: user.email?.split("@")[0] || "user",
+        reputation: 0,
+        onboarding_completed: false
+      } as any;
     }
   }
 

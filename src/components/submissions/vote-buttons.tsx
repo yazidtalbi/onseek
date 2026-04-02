@@ -6,6 +6,7 @@ import { ChevronUp } from "lucide-react";
 import { voteAction } from "@/actions/vote.actions";
 import type { Submission } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/components/layout/auth-provider";
 
 export function VoteButtons({
   submission,
@@ -16,6 +17,8 @@ export function VoteButtons({
 }) {
   const queryClient = useQueryClient();
   const [isPending, startTransition] = React.useTransition();
+  const { user } = useAuth();
+  const isOwnSubmission = user?.id === submission.user_id;
 
   const mutateVote = useMutation({
     mutationFn: async (vote: 1) => {
@@ -81,14 +84,18 @@ export function VoteButtons({
       <button
         type="button"
         onClick={handleVote}
-        disabled={isPending}
-        className="flex items-center justify-center h-full px-2 hover:bg-neutral-100 transition-colors text-neutral-400 hover:text-neutral-600"
+        disabled={isPending || isOwnSubmission}
+        className={cn(
+          "flex items-center justify-center h-full px-2 transition-colors",
+          isOwnSubmission ? "cursor-not-allowed opacity-50" : "hover:bg-neutral-100 text-neutral-400 hover:text-neutral-600"
+        )}
+        title={isOwnSubmission ? "You cannot upvote your own submission" : "Upvote"}
         aria-label="Upvote"
       >
         <ChevronUp
           className={cn(
             "h-4 w-4",
-            submission.has_voted === 1 ? "text-[#FF5F00]" : "text-neutral-400"
+            submission.has_voted === 1 ? "text-[#FF5F00]" : (isOwnSubmission ? "text-neutral-300" : "text-neutral-400")
           )}
         />
       </button>

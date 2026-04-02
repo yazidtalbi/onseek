@@ -281,12 +281,10 @@ export default async function ProfilePage({
                 <div className="flex-shrink-0">
                   {profile.avatar_url ? (
                     <div className="relative w-16 h-16 rounded-full overflow-hidden border border-[#e5e7eb]">
-                      <Image
+                      <img
                         src={profile.avatar_url}
                         alt={profile.display_name || profile.username}
-                        fill
-                        className="object-cover"
-                        unoptimized
+                        className="w-full h-full object-cover"
                       />
                     </div>
                   ) : (

@@ -109,7 +109,7 @@ export function RequestDetailView({
               <div className="space-y-4">
                 <h2 className="text-2xl font-semibold text-foreground tracking-tight" style={{ letterSpacing: '-0.8px' }}>Proposals</h2>
 
-                {showSubmissionForm ? (
+                {showSubmissionForm && !isOwner ? (
                   <SubmissionForm
                     requestId={request.id}
                     requestBudgetMax={request.budget_max}

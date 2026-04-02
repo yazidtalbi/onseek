@@ -48,17 +48,25 @@ export function OnboardingModal() {
   
   const [country, setCountry] = React.useState("");
   const [searchQuery, setSearchQuery] = React.useState("");
-  const [avatarUrl, setAvatarUrl] = React.useState("");
-  
+  const [avatarUrl, setAvatarUrl] = React.useState<string | null>(null);
+  const [imageError, setImageError] = React.useState(false);
   const [isUploading, setIsUploading] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [error, setError] = React.useState("");
 
   React.useEffect(() => {
+    let url = null;
     if (profile?.avatar_url) {
-      setAvatarUrl(profile.avatar_url);
+      url = profile.avatar_url;
     } else if (user?.user_metadata?.avatar_url || user?.user_metadata?.picture) {
-      setAvatarUrl(user.user_metadata.avatar_url || user.user_metadata.picture);
+      url = user.user_metadata.avatar_url || user.user_metadata.picture;
+    }
+    
+    if (url && typeof url === "string") {
+      url = url.trim();
+      if (url.startsWith("//")) url = `https:${url}`;
+      setAvatarUrl(url);
+      setImageError(false); // Reset error when URL changes
     }
   }, [profile?.avatar_url, user?.user_metadata]);
 
@@ -283,16 +291,22 @@ export function OnboardingModal() {
             </div>
             
             <div className="relative mb-6">
-              <div className="w-[120px] h-[120px] rounded-full border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden bg-gray-50">
-                <Avatar className="w-full h-full">
-                  <AvatarImage src={avatarUrl} className="object-cover" />
-                  <AvatarFallback className="bg-gray-100 text-gray-400">
-                    <User className="h-12 w-12" />
-                  </AvatarFallback>
-                </Avatar>
+              <div className="w-[120px] h-[120px] rounded-full border border-gray-200 flex items-center justify-center overflow-hidden bg-gray-50 relative">
+                {avatarUrl && !imageError ? (
+                  <img 
+                    src={avatarUrl} 
+                    alt="Avatar" 
+                    className="w-full h-full object-cover" 
+                    onError={() => setImageError(true)}
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                    <User className="h-12 w-12 text-gray-300" />
+                  </div>
+                )}
                 {isUploading && (
-                  <div className="absolute inset-0 bg-white/60 flex items-center justify-center rounded-full">
-                    <Loader2 className="h-6 w-6 animate-spin text-[#00B2A9]" />
+                  <div className="absolute inset-0 bg-white/60 flex items-center justify-center rounded-full z-10">
+                    <Loader2 className="h-6 w-6 animate-spin text-[#7755FF]" />
                   </div>
                 )}
               </div>
@@ -356,13 +370,22 @@ export function OnboardingModal() {
         {/* Step 3: Success / Welcome */}
         {step === 3 && (
           <div className="p-8 flex flex-col items-center text-center">
-            <div className="w-[120px] h-[120px] rounded-full border-4 border-[#00B2A9]/10 p-1 mb-6">
-              <Avatar className="w-full h-full">
-                <AvatarImage src={avatarUrl} className="object-cover" />
-                <AvatarFallback className="bg-gray-100 text-gray-400">
-                  <User className="h-12 w-12" />
-                </AvatarFallback>
-              </Avatar>
+            <div className="w-[120px] h-[120px] rounded-full border-4 border-[#00B2A9]/10 p-1 mb-6 relative overflow-hidden">
+              <div className="w-full h-full rounded-full overflow-hidden relative">
+                {avatarUrl ? (
+                  <Image 
+                    src={avatarUrl} 
+                    alt="Avatar" 
+                    fill 
+                    className="object-cover" 
+                    unoptimized
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                    <User className="h-12 w-12 text-gray-300" />
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="mb-8">

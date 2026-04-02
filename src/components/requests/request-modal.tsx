@@ -51,7 +51,7 @@ export function RequestModal({ children, requestId }: RequestModalProps) {
                 <span className="hidden sm:inline">Open in new window</span>
               </Link>
             )}
-            
+
             <button
               onClick={() => setOpen(false)}
               className="flex items-center justify-center w-10 h-10 p-0 rounded-full text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-all ml-1 active:scale-95"

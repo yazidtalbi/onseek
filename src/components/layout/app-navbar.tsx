@@ -348,6 +348,8 @@ export function AppNavbar() {
     };
   }, [isHomePage]);
 
+  const [avatarError, setAvatarError] = useState(false);
+
   return (
     <header className="sticky top-0 z-20 w-full bg-white border-b border-[#e5e7eb]">
       {/* Mobile Navbar */}
@@ -432,8 +434,18 @@ export function AppNavbar() {
           {/* Profile Image Menu - Opens Full Screen Modal */}
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <SheetTrigger asChild>
-              <button className="flex items-center justify-center h-8 w-8 rounded-full bg-gray-200 text-foreground font-medium text-sm hover:bg-gray-300 transition-colors">
-                {user && profile ? (
+              <button className={cn(
+                "flex items-center justify-center h-8 w-8 rounded-full bg-gray-100 text-gray-700 font-bold text-xs hover:bg-gray-200 transition-colors overflow-hidden relative",
+                !user && "bg-gray-100"
+              )}>
+                {user && profile?.avatar_url && !avatarError ? (
+                  <img 
+                    src={profile.avatar_url} 
+                    alt={profile.username || "User"} 
+                    className="w-full h-full object-cover"
+                    onError={() => setAvatarError(true)}
+                  />
+                ) : user && profile ? (
                   profile.username?.charAt(0).toUpperCase() || "U"
                 ) : (
                   <User className="h-5 w-5" />
@@ -456,8 +468,17 @@ export function AppNavbar() {
                 {user && (
                   <div className="p-4 border-b border-[#e5e7eb]">
                     <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center text-foreground font-medium">
-                        {profile?.username?.charAt(0).toUpperCase() || "U"}
+                      <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-700 font-bold text-sm overflow-hidden relative">
+                        {profile?.avatar_url && !avatarError ? (
+                          <img 
+                            src={profile.avatar_url} 
+                            alt={profile.username || "User"} 
+                            className="w-full h-full object-cover"
+                            onError={() => setAvatarError(true)}
+                          />
+                        ) : (
+                          profile?.username?.charAt(0).toUpperCase() || "U"
+                        )}
                       </div>
                       <div className="flex-1">
                         <p className="text-sm font-medium">{profile?.username || "User"}</p>
@@ -466,6 +487,8 @@ export function AppNavbar() {
                     </div>
                   </div>
                 )}
+                {/* Rest of the mobile menu content... */}
+
 
                 {/* Scrollable Content */}
                 <div className="flex-1 overflow-y-auto">
@@ -811,17 +834,35 @@ export function AppNavbar() {
                 </div>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button className="flex items-center gap-2 pl-2 pr-1 h-10 hover:bg-gray-100 rounded-full transition-colors outline-none shrink-0">
-                      <div className="flex items-center justify-center h-8 w-8 rounded-full bg-gray-200 text-foreground font-medium text-sm shrink-0">
-                        {profile?.username?.charAt(0).toUpperCase() || "U"}
+                    <button className="flex items-center gap-2 pl-2 pr-1 h-10 hover:bg-gray-50 rounded-full transition-colors outline-none shrink-0">
+                      <div className="flex items-center justify-center h-8 w-8 rounded-full bg-gray-100 text-gray-700 font-bold text-xs shrink-0 overflow-hidden relative">
+                        {profile?.avatar_url && !avatarError ? (
+                          <img 
+                            src={profile.avatar_url} 
+                            alt={profile.username || "User"} 
+                            className="w-full h-full object-cover"
+                            onError={() => setAvatarError(true)}
+                          />
+                        ) : (
+                          profile?.username?.charAt(0).toUpperCase() || "U"
+                        )}
                       </div>
-                      <ChevronDown className="h-4 w-4 text-gray-500 shrink-0" />
+                      <ChevronDown className="h-4 w-4 text-gray-400 shrink-0" />
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56 p-2 bg-white shadow-lg border border-border mt-2">
                     <div className="flex items-center gap-3 p-2 mb-2">
-                      <div className="flex items-center justify-center h-10 w-10 rounded-full bg-gray-200 text-foreground font-medium shrink-0">
-                        {profile?.username?.charAt(0).toUpperCase() || "U"}
+                      <div className="flex items-center justify-center h-10 w-10 rounded-full bg-gray-100 text-gray-700 font-bold text-sm shrink-0 overflow-hidden relative">
+                        {profile?.avatar_url && !avatarError ? (
+                          <img 
+                            src={profile.avatar_url} 
+                            alt={profile.username || "User"} 
+                            className="w-full h-full object-cover"
+                            onError={() => setAvatarError(true)}
+                          />
+                        ) : (
+                          profile?.username?.charAt(0).toUpperCase() || "U"
+                        )}
                       </div>
                       <div className="flex-1 overflow-hidden">
                         <p className="text-sm font-medium truncate">{profile?.username || "User"}</p>
