@@ -115,7 +115,7 @@ export function NotificationItem({ notification }: NotificationItemProps) {
 
   if (link) {
     return (
-      <Link href={link} onClick={handleClick}>
+      <Link href={link} onClick={handleClick} scroll={false}>
         {NotificationCard}
       </Link>
     );

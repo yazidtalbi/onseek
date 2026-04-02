@@ -235,6 +235,7 @@ function RequestCardComponent({
                       variant === "detail" && !smallImages ? "text-4xl max-w-[75%]" : "text-[18px]",
                       !headerActions && "pr-24"
                     )}
+                    style={variant === "detail" && !smallImages ? { letterSpacing: '-1.2px' } : undefined}
                   >
                     {request.title}
                   </h3>
@@ -368,7 +369,7 @@ function RequestCardComponent({
                     <h4 className="text-sm font-semibold text-gray-400 mb-1.5">Condition</h4>
                     <p className="text-sm text-neutral-900">{formattedCondition}</p>
                   </div>
-                  )}
+                )}
               </div>
             )}
 
@@ -511,11 +512,35 @@ function RequestCardComponent({
     <div className="relative group w-full">
       {variant === "detail" ? (
         <div className="flex flex-col gap-3">
-          <Link
-            href={createRequestUrl(request.id)}
-            prefetch={true}
-            className="block h-full group/card"
-          >
+          {smallImages ? (
+            <Link
+              href={createRequestUrl(request.id)}
+              prefetch={true}
+              scroll={false}
+              className="block h-full group/card"
+            >
+              <Card
+                ref={cardRef}
+                className={cn(
+                  "flex flex-col relative w-full bg-white shadow-none transition-all duration-300 ease-out",
+                  !noRounding && "overflow-hidden rounded-2xl",
+                  noRounding && "rounded-none",
+                  noBorder ? "!border-none !shadow-none bg-white" : "border border-[#e5e7eb]",
+                  hasContent ? "h-full" : "h-fit",
+                  smallImages && !noBorder && !disableHover && "group-hover/card:-translate-y-1 group-hover/card:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.1)]"
+                )}
+              >
+                {cardContent}
+                {isOverflowing && smallImages && (
+                  <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-white via-white/95 to-transparent flex items-end justify-center pb-6 z-10 pointer-events-none rounded-b-2xl">
+                    <span className="text-sm font-medium text-[#7755FF] bg-white backdrop-blur-sm px-6 py-2 rounded-full shadow-[0_4px_14px_0_rgba(0,0,0,0.05)] border border-[#e5e7eb]">
+                      View more...
+                    </span>
+                  </div>
+                )}
+              </Card>
+            </Link>
+          ) : (
             <Card
               ref={cardRef}
               className={cn(
@@ -523,20 +548,12 @@ function RequestCardComponent({
                 !noRounding && "overflow-hidden rounded-2xl",
                 noRounding && "rounded-none",
                 noBorder ? "!border-none !shadow-none bg-white" : "border border-[#e5e7eb]",
-                hasContent ? "h-full" : "h-fit",
-                smallImages && !noBorder && !disableHover && "group-hover/card:-translate-y-1 group-hover/card:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.1)]"
+                hasContent ? "h-full" : "h-fit"
               )}
             >
               {cardContent}
-              {isOverflowing && smallImages && (
-                <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-white via-white/95 to-transparent flex items-end justify-center pb-6 z-10 pointer-events-none rounded-b-2xl">
-                  <span className="text-sm font-medium text-[#7755FF] bg-white backdrop-blur-sm px-6 py-2 rounded-full shadow-[0_4px_14px_0_rgba(0,0,0,0.05)] border border-[#e5e7eb]">
-                    View more...
-                  </span>
-                </div>
-              )}
             </Card>
-          </Link>
+          )}
           {smallImages && (
             <div className="px-4">
               {footerSection}
@@ -569,8 +586,8 @@ function RequestCardComponent({
             if (target.closest('a')) {
               return;
             }
-            
-            router.push(createRequestUrl(request.id));
+
+            router.push(createRequestUrl(request.id), { scroll: false });
           }}
           className="block focus:outline-none cursor-pointer"
         >

@@ -335,7 +335,7 @@ export function SubmissionForm({ requestId, requestBudgetMax, requestDescription
           className="w-full h-10 rounded-full bg-[#212733] text-white hover:bg-[#212733]/90 text-sm font-medium"
           onClick={() => handleOpenChange(true)}
         >
-          Submit a proposal
+          Submit proposal
         </Button>
       )}
       {hideButton && (
@@ -345,14 +345,14 @@ export function SubmissionForm({ requestId, requestBudgetMax, requestDescription
           className="hidden"
           onClick={() => handleOpenChange(true)}
         >
-          Submit a proposal
+          Submit proposal
         </Button>
       )}
 
       <Dialog open={isExpanded} onOpenChange={handleOpenChange}>
         <DialogContent className="max-w-lg">
           <DialogHeader className="mb-4">
-            <DialogTitle className="text-xl font-semibold">Submit a proposal</DialogTitle>
+            <DialogTitle className="text-xl font-semibold">Submit proposal</DialogTitle>
           </DialogHeader>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5" noValidate>
           {/* Proposal Type Selection */}

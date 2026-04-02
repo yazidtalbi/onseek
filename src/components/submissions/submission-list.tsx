@@ -43,6 +43,7 @@ export function SubmissionList({
   canSelectWinner,
   requestStatus,
   requestOwnerId,
+  hideTitle,
 }: {
   requestId: string;
   requestTitle?: string;
@@ -51,6 +52,7 @@ export function SubmissionList({
   canSelectWinner?: boolean;
   requestStatus?: "open" | "closed" | "solved";
   requestOwnerId?: string;
+  hideTitle?: boolean;
 }) {
   const [localWinner, setLocalWinner] = React.useState<string | null>(
     winnerId ?? null
@@ -115,7 +117,7 @@ export function SubmissionList({
         
         {/* CTA Button */}
         <Button 
-          className="bg-[#212733] text-white hover:bg-[#212733]/90 rounded-full px-8 py-6 text-lg"
+          className="bg-[#212733] text-white hover:bg-[#212733]/90 rounded-full px-8 py-5 text-base"
           onClick={() => {
             // Find and click the submission form button by ID
             const submitButton = document.getElementById('submission-form-trigger') as HTMLButtonElement;
@@ -124,7 +126,7 @@ export function SubmissionList({
             }
           }}
         >
-          Submit a proposal
+          Submit proposal
         </Button>
       </div>
     );
@@ -152,7 +154,10 @@ export function SubmissionList({
   }, [data, sortBy]);
 
   return (
-    <div>
+    <div className="space-y-6">
+      {!hideTitle && (
+        <h2 className="text-2xl font-semibold text-foreground tracking-tight" style={{ letterSpacing: '-0.8px' }}>Proposals</h2>
+      )}
       <div className="flex items-center justify-between mb-4">
         <div className="text-sm text-neutral-400">
           {data.length} {data.length === 1 ? 'proposal' : 'proposals'}

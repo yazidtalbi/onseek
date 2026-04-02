@@ -5,6 +5,7 @@ import { ScrollToTop } from "@/components/layout/scroll-to-top";
 import { AuthProvider } from "@/components/layout/auth-provider";
 import { OnboardingModal } from "@/components/auth/onboarding-modal";
 
+
 import { PageLayout } from "@/components/layout/page-layout";
 import { AppSidebar, SidebarProvider } from "@/components/layout/app-sidebar";
 
@@ -12,8 +13,10 @@ export const dynamic = "force-dynamic";
 
 export default async function AppLayout({
   children,
+  modal,
 }: {
   children: React.ReactNode;
+  modal: React.ReactNode;
 }) {
   const supabase = await createServerSupabaseClient();
   const {
@@ -48,13 +51,13 @@ export default async function AppLayout({
   // This prevents chunk loading errors by ensuring only serializable data is passed
   const serializedUser = user
     ? {
-        id: user.id,
-        email: user.email,
-        user_metadata: user.user_metadata,
-        app_metadata: user.app_metadata,
-        aud: user.aud,
-        created_at: user.created_at,
-      }
+      id: user.id,
+      email: user.email,
+      user_metadata: user.user_metadata,
+      app_metadata: user.app_metadata,
+      aud: user.aud,
+      created_at: user.created_at,
+    }
     : null;
 
   return (
@@ -65,6 +68,7 @@ export default async function AppLayout({
           <div className="flex-1 flex min-h-0 w-full relative">
             <AppSidebar>
               <main className="flex-1 w-full flex flex-col min-w-0">
+                {modal}
                 <PageLayout>{children}</PageLayout>
               </main>
             </AppSidebar>
@@ -77,4 +81,3 @@ export default async function AppLayout({
     </AuthProvider>
   );
 }
-

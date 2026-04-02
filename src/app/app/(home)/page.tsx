@@ -18,9 +18,9 @@ export default async function AppFeedPage({
 }: {
   searchParams: SearchParams;
 }) {
-  const mode = (searchParams.mode === "for_you" || 
-                searchParams.mode === "latest" || 
-                searchParams.mode === "trending"
+  const mode = (searchParams.mode === "for_you" ||
+    searchParams.mode === "latest" ||
+    searchParams.mode === "trending"
     ? searchParams.mode
     : "for_you") as FeedMode;
 

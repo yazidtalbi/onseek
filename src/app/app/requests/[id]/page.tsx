@@ -6,9 +6,9 @@ import { SubmissionList } from "@/components/submissions/submission-list";
 import { SubmissionForm } from "@/components/submissions/submission-form";
 import { RequestCard } from "@/components/requests/request-card";
 import { BackButton } from "@/components/ui/back-button";
-import { AnnouncementBanner } from "@/components/requests/announcement-banner";
 import { ChevronRight } from "lucide-react";
 import { ShareButton } from "@/components/requests/share-button";
+import { RequestDetailView } from "@/components/requests/request-detail-view";
 
 export const dynamic = "force-dynamic";
 
@@ -153,96 +153,22 @@ export default async function RequestDetailPage({
 
   const proposalCount = initialSubmissions.length;
 
-  // Check if request should show announcement banner (no proposals and old)
-  const hasNoSubmissions = proposalCount === 0;
-  const requestAge = new Date().getTime() - new Date(request.created_at).getTime();
-  const daysOld = requestAge / (1000 * 60 * 60 * 24);
-  const shouldShowAnnouncement = hasNoSubmissions && daysOld >= 7; // Show if 7+ days old with no proposals
-
   return (
-    <div className="mx-auto w-full space-y-6 px-4 md:px-6">
-      {/* Back Button and Breadcrumbs */}
-      <div className="flex items-center gap-4">
-        <BackButton />
-        <nav className="flex items-center gap-2 text-sm text-gray-600">
-          <Link 
-            href={`/app/category/${request.category.toLowerCase()}`} 
-            className="hover:text-foreground transition-colors text-foreground font-medium"
-          >
-            {request.category}
-          </Link>
-        </nav>
-      </div>
-
-      {/* Two Column Layout: Request on Left, Submissions on Right */}
-      <div className="flex flex-col lg:flex-row gap-8 lg:gap-14 items-start">
-        {/* Left Column: Request Details - Sticky on scroll */}
-        <div className="w-full lg:w-[55%] space-y-6 flex-shrink-0 lg:sticky lg:top-24 self-start">
-          <RequestCard
-            request={request}
-            variant="detail"
-            isFavorite={isFavorite}
-            images={images?.map((img: any) => img.image_url) || []}
-            links={links?.map((link: any) => link.url) || []}
-            proposalCount={proposalCount}
-            noBorder={true}
-            noPadding={true}
-            noRounding={true}
-            headerActions={<ShareButton requestId={request.id} />}
-          />
-        </div>
-
-
-        {/* Right Column: Proposals */}
-        <div className="flex-1 space-y-6 min-w-0">
-          {shouldShowAnnouncement && (
-            <AnnouncementBanner />
-          )}
-          <div className="space-y-4">
-            {showSubmissionForm ? (
-              <SubmissionForm 
-                requestId={request.id} 
-                requestBudgetMax={request.budget_max} 
-                requestDescription={request.description}
-                hideButton={proposalCount === 0}
-              />
-            ) : null}
-          </div>
-          <SubmissionList
-            requestId={request.id}
-            requestTitle={request.title}
-            initialSubmissions={initialSubmissions}
-            winnerId={request.winner_submission_id}
-            canSelectWinner={isOwner}
-            requestStatus={request.status}
-            requestOwnerId={request.user_id}
-          />
-        </div>
-      </div>
-
-      {similarRequests && similarRequests.length > 0 ? (
-        <div className="space-y-4 pt-12 mt-12">
-          <h2 className="text-2xl font-semibold text-foreground">Similar requests</h2>
-          <div className="columns-1 sm:columns-2 lg:columns-3 gap-4">
-            {similarRequests.map((similarRequest) => (
-              <div key={similarRequest.id} className="break-inside-avoid mb-6 bg-[#f5f6f9] rounded-[20px] p-[6px] transition-all duration-300 ease-out hover:-translate-y-1.5 shadow-none hover:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.12)]">
-                <RequestCard
-                  request={{
-                    ...similarRequest,
-                    submissionCount: similarRequestSubmissionCounts[similarRequest.id] || 0,
-                  }}
-                  variant="detail"
-                  smallImages={true}
-                  images={similarRequestImages[similarRequest.id] || []}
-                  isFavorite={similarRequestFavorites.has(similarRequest.id)}
-                  noBorder={true}
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-      ) : null}
-    </div>
+    <RequestDetailView
+      request={request}
+      images={images || []}
+      links={links || []}
+      initialSubmissions={initialSubmissions}
+      user={user}
+      isOwner={isOwner}
+      showSubmissionForm={showSubmissionForm}
+      isFavorite={isFavorite}
+      proposalCount={proposalCount}
+      similarRequests={similarRequests || []}
+      similarRequestImages={similarRequestImages}
+      similarRequestSubmissionCounts={similarRequestSubmissionCounts}
+      similarRequestFavorites={Array.from(similarRequestFavorites)}
+    />
   );
 }
 

@@ -319,6 +319,7 @@ export function SubmissionCard({
                 href={requestTitle ? createRequestUrl(requestId, requestTitle) : `/app/requests/${requestId}`}
                 className="text-sm text-[#7755FF] hover:underline"
                 onClick={(e) => e.stopPropagation()}
+                scroll={false}
               >
                 View request
               </Link>

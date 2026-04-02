@@ -5,16 +5,16 @@ import { getCategoryName } from "@/lib/utils/category-routing";
 
 export const dynamic = "force-dynamic";
 
-export default async function PopularCategoryPage({ 
-  params, 
-  searchParams 
-}: { 
+export default async function PopularCategoryPage({
+  params,
+  searchParams
+}: {
   params: Promise<{ category: string }>;
   searchParams: any;
 }) {
   const { category: slug } = await params;
   const categoryName = getCategoryName(slug);
-  
+
   if (!categoryName) return notFound();
 
   const mode = "trending";
