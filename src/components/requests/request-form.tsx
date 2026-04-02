@@ -522,6 +522,7 @@ export function RequestForm({
                       type="number"
                       step="10"
                       min={0}
+                      autoFocus
                       value={form.watch("budgetMax") ?? ""}
                       onChange={handleBudgetMaxChange}
                       placeholder="Enter amount"
@@ -608,6 +609,7 @@ export function RequestForm({
                       ))}
                       <Input
                         placeholder={preferences.length === 0 ? "Brand, model, or specific preference" : ""}
+                        autoFocus
                         className="flex-1 min-w-[200px] h-8 border-none focus-visible:ring-0 px-0 text-base font-medium placeholder:text-gray-400 placeholder:font-normal bg-transparent"
                         value={inlinePrefValue}
                         onChange={(e) => setInlinePrefValue(e.target.value)}
@@ -674,6 +676,7 @@ export function RequestForm({
                       ))}
                       <Input
                         placeholder={dealbreakers.length === 0 ? "No scratches, no repairs, etc." : ""}
+                        autoFocus
                         className="flex-1 min-w-[200px] h-8 border-none focus-visible:ring-0 px-0 text-base font-medium placeholder:text-gray-400 placeholder:font-normal bg-transparent"
                         value={inlineDbValue}
                         onChange={(e) => setInlineDbValue(e.target.value)}

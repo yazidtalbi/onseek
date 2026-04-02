@@ -48,7 +48,7 @@ export function RequestFeed({
   const router = useRouter();
   const searchParams = useSearchParams();
   const currentPage = page;
-  
+
   // Use external viewMode if provided, otherwise manage internally
   const [internalViewMode, setInternalViewMode] = useState<"list" | "grid">(() => {
     if (forceListView) return "list";
@@ -98,7 +98,7 @@ export function RequestFeed({
       if (filters.priceMin || filters.priceMax) {
         const min = filters.priceMin ? parseFloat(filters.priceMin) : null;
         const max = filters.priceMax ? parseFloat(filters.priceMax) : null;
-        
+
         if (min !== null && !isNaN(min)) {
           // Request budget_max should be >= filter min (or no max limit)
           query = query.or(`budget_max.gte.${min},budget_max.is.null`);
@@ -132,61 +132,61 @@ export function RequestFeed({
         console.error("Error fetching requests:", error);
         return [];
       }
-      
-        // Fetch up to 3 images, links, and submission counts for each request
-        if (requests && requests.length > 0) {
-          const requestIds = requests.map((r) => r.id);
-          const { data: images } = await supabase
-            .from("request_images")
-            .select("request_id, image_url, image_order")
-            .in("request_id", requestIds)
-            .order("image_order", { ascending: true });
-          
-          // Fetch links
-          const { data: links } = await supabase
-            .from("request_links")
-            .select("request_id, url")
-            .in("request_id", requestIds);
-          
-          // Fetch submission counts
-          const { data: submissionCounts } = await supabase
-            .from("submissions")
-            .select("request_id")
-            .in("request_id", requestIds);
-          
-          // Create a map of request_id -> submission count
-          const submissionCountMap = new Map<string, number>();
-          submissionCounts?.forEach((sub) => {
-            const current = submissionCountMap.get(sub.request_id) || 0;
-            submissionCountMap.set(sub.request_id, current + 1);
-          });
-          
-          // Create a map of request_id -> array of images (max 3)
-          const imageMap = new Map<string, string[]>();
-          images?.forEach((img) => {
-            const existing = imageMap.get(img.request_id) || [];
-            if (existing.length < 3) {
-              existing.push(img.image_url);
-              imageMap.set(img.request_id, existing);
-            }
-          });
-          
-          // Create a map of request_id -> array of links
-          const linkMap = new Map<string, string[]>();
-          links?.forEach((link) => {
-            const existing = linkMap.get(link.request_id) || [];
-            existing.push(link.url);
-            linkMap.set(link.request_id, existing);
-          });
-          
-          // Attach images array, links array, and submission count to each request
-          const requestsWithImages = requests.map((req) => ({
-            ...req,
-            images: imageMap.get(req.id) || [],
-            links: linkMap.get(req.id) || [],
-            submissionCount: submissionCountMap.get(req.id) || 0,
-          }));
-        
+
+      // Fetch up to 3 images, links, and submission counts for each request
+      if (requests && requests.length > 0) {
+        const requestIds = requests.map((r) => r.id);
+        const { data: images } = await supabase
+          .from("request_images")
+          .select("request_id, image_url, image_order")
+          .in("request_id", requestIds)
+          .order("image_order", { ascending: true });
+
+        // Fetch links
+        const { data: links } = await supabase
+          .from("request_links")
+          .select("request_id, url")
+          .in("request_id", requestIds);
+
+        // Fetch submission counts
+        const { data: submissionCounts } = await supabase
+          .from("submissions")
+          .select("request_id")
+          .in("request_id", requestIds);
+
+        // Create a map of request_id -> submission count
+        const submissionCountMap = new Map<string, number>();
+        submissionCounts?.forEach((sub) => {
+          const current = submissionCountMap.get(sub.request_id) || 0;
+          submissionCountMap.set(sub.request_id, current + 1);
+        });
+
+        // Create a map of request_id -> array of images (max 3)
+        const imageMap = new Map<string, string[]>();
+        images?.forEach((img) => {
+          const existing = imageMap.get(img.request_id) || [];
+          if (existing.length < 3) {
+            existing.push(img.image_url);
+            imageMap.set(img.request_id, existing);
+          }
+        });
+
+        // Create a map of request_id -> array of links
+        const linkMap = new Map<string, string[]>();
+        links?.forEach((link) => {
+          const existing = linkMap.get(link.request_id) || [];
+          existing.push(link.url);
+          linkMap.set(link.request_id, existing);
+        });
+
+        // Attach images array, links array, and submission count to each request
+        const requestsWithImages = requests.map((req) => ({
+          ...req,
+          images: imageMap.get(req.id) || [],
+          links: linkMap.get(req.id) || [],
+          submissionCount: submissionCountMap.get(req.id) || 0,
+        }));
+
         // Filter out hidden requests
         if (typeof window !== "undefined") {
           try {
@@ -197,10 +197,10 @@ export function RequestFeed({
             return requestsWithImages;
           }
         }
-        
+
         return requestsWithImages;
       }
-      
+
       // Filter out hidden requests from initial data too
       if (typeof window !== "undefined") {
         try {
@@ -211,7 +211,7 @@ export function RequestFeed({
           return requests ?? [];
         }
       }
-      
+
       return requests ?? [];
     },
     initialData: initialRequests, // Use initialRequests as initial data
@@ -232,19 +232,19 @@ export function RequestFeed({
 
   return (
     <div className="space-y-4">
-      <div className={viewMode === "grid" ? "columns-1 md:columns-2 xl:columns-3 gap-6 line-masonry" : "flex flex-col gap-4 w-full"}>
+      <div className={viewMode === "grid" ? "columns-[360px] gap-6 line-masonry" : "flex flex-col gap-4 w-full"}>
         {data.map((request: any, index: number) => (
-          <div 
-            key={request.id} 
+          <div
+            key={request.id}
             className={cn(
               "break-inside-avoid mb-6",
               useHomeStyle && "bg-[#f5f6f9] rounded-[20px] p-[6px] transition-all duration-300 ease-out",
               useHomeStyle && !disableHover && "hover:scale-[1.02]"
             )}
           >
-            <RequestCard 
-              request={request} 
-              variant={useHomeStyle ? "detail" : "feed"} 
+            <RequestCard
+              request={request}
+              variant={useHomeStyle ? "detail" : "feed"}
               images={request.images || []}
               links={request.links || []}
               isFavorite={allFavorited}
@@ -289,7 +289,7 @@ export function RequestFeed({
               } else {
                 pageNum = currentPage - 3 + i;
               }
-              
+
               return (
                 <Button
                   key={pageNum}

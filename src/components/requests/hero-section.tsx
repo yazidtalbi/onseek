@@ -20,7 +20,7 @@ export function HeroSection({ user, tradeMode, setTradeMode }: HeroSectionProps)
 
   return (
     <>
-      <section className="relative mx-auto w-full max-w-[1360px] flex items-center justify-center rounded-[32px] bg-white overflow-hidden px-6 py-12 sm:px-10 sm:py-16 min-h-[440px] mb-8 transition-all duration-500">
+      <section className="relative mx-auto w-full max-w-[1360px] flex items-center justify-center rounded-[32px] bg-white overflow-hidden px-6 py-12 sm:px-10 sm:py-16 min-h-[440px] mb-4 transition-all duration-500">
         {/* Hero background images */}
         <div className="hidden lg:block absolute -left-6 xl:-left-10 top-[40%] -translate-y-1/2 w-[260px] xl:w-[320px] h-[260px] xl:h-[320px] pointer-events-none z-0">
           <Image src="/hero/left.png" alt="Microphone composition" fill className="object-contain mix-blend-multiply" priority />

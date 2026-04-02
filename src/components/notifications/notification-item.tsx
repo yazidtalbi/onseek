@@ -7,6 +7,8 @@ import { cn } from "@/lib/utils";
 import { markNotificationReadAction } from "@/actions/notification.actions";
 import { useRouter } from "next/navigation";
 import { MessageSquare, Award, Bell } from "lucide-react";
+import { createRequestUrl } from "@/lib/utils/slug";
+import { useSearchParams } from "next/navigation";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
@@ -22,6 +24,7 @@ interface NotificationItemProps {
 
 export function NotificationItem({ notification }: NotificationItemProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
   const timeAgo = formatTimeAgo(notification.created_at);
   const p = notification.payload || {};
@@ -45,7 +48,7 @@ export function NotificationItem({ notification }: NotificationItemProps) {
   if (notification.type === "new_submission") {
     avatarUrl = p.sender_avatar || "";
     avatarFallback = p.sender_name?.substring(0,2)?.toUpperCase() || "U";
-    link = p.request_id ? `/app/requests/${p.request_id}` : null;
+    link = p.request_id ? createRequestUrl(p.request_id, searchParams) : null;
     titleNode = (
       <p className="text-sm text-neutral-800 leading-snug">
         <span className="font-semibold text-neutral-900">{p.sender_name || "User"}</span> made a proposal for <span className="font-semibold text-neutral-900">{p.request_title || "a request"}</span>
@@ -64,7 +67,7 @@ export function NotificationItem({ notification }: NotificationItemProps) {
     bubbleContent = p.message_snippet || null;
   } else if (notification.type === "winner" || notification.type === "winner_selected") {
     avatarFallback = "🏆";
-    link = p.request_id ? `/app/requests/${p.request_id}` : null;
+    link = p.request_id ? createRequestUrl(p.request_id, searchParams) : null;
     titleNode = (
       <p className="text-sm text-neutral-800 leading-snug">
         <span className="font-semibold text-neutral-900">You won!</span> Your proposal was selected as the winner.

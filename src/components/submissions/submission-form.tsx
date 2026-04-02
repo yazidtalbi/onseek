@@ -385,12 +385,12 @@ export function SubmissionForm({ requestId, requestBudgetMax, requestDescription
 
           {/* URL field - only for link submissions */}
           {submissionType === "link" && (
-            <div className="space-y-2">
-              <Label htmlFor="url">Product URL</Label>
+            <div className="space-y-4">
               <Input 
                 id="url" 
                 type="url" 
-                className="rounded-lg"
+                placeholder="Product URL (Paste a link here...)"
+                className="h-14 bg-white border-[#e5e7eb] rounded-xl focus-visible:ring-[#222234] placeholder:text-gray-400 placeholder:font-normal text-base font-semibold"
                 {...form.register("url")} 
               />
               
@@ -423,10 +423,9 @@ export function SubmissionForm({ requestId, requestBudgetMax, requestDescription
               {/* Saved Items Selector */}
               {savedItems.length > 0 && (
                 <div className="space-y-2">
-                  <Label>Load from saved items (optional)</Label>
                   <Select onValueChange={handleSelectSavedItem}>
-                    <SelectTrigger className="rounded-lg">
-                      <SelectValue placeholder="Select a saved item..." />
+                    <SelectTrigger className="h-14 bg-white border-[#e5e7eb] rounded-xl focus:ring-[#222234]">
+                      <SelectValue placeholder="Load from saved items (optional)" />
                     </SelectTrigger>
                     <SelectContent>
                       {savedItems.map((item) => (
@@ -441,18 +440,16 @@ export function SubmissionForm({ requestId, requestBudgetMax, requestDescription
 
               {/* Article name - first for personal items */}
               <div className="space-y-2">
-                <Label htmlFor="articleName">Article name</Label>
                 <Input 
                   id="articleName" 
-                  className="rounded-lg"
-                  placeholder="e.g., iPhone 15 Pro, Nike Air Max..."
+                  className="h-14 bg-white border-[#e5e7eb] rounded-xl focus-visible:ring-[#222234] placeholder:text-gray-400 placeholder:font-normal text-base font-semibold"
+                  placeholder="Article name (e.g., iPhone 15 Pro, Nike Air Max...)"
                   {...form.register("articleName")}
                 />
               </div>
 
               {/* Image upload for personal items - second */}
               <div className="space-y-2">
-                <Label htmlFor="imageUpload">Item image (optional)</Label>
                 <div className="flex items-center gap-2">
                   <input
                     id="imageUpload"
@@ -463,10 +460,10 @@ export function SubmissionForm({ requestId, requestBudgetMax, requestDescription
                   />
                   <label
                     htmlFor="imageUpload"
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border bg-card hover:bg-gray-50 cursor-pointer transition-colors"
+                    className="flex items-center gap-2 px-6 py-3 rounded-xl border border-[#e5e7eb] bg-white hover:bg-gray-50 cursor-pointer transition-colors text-sm font-medium"
                   >
                     <Upload className="h-4 w-4" />
-                    <span className="text-sm">Upload image</span>
+                    <span>Upload item image (optional)</span>
                   </label>
                 </div>
                 {uploadedImage && (
@@ -498,63 +495,66 @@ export function SubmissionForm({ requestId, requestBudgetMax, requestDescription
 
               {/* Description - third for personal items */}
               <div className="space-y-2">
-                <Label htmlFor="personalDescription">Item description</Label>
                 <Textarea 
                   id="personalDescription"
-                  placeholder="Describe the item you have..."
+                  placeholder="Item description (Describe the item you have...)"
+                  className="min-h-[120px] bg-white border-[#e5e7eb] rounded-xl focus-visible:ring-[#222234] placeholder:text-gray-400 placeholder:font-normal text-base resize-none"
                   {...form.register("notes")} 
                 />
               </div>
 
               {/* Price - fourth for personal items */}
               <div className="space-y-2">
-                <Label htmlFor="price">Price</Label>
-                <Input
-                  id="price"
-                  type="number"
-                  step="0.01"
-                  className="rounded-lg"
-                  {...form.register("price", { valueAsNumber: true })}
-                />
+                <div className="relative group">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-semibold text-lg">$</span>
+                  <Input
+                    id="price"
+                    type="number"
+                    step="0.01"
+                    placeholder="Price (0.00)"
+                    className="h-14 bg-white border-[#e5e7eb] rounded-xl focus-visible:ring-[#222234] placeholder:text-gray-400 placeholder:font-normal text-base font-semibold pl-8"
+                    {...form.register("price", { valueAsNumber: true })}
+                  />
+                </div>
               </div>
             </div>
           )}
 
           {/* Show these fields only after URL fetch is attempted (for link submissions) */}
           {submissionType === "link" && urlFetchAttempted && (
-            <>
-              <div className="space-y-2">
-                <Label htmlFor="articleName">Article name</Label>
-                <div className="relative">
-                  <Input 
-                    id="articleName" 
-                    className="rounded-lg pr-10"
-                    placeholder="e.g., iPhone 15 Pro, Nike Air Max..."
-                    {...form.register("articleName")}
-                    disabled={isLoadingPreview}
-                  />
-                  {isLoadingPreview && (
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                      <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                    </div>
-                  )}
-                </div>
+            <div className="space-y-4">
+              <div className="relative">
+                <Input 
+                  id="articleName" 
+                  className="h-14 bg-white border-[#e5e7eb] rounded-xl focus-visible:ring-[#222234] placeholder:text-gray-400 placeholder:font-normal text-base font-semibold pr-10"
+                  placeholder="Article name (e.g., iPhone 15 Pro, Nike Air Max...)"
+                  {...form.register("articleName")}
+                  disabled={isLoadingPreview}
+                />
+                {isLoadingPreview && (
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                  </div>
+                )}
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="price">Price</Label>
+              <div className="relative group">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-semibold text-lg">$</span>
                 <Input
                   id="price"
                   type="number"
                   step="0.01"
-                  className="rounded-lg"
+                  placeholder="Price (0.00)"
+                  className="h-14 bg-white border-[#e5e7eb] rounded-xl focus-visible:ring-[#222234] placeholder:text-gray-400 placeholder:font-normal text-base font-semibold pl-8"
                   {...form.register("price", { valueAsNumber: true })}
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="notes">Why it matches</Label>
-                <Textarea id="notes" {...form.register("notes")} />
-              </div>
-            </>
+              <Textarea 
+                id="notes" 
+                placeholder="Why it matches (Tell the buyer why this is perfect...)"
+                className="min-h-[100px] bg-white border-[#e5e7eb] rounded-xl focus-visible:ring-[#222234] placeholder:text-gray-400 placeholder:font-normal text-base resize-none"
+                {...form.register("notes")} 
+              />
+            </div>
           )}
 
           {/* Save item checkbox for personal items */}

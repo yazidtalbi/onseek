@@ -25,6 +25,7 @@ import { useAuth } from "@/components/layout/auth-provider";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import type { Profile } from "@/lib/types";
 import { createRequestUrl } from "@/lib/utils/slug";
+import { useSearchParams } from "next/navigation";
 import { MessageProposerDialog } from "@/components/messaging/message-proposer-dialog";
 
 function getHost(url: string) {
@@ -71,6 +72,7 @@ export function SubmissionCard({
   const [messageDialogOpen, setMessageDialogOpen] = React.useState(false);
   const [submitterProfile, setSubmitterProfile] = React.useState<Profile | null>(null);
   const { user } = useAuth();
+  const searchParams = useSearchParams();
   const submittedAt = formatTimeAgo(submission.created_at);
   
   // Check if current user is the request owner

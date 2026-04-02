@@ -23,6 +23,6 @@ export function getCategorySlug(category: string): string {
 export function getCategoryName(slug: string): string | null {
   if (!slug) return null;
   const normalizedSlug = slug.toLowerCase();
-  if (normalizedSlug === "all") return "All";
+  if (normalizedSlug === "all") return "Discover";
   return MAIN_CATEGORIES.find(cat => getCategorySlug(cat) === normalizedSlug) || null;
 }

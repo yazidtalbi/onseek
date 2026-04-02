@@ -47,7 +47,7 @@ export function CategoryPills({
   const pathCategory = isCategoryInPath ? getCategoryName(lastPart) : null;
   const isHomePage = pathname === "/app";
 
-  const selectedCategory = isHomePage ? "Discover" : (pathCategory || searchParams.get("category") || "All");
+  const selectedCategory = isHomePage ? "Discover" : (pathCategory || searchParams.get("category") || "Discover");
 
   const handleModeChange = (newMode: string) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -130,13 +130,13 @@ export function CategoryPills({
 
   const priceMax = searchParams.get("priceMax") || "";
   const country = searchParams.get("country") || "";
-  const categories = ["Discover", "All", ...MAIN_CATEGORIES];
+  const categories = ["Discover", ...MAIN_CATEGORIES];
   const [filtersOpen, setFiltersOpen] = React.useState(false);
   const hasActiveFilters = searchParams.get("priceMin") || searchParams.get("priceMax") || searchParams.get("country");
 
   const updateParam = (key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString());
-    if (value === "All" || value === "" || value === "0") {
+    if (value === "Discover" || value === "" || value === "0") {
       params.delete(key);
     } else {
       params.set(key, value);
@@ -172,7 +172,7 @@ export function CategoryPills({
             className="flex items-center gap-2 overflow-x-auto scrollbar-hide scroll-smooth w-full px-2 justify-start"
           >
             {categories.map((category) => {
-              const isActive = selectedCategory === category || (selectedCategory === null && category === "All");
+              const isActive = selectedCategory === category;
               return (
                 <button
                   key={category}

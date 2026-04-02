@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { memo, useState, useRef, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -89,6 +89,7 @@ function RequestCardComponent({
   priority = false,
 }: RequestCardProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [previewImageIndex, setPreviewImageIndex] = useState<number>(0);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -232,7 +233,7 @@ function RequestCardComponent({
                   <h3
                     className={cn(
                       "font-semibold leading-snug text-foreground transition-colors font-[family-name:var(--font-inter-display)]",
-                      variant === "detail" && !smallImages ? "text-4xl max-w-[75%]" : "text-[18px]",
+                      variant === "detail" && !smallImages ? "text-4xl" : "text-[18px]",
                       !headerActions && "pr-24"
                     )}
                     style={variant === "detail" && !smallImages ? { letterSpacing: '-1.2px' } : undefined}
@@ -514,7 +515,7 @@ function RequestCardComponent({
         <div className="flex flex-col gap-3">
           {smallImages ? (
             <Link
-              href={createRequestUrl(request.id)}
+              href={createRequestUrl(request.id, searchParams)}
               prefetch={true}
               scroll={false}
               className="block h-full group/card"
@@ -587,7 +588,7 @@ function RequestCardComponent({
               return;
             }
 
-            router.push(createRequestUrl(request.id), { scroll: false });
+            router.push(createRequestUrl(request.id, searchParams), { scroll: false });
           }}
           className="block focus:outline-none cursor-pointer"
         >

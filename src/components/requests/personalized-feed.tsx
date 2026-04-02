@@ -43,8 +43,8 @@ export function PersonalizedFeed({
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const { user, profile } = useAuth();
-  const isHomePage = pathname === "/app" || pathname === "/";
-  const showHero = isHomePage && !user;
+  const isHomePage = pathname === "/app" || pathname === "/" || pathname.startsWith("/app/requests/");
+  const showHero = (pathname === "/app" || pathname === "/") && !user;
   const [mode, setMode] = useState<FeedMode>(() => {
     // Determine mode from pathname first
     if (pathname.includes("/app/popular")) return "trending";
@@ -149,7 +149,7 @@ export function PersonalizedFeed({
         .eq("status", "open");
 
       // Apply filters
-      if (category && category !== "All") {
+      if (category && category !== "Discover") {
         query = query.eq("category", category);
       }
       if (country) {
@@ -315,40 +315,27 @@ export function PersonalizedFeed({
   return (
     <div className="flex flex-col w-full">
       {showHero && (
-        <HeroSection 
-          user={user} 
-          tradeMode={tradeMode} 
-          setTradeMode={setTradeMode} 
+        <HeroSection
+          user={user}
+          tradeMode={tradeMode}
+          setTradeMode={setTradeMode}
         />
       )}
 
-      {!showHero && (
-        <div className="py-2 min-h-[80px] mb-0">
-          <div className="mx-auto w-full text-center flex flex-col items-center relative z-10 max-w-full px-0">
-            <div className="w-full flex flex-col items-stretch">
-              <CategoryPills 
-                mode={mode} 
-                hasPreferences={hasPreferences} 
-                viewMode={viewMode}
-                onViewModeChange={setViewMode}
-                hideViewToggle={false}
-              />
-            </div>
+      {/* Categories Strip */}
+      <div className="py-1 min-h-[70px] mb-0">
+        <div className="mx-auto w-full text-center flex flex-col items-center relative z-10 max-w-full px-0">
+          <div className="w-full flex flex-col items-stretch">
+            <CategoryPills
+              mode={mode}
+              hasPreferences={hasPreferences}
+              viewMode={viewMode}
+              onViewModeChange={setViewMode}
+              hideViewToggle={false}
+            />
           </div>
         </div>
-      )}
-
-      {showHero && (
-        <div className="w-full mb-4">
-          <CategoryPills 
-            mode={mode} 
-            hasPreferences={hasPreferences} 
-            viewMode={viewMode}
-            onViewModeChange={setViewMode}
-            hideViewToggle={false}
-          />
-        </div>
-      )}
+      </div>
 
       {/* Error state */}
       {isError ? (
@@ -396,7 +383,7 @@ export function PersonalizedFeed({
             </div>
           )}
 
-          <div className={cn("py-4 w-full", viewMode === "grid" ? "columns-1 md:columns-2 xl:columns-3 gap-6" : "flex flex-col gap-4 max-w-2xl mx-auto")}>
+          <div className={cn("pb-4 w-full", viewMode === "grid" ? "columns-[360px] gap-6" : "flex flex-col gap-4 max-w-2xl mx-auto")}>
             {/* Inject textarea for creation at top of masonry if logged in */}
             {user && isHomePage && (
               <div className="break-inside-avoid mb-6">
