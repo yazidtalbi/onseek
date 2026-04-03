@@ -49,9 +49,9 @@ export async function voteAction(formData: FormData) {
   }
 
   if (requestId) {
-    revalidatePath(`/app/requests/${requestId}`);
+    revalidatePath(`/requests/${requestId}`);
   }
-  revalidatePath("/app/submissions");
+  revalidatePath("/submissions");
   return { success: true };
 }
 

@@ -83,7 +83,7 @@ export function FiltersModal({ open, onOpenChange, children }: FiltersModalProps
       params.set(key, value);
     }
     params.delete("page");
-    router.push(`/app?${params.toString()}`);
+    router.push(`/?${params.toString()}`);
   };
 
   const handleSave = () => {
@@ -104,7 +104,7 @@ export function FiltersModal({ open, onOpenChange, children }: FiltersModalProps
     }
 
     params.delete("page");
-    router.push(`/app?${params.toString()}`);
+    router.push(`/?${params.toString()}`);
     onOpenChange(false);
   };
 
@@ -117,7 +117,7 @@ export function FiltersModal({ open, onOpenChange, children }: FiltersModalProps
     params.delete("priceMax");
     params.delete("country");
     params.delete("page");
-    router.push(`/app?${params.toString()}`);
+    router.push(`/?${params.toString()}`);
     onOpenChange(false);
   };
 

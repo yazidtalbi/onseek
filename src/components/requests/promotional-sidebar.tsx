@@ -43,7 +43,7 @@ export function PromotionalSidebar() {
           </div>
         </div>
         <Button
-          onClick={() => router.push("/app/requests/new")}
+          onClick={() => router.push("/requests/new")}
           className="w-full bg-[#F2F3F5] text-[#363B40] hover:bg-[#F2F3F5]/90"
         >
           Create your first request

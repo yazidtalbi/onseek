@@ -99,7 +99,7 @@ export function ContactInfoDialog({
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-neutral-500">Username</p>
                   <Link
-                    href={`/app/profile/${submitterProfile.username}`}
+                    href={`/profile/${submitterProfile.username}`}
                     className="text-sm font-medium text-[#7755FF] hover:underline inline-flex items-center gap-1"
                     onClick={(e) => e.stopPropagation()}
                   >

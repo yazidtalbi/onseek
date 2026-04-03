@@ -55,7 +55,7 @@ export function RequestDetailView({
             <BackButton />
             <nav className="flex items-center gap-2 text-sm text-gray-600">
               <Link
-                href={`/app/category/${request.category.toLowerCase()}`}
+                href={`/category/${request.category.toLowerCase()}`}
                 className="hover:text-foreground transition-colors text-foreground font-medium"
               >
                 {request.category}

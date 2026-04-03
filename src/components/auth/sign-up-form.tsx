@@ -60,7 +60,7 @@ export function SignUpForm({ onSuccess }: { onSuccess?: () => void }) {
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/auth/callback?next=/app`,
+          redirectTo: `${window.location.origin}/auth/callback?next=/`,
           queryParams: {
             prompt: 'select_account',
           },

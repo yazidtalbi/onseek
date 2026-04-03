@@ -111,7 +111,7 @@ function MobileCountrySelector({ onSelect }: { onSelect: () => void }) {
       params.set("country", country);
     }
     params.delete("page");
-    router.push(`/app?${params.toString()}`);
+    router.push(`/?${params.toString()}`);
     onSelect();
   };
 
@@ -292,11 +292,11 @@ export function AppNavbar() {
 
   const handleCategorySelect = (category: string) => {
     if (category === "All") {
-      router.push("/app/popular");
+      router.push("/popular");
     } else {
       const { getCategorySlug } = require("@/lib/utils/category-routing");
       const slug = getCategorySlug(category);
-      router.push(`/app/popular/${slug}`);
+      router.push(`/popular/${slug}`);
     }
   };
 
@@ -388,7 +388,7 @@ export function AppNavbar() {
                 <Button variant="ghost" size="icon" className="h-9 w-9 -ml-2" onClick={() => setMobileMenuOpen(true)}>
                   <Menu className="h-5 w-5" />
                 </Button>
-                <Link href="/app" prefetch={true} className="shrink-0 flex items-center gap-2">
+                <Link href="/" prefetch={true} className="shrink-0 flex items-center gap-2">
                   <Image src="/logo.png" alt="onseek" width={100} height={28} className="h-6 w-auto" priority />
                   <span className="text-lg text-black" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>onseek</span>
                 </Link>
@@ -409,7 +409,7 @@ export function AppNavbar() {
                     )}
                   </Button>
                 </NotificationsDrawer>
-                <Link href={profile?.username ? `/app/profile/${profile.username}` : "/app/settings"} className="ml-1">
+                <Link href={profile?.username ? `/profile/${profile.username}` : "/settings"} className="ml-1">
                   <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-700 font-bold text-xs overflow-hidden border border-gray-200">
                     {profile?.avatar_url && !avatarError ? (
                       <img src={profile.avatar_url} alt={profile.username || "User"} className="w-full h-full object-cover" onError={() => setAvatarError(true)} />
@@ -424,7 +424,7 @@ export function AppNavbar() {
             <>
               {/* Guest Layout */}
               {/* Left: Logo */}
-              <Link href="/app" prefetch={true} className="shrink-0 flex items-center gap-2">
+              <Link href="/" prefetch={true} className="shrink-0 flex items-center gap-2">
                 <Image src="/logo.png" alt="onseek" width={100} height={28} className="h-6 w-auto" priority />
                 <span className="text-lg text-black" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>onseek</span>
               </Link>
@@ -529,11 +529,11 @@ export function AppNavbar() {
                         <AccordionContent>
                           <div className="px-4 pb-2 space-y-0.5">
                             <Link
-                              href="/app/popular"
+                              href="/popular"
                               onClick={() => setMobileMenuOpen(false)}
                               className={cn(
                                 "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
-                                pathname.startsWith("/app/popular")
+                                pathname.startsWith("/popular")
                                   ? "bg-gray-100 text-foreground font-medium"
                                   : "text-muted-foreground hover:text-foreground hover:bg-gray-50"
                               )}
@@ -542,11 +542,11 @@ export function AppNavbar() {
                               Popular
                             </Link>
                             <Link
-                              href="/app/latest"
+                              href="/latest"
                               onClick={() => setMobileMenuOpen(false)}
                               className={cn(
                                 "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
-                                pathname.startsWith("/app/latest")
+                                pathname.startsWith("/latest")
                                   ? "bg-gray-100 text-foreground font-medium"
                                   : "text-muted-foreground hover:text-foreground hover:bg-gray-50"
                               )}
@@ -556,7 +556,7 @@ export function AppNavbar() {
                             </Link>
                             {categories.map((category) => {
                               const { getCategorySlug } = require("@/lib/utils/category-routing");
-                              const categoryPath = `/app/popular/${getCategorySlug(category)}`;
+                              const categoryPath = `/popular/${getCategorySlug(category)}`;
                               const isActive = pathname === categoryPath;
                               return (
                                 <Link
@@ -586,11 +586,11 @@ export function AppNavbar() {
                     {user && (
                       <>
                         <Link
-                          href="/app/requests"
+                          href="/requests"
                           onClick={() => setMobileMenuOpen(false)}
                           className={cn(
                             "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
-                            pathname === "/app/requests" || pathname.startsWith("/app/requests/")
+                            pathname === "/requests" || pathname.startsWith("/requests/")
                               ? "bg-gray-100 text-foreground font-medium"
                               : "text-muted-foreground hover:text-foreground hover:bg-gray-50"
                           )}
@@ -599,11 +599,11 @@ export function AppNavbar() {
                           My Requests
                         </Link>
                         <Link
-                          href="/app/submissions"
+                          href="/submissions"
                           onClick={() => setMobileMenuOpen(false)}
                           className={cn(
                             "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
-                            pathname === "/app/submissions"
+                            pathname === "/submissions"
                               ? "bg-gray-100 text-foreground font-medium"
                               : "text-muted-foreground hover:text-foreground hover:bg-gray-50"
                           )}
@@ -625,11 +625,11 @@ export function AppNavbar() {
                           Messages
                         </Link>
                         <Link
-                          href="/app/personal-items"
+                          href="/personal-items"
                           onClick={() => setMobileMenuOpen(false)}
                           className={cn(
                             "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
-                            pathname === "/app/personal-items"
+                            pathname === "/personal-items"
                               ? "bg-gray-100 text-foreground font-medium"
                               : "text-muted-foreground hover:text-foreground hover:bg-gray-50"
                           )}
@@ -638,18 +638,18 @@ export function AppNavbar() {
                           Inventory
                         </Link>
                         <Link
-                          href="/app/saved"
+                          href="/saved"
                           onClick={() => setMobileMenuOpen(false)}
                           className={cn(
                             "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
-                            pathname === "/app/saved"
+                            pathname === "/saved"
                               ? "bg-gray-100 text-foreground font-medium"
                               : "text-muted-foreground hover:text-foreground hover:bg-gray-50"
                           )}
                         >
                           <Bookmark className={cn(
                             "h-5 w-5 shrink-0",
-                            pathname === "/app/saved" && "fill-current"
+                            pathname === "/saved" && "fill-current"
                           )} />
                           Saved
                         </Link>
@@ -658,7 +658,7 @@ export function AppNavbar() {
                             onClick={() => setMobileMenuOpen(false)}
                             className={cn(
                               "flex w-full items-center gap-3 px-3 py-2 rounded-md transition-colors relative text-left",
-                              pathname === "/app/notifications"
+                              pathname === "/notifications"
                                 ? "bg-gray-100 text-foreground font-medium"
                                 : "text-muted-foreground hover:text-foreground hover:bg-gray-50"
                             )}
@@ -673,11 +673,11 @@ export function AppNavbar() {
                           </button>
                         </NotificationsDrawer>
                         <Link
-                          href="/app/leaderboard"
+                          href="/leaderboard"
                           onClick={() => setMobileMenuOpen(false)}
                           className={cn(
                             "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
-                            pathname === "/app/leaderboard"
+                            pathname === "/leaderboard"
                               ? "bg-gray-100 text-foreground font-medium"
                               : "text-muted-foreground hover:text-foreground hover:bg-gray-50"
                           )}
@@ -693,11 +693,11 @@ export function AppNavbar() {
                   {user && (
                     <div className="border-t border-[#e5e7eb] p-4 space-y-1">
                       <Link
-                        href={profile?.username ? `/app/profile/${profile.username}` : "/app/settings"}
+                        href={profile?.username ? `/profile/${profile.username}` : "/settings"}
                         onClick={() => setMobileMenuOpen(false)}
                         className={cn(
                           "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
-                          pathname.startsWith("/app/profile/")
+                          pathname.startsWith("/profile/")
                             ? "bg-gray-100 text-foreground font-medium"
                             : "text-muted-foreground hover:text-foreground hover:bg-gray-50"
                         )}
@@ -706,11 +706,11 @@ export function AppNavbar() {
                         Profile
                       </Link>
                       <Link
-                        href="/app/settings"
+                        href="/settings"
                         onClick={() => setMobileMenuOpen(false)}
                         className={cn(
                           "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
-                          pathname === "/app/settings"
+                          pathname === "/settings"
                             ? "bg-gray-100 text-foreground font-medium"
                             : "text-muted-foreground hover:text-foreground hover:bg-gray-50"
                         )}
@@ -742,7 +742,7 @@ export function AppNavbar() {
       <div className="hidden md:flex w-full px-4 h-16 items-center relative">
         {/* Left Side: Space for sidebar on desktop */}
         <div className="flex items-center shrink-0 gap-6">
-          <Link href="/app" className="hidden md:flex items-center gap-2">
+          <Link href="/" className="hidden md:flex items-center gap-2">
             <Image src="/logo.png" alt="onseek" width={24} height={24} className="h-6 w-auto" priority />
             <span className="text-xl text-black" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>
               onseek
@@ -761,11 +761,11 @@ export function AppNavbar() {
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-56 bg-white shadow-lg overflow-y-auto max-h-[70vh] z-[100]">
-                <DropdownMenuItem onClick={() => router.push("/app/popular")} className="font-medium">
+                <DropdownMenuItem onClick={() => router.push("/popular")} className="font-medium">
                   <TrendingUp className="h-4 w-4 mr-2" />
                   Popular
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => router.push("/app/latest")} className="font-medium">
+                <DropdownMenuItem onClick={() => router.push("/latest")} className="font-medium">
                   <Sparkles className="h-4 w-4 mr-2" />
                   New and Noteworthy
                 </DropdownMenuItem>
@@ -886,7 +886,7 @@ export function AppNavbar() {
                       </div>
                     </div>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => router.push(profile?.username ? `/app/profile/${profile.username}` : "/app/settings")} className="cursor-pointer font-medium py-2">
+                    <DropdownMenuItem onClick={() => router.push(profile?.username ? `/profile/${profile.username}` : "/settings")} className="cursor-pointer font-medium py-2">
                       <User className="h-4 w-4 mr-2 text-muted-foreground" />
                       Profile
                     </DropdownMenuItem>

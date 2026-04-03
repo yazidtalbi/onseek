@@ -88,7 +88,7 @@ export function CountryFlagSelector() {
     }
     // Reset to page 1 when filter changes
     params.delete("page");
-    router.push(`/app?${params.toString()}`);
+    router.push(`/?${params.toString()}`);
     setOpen(false);
   };
 

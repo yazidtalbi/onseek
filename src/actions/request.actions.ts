@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { requestSchema } from "@/lib/validators";
-import { createRequestUrl } from "@/lib/utils/slug";
+import { createRequestUrl, generateSlug } from "@/lib/utils/slug";
 
 function parseLinks(raw?: string | null) {
   if (!raw) return [];
@@ -123,9 +123,31 @@ export async function createRequestAction(formData: FormData) {
   console.log("User ID:", user.id);
   console.log("User Country from Profile:", userCountry);
   
+  // Generate a unique slug based on title
+  const baseSlug = generateSlug(parsed.data.title);
+  let slug = baseSlug;
+  let counter = 1;
+  let isUnique = false;
+  
+  while (!isUnique) {
+    const { data } = await supabase
+      .from("requests")
+      .select("id")
+      .eq("slug", slug)
+      .maybeSingle();
+      
+    if (!data) {
+      isUnique = true;
+    } else {
+      slug = `${baseSlug}-${counter}`;
+      counter++;
+    }
+  }
+  
   const insertData = {
     user_id: user.id,
     title: parsed.data.title,
+    slug,
     description: descriptionWithMetadata,
     category: parsed.data.category,
     budget_min: parsed.data.budgetMin,
@@ -182,12 +204,12 @@ export async function createRequestAction(formData: FormData) {
     );
   }
 
-  revalidatePath("/app");
-  revalidatePath("/app/requests");
-  revalidatePath("/app/submissions");
+  revalidatePath("/");
+  revalidatePath("/requests");
+  revalidatePath("/submissions");
   revalidatePath("/");
   
-  const url = createRequestUrl(request.id, request.title);
+  const url = createRequestUrl(request.slug);
   return { success: true, url };
 }
 
@@ -205,10 +227,10 @@ export async function updateRequestStatusAction(formData: FormData) {
   if (error) {
     return { error: error.message };
   }
-  revalidatePath(`/app/requests/${requestId}`);
-  revalidatePath("/app");
-  revalidatePath("/app/requests");
-  revalidatePath("/app/submissions");
+  revalidatePath(`/requests/${requestId}`);
+  revalidatePath("/");
+  revalidatePath("/requests");
+  revalidatePath("/submissions");
   return { success: true };
 }
 
@@ -252,10 +274,10 @@ export async function markSolvedAction(formData: FormData) {
     });
   }
 
-  revalidatePath(`/app/requests/${requestId}`);
-  revalidatePath("/app");
-  revalidatePath("/app/requests");
-  revalidatePath("/app/submissions");
+  revalidatePath(`/requests/${requestId}`);
+  revalidatePath("/");
+  revalidatePath("/requests");
+  revalidatePath("/submissions");
   return { success: true };
 }
 

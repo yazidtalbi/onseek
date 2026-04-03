@@ -1,20 +1,19 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { PersonalItemsList } from "@/components/personal-items/personal-items-list";
-import { Package, Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
+import { PersonalItemsListWrapper } from "@/components/personal-items/personal-items-list-wrapper";
+import { AddItemModal } from "@/components/personal-items/add-item-modal";
+import { Package } from "lucide-react";
 import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
-export default async function PersonalItemsPage() {
+export default async function InventoryPage() {
   const supabase = await createServerSupabaseClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect("/login?redirectTo=/app/personal-items");
+    redirect("/login?redirectTo=/inventory");
   }
 
   // Fetch user's personal items
@@ -32,23 +31,17 @@ export default async function PersonalItemsPage() {
     <div className="space-y-6 w-full max-w-3xl mx-auto">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-semibold flex items-center gap-2">
-            <Package className="h-8 w-8" />
-            Personal Items
+          <h1 className="text-3xl text-foreground flex items-center gap-2" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>
+            Inventory
           </h1>
           <p className="text-sm text-muted-foreground mt-2">
             Manage your saved personal items. Use them when submitting to requests.
           </p>
         </div>
-        <Button asChild className="h-11 rounded-full bg-[#212133] hover:bg-[#212133]/90 text-white px-8 font-bold transition-colors">
-          <Link href="/app/new">
-            <Plus className="h-4 w-4 mr-2" />
-            New item
-          </Link>
-        </Button>
+        <AddItemModal />
       </div>
 
-      <PersonalItemsList initialItems={items || []} />
+      <PersonalItemsListWrapper initialItems={items || []} />
     </div>
   );
 }

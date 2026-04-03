@@ -133,12 +133,12 @@ function MobileSidebarContent({ onClose }: { onClose?: () => void }) {
   };
 
   const mainNavItems = [
-    { href: "/app", label: "Home", icon: Home },
-    { href: "/app/requests", label: "Requests", icon: Hand },
-    { href: "/app/submissions", label: "Proposals", icon: FileText },
-    { href: "/app/inventory", label: "Inventory", icon: Library },
+    { href: "/", label: "Home", icon: Home },
+    { href: "/requests", label: "Requests", icon: Hand },
+    { href: "/submissions", label: "Proposals", icon: FileText },
+    { href: "/inventory", label: "Inventory", icon: Library },
     { href: "/messages", label: "Messages", icon: MessageCircleMore },
-    { href: "/app/leaderboard", label: "Leaderboard", icon: Trophy },
+    { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
   ];
 
   const hasUnreadMessages = useUnreadMessages();
@@ -167,7 +167,7 @@ function MobileSidebarContent({ onClose }: { onClose?: () => void }) {
   return (
     <div className="flex flex-col h-full overflow-y-auto">
       <div className="px-4 mb-6">
-        <Link href="/app" onClick={handleClose} className="flex items-center gap-2 group">
+        <Link href="/" onClick={handleClose} className="flex items-center gap-2 group">
           <Image src="/logo.png" alt="onseek" width={100} height={24} className="h-6 w-auto" priority />
           <span className="text-xl text-black" style={{ fontFamily: "var(--font-expanded)", fontWeight: 600 }}>
             onseek
@@ -177,7 +177,7 @@ function MobileSidebarContent({ onClose }: { onClose?: () => void }) {
 
       <nav className="space-y-1 px-4 flex-1">
         {mainNavItems.map((item) => {
-          const isActive = pathname === item.href || (item.href !== "/app" && pathname.startsWith(item.href));
+          const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
           return <NavLink key={item.href} item={item} active={isActive} />;
         })}
       </nav>
@@ -186,11 +186,11 @@ function MobileSidebarContent({ onClose }: { onClose?: () => void }) {
         {user ? (
           <>
             <Link
-              href="/app/settings"
+              href="/settings"
               onClick={handleClose}
               className={cn(
                 "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
-                pathname === "/app/settings"
+                pathname === "/settings"
                   ? "bg-transparent text-[#7a61ff]"
                   : "text-gray-400 hover:text-foreground hover:bg-gray-50"
               )}
@@ -228,12 +228,12 @@ function DesktopSidebarContent() {
   };
 
   const mainNavItems = [
-    { href: "/app", label: "Home", icon: Home },
-    { href: "/app/requests", label: "Requests", icon: Hand },
-    { href: "/app/submissions", label: "Proposals", icon: FileText },
-    { href: "/app/inventory", label: "Inventory", icon: Library },
+    { href: "/", label: "Home", icon: Home },
+    { href: "/requests", label: "Requests", icon: Hand },
+    { href: "/submissions", label: "Proposals", icon: FileText },
+    { href: "/inventory", label: "Inventory", icon: Library },
     { href: "/messages", label: "Messages", icon: MessageCircleMore },
-    { href: "/app/leaderboard", label: "Leaderboard", icon: Trophy },
+    { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
   ];
 
   return (
@@ -245,7 +245,7 @@ function DesktopSidebarContent() {
           {mainNavItems.map((item) => {
             const isActive =
               pathname === item.href ||
-              (item.href !== "/app" && pathname.startsWith(item.href));
+              (item.href !== "/" && pathname.startsWith(item.href));
             return (
               <Tooltip key={item.href}>
                 <TooltipTrigger asChild>
@@ -281,10 +281,10 @@ function DesktopSidebarContent() {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Link
-                    href="/app/settings"
+                    href="/settings"
                     className={cn(
                       "flex items-center justify-center w-12 h-12 rounded-md transition-colors",
-                      pathname === "/app/settings"
+                      pathname === "/settings"
                         ? "bg-transparent text-[#7a61ff]"
                         : "text-gray-400 hover:text-foreground hover:bg-gray-50"
                     )}

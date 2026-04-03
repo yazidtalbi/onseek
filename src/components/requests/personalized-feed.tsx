@@ -43,13 +43,13 @@ export function PersonalizedFeed({
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const { user, profile } = useAuth();
-  const isHomePage = pathname === "/app" || pathname === "/" || pathname.startsWith("/app/requests/");
-  const showHero = (pathname === "/app" || pathname === "/") && !user;
+  const isHomePage = pathname === "/" || pathname === "/" || pathname.startsWith("/requests/");
+  const showHero = (pathname === "/" || pathname === "/") && !user;
   const [mode, setMode] = useState<FeedMode>(() => {
     // Determine mode from pathname first
-    if (pathname.includes("/app/popular")) return "trending";
-    if (pathname.includes("/app/latest")) return "latest";
-    if (pathname.includes("/app/for-you")) return "for_you";
+    if (pathname.includes("/popular")) return "trending";
+    if (pathname.includes("/latest")) return "latest";
+    if (pathname.includes("/for-you")) return "for_you";
 
     const modeParam = searchParams.get("mode");
     return (modeParam === "for_you" || modeParam === "latest" || modeParam === "trending"
@@ -206,7 +206,7 @@ export function PersonalizedFeed({
     const modePath = REVERSE_MODE_MAP[newMode] || "for-you";
     const categoryPath = category && category !== "All" ? `/${getCategorySlug(category)}` : "";
 
-    router.push(`/app/${modePath}${categoryPath}`);
+    router.push(`/${modePath}${categoryPath}`);
   };
 
   // Infinite scroll: load more when user scrolls near bottom
@@ -304,7 +304,7 @@ export function PersonalizedFeed({
                   Personalize your feed by selecting your interests
                 </p>
                 <Button asChild className="bg-[#7755FF] hover:bg-[#6644EE]">
-                  <Link href="/app/settings">Choose Categories</Link>
+                  <Link href="/settings">Choose Categories</Link>
                 </Button>
               </div>
             ) : (
@@ -395,7 +395,7 @@ export function PersonalizedFeed({
                 Let your item come fiiind you
               </h2>
               <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
-                <Button size="lg" className="rounded-full bg-white hover:bg-white/90 text-[#785ffe] px-10 h-14 text-[16px] font-bold w-full sm:w-auto shadow-sm" onClick={() => router.push(user ? '/app/new' : '/signup')}>
+                <Button size="lg" className="rounded-full bg-white hover:bg-white/90 text-[#785ffe] px-10 h-14 text-[16px] font-bold w-full sm:w-auto shadow-sm" onClick={() => router.push(user ? '/new' : '/signup')}>
                   Join the community now
                 </Button>
               </div>

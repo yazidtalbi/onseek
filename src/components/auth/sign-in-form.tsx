@@ -23,7 +23,7 @@ export function SignInForm({ onSuccess }: { onSuccess?: () => void }) {
   const [isGooglePending, setIsGooglePending] = React.useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectTo = searchParams.get("redirectTo") || "/app";
+  const redirectTo = searchParams.get("redirectTo") || "/";
   const form = useForm<SignInValues>({
     resolver: zodResolver(signInSchema),
     defaultValues: { emailOrUsername: "", password: "" },
@@ -79,7 +79,7 @@ export function SignInForm({ onSuccess }: { onSuccess?: () => void }) {
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/auth/callback?next=/app`,
+          redirectTo: `${window.location.origin}/auth/callback?next=/`,
           queryParams: {
             prompt: 'select_account',
           },

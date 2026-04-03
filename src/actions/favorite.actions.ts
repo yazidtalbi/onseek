@@ -39,7 +39,7 @@ export async function toggleFavoriteAction(formData: FormData) {
       return { error: error.message };
     }
     
-    revalidatePath(`/app/requests/${requestId}`);
+    revalidatePath(`/requests/${requestId}`);
     revalidatePath("/");
     return { success: true, isFavorite: false };
   } else {
@@ -55,7 +55,7 @@ export async function toggleFavoriteAction(formData: FormData) {
       return { error: error.message };
     }
     
-    revalidatePath(`/app/requests/${requestId}`);
+    revalidatePath(`/requests/${requestId}`);
     revalidatePath("/");
     return { success: true, isFavorite: true };
   }

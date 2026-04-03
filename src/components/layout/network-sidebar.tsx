@@ -87,20 +87,20 @@ export function NetworkSidebar() {
   }, [user]);
 
   const navLinks = [
-    { href: "/app", label: "Home", icon: Home },
-    { href: "/app/requests", label: "Requests", icon: ClipboardList },
-    { href: "/app/submissions", label: "Proposals", icon: Send },
-    { href: "/app/personal-items", label: "Inventory", icon: Package },
-    { href: "/app/saved", label: "Saved", icon: Bookmark },
-    { href: "/app/notifications", label: "Notifications", icon: Bell, badge: unreadCount },
-    { href: "/app/leaderboard", label: "Leaderboard", icon: Trophy },
+    { href: "/", label: "Home", icon: Home },
+    { href: "/requests", label: "Requests", icon: ClipboardList },
+    { href: "/submissions", label: "Proposals", icon: Send },
+    { href: "/personal-items", label: "Inventory", icon: Package },
+    { href: "/saved", label: "Saved", icon: Bookmark },
+    { href: "/notifications", label: "Notifications", icon: Bell, badge: unreadCount },
+    { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
   ];
 
   const isActive = (href: string) => {
-    if (href === "/app") {
-      return pathname === "/app";
+    if (href === "/") {
+      return pathname === "/";
     }
-    return pathname === href || (href !== "/app" && pathname.startsWith(href));
+    return pathname === href || (href !== "/" && pathname.startsWith(href));
   };
 
   const handleGuestClick = (href?: string) => {
@@ -112,7 +112,7 @@ export function NetworkSidebar() {
     <section className="flex flex-col h-[calc(100vh-4rem)] max-h-[calc(100vh-4rem)]">
       {/* Logo */}
       <Link
-        href={user ? "/app" : "/login"}
+        href={user ? "/" : "/login"}
         prefetch={true}
         onClick={(e) => {
           if (!user) {
@@ -182,7 +182,7 @@ export function NetworkSidebar() {
                 <Icon
                   className={cn(
                     "h-5 w-5 shrink-0",
-                    link.href === "/app/saved" && active && "fill-current",
+                    link.href === "/saved" && active && "fill-current",
                     !active && "text-gray-400"
                   )}
                 />
@@ -206,14 +206,14 @@ export function NetworkSidebar() {
             asChild 
             className="w-full h-14 rounded-full bg-[#212733] text-white hover:bg-[#212733]/90 border border-[#222234] text-base font-medium"
           >
-            <Link href="/app/new">
+            <Link href="/new">
               Post request
             </Link>
           </Button>
         ) : (
           <Button
             className="w-full h-14 rounded-full bg-[#212733] text-white hover:bg-[#212733]/90 border border-[#222234] text-base font-medium"
-            onClick={() => handleGuestClick("/app/new")}
+            onClick={() => handleGuestClick("/new")}
           >
             Log in to post
           </Button>
@@ -235,13 +235,13 @@ export function NetworkSidebar() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuItem asChild>
-                <Link href={profile?.username ? `/app/profile/${profile.username}` : "/app/settings"} className="flex items-center">
+                <Link href={profile?.username ? `/profile/${profile.username}` : "/settings"} className="flex items-center">
                   <User className="h-4 w-4 mr-2" />
                   Profile
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link href="/app/settings" className="flex items-center">
+                <Link href="/settings" className="flex items-center">
                   <Settings className="h-4 w-4 mr-2" />
                   Settings
                 </Link>

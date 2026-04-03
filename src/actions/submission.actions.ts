@@ -119,9 +119,9 @@ export async function createSubmissionAction(formData: FormData) {
   // Notification is now handled automatically by database trigger (more efficient)
   // No need to manually create notification here
 
-  revalidatePath(`/app/requests/${requestId}`);
-  revalidatePath("/app/submissions");
-  revalidatePath("/app");
+  revalidatePath(`/requests/${requestId}`);
+  revalidatePath("/submissions");
+  revalidatePath("/");
   return { success: true };
 }
 

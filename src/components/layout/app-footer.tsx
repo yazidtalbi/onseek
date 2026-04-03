@@ -12,28 +12,28 @@ export function AppFooter() {
           <div className="space-y-3">
             <h4 className="text-sm font-semibold text-foreground">App</h4>
             <nav className="space-y-2">
-              <Link href="/app" className="block text-sm text-gray-600 hover:text-foreground transition-colors">
+              <Link href="/" className="block text-sm text-gray-600 hover:text-foreground transition-colors">
                 Home
               </Link>
-              <Link href="/app/new" className="block text-sm text-gray-600 hover:text-foreground transition-colors">
+              <Link href="/new" className="block text-sm text-gray-600 hover:text-foreground transition-colors">
                 Create a Request
               </Link>
-              <Link href="/app/requests" className="block text-sm text-gray-600 hover:text-foreground transition-colors">
+              <Link href="/requests" className="block text-sm text-gray-600 hover:text-foreground transition-colors">
                 My Requests
               </Link>
-              <Link href="/app/submissions" className="block text-sm text-gray-600 hover:text-foreground transition-colors">
+              <Link href="/submissions" className="block text-sm text-gray-600 hover:text-foreground transition-colors">
                 Proposals
               </Link>
-              <Link href="/app/personal-items" className="block text-sm text-gray-600 hover:text-foreground transition-colors">
+              <Link href="/personal-items" className="block text-sm text-gray-600 hover:text-foreground transition-colors">
                 Inventory
               </Link>
-              <Link href="/app/saved" className="block text-sm text-gray-600 hover:text-foreground transition-colors">
+              <Link href="/saved" className="block text-sm text-gray-600 hover:text-foreground transition-colors">
                 Saved
               </Link>
-              <Link href="/app/notifications" className="block text-sm text-gray-600 hover:text-foreground transition-colors">
+              <Link href="/notifications" className="block text-sm text-gray-600 hover:text-foreground transition-colors">
                 Notifications
               </Link>
-              <Link href="/app/leaderboard" className="block text-sm text-gray-600 hover:text-foreground transition-colors">
+              <Link href="/leaderboard" className="block text-sm text-gray-600 hover:text-foreground transition-colors">
                 Leaderboard
               </Link>
             </nav>
@@ -46,7 +46,7 @@ export function AppFooter() {
               {MAIN_CATEGORIES.map((category) => (
                 <Link
                   key={category}
-                  href={`/app/category/${category.toLowerCase()}`}
+                  href={`/category/${category.toLowerCase()}`}
                   className="block text-sm text-gray-600 hover:text-foreground transition-colors"
                 >
                   {category}

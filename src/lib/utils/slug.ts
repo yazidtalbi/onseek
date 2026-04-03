@@ -18,10 +18,10 @@ function getShortId(id: string): string {
 }
 
 /**
- * Create a request URL with ID and optional search params
+ * Create a request URL with slug and optional search params
  */
-export function createRequestUrl(id: string, searchParams?: string | URLSearchParams): string {
-  const base = `/app/requests/${id}`;
+export function createRequestUrl(slug: string, searchParams?: string | URLSearchParams): string {
+  const base = `/requests/${slug}`;
   if (!searchParams) return base;
   
   const paramsStr = typeof searchParams === 'string' ? searchParams : searchParams.toString();

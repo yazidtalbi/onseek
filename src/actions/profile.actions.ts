@@ -37,8 +37,8 @@ export async function updateProfileAction(formData: FormData) {
     return { error: error.message };
   }
 
-  revalidatePath("/app/settings");
-  revalidatePath(`/app/profile/${parsed.data.username}`);
+  revalidatePath("/settings");
+  revalidatePath(`/profile/${parsed.data.username}`);
   return { success: true };
 }
 
@@ -85,7 +85,7 @@ export async function updateContactInfoAction(formData: FormData) {
     return { error: error.message };
   }
 
-  revalidatePath("/app/settings");
+  revalidatePath("/settings");
   return { success: true };
 }
 

@@ -172,7 +172,7 @@ export function SubmissionCard({
             {username ? (
               <>
                 <Link
-                  href={`/app/profile/${username}`}
+                  href={`/profile/${username}`}
                   className="text-xs text-neutral-500 hover:text-neutral-700 hover:underline"
                   onClick={(e) => e.stopPropagation()}
                 >
@@ -318,7 +318,7 @@ export function SubmissionCard({
             </Button>
             {hideVotes ? (
               <Link
-                href={requestTitle ? createRequestUrl(requestId, requestTitle) : `/app/requests/${requestId}`}
+                href={requestTitle ? createRequestUrl(requestId, requestTitle) : `/requests/${requestId}`}
                 className="text-sm text-[#7755FF] hover:underline"
                 onClick={(e) => e.stopPropagation()}
                 scroll={false}

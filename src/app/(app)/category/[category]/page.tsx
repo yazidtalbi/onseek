@@ -6,5 +6,5 @@ export default async function CategoryRedirectPage({
   params: Promise<{ category: string }>;
 }) {
   const { category } = await params;
-  redirect(`/app/popular/${category.toLowerCase()}`);
+  redirect(`/popular/${category.toLowerCase()}`);
 }

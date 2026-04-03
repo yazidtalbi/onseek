@@ -17,7 +17,7 @@ const defaultContent = {
   ctaPrimaryText: "Start a request",
   ctaPrimaryLink: "/signup",
   ctaSecondaryText: "Explore live requests",
-  ctaSecondaryLink: "/app",
+  ctaSecondaryLink: "/",
   features: [
     {
       id: 1,
@@ -158,7 +158,7 @@ export default async function LandingPage() {
                 Explore the latest requests and submissions from the community.
               </p>
               <Button asChild variant="accent" size="lg">
-                <Link href="/app">Go to Dashboard</Link>
+                <Link href="/">Go to Dashboard</Link>
               </Button>
             </div>
           )}

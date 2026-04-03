@@ -28,27 +28,42 @@ function computeScore(
 export default async function InterceptedRequestPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ slug: string }>;
 }) {
-  const { id } = await params;
+  const { slug } = await params;
   const supabase = await createServerSupabaseClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Fetch all data in parallel
+  const requestRes = await supabase
+    .from("requests")
+    .select("*, profiles(username)")
+    .eq("slug", slug)
+    .maybeSingle();
+
+  let request = requestRes.data;
+  
+  // Fallback for legacy UUID links
+  if (!request && (slug.length >= 20 || slug.includes("-"))) {
+    const fallbackRes = await supabase
+      .from("requests")
+      .select("*, profiles(username)")
+      .eq("id", slug)
+      .maybeSingle();
+    request = fallbackRes.data;
+  }
+  
+  if (!request) notFound();
+  const id = request.id;
+
+  // Fetch relations in parallel using the retrieved ID
   const [
-    requestRes,
     linksRes,
     imagesRes,
     submissionsRes,
     favoriteRes,
   ] = await Promise.all([
-    supabase
-      .from("requests")
-      .select("*, profiles(username)")
-      .eq("id", id)
-      .single(),
     supabase.from("request_links").select("*").eq("request_id", id),
     supabase
       .from("request_images")
@@ -70,8 +85,6 @@ export default async function InterceptedRequestPage({
       : Promise.resolve({ data: null }),
   ]);
 
-  const request = requestRes.data;
-  if (!request) notFound();
 
   const initialSubmissions =
     submissionsRes.data?.map((item) =>

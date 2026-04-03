@@ -21,6 +21,7 @@ export type RequestItem = {
   id: string;
   user_id: string;
   title: string;
+  slug: string;
   description: string;
   category: string; // Legacy field, kept for backward compatibility
   budget_min: number | null;

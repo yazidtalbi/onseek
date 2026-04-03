@@ -45,11 +45,11 @@ export function CategoryPills({
   // Detect selected category from pathname or search params
   const pathParts = pathname.split('/');
   const lastPart = pathParts[pathParts.length - 1];
-  const isCategoryInPath = pathname.includes('/app/popular/') || pathname.includes('/app/latest/') || pathname.includes('/app/for-you/');
+  const isCategoryInPath = pathname.includes('/popular/') || pathname.includes('/latest/') || pathname.includes('/for-you/');
   const pathCategory = isCategoryInPath ? getCategoryName(lastPart) : null;
-  const isHomePage = pathname === "/app";
-  const isForYouPage = pathname.includes("/app/for-you");
-  const isSavedPage = pathname.includes("/app/saved");
+  const isHomePage = pathname === "/";
+  const isForYouPage = pathname.includes("/for-you");
+  const isSavedPage = pathname.includes("/saved");
 
   let selectedCategory = isHomePage ? "Discover" : (pathCategory || searchParams.get("category") || "Discover");
   if (isForYouPage) selectedCategory = "For You";
@@ -64,15 +64,15 @@ export function CategoryPills({
     // Maintain current category slug if present
     const pathParts = pathname.split('/');
     const lastPart = pathParts.pop();
-    const isCategoryPath = pathname.includes('/app/popular/') || pathname.includes('/app/latest/');
+    const isCategoryPath = pathname.includes('/popular/') || pathname.includes('/latest/');
     
     // Ignore words that are path roots like 'for-you', 'popular', 'latest'
     const isSpecialRoot = lastPart === 'for-you' || lastPart === 'popular' || lastPart === 'latest';
 
     if (isCategoryPath && lastPart && !isSpecialRoot) {
-      router.push(`/app/${modePath}/${lastPart}?${params.toString()}`);
+      router.push(`/${modePath}/${lastPart}?${params.toString()}`);
     } else {
-      router.push(`/app/${modePath}?${params.toString()}`);
+      router.push(`/${modePath}?${params.toString()}`);
     }
   };
 
@@ -106,27 +106,27 @@ export function CategoryPills({
     params.delete("page");
 
     if (category === "Discover") {
-      router.push("/app" + (params.toString() ? `?${params.toString()}` : ""));
+      router.push("/" + (params.toString() ? `?${params.toString()}` : ""));
       return;
     }
 
     if (category === "For You") {
-      router.push("/app/for-you" + (params.toString() ? `?${params.toString()}` : ""));
+      router.push("/for-you" + (params.toString() ? `?${params.toString()}` : ""));
       return;
     }
 
     if (category === "My saves") {
-      router.push("/app/saved");
+      router.push("/saved");
       return;
     }
 
     const modePath = mode === "for_you" ? "latest" : (REVERSE_MODE_MAP[mode] || "latest");
 
     if (category === "All") {
-      router.push(`/app/${modePath}?${params.toString()}`);
+      router.push(`/${modePath}?${params.toString()}`);
     } else {
       const slug = getCategorySlug(category);
-      router.push(`/app/${modePath}/${slug}?${params.toString()}`);
+      router.push(`/${modePath}/${slug}?${params.toString()}`);
     }
   };
 

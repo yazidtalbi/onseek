@@ -423,6 +423,7 @@ export function RequestForm({
     id: "preview",
     user_id: "preview",
     title: titleValue || "Your Request Title",
+    slug: "preview-slug",
     description: `<!--REQUEST_PREFS:${JSON.stringify({
       priceLock: form.watch("priceLock"),
       exactItem: form.watch("exactItem"),

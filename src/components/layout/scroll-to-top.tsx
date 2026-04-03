@@ -10,7 +10,7 @@ export function ScrollToTop() {
   const pathname = usePathname();
 
   // Hide on match page
-  if (pathname === "/app/requests/match") {
+  if (pathname === "/requests/match") {
     return null;
   }
 

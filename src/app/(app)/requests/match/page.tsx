@@ -188,7 +188,7 @@ export default function RequestsMatchPage() {
           <p className="text-muted-foreground mb-6">
             There are no more matching requests available at the moment.
           </p>
-          <Button onClick={() => router.push("/app")} variant="default">
+          <Button onClick={() => router.push("/")} variant="default">
             Browse all requests
           </Button>
         </div>
@@ -259,7 +259,7 @@ export default function RequestsMatchPage() {
             </Button>
             <Button
               onClick={() => {
-                router.push(`/app/requests/${currentRequest.id}`);
+                router.push(`/requests/${currentRequest.id}`);
               }}
               variant="default"
               size="lg"

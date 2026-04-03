@@ -58,8 +58,8 @@ export async function savePreferencesAction(categoryIds: string[]) {
     }
   }
 
-  revalidatePath("/app");
-  revalidatePath("/app/settings");
+  revalidatePath("/");
+  revalidatePath("/settings");
   return { success: true };
 }
 
@@ -110,7 +110,7 @@ export async function hideCategoryAction(categoryId: string) {
     .eq("user_id", user.id)
     .eq("category_id", categoryId);
 
-  revalidatePath("/app");
+  revalidatePath("/");
   return { success: true };
 }
 

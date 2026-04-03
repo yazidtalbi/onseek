@@ -28,7 +28,7 @@ export default async function LeaderboardPage() {
               <div>
                 <p className="text-sm text-muted-foreground">#{index + 1}</p>
                 <Link
-                  href={`/app/profile/${profile.username}`}
+                  href={`/profile/${profile.username}`}
                   className="text-lg font-semibold"
                 >
                   {profile.username}

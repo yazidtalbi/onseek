@@ -63,19 +63,19 @@ export function LoginInfoSection() {
         </p>
         <div className="space-y-2">
           <Link
-            href="/app/new"
+            href="/new"
             className="block text-sm text-[#7755FF] hover:text-[#6644EE] hover:underline"
           >
             → Create a new request
           </Link>
           <Link
-            href="/app"
+            href="/"
             className="block text-sm text-[#7755FF] hover:text-[#6644EE] hover:underline"
           >
             → Explore live requests
           </Link>
           <Link
-            href="/app/requests"
+            href="/requests"
             className="block text-sm text-[#7755FF] hover:text-[#6644EE] hover:underline"
           >
             → View your requests

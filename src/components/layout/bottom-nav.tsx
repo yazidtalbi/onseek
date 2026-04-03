@@ -11,12 +11,12 @@ export function BottomNav() {
   const { profile } = useAuth();
 
   const navItems = [
-    { href: "/app", label: "Home", icon: Home },
-    { href: "/app/requests", label: "My Requests", icon: ClipboardList },
-    { href: "/app/new", label: "New", icon: PlusCircle, cta: true },
-    { href: "/app/personal-items", label: "Items", icon: Package },
+    { href: "/", label: "Home", icon: Home },
+    { href: "/requests", label: "My Requests", icon: ClipboardList },
+    { href: "/new", label: "New", icon: PlusCircle, cta: true },
+    { href: "/personal-items", label: "Items", icon: Package },
     {
-      href: profile?.username ? `/app/profile/${profile.username}` : "/app/settings",
+      href: profile?.username ? `/profile/${profile.username}` : "/settings",
       label: "Profile",
       icon: User,
     },
@@ -28,7 +28,7 @@ export function BottomNav() {
         {navItems.map((item) => {
           const isActive =
             pathname === item.href ||
-            (item.href !== "/app" && pathname.startsWith(item.href));
+            (item.href !== "/" && pathname.startsWith(item.href));
           const Icon = item.icon;
           return (
             <Link

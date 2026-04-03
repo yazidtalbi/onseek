@@ -220,7 +220,7 @@ function RequestCardComponent({
                   {variant === "detail" && request.profiles?.username && (
                     <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
                       <Link
-                        href={`/app/profile/${request.profiles.username}`}
+                        href={`/profile/${request.profiles.username}`}
                         className="hover:text-gray-700 hover:underline"
                         onClick={(e) => e.stopPropagation()}
                       >
@@ -515,7 +515,7 @@ function RequestCardComponent({
         <div className="flex flex-col gap-3">
           {smallImages ? (
             <Link
-              href={createRequestUrl(request.id, searchParams)}
+              href={createRequestUrl(request.slug, searchParams)}
               prefetch={true}
               scroll={false}
               className="block h-full group/card"
@@ -588,7 +588,7 @@ function RequestCardComponent({
               return;
             }
 
-            router.push(createRequestUrl(request.id, searchParams), { scroll: false });
+            router.push(createRequestUrl(request.slug, searchParams), { scroll: false });
           }}
           className="block focus:outline-none cursor-pointer"
         >

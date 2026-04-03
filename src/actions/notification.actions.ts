@@ -23,8 +23,8 @@ export async function markNotificationReadAction(notificationId: string) {
     return { error: error.message };
   }
 
-  revalidatePath("/app/notifications");
-  revalidatePath("/app"); // Also revalidate the navbar
+  revalidatePath("/notifications");
+  revalidatePath("/"); // Also revalidate the navbar
   return { success: true };
 }
 
@@ -48,8 +48,8 @@ export async function markAllNotificationsReadAction() {
     return { error: error.message };
   }
 
-  revalidatePath("/app/notifications");
-  revalidatePath("/app"); // Also revalidate the navbar
+  revalidatePath("/notifications");
+  revalidatePath("/"); // Also revalidate the navbar
   return { success: true };
 }
 
@@ -73,7 +73,7 @@ export async function deleteNotificationAction(notificationId: string) {
     return { error: error.message };
   }
 
-  revalidatePath("/app/notifications");
-  revalidatePath("/app"); // Also revalidate the navbar
+  revalidatePath("/notifications");
+  revalidatePath("/"); // Also revalidate the navbar
   return { success: true };
 }

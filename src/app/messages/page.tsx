@@ -50,7 +50,7 @@ export default function MessagesPage() {
     <div className="flex flex-col h-screen bg-white overflow-hidden">
       {/* Simple Messages Navbar */}
       <header className="h-16 border-b flex items-center justify-between px-4 sm:px-6 shrink-0 bg-white">
-        <Link href="/app" className="flex items-center gap-2">
+        <Link href="/" className="flex items-center gap-2">
           <Image
             src="/logo.png"
             alt="onseek"
@@ -64,7 +64,7 @@ export default function MessagesPage() {
           </span>
         </Link>
         <Link 
-          href="/app"
+          href="/"
           className="text-sm font-medium text-neutral-600 hover:text-neutral-900 flex items-center gap-2 transition-colors"
         >
           Return to app

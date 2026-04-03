@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import type { Submission } from "@/lib/types";
@@ -34,9 +34,9 @@ function computeScore(
 export default async function RequestDetailPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ slug: string }>;
 }) {
-  const { id } = await params;
+  const { slug } = await params;
   const supabase = await createServerSupabaseClient();
   const {
     data: { user },
@@ -45,12 +45,25 @@ export default async function RequestDetailPage({
   const { data: request } = await supabase
     .from("requests")
     .select("*, profiles(username)")
-    .eq("id", id)
-    .single();
+    .eq("slug", slug)
+    .maybeSingle();
 
   if (!request) {
+    if (slug.length >= 20 || slug.includes("-")) {
+      const { data: fallbackReq } = await supabase
+        .from("requests")
+        .select("slug")
+        .eq("id", slug)
+        .maybeSingle();
+        
+      if (fallbackReq && fallbackReq.slug) {
+        redirect(`/requests/${fallbackReq.slug}`);
+      }
+    }
     notFound();
   }
+
+  const id = request.id;
 
   const { data: links } = await supabase
     .from("request_links")

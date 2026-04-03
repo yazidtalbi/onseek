@@ -5,8 +5,8 @@ import { cn } from "@/lib/utils";
 
 export function MaxWidthWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const isAppHome = pathname === "/app";
-  const isRequestPage = pathname.startsWith("/app/requests/") && pathname !== "/app/requests";
+  const isAppHome = pathname === "/";
+  const isRequestPage = pathname.startsWith("/requests/") && pathname !== "/requests";
 
   return (
     <div

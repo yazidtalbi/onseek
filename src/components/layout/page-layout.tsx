@@ -6,13 +6,13 @@ import { cn } from "@/lib/utils";
 
 export function PageLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const showPromotional = false; // pathname === "/app";
+  const showPromotional = false; // pathname === "/";
 
   if (!showPromotional) {
     return (
       <div className={cn(
         "flex-1 w-full mx-auto px-4 md:px-6 pb-8",
-        pathname === "/app" || pathname === "/" || pathname.startsWith("/app/") ? "pt-0" : "pt-8"
+        pathname === "/" || pathname.startsWith("/") ? "pt-0" : "pt-8"
       )}>
         {children}
       </div>

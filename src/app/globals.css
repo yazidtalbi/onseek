@@ -101,7 +101,7 @@ h6,
 }
 
 /* Logo font - Zalando Sans SemiExpanded */
-a[href="/app"].text-xl.font-semibold,
+a[href="/"].text-xl.font-semibold,
 a[href="/"].text-lg.font-semibold,
 a[href="/"].text-xl {
   font-family: var(--font-expanded);

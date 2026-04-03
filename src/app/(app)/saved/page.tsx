@@ -28,7 +28,7 @@ export default async function SavedRequestsPage({
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect("/login?redirectTo=/app/saved");
+    redirect("/login?redirectTo=/saved");
   }
 
   // Fetch user's favorites

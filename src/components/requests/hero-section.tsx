@@ -114,7 +114,7 @@ export function HeroSection({ user, tradeMode, setTradeMode }: HeroSectionProps)
                 <Button
                   onClick={() => {
                     if (user) {
-                      router.push('/app/personal-items');
+                      router.push('/personal-items');
                     } else {
                       setIsAuthModalOpen(true);
                     }
