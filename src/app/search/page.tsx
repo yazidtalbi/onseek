@@ -3,7 +3,6 @@ import { RequestFilters } from "@/components/requests/request-filters";
 import { RequestFeed } from "@/components/requests/request-feed";
 import { AppNavbar } from "@/components/layout/app-navbar";
 import { AppFooter } from "@/components/layout/app-footer";
-import { BottomNav } from "@/components/layout/bottom-nav";
 import { AuthProvider } from "@/components/layout/auth-provider";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
@@ -200,7 +199,7 @@ export default async function SearchPage({
 
   return (
     <AuthProvider user={user ?? null} profile={resolvedProfile ?? null}>
-      <div className="flex flex-col min-h-screen bg-background pb-24">
+      <div className="flex flex-col min-h-screen bg-background pb-0">
         <AppNavbar />
         <main className="flex-1 w-full px-4 py-6 md:px-6">
           <div className="mx-auto max-w-7xl w-full space-y-8">
@@ -256,7 +255,6 @@ export default async function SearchPage({
         <div className="mx-auto max-w-7xl w-full">
           <AppFooter />
         </div>
-        <BottomNav />
       </div>
     </AuthProvider>
   );

@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { FiltersModal } from "@/components/requests/filters-modal";
 import { getCategorySlug, getCategoryName, REVERSE_MODE_MAP } from "@/lib/utils/category-routing";
 import type { FeedMode } from "@/lib/types";
+import { useAuth } from "@/components/layout/auth-provider";
 import {
   Select,
   SelectContent,
@@ -37,6 +38,7 @@ export function CategoryPills({
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const scrollContainerRef = React.useRef<HTMLDivElement>(null);
+  const { user } = useAuth();
   const [canScrollCategoriesRight, setCanScrollCategoriesRight] = React.useState(true);
   const [canScrollCategoriesLeft, setCanScrollCategoriesLeft] = React.useState(false);
 
@@ -46,21 +48,29 @@ export function CategoryPills({
   const isCategoryInPath = pathname.includes('/app/popular/') || pathname.includes('/app/latest/') || pathname.includes('/app/for-you/');
   const pathCategory = isCategoryInPath ? getCategoryName(lastPart) : null;
   const isHomePage = pathname === "/app";
+  const isForYouPage = pathname.includes("/app/for-you");
+  const isSavedPage = pathname.includes("/app/saved");
 
-  const selectedCategory = isHomePage ? "Discover" : (pathCategory || searchParams.get("category") || "Discover");
+  let selectedCategory = isHomePage ? "Discover" : (pathCategory || searchParams.get("category") || "Discover");
+  if (isForYouPage) selectedCategory = "For You";
+  if (isSavedPage) selectedCategory = "My saves";
 
   const handleModeChange = (newMode: string) => {
     const params = new URLSearchParams(searchParams.toString());
     params.delete("page");
 
-    const modePath = REVERSE_MODE_MAP[newMode as FeedMode] || "for-you";
+    const modePath = REVERSE_MODE_MAP[newMode as FeedMode] || "latest";
 
     // Maintain current category slug if present
-    const categorySlug = pathname.split('/').pop();
-    const isCategoryPath = pathname.includes('/app/popular/') || pathname.includes('/app/latest/') || pathname.includes('/app/for-you/');
+    const pathParts = pathname.split('/');
+    const lastPart = pathParts.pop();
+    const isCategoryPath = pathname.includes('/app/popular/') || pathname.includes('/app/latest/');
+    
+    // Ignore words that are path roots like 'for-you', 'popular', 'latest'
+    const isSpecialRoot = lastPart === 'for-you' || lastPart === 'popular' || lastPart === 'latest';
 
-    if (isCategoryPath && categorySlug && categorySlug !== modePath) {
-      router.push(`/app/${modePath}/${categorySlug}?${params.toString()}`);
+    if (isCategoryPath && lastPart && !isSpecialRoot) {
+      router.push(`/app/${modePath}/${lastPart}?${params.toString()}`);
     } else {
       router.push(`/app/${modePath}?${params.toString()}`);
     }
@@ -100,7 +110,17 @@ export function CategoryPills({
       return;
     }
 
-    const modePath = REVERSE_MODE_MAP[mode] || "for-you";
+    if (category === "For You") {
+      router.push("/app/for-you" + (params.toString() ? `?${params.toString()}` : ""));
+      return;
+    }
+
+    if (category === "My saves") {
+      router.push("/app/saved");
+      return;
+    }
+
+    const modePath = mode === "for_you" ? "latest" : (REVERSE_MODE_MAP[mode] || "latest");
 
     if (category === "All") {
       router.push(`/app/${modePath}?${params.toString()}`);
@@ -130,7 +150,7 @@ export function CategoryPills({
 
   const priceMax = searchParams.get("priceMax") || "";
   const country = searchParams.get("country") || "";
-  const categories = ["Discover", ...MAIN_CATEGORIES];
+  const categories = ["Discover", ...(user ? ["For You", "My saves"] : []), ...MAIN_CATEGORIES];
   const [filtersOpen, setFiltersOpen] = React.useState(false);
   const hasActiveFilters = searchParams.get("priceMin") || searchParams.get("priceMax") || searchParams.get("country");
 
@@ -223,14 +243,13 @@ export function CategoryPills({
           </button>
 
           {/* Sort (Latest) */}
-          <Select value={mode} onValueChange={handleModeChange}>
+          <Select value={mode === "for_you" ? "latest" : mode} onValueChange={handleModeChange}>
             <SelectTrigger className="px-3 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors flex items-center gap-2 border-transparent bg-white text-gray-600 hover:text-gray-900 h-9 shadow-none focus:ring-0 w-auto">
               <span className="truncate">
-                {mode === "for_you" ? "For you" : mode === "trending" ? "Trending" : "Latest"}
+                {mode === "trending" ? "Trending" : "Latest"}
               </span>
             </SelectTrigger>
             <SelectContent className="bg-white min-w-[150px]">
-              <SelectItem value="for_you" disabled={!hasPreferences}>For you</SelectItem>
               <SelectItem value="latest">Latest</SelectItem>
               <SelectItem value="trending">Trending</SelectItem>
             </SelectContent>

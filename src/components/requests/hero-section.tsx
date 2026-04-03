@@ -65,8 +65,8 @@ export function HeroSection({ user, tradeMode, setTradeMode }: HeroSectionProps)
           >
             Stop searching<br />& start <span className="text-[#7860fe] bg-[#f0edff] px-3 py-1 rounded-l-lg pb-1.5 align-baseline border-solid border-r-[3px]" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 500, borderRightColor: "#7860fe" }}>seeking</span>
           </h1>
-          <p className="mx-auto mt-4 max-w-xl text-base text-gray-500 sm:text-lg">
-            Post a request, receive offers, compare deals,<br />and connect with the right seller.
+          <p className="mx-auto mt-4 max-w-xl text-base text-gray-500 sm:text-lg px-4 sm:px-0">
+            Post a request, receive offers, compare deals, and connect with the right seller.
           </p>
 
           <div className={cn(

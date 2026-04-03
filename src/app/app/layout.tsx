@@ -1,6 +1,5 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { AppNavbar } from "@/components/layout/app-navbar";
-import { BottomNav } from "@/components/layout/bottom-nav";
 import { ScrollToTop } from "@/components/layout/scroll-to-top";
 import { AuthProvider } from "@/components/layout/auth-provider";
 import { OnboardingModal } from "@/components/auth/onboarding-modal";
@@ -80,7 +79,7 @@ export default async function AppLayout({
 
   return (
     <SidebarProvider>
-      <div className="flex flex-col min-h-screen bg-background pb-20 md:pb-0 overflow-x-clip">
+      <div className="flex flex-col min-h-screen bg-background pb-0 overflow-x-clip">
         <AppNavbar />
         <div className="flex-1 flex min-h-0 w-full relative">
           <AppSidebar>
@@ -90,7 +89,6 @@ export default async function AppLayout({
             </main>
           </AppSidebar>
         </div>
-        <BottomNav />
         <ScrollToTop />
       </div>
     </SidebarProvider>

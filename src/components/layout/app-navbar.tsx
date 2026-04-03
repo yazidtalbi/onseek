@@ -269,10 +269,16 @@ export function AppNavbar() {
     return () => window.removeEventListener('open-create-request-modal', handleOpenCreateModal);
   }, [searchParams, pathname, router]);
 
-  const handleSignOut = () => {
-    startTransition(async () => {
-      await signOutAction();
-    });
+  const handleSignOut = async () => {
+    try {
+      const supabase = createBrowserSupabaseClient();
+      await supabase.auth.signOut();
+      
+      // Force hard refresh to root
+      window.location.href = "/";
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
   };
   
   const navItems: { href: string; label: string }[] = [];
@@ -371,107 +377,85 @@ export function AppNavbar() {
 
   return (
     <header className="sticky top-0 z-20 w-full bg-white border-b border-[#e5e7eb]">
-      {/* Mobile Navbar */}
-      <div className="md:hidden flex items-center justify-between py-3 px-4 md:px-6 max-w-[1360px] mx-auto w-full">
-        {/* Brand */}
-        <Link href="/app" prefetch={true} className="shrink-0 flex items-center gap-2">
-          <Image
-            src="/logo.png"
-            alt="onseek"
-            width={120}
-            height={32}
-            className="h-8 w-auto"
-            priority
-          />
-          <span className="text-xl text-black" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>
-            onseek
-          </span>
-        </Link>
-        
-        {/* Right side: Create Request, Search and Profile Menu */}
-        <div className="flex items-center gap-2">
-          {/* Create Request Button */}
+      {/* Mobile Navbar Container */}
+      <div className="md:hidden flex flex-col w-full relative z-20 bg-white">
+        {/* Top bar */}
+        <div className="flex items-center justify-between py-3 px-4 w-full">
           {user ? (
-            <Button onClick={() => setIsCreateModalOpen(true)} size="icon" className="rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300">
-              <Plus className="h-4 w-4" />
-            </Button>
-          ) : (
-            <Button onClick={() => setIsCreateModalOpen(true)} size="icon" className="rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300">
-              <Plus className="h-4 w-4" />
-            </Button>
-          )}
-
-          {/* Search Icon - Opens Bottom Sheet */}
-          <BottomSheet open={searchSheetOpen} onOpenChange={setSearchSheetOpen}>
-            <BottomSheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="relative">
-                <Search className="h-5 w-5" />
-              </Button>
-            </BottomSheetTrigger>
-            <BottomSheetContent>
-              <BottomSheetHeader>
-                <BottomSheetTitle>Search</BottomSheetTitle>
-              </BottomSheetHeader>
-              <form action="/search" method="get" className="space-y-4 mt-4">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    name="q"
-                    placeholder="Search..."
-                    className="pl-9  border w-full"
-                  />
-                </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button type="button" variant="outline" className="w-full justify-between">
-                      {searchType === "requests" ? "Requests" : "Items"}
-                      <ChevronDown className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuItem onClick={() => setSearchType("requests")}>
-                      <div className="flex flex-col">
-                        <span className="font-medium">Requests</span>
-                        <span className="text-xs text-muted-foreground">Search community requests</span>
-                      </div>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setSearchType("items")}>
-                      <div className="flex flex-col">
-                        <span className="font-medium">Items</span>
-                        <span className="text-xs text-muted-foreground">Search products and items</span>
-                      </div>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-                <Button type="submit" className="w-full bg-[#7755FF] hover:bg-[#6644EE]" onClick={() => setSearchSheetOpen(false)}>
-                  Search
+            <>
+              {/* Left: Hamburger, Logo */}
+              <div className="flex items-center gap-3">
+                <Button variant="ghost" size="icon" className="h-9 w-9 -ml-2" onClick={() => setMobileMenuOpen(true)}>
+                  <Menu className="h-5 w-5" />
                 </Button>
-              </form>
-            </BottomSheetContent>
-          </BottomSheet>
+                <Link href="/app" prefetch={true} className="shrink-0 flex items-center gap-2">
+                  <Image src="/logo.png" alt="onseek" width={100} height={28} className="h-6 w-auto" priority />
+                  <span className="text-lg text-black" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>onseek</span>
+                </Link>
+              </div>
 
-          {/* Profile Image Menu - Opens Full Screen Modal */}
-          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-            <SheetTrigger asChild>
-              <button className={cn(
-                "flex items-center justify-center h-8 w-8 rounded-full bg-gray-100 text-gray-700 font-bold text-xs hover:bg-gray-200 transition-colors overflow-hidden relative",
-                !user && "bg-gray-100"
-              )}>
-                {user && profile?.avatar_url && !avatarError ? (
-                  <img 
-                    src={profile.avatar_url} 
-                    alt={profile.username || "User"} 
-                    className="w-full h-full object-cover"
-                    onError={() => setAvatarError(true)}
-                  />
-                ) : user && profile ? (
-                  profile.username?.charAt(0).toUpperCase() || "U"
-                ) : (
-                  <User className="h-5 w-5" />
-                )}
-              </button>
-            </SheetTrigger>
-            <SheetContent side="left" fullScreen={true} noBlur={true} className="w-full p-0">
+              {/* Right: Messages, Alert, Avatar */}
+              <div className="flex items-center gap-2">
+                <Link href="/messages" className="flex items-center justify-center h-9 w-9 rounded-full hover:bg-gray-100 transition-colors">
+                  <MessageCircle className="h-5 w-5 text-gray-700" />
+                </Link>
+                <NotificationsDrawer>
+                  <Button variant="ghost" size="icon" className="relative h-9 w-9">
+                    <Bell className="h-5 w-5 text-gray-700" />
+                    {unreadCount > 0 && (
+                      <span className="absolute top-1 right-1 h-3.5 w-3.5 rounded-full bg-[#7755FF] text-white text-[9px] font-semibold flex items-center justify-center shrink-0">
+                        {unreadCount > 9 ? "9+" : unreadCount}
+                      </span>
+                    )}
+                  </Button>
+                </NotificationsDrawer>
+                <Link href={profile?.username ? `/app/profile/${profile.username}` : "/app/settings"} className="ml-1">
+                  <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-700 font-bold text-xs overflow-hidden border border-gray-200">
+                    {profile?.avatar_url && !avatarError ? (
+                      <img src={profile.avatar_url} alt={profile.username || "User"} className="w-full h-full object-cover" onError={() => setAvatarError(true)} />
+                    ) : (
+                      profile?.username?.charAt(0).toUpperCase() || "U"
+                    )}
+                  </div>
+                </Link>
+              </div>
+            </>
+          ) : (
+            <>
+              {/* Guest Layout */}
+              {/* Left: Logo */}
+              <Link href="/app" prefetch={true} className="shrink-0 flex items-center gap-2">
+                <Image src="/logo.png" alt="onseek" width={100} height={28} className="h-6 w-auto" priority />
+                <span className="text-lg text-black" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>onseek</span>
+              </Link>
+              
+              {/* Right: Plus, Hamburger */}
+              <div className="flex items-center gap-2">
+                <Button onClick={() => setIsCreateModalOpen(true)} size="icon" className="h-9 w-9 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200">
+                  <SquarePlus className="h-4 w-4" />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-9 w-9 ml-1 -mr-2" onClick={() => setMobileMenuOpen(true)}>
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Sticky Search bar beneath top bar */}
+        {user && (
+          <div className="px-4 pb-3 pt-1 w-full relative z-10 bg-white">
+            <form action="/search" method="get" className="relative w-full flex items-center">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input name="q" placeholder="Search..." defaultValue={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9 pr-4 bg-gray-100 border-transparent rounded-full h-10 w-full text-sm focus-visible:ring-1 focus-visible:ring-gray-300 transition-shadow" />
+              <input type="hidden" name="type" value={searchType} />
+            </form>
+          </div>
+        )}
+      </div>
+
+      <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+            <SheetContent side="left" fullScreen={true} noBlur={true} className="w-full p-0 bg-white">
               <div className="flex flex-col h-full">
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 border-b border-[#e5e7eb]">
@@ -482,6 +466,30 @@ export function AppNavbar() {
                     </Button>
                   </SheetClose>
                 </div>
+
+                {/* Guest layout - Search and Auth */}
+                {!user && (
+                  <div className="px-4 py-4 border-b border-[#e5e7eb] space-y-4">
+                    <form action="/search" method="get" className="relative w-full flex items-center">
+                      <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                      <Input name="q" placeholder="Search..." defaultValue={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9 pr-4 bg-gray-100 border-transparent rounded-full h-10 w-full text-sm focus-visible:ring-1 focus-visible:ring-gray-300 transition-shadow" />
+                      <input type="hidden" name="type" value={searchType} />
+                    </form>
+                    
+                    <div className="flex gap-2 w-full">
+                      <Button asChild className="flex-1 rounded-full bg-[#222234] text-white hover:bg-[#222234]/90 text-sm font-semibold h-11">
+                        <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
+                          Log In
+                        </Link>
+                      </Button>
+                      <Button asChild className="flex-1 rounded-full bg-[#222234] text-white hover:bg-[#222234]/90 text-sm font-semibold h-11">
+                        <Link href="/signup" onClick={() => setMobileMenuOpen(false)}>
+                          Sign Up
+                        </Link>
+                      </Button>
+                    </div>
+                  </div>
+                )}
 
                 {/* User Info Section */}
                 {user && (
@@ -725,30 +733,13 @@ export function AppNavbar() {
                     </div>
                   )}
 
-                  {/* Guest Actions */}
-                  {!user && (
-                    <div className="border-t border-[#e5e7eb] p-4 space-y-2">
-                      <Button asChild className="w-full bg-[#7755FF] hover:bg-[#6644EE]">
-                        <Link href="/signup" onClick={() => setMobileMenuOpen(false)}>
-                          Sign Up
-                        </Link>
-                      </Button>
-                      <Button asChild variant="outline" className="w-full">
-                        <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
-                          Log In
-                        </Link>
-                      </Button>
-                    </div>
-                  )}
                 </div>
               </div>
             </SheetContent>
           </Sheet>
-        </div>
-      </div>
 
       {/* Desktop Navbar */}
-      <div className="w-full px-4 h-16 flex items-center relative">
+      <div className="hidden md:flex w-full px-4 h-16 items-center relative">
         {/* Left Side: Space for sidebar on desktop */}
         <div className="flex items-center shrink-0 gap-6">
           <Link href="/app" className="hidden md:flex items-center gap-2">
@@ -898,10 +889,6 @@ export function AppNavbar() {
                     <DropdownMenuItem onClick={() => router.push(profile?.username ? `/app/profile/${profile.username}` : "/app/settings")} className="cursor-pointer font-medium py-2">
                       <User className="h-4 w-4 mr-2 text-muted-foreground" />
                       Profile
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => router.push("/app/saved")} className="cursor-pointer font-medium py-2">
-                      <Bookmark className="h-4 w-4 mr-2 text-muted-foreground" />
-                      Saved
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleSignOut} disabled={isPending} className="cursor-pointer font-medium py-2 text-red-600 focus:text-red-600 focus:bg-red-50">

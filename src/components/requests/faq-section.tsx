@@ -11,15 +11,11 @@ const faqs = [
   },
   {
     question: "How do I become a seller?",
-    answer: "You can sign up as a seller. Once your profile is ready, you can start fulfilling requests and making offers on public listings."
+    answer: "For the moment, every user can submit proposals from their inventory. Official shops are currently in our roadmap."
   },
   {
-    question: "Is it free to post a request?",
-    answer: "Yes, posting a request is completely free. You only pay when you decide to proceed with an offer from a seller."
-  },
-  {
-    question: "How are payments handled?",
-    answer: "Payments are securely held until the transaction is successfully completed, ensuring safety for both buyers and sellers."
+    question: "Is it free?",
+    answer: "Yes, it is completely free to post requests and submit offers."
   }
 ];
 

@@ -65,7 +65,7 @@ export function RequestDetailView({
         )}
 
         {/* Two Column Layout: Request on Left, Submissions on Right */}
-        <div className="flex flex-col lg:flex-row gap-8 lg:gap-14 items-start relative">
+        <div className="flex flex-col lg:flex-row gap-8 lg:gap-14 items-start relative pb-24 sm:pb-0">
           {/* Left Column: Request Details - Sticky on scroll */}
           <div className={cn(
             "w-full lg:w-[55%] space-y-6 flex-shrink-0 self-start lg:sticky lg:top-20"
@@ -108,12 +108,14 @@ export function RequestDetailView({
               <div className="space-y-4">
 
                 {showSubmissionForm && !isOwner ? (
-                  <SubmissionForm
-                    requestId={request.id}
-                    requestBudgetMax={request.budget_max}
-                    requestDescription={request.description}
-                    hideButton={proposalCount === 0}
-                  />
+                  <div className="hidden sm:block">
+                    <SubmissionForm
+                      requestId={request.id}
+                      requestBudgetMax={request.budget_max}
+                      requestDescription={request.description}
+                      hideButton={proposalCount === 0}
+                    />
+                  </div>
                 ) : null}
               </div>
             </div>
@@ -128,6 +130,25 @@ export function RequestDetailView({
               requestOwnerId={request.user_id}
               hideTitle={true}
             />
+          </div>
+        </div>
+
+        {/* Mobile Sticky Bottom Bar (Submit Proposal & Save) */}
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 z-50 flex sm:hidden items-center gap-3 shadow-[0_-4px_12px_rgba(0,0,0,0.05)]" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
+          {showSubmissionForm && !isOwner ? (
+            <div className="flex-1">
+              <SubmissionForm
+                requestId={request.id}
+                requestBudgetMax={request.budget_max}
+                requestDescription={request.description}
+                hideButton={proposalCount === 0}
+              />
+            </div>
+          ) : (
+            <div className="flex-1" />
+          )}
+          <div className="flex items-center justify-center w-[40px] h-[40px] rounded-full shrink-0 border border-gray-200 bg-white shadow-sm">
+            <FavoriteButton requestId={request.id} isFavorite={isFavorite} />
           </div>
         </div>
       </div>

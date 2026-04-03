@@ -139,115 +139,31 @@ export function PersonalizedFeed({
   } = useInfiniteQuery({
     queryKey: ["personalized-feed", mode, category, priceMin, priceMax, country, sort],
     queryFn: async ({ pageParam }) => {
-      const supabase = createBrowserSupabaseClient();
       const limit = isHomePage ? 16 : 20;
 
-      // Build query
-      let query = supabase
-        .from("requests")
-        .select("*")
-        .eq("status", "open");
+      // Import the action dynamically to avoid top-level issues if any
+      const { getPersonalizedFeedAction } = await import("@/actions/preference.actions");
 
-      // Apply filters
-      if (category && category !== "Discover") {
-        query = query.eq("category", category);
-      }
-      if (country) {
-        query = query.ilike("country", `%${country}%`);
-      }
-      if (priceMin || priceMax) {
-        const min = priceMin ? parseFloat(priceMin) : null;
-        const max = priceMax ? parseFloat(priceMax) : null;
-        if (min !== null && !isNaN(min)) {
-          query = query.or(`budget_max.gte.${min},budget_max.is.null`);
+      const response = await getPersonalizedFeedAction(
+        mode,
+        pageParam as string | undefined,
+        limit,
+        {
+          category,
+          priceMin,
+          priceMax,
+          country,
+          sort,
         }
-        if (max !== null && !isNaN(max)) {
-          query = query.or(`budget_min.lte.${max},budget_min.is.null`);
-        }
+      );
+
+      if ('error' in response) {
+        throw new Error(response.error);
       }
-
-      // Apply sort
-      const sortMode = sort || (mode === "latest" ? "newest" : mode === "trending" ? "active" : "newest");
-      if (sortMode === "active") {
-        query = query.order("updated_at", { ascending: false });
-      } else {
-        query = query.order("created_at", { ascending: false });
-      }
-
-      // Cursor-based pagination
-      if (pageParam) {
-        query = query.lt("created_at", pageParam);
-      }
-
-      const { data: requests, error: queryError } = await query.limit(limit + 1);
-
-      if (queryError) {
-        throw new Error(queryError.message);
-      }
-
-      if (!requests || requests.length === 0) {
-        return {
-          items: [],
-          nextCursor: null,
-        };
-      }
-
-      const hasMore = requests.length > limit;
-      const items = requests.slice(0, limit);
-      const nextCursor = hasMore ? items[items.length - 1].created_at : null;
-
-      // Fetch images, links, and submission counts in parallel
-      const requestIds = items.map((r: any) => r.id);
-      const [imagesResult, linksResult, submissionCountsResult] = await Promise.all([
-        supabase
-          .from("request_images")
-          .select("request_id, image_url, image_order")
-          .in("request_id", requestIds)
-          .order("image_order", { ascending: true }),
-        supabase
-          .from("request_links")
-          .select("request_id, url")
-          .in("request_id", requestIds),
-        supabase
-          .from("submissions")
-          .select("request_id")
-          .in("request_id", requestIds),
-      ]);
-
-      // Create maps for efficient lookups
-      const imageMap = new Map<string, string[]>();
-      imagesResult.data?.forEach((img) => {
-        const existing = imageMap.get(img.request_id) || [];
-        if (existing.length < 3) {
-          existing.push(img.image_url);
-          imageMap.set(img.request_id, existing);
-        }
-      });
-
-      const linkMap = new Map<string, string[]>();
-      linksResult.data?.forEach((link) => {
-        const existing = linkMap.get(link.request_id) || [];
-        existing.push(link.url);
-        linkMap.set(link.request_id, existing);
-      });
-
-      const submissionCountMap = new Map<string, number>();
-      submissionCountsResult.data?.forEach((sub) => {
-        const current = submissionCountMap.get(sub.request_id) || 0;
-        submissionCountMap.set(sub.request_id, current + 1);
-      });
-
-      // Attach images, links, and submission counts to items
-      const itemsWithExtras = items.map((req: any) => ({
-        ...req,
-        images: imageMap.get(req.id) || [],
-        links: linkMap.get(req.id) || [],
-        submissionCount: submissionCountMap.get(req.id) || 0,
-      }));
 
       return {
-        items: itemsWithExtras,
-        nextCursor,
+        items: response.items,
+        nextCursor: response.nextCursor,
       };
     },
     initialPageParam: undefined as string | undefined,
@@ -266,21 +182,22 @@ export function PersonalizedFeed({
   const allItems = useMemo(() => {
     if (!data || !data.pages) return [];
 
-    const items = data.pages.flatMap((page) => page?.items || []);
+    let items = data.pages.flatMap((page) => page?.items || []);
 
     // Filter out hidden requests (client-side only, post-hydration)
     if (!mounted || typeof window === "undefined") {
-      return items;
+      return (!user && isHomePage) ? items.slice(0, 12) : items;
     }
 
     try {
       const hidden = JSON.parse(localStorage.getItem("hiddenRequests") || "[]");
-      return items.filter((item: RequestItem) => !hidden.includes(item.id));
+      items = items.filter((item: RequestItem) => !hidden.includes(item.id));
     } catch (error) {
       console.error("Error reading hidden requests:", error);
-      return items;
     }
-  }, [data, mounted]);
+    
+    return (!user && isHomePage) ? items.slice(0, 12) : items;
+  }, [data, mounted, user, isHomePage]);
 
   const handleModeChange = (newMode: FeedMode) => {
     setMode(newMode);
@@ -309,7 +226,30 @@ export function PersonalizedFeed({
 
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [hasNextPage, isFetchingNextPage, isFetching, fetchNextPage]);
+  }, [hasNextPage, isFetchingNextPage, isFetching, fetchNextPage, user, isHomePage]);
+
+  // Scroll tracking for Categories Strip hide/show behavior
+  const [showCategories, setShowCategories] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (typeof window !== 'undefined') {
+        const currentScrollY = window.scrollY;
+        setLastScrollY((prevScrollY) => {
+          if (currentScrollY > prevScrollY && currentScrollY > 100) {
+            setShowCategories(false);
+          } else if (currentScrollY < prevScrollY) {
+            setShowCategories(true);
+          }
+          return currentScrollY;
+        });
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
 
   return (
@@ -323,7 +263,10 @@ export function PersonalizedFeed({
       )}
 
       {/* Categories Strip */}
-      <div className="py-1 min-h-[70px] mb-0">
+      <div className={cn(
+        "py-2 min-h-[70px] flex flex-col justify-center mb-0 sticky top-16 z-[15] bg-white transition-transform duration-300",
+        !showCategories && "-translate-y-[150%]"
+      )}>
         <div className="mx-auto w-full text-center flex flex-col items-center relative z-10 max-w-full px-0">
           <div className="w-full flex flex-col items-stretch">
             <CategoryPills

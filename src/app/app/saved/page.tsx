@@ -2,8 +2,10 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { SavedRequestsList } from "@/components/requests/saved-requests-list";
 import { RequestFilters } from "@/components/requests/request-filters";
 import { RequestFeedWrapper } from "@/components/requests/request-feed-wrapper";
+import { CategoryPills } from "@/components/requests/category-pills";
 import { Bookmark } from "lucide-react";
 import { redirect } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -99,9 +101,17 @@ export default async function SavedRequestsPage({
   };
 
   return (
-    <div className="space-y-6 w-full max-w-3xl mx-auto">
+    <div className="flex flex-col w-full">
+      <div className="py-2 min-h-[70px] flex flex-col justify-center mb-0 sticky top-16 z-[15] bg-white transition-transform duration-300">
+        <div className="mx-auto w-full text-center flex flex-col items-center relative z-10 max-w-full px-0">
+          <div className="w-full flex flex-col items-stretch">
+            <CategoryPills mode="latest" hideViewToggle={true} />
+          </div>
+        </div>
+      </div>
+
       <div className="w-full">
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4 mb-6">
           <div>
             <h1 className="text-3xl text-foreground" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>
               Saved Requests
@@ -120,7 +130,7 @@ export default async function SavedRequestsPage({
             filters={filters}
             page={1}
             totalPages={1}
-            forceListView={true}
+            forceListView={false}
             allFavorited={true}
             useHomeStyle={true}
           />

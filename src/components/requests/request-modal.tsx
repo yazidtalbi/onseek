@@ -25,7 +25,7 @@ export function RequestModal({ children, requestId }: RequestModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="max-w-[1100px] w-[95vw] max-h-[90vh] overflow-y-auto p-0 rounded-[28px] border-none shadow-[0_32px_64px_-12px_rgba(0,0,0,0.14)] bg-white scrollbar-hide">
+      <DialogContent className="max-w-[1100px] w-full h-[100dvh] sm:h-auto sm:w-[95vw] sm:max-h-[90vh] overflow-y-auto p-0 rounded-none sm:rounded-[28px] border-none shadow-[0_32px_64px_-12px_rgba(0,0,0,0.14)] bg-white scrollbar-hide flex flex-col">
         {/* Navigation Bar inside Modal */}
         <div className="sticky top-0 z-50 flex items-center justify-between px-6 py-4 bg-white/90 backdrop-blur-xl">
           <div className="flex items-center gap-3">
