@@ -31,10 +31,33 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { createContext, useContext, useState, ReactNode, useTransition } from "react";
+import { createContext, useContext, useState, ReactNode, useTransition, useEffect } from "react";
 import Image from "next/image";
 import { signOutAction } from "@/actions/auth.actions";
 import { NotificationsDrawer } from "@/components/notifications/notifications-drawer";
+import { createBrowserSupabaseClient } from "@/lib/supabase/client";
+
+function useUnreadMessages() {
+  const { user } = useAuth();
+  const [hasUnread, setHasUnread] = useState(false);
+  useEffect(() => {
+    if (!user) { setHasUnread(false); return; }
+    const supabase = createBrowserSupabaseClient();
+    const fetchUnread = async () => {
+      const { count } = await supabase.from("notifications")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", user.id).eq("read", false).eq("type", "new_message");
+      setHasUnread((count || 0) > 0);
+    };
+    fetchUnread();
+    const channel = supabase.channel("sidebar_messages_notif")
+      .on("postgres_changes", { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` }, () => {
+        fetchUnread();
+      }).subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user]);
+  return hasUnread;
+}
 
 const SidebarContext = createContext<{
   open: boolean;
@@ -118,6 +141,8 @@ function MobileSidebarContent({ onClose }: { onClose?: () => void }) {
     { href: "/app/leaderboard", label: "Leaderboard", icon: Trophy },
   ];
 
+  const hasUnreadMessages = useUnreadMessages();
+
   const NavLink = ({ item, active }: { item: (typeof mainNavItems)[0]; active: boolean }) => (
     <Link
       href={item.href}
@@ -129,7 +154,12 @@ function MobileSidebarContent({ onClose }: { onClose?: () => void }) {
           : "text-gray-400 hover:text-foreground hover:bg-gray-50"
       )}
     >
-      <item.icon className="h-5 w-5" />
+      <div className="relative">
+        <item.icon className="h-5 w-5" />
+        {item.href === "/messages" && hasUnreadMessages && (
+          <span className="absolute -top-1 -right-1 h-2.5 w-2.5 bg-red-500 rounded-full border border-white" />
+        )}
+      </div>
       <span>{item.label}</span>
     </Link>
   );
@@ -189,6 +219,7 @@ function DesktopSidebarContent() {
   const pathname = usePathname();
   const { user, profile } = useAuth();
   const [isPending, startTransition] = useTransition();
+  const hasUnreadMessages = useUnreadMessages();
 
   const handleSignOut = () => {
     startTransition(async () => {
@@ -227,7 +258,12 @@ function DesktopSidebarContent() {
                         : "text-gray-400 hover:text-foreground hover:bg-gray-50"
                     )}
                   >
-                    <item.icon className="h-6 w-6" />
+                    <div className="relative">
+                      <item.icon className="h-6 w-6" />
+                      {item.href === "/messages" && hasUnreadMessages && (
+                        <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full border-2 border-white" />
+                      )}
+                    </div>
                   </Link>
                 </TooltipTrigger>
                 <TooltipContent side="right" sideOffset={8} className="bg-[#212733] text-white border-[#212733]">

@@ -24,8 +24,17 @@ export async function fetchInitialFeedData(
   if (filters.category && filters.category !== "All") {
     query = query.eq("category", filters.category);
   }
-  if (filters.country) {
-    query = query.ilike("country", `%${filters.country}%`);
+  const { data: { user } } = await supabase.auth.getUser();
+  let defaultCountry = null;
+  if (user) {
+    const { data: profile } = await supabase.from("profiles").select("country").eq("id", user.id).single();
+    if (profile?.country) defaultCountry = profile.country;
+  }
+  
+  const countryToSearch = filters.country !== undefined ? filters.country : defaultCountry;
+
+  if (countryToSearch && countryToSearch !== "All") {
+    query = query.ilike("country", `%${countryToSearch}%`);
   }
   if (filters.priceMin || filters.priceMax) {
     const min = filters.priceMin ? parseFloat(filters.priceMin) : null;

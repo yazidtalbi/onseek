@@ -19,13 +19,17 @@ type SearchParams = {
   priceMax?: string;
   country?: string;
   page?: string;
+  pref?: string | string[];
+  dealbreaker?: string | string[];
+  condition?: string;
 };
 
 export default async function SearchPage({
   searchParams,
 }: {
-  searchParams: SearchParams;
+  searchParams: Promise<SearchParams>;
 }) {
+  const params = await searchParams;
   const supabase = await createServerSupabaseClient();
   const {
     data: { user },
@@ -56,13 +60,18 @@ export default async function SearchPage({
     }
   }
 
-  const status = searchParams.status ?? "open";
-  const sort = searchParams.sort ?? "newest";
-  const category = searchParams.category ?? "All";
-  const queryText = searchParams.q?.trim() ?? "";
-  const priceMin = searchParams.priceMin;
-  const priceMax = searchParams.priceMax;
-  const country = searchParams.country;
+  const status = params.status ?? "open";
+  const sort = params.sort ?? "newest";
+  const category = params.category ?? "All";
+  const queryText = params.q?.trim() ?? "";
+  const priceMin = params.priceMin;
+  const priceMax = params.priceMax;
+  const country = params.country;
+  const prefParam = params.pref;
+  const dealbreakerParam = params.dealbreaker;
+  const condition = params.condition;
+  const prefs = Array.isArray(prefParam) ? prefParam : prefParam ? [prefParam] : [];
+  const dealbreakers = Array.isArray(dealbreakerParam) ? dealbreakerParam : dealbreakerParam ? [dealbreakerParam] : [];
 
   let query = supabase.from("requests").select("*");
   
@@ -101,7 +110,25 @@ export default async function SearchPage({
       query = query.or(`title.ilike.%${safeQuery}%,description.ilike.%${safeQuery}%`);
     }
   }
+
+  // Preferences and Dealbreakers
+  prefs.forEach((pref) => {
+    query = query.ilike("description", `%${pref}%`);
+  });
+  dealbreakers.forEach((deal) => {
+    query = query.not("description", "ilike", `%${deal}%`);
+  });
   
+  if (condition && condition !== "Either" && condition !== "") {
+    if (condition === "New") {
+      query = query.in("condition", ["New", "Either"]);
+    } else if (condition === "Used") {
+      query = query.in("condition", ["Used", "Either"]);
+    } else {
+      query = query.eq("condition", condition);
+    }
+  }
+
   // Apply sorting
   if (sort === "active") {
     query = query.order("updated_at", { ascending: false });
@@ -110,7 +137,7 @@ export default async function SearchPage({
   }
 
   // Pagination
-  const page = parseInt(searchParams.page || "1");
+  const page = parseInt(params.page || "1");
   const limit = 20;
   const offset = (page - 1) * limit;
 
@@ -141,6 +168,23 @@ export default async function SearchPage({
       countQuery.or(`title.ilike.%${safeQuery}%,description.ilike.%${safeQuery}%`);
     }
   }
+  
+  prefs.forEach((pref) => {
+    countQuery.ilike("description", `%${pref}%`);
+  });
+  dealbreakers.forEach((deal) => {
+    countQuery.not("description", "ilike", `%${deal}%`);
+  });
+  
+  if (condition && condition !== "Either" && condition !== "") {
+    if (condition === "New") {
+      countQuery.in("condition", ["New", "Either"]);
+    } else if (condition === "Used") {
+      countQuery.in("condition", ["Used", "Either"]);
+    } else {
+      countQuery.eq("condition", condition);
+    }
+  }
 
   const { count, error: countError } = await countQuery;
   if (countError) {
@@ -163,14 +207,6 @@ export default async function SearchPage({
             {/* Search Header */}
             <div className="space-y-4">
               <div>
-                <h1 className="text-3xl font-semibold">
-                  {queryText ? `Search results for "${queryText}"` : "Search requests"}
-                </h1>
-                {queryText && (
-                  <p className="text-sm text-muted-foreground mt-2">
-                    {count ?? 0} {count === 1 ? "request found" : "requests found"}
-                  </p>
-                )}
               </div>
               <form action="/search" method="get" className="w-full max-w-2xl">
                 <div className="relative">
@@ -187,7 +223,12 @@ export default async function SearchPage({
 
             {queryText ? (
               <>
-                <RequestFilters />
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <p className="text-sm text-muted-foreground font-medium">
+                    {count ?? 0} {count === 1 ? "request found" : "requests found"}
+                  </p>
+                  <RequestFilters />
+                </div>
 
                 <RequestFeed
                   initialRequests={requests ?? []}
@@ -202,6 +243,7 @@ export default async function SearchPage({
                   }}
                   page={page}
                   totalPages={totalPages}
+                  useHomeStyle={true}
                 />
               </>
             ) : (

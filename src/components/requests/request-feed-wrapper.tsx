@@ -24,6 +24,7 @@ export function RequestFeedWrapper({
   totalPages = 1,
   forceListView = false,
   allFavorited = false,
+  useHomeStyle = false,
 }: {
   initialRequests: RequestItem[];
   filters: Filters;
@@ -31,6 +32,7 @@ export function RequestFeedWrapper({
   totalPages?: number;
   forceListView?: boolean;
   allFavorited?: boolean;
+  useHomeStyle?: boolean;
 }) {
   const [viewMode, setViewMode] = useState<"list" | "grid">(() => {
     if (forceListView) return "list";
@@ -61,6 +63,7 @@ export function RequestFeedWrapper({
         viewMode={viewMode}
         onViewModeChange={setViewMode}
         allFavorited={allFavorited}
+        useHomeStyle={useHomeStyle}
       />
     </div>
   );

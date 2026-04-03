@@ -233,7 +233,26 @@ export function AppNavbar() {
   const [exploreOpen, setExploreOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const isHomePage = pathname === "/";
+  const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
 
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      const currentParam = searchParams.get("q") || "";
+      if (searchQuery !== currentParam) {
+        const params = new URLSearchParams(searchParams.toString());
+        if (searchQuery) {
+          params.set("q", searchQuery);
+          params.delete("page");
+          router.push(`/search?${params.toString()}`);
+        } else if (currentParam) {
+          params.delete("q");
+          params.delete("page");
+          router.push(`/search?${params.toString()}`);
+        }
+      }
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [searchQuery, searchParams, router]);
   useEffect(() => {
     const handleOpenCreateModal = () => setIsCreateModalOpen(true);
     window.addEventListener('open-create-request-modal', handleOpenCreateModal);
@@ -714,7 +733,11 @@ export function AppNavbar() {
                           Sign Up
                         </Link>
                       </Button>
-                      <LoginDropdown />
+                      <Button asChild variant="outline" className="w-full">
+                        <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
+                          Log In
+                        </Link>
+                      </Button>
                     </div>
                   )}
                 </div>
@@ -776,14 +799,16 @@ export function AppNavbar() {
             "w-full transition-all duration-300 pointer-events-auto",
             showSearch ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4 pointer-events-none"
           )}>
-            <form action="/search" method="get" className="relative flex items-center w-full bg-white border border-gray-200 rounded-full h-11">
+            <div className="relative flex items-center w-full bg-white border border-gray-200 rounded-full h-11">
               <Search className="ml-4 h-5 w-5 text-gray-900 shrink-0" strokeWidth={1.5} />
               <Input
                 name="q"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="What are you looking for today?"
                 className="flex-1 bg-transparent border-none focus-visible:ring-0 text-sm h-full pl-2 shadow-none placeholder:text-slate-500"
               />
-            </form>
+            </div>
           </div>
         </div>
 
@@ -898,7 +923,9 @@ export function AppNavbar() {
                   </Button>
                 </Link>
                 <div className="ml-3">
-                  <LoginDropdown />
+                  <Button asChild variant="outline" className="h-11 rounded-full px-6 bg-white hover:bg-gray-50 shrink-0 whitespace-nowrap text-sm font-semibold">
+                    <Link href="/login">Log In</Link>
+                  </Button>
                 </div>
               </>
             )}

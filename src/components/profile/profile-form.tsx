@@ -46,7 +46,7 @@ export function ProfileForm({ profile }: { profile: Profile }) {
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" noValidate>
       <div className="space-y-2">
         <Label htmlFor="username">Username</Label>
-        <Input id="username" {...form.register("username")} />
+        <Input id="username" {...form.register("username")} disabled className="bg-gray-50 text-gray-500 cursor-not-allowed" />
         {form.formState.errors.username ? (
           <p className="text-xs text-red-600">
             {form.formState.errors.username.message}
@@ -64,7 +64,7 @@ export function ProfileForm({ profile }: { profile: Profile }) {
       </div>
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
       {status ? <p className="text-sm text-emerald-700">{status}</p> : null}
-      <Button type="submit" variant="outline" className="w-full bg-gray-100 text-neutral-900 hover:bg-gray-200 border-gray-300" disabled={isPending}>
+      <Button type="submit" className="w-full bg-[#7755FF] text-white hover:bg-[#6644EE] border-0" disabled={isPending}>
         {isPending ? "Saving..." : "Save changes"}
       </Button>
     </form>

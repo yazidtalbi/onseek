@@ -528,7 +528,7 @@ function RequestCardComponent({
                   noRounding && "rounded-none",
                   noBorder ? "!border-none !shadow-none bg-white" : "border border-[#e5e7eb]",
                   hasContent ? "h-full" : "h-fit",
-                  smallImages && !noBorder && !disableHover && "group-hover/card:-translate-y-1 group-hover/card:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.1)]"
+                  smallImages && !noBorder && !disableHover && "group-hover/card:scale-[1.02]"
                 )}
               >
                 {cardContent}
@@ -564,7 +564,7 @@ function RequestCardComponent({
       ) : isPreview ? (
         <Card
           className={cn(
-            "flex flex-col relative group transition-all duration-300 ease-out shadow-[0_20px_50px_-12px_rgba(0,0,0,0.15)]",
+            "flex flex-col relative group transition-all duration-300 ease-out",
             noRounding ? "rounded-none" : "rounded-2xl",
             noBorder ? "border-none" : "border border-[#e5e7eb]",
             hasContent ? "h-full" : "h-fit"
@@ -595,7 +595,7 @@ function RequestCardComponent({
           <Card
             className={cn(
               "flex flex-col transition-all duration-300 ease-out relative group",
-              !noBorder && !disableHover && "hover:-translate-y-2 hover:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.15)]",
+              !noBorder && !disableHover && "hover:scale-[1.02]",
               hasContent ? "h-full" : "h-fit",
               !noBorder && !isFeed && !noRounding ? "rounded-2xl" : "",
               !noBorder && isFeed && isFirst && isLast && !noRounding ? "rounded-2xl" : "",

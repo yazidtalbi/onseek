@@ -120,8 +120,9 @@ export default async function SavedRequestsPage({
             filters={filters}
             page={1}
             totalPages={1}
-            forceListView={false}
+            forceListView={true}
             allFavorited={true}
+            useHomeStyle={true}
           />
         </div>
       ) : (

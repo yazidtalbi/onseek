@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { ProfileForm } from "@/components/profile/profile-form";
-import { ContactInfoForm } from "@/components/profile/contact-info-form";
 import { ThemeToggle } from "@/components/settings/theme-toggle";
 import { CategoryPreferences } from "@/components/settings/category-preferences";
 import { Card, CardContent } from "@/components/ui/card";
@@ -34,7 +33,6 @@ export function SettingsContent({ user, profile }: SettingsContentProps) {
 
   const menuItems = [
     { id: "profile", label: "Edit Profile", icon: User },
-    { id: "contact", label: "Contact Information", icon: Phone },
     { id: "interests", label: "Interests", icon: Sparkles },
     { id: "appearance", label: "Appearance", icon: Palette },
     { id: "account", label: "Account & Security", icon: Lock },
@@ -115,16 +113,6 @@ export function SettingsContent({ user, profile }: SettingsContentProps) {
             </div>
           </div>
 
-          <div className={activeTab === "contact" ? "block" : "hidden"}>
-            <div className="space-y-6">
-              <div className="space-y-1 pb-4">
-                <h2 className="text-lg font-bold text-gray-900">Contact Information</h2>
-                <p className="text-sm text-gray-500">How people can reach you for items.</p>
-              </div>
-              <ContactInfoForm profile={profile} />
-            </div>
-          </div>
-
           <div className={activeTab === "interests" ? "block" : "hidden"}>
             <div className="space-y-6">
                <div className="space-y-1 pb-4">
@@ -159,7 +147,7 @@ export function SettingsContent({ user, profile }: SettingsContentProps) {
                     <label className="text-sm font-bold text-gray-700">Email Address</label>
                     <p className="text-sm text-gray-600">{user.email}</p>
                   </div>
-                  <Button variant="outline" size="sm" className="rounded-full px-4">
+                  <Button variant="default" size="sm" className="rounded-full px-4 bg-[#7755FF] text-white hover:bg-[#6644EE] border-0">
                     Change Email
                   </Button>
                 </div>
@@ -175,7 +163,7 @@ export function SettingsContent({ user, profile }: SettingsContentProps) {
                     <label className="text-sm font-bold text-gray-700">Password</label>
                     <p className="text-sm text-gray-600">••••••••••••</p>
                   </div>
-                  <Button variant="outline" size="sm" className="rounded-full px-4">
+                  <Button variant="default" size="sm" className="rounded-full px-4 bg-[#7755FF] text-white hover:bg-[#6644EE] border-0">
                     Update Password
                   </Button>
                 </div>
@@ -202,7 +190,7 @@ export function SettingsContent({ user, profile }: SettingsContentProps) {
                   Once you delete your account, all of your profile, requests, and proposals will be permanently removed. 
                   Please be certain.
                 </p>
-                <Button variant="outline" className="text-red-600 border-red-200 hover:bg-red-100 transition-colors rounded-full px-6 bg-white shadow-none">
+                <Button variant="default" className="text-white hover:bg-red-700 transition-colors rounded-full px-6 bg-red-600 shadow-none border-0">
                   Delete My Account
                 </Button>
               </div>

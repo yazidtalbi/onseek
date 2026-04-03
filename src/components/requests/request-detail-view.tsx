@@ -68,8 +68,7 @@ export function RequestDetailView({
         <div className="flex flex-col lg:flex-row gap-8 lg:gap-14 items-start relative">
           {/* Left Column: Request Details - Sticky on scroll */}
           <div className={cn(
-            "w-full lg:w-[55%] space-y-6 flex-shrink-0 self-start",
-            !isModal ? "lg:sticky lg:top-24" : "lg:sticky lg:top-[-10px] lg:max-h-[calc(90vh-100px)] lg:overflow-y-auto lg:pr-4 scrollbar-hide"
+            "w-full lg:w-[55%] space-y-6 flex-shrink-0 self-start lg:sticky lg:top-20"
           )}>
             <RequestCard
               request={request}
@@ -107,7 +106,6 @@ export function RequestDetailView({
               </div>
 
               <div className="space-y-4">
-                <h2 className="text-2xl font-semibold text-foreground tracking-tight" style={{ letterSpacing: '-0.8px' }}>Proposals</h2>
 
                 {showSubmissionForm && !isOwner ? (
                   <SubmissionForm
