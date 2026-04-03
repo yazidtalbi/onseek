@@ -11,9 +11,10 @@ import { createRequestUrl } from "@/lib/utils/slug";
 interface RequestModalProps {
   children: React.ReactNode;
   requestId: string;
+  requestSlug?: string;
 }
 
-export function RequestModal({ children, requestId }: RequestModalProps) {
+export function RequestModal({ children, requestId, requestSlug }: RequestModalProps) {
   const router = useRouter();
   const [open, setOpen] = useState(true);
 
@@ -42,7 +43,7 @@ export function RequestModal({ children, requestId }: RequestModalProps) {
           <div className="flex items-center gap-2">
             {requestId && (
               <Link
-                href={createRequestUrl(requestId)}
+                href={createRequestUrl(requestSlug || requestId)}
                 target="_blank"
                 scroll={false}
                 className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-[#7755FF] hover:text-[#7755FF]/80 transition-all hover:scale-[1.02] active:scale-[0.98]"

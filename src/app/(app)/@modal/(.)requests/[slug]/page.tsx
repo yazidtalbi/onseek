@@ -97,7 +97,7 @@ export default async function InterceptedRequestPage({
   const proposalCount = initialSubmissions.length;
 
   return (
-    <RequestModal requestId={id}>
+    <RequestModal requestId={id} requestSlug={request.slug}>
       <RequestDetailView
         request={request}
         images={imagesRes.data || []}
