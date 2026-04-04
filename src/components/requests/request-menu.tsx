@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { MoreHorizontal, EyeOff, Flag, X, Share2, Ban } from "lucide-react";
+import { MoreHorizontal, EyeOff, Flag, Share2, Ban, Archive as ArchiveIcon } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,26 +20,31 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ReportDialog } from "@/components/reports/report-dialog";
-import { updateRequestStatusAction } from "@/actions/request.actions";
+import { archiveRequestAction, approveRequestAction, rejectRequestAction } from "@/actions/request.actions";
 import { hideCategoryAction } from "@/actions/preference.actions";
 import { useAuth } from "@/components/layout/auth-provider";
 import { useTransition } from "react";
-import type { Category } from "@/lib/types";
+import type { Category, RequestStatus } from "@/lib/types";
+import { useToast } from "@/components/ui/use-toast";
+import { Check, XCircle } from "lucide-react";
 
 export function RequestMenu({
   requestId,
   requestUserId,
   status,
+  isAdmin,
   categories,
 }: {
   requestId: string;
   requestUserId: string;
-  status: "open" | "closed" | "solved";
+  status: RequestStatus;
+  isAdmin?: boolean;
   categories?: Category[];
 }) {
   const router = useRouter();
   const { user } = useAuth();
   const [isPending, startTransition] = useTransition();
+  const { toast } = useToast();
   const [isHidingCategory, setIsHidingCategory] = React.useState(false);
   const [showReportDialog, setShowReportDialog] = React.useState(false);
   const [showCloseConfirmDialog, setShowCloseConfirmDialog] = React.useState(false);
@@ -48,13 +53,13 @@ export function RequestMenu({
 
   const isOwner = user?.id === requestUserId;
   const isOpen = status === "open";
+  const rid = requestId;
+  const rstatus = status;
+  const is_admin = isAdmin;
 
   const handleCloseRequest = () => {
-    const formData = new FormData();
-    formData.set("requestId", requestId);
-    formData.set("status", "closed");
     startTransition(async () => {
-      const res = await updateRequestStatusAction(formData);
+      const res = await archiveRequestAction(requestId);
       if (!res?.error) {
         setShowCloseConfirmDialog(false);
         router.refresh();
@@ -137,8 +142,49 @@ export function RequestMenu({
             <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
           </button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-48">
+        <DropdownMenuContent align="end" className="w-56">
+          {is_admin && (
+            <>
+              <div className="px-2 py-1.5 text-xs font-semibold text-amber-600 uppercase tracking-wider">
+                Moderation
+              </div>
+              {rstatus === "pending" && (
+                <DropdownMenuItem
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    const res = await approveRequestAction(rid);
+                    if (res.success) {
+                      toast({ title: "Approved", description: "Request is now public" });
+                      router.refresh();
+                    } else toast({ title: "Error", description: res.error });
+                  }}
+                  className="cursor-pointer text-green-600"
+                >
+                  <Check className="h-4 w-4 mr-2" />
+                  Approve & Publish
+                </DropdownMenuItem>
+              )}
+              {(rstatus === "pending" || rstatus === "open") && (
+                <DropdownMenuItem
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    const res = await rejectRequestAction(rid);
+                    if (res.success) {
+                      toast({ title: "Rejected", description: "Request has been rejected" });
+                      router.refresh();
+                    } else toast({ title: "Error", description: res.error });
+                  }}
+                  className="cursor-pointer text-red-600"
+                >
+                  <XCircle className="h-4 w-4 mr-2" />
+                  Reject Request
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuSeparator />
+            </>
+          )}
           <DropdownMenuItem
+
             onClick={(e) => {
               e.stopPropagation();
               handleHide();
@@ -190,7 +236,7 @@ export function RequestMenu({
             <Flag className="h-4 w-4 mr-2" />
             Report
           </DropdownMenuItem>
-          {isOwner && isOpen && (
+          {isOwner && (status === "open" || status === "solved") && (
             <>
               <DropdownMenuSeparator />
               <DropdownMenuItem
@@ -199,10 +245,10 @@ export function RequestMenu({
                   setShowCloseConfirmDialog(true);
                 }}
                 disabled={isPending}
-                className="cursor-pointer text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400"
+                className="cursor-pointer text-gray-600 focus:text-gray-900"
               >
-                <X className="h-4 w-4 mr-2" />
-                Close request
+                <ArchiveIcon className="h-4 w-4 mr-2" />
+                Archive request
               </DropdownMenuItem>
             </>
           )}
@@ -219,9 +265,9 @@ export function RequestMenu({
       <Dialog open={showCloseConfirmDialog} onOpenChange={setShowCloseConfirmDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Close request?</DialogTitle>
+            <DialogTitle>Archive request?</DialogTitle>
             <DialogDescription>
-              Are you sure you want to close this request? This action cannot be undone. The request will no longer accept new submissions.
+              Are you sure you want to archive this request? It will be hidden from your active dashboard.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -236,9 +282,9 @@ export function RequestMenu({
               variant="default"
               onClick={handleCloseRequest}
               disabled={isPending}
-              className="bg-red-600 hover:bg-red-700 text-white"
+              className="bg-gray-900 hover:bg-gray-800 text-white"
             >
-              {isPending ? "Closing..." : "Close request"}
+              {isPending ? "Archiving..." : "Archive request"}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -38,7 +38,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Upload, X, GripVertical, Info, Plus, Check, Sparkles, Crown, LockKeyhole, MapPin, ChevronLeft, ShieldCheck } from "lucide-react";
+import { Upload, X, GripVertical, Info, Plus, Check, Sparkles, Crown, LockKeyhole, MapPin, ChevronLeft, ShieldCheck, Loader2, Link as LinkIcon } from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { MAIN_CATEGORIES, SUBCATEGORIES, type MainCategory } from "@/lib/categories";
@@ -72,6 +72,7 @@ export function RequestForm({
   const [referenceLinks, setReferenceLinks] = React.useState<string[]>([]);
   const [linkInput, setLinkInput] = React.useState("");
   const [draggedIndex, setDraggedIndex] = React.useState<number | null>(null);
+  const [imageUrlInput, setImageUrlInput] = React.useState("");
   const [preferences, setPreferences] = React.useState<Array<{ label: string; note?: string }>>([]);
   const [dealbreakers, setDealbreakers] = React.useState<Array<{ label: string; note?: string }>>([]);
   const [showPrefInput, setShowPrefInput] = React.useState(false);
@@ -271,6 +272,26 @@ export function RequestForm({
     setImageFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const addImageUrl = () => {
+    const trimmed = imageUrlInput.trim();
+    if (!trimmed) return;
+
+    try {
+      new URL(trimmed);
+      if (uploadedImages.length >= 5) {
+        setError("Maximum 5 images allowed");
+        return;
+      }
+      if (!uploadedImages.includes(trimmed)) {
+        setUploadedImages([...uploadedImages, trimmed]);
+        setImageUrlInput("");
+        setErrors((prev) => ({ ...prev, imageUrlInput: "" }));
+      }
+    } catch {
+      setErrors((prev) => ({ ...prev, imageUrlInput: "Please enter a valid Image URL" }));
+    }
+  };
+
   // Drag and drop handlers
   const handleDragStart = (index: number) => {
     setDraggedIndex(index);
@@ -404,7 +425,7 @@ export function RequestForm({
             onSuccess();
           }
           if (res.url) {
-            router.push(res.url);
+            window.location.href = res.url;
           } else {
             router.refresh();
           }
@@ -783,6 +804,45 @@ export function RequestForm({
                   <div className="flex items-center gap-2 mb-2">
                     <Label className="text-sm font-semibold text-gray-500">Add a few example images</Label>
                   </div>
+
+                  {/* Image URL Input */}
+                  <div className="space-y-3 mb-6">
+                    <div className="flex gap-2">
+                      <div className="relative flex-1 group">
+                        <LinkIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-[#222234] transition-colors" />
+                        <Input
+                          placeholder="Paste an Image URL (jpg, png...)"
+                          value={imageUrlInput}
+                          onChange={(e) => {
+                            setImageUrlInput(e.target.value);
+                            setErrors((prev) => ({ ...prev, imageUrlInput: "" }));
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              addImageUrl();
+                            }
+                          }}
+                          onBlur={addImageUrl}
+                          className={cn(
+                            "h-14 bg-white border-[#e5e7eb] rounded-xl focus-visible:ring-[#222234] placeholder:text-gray-400 placeholder:font-normal pl-11",
+                            errors.imageUrlInput && "border-red-500 focus-visible:ring-red-500"
+                          )}
+                        />
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={addImageUrl}
+                        disabled={uploadedImages.length >= 5}
+                        className="shrink-0 h-14 w-14 rounded-xl border flex items-center justify-center p-0"
+                      >
+                        <Plus className="h-5 w-5" strokeWidth={2.5} />
+                      </Button>
+                    </div>
+                    {errors.imageUrlInput && <p className="text-xs text-red-600 font-medium ml-1">{errors.imageUrlInput}</p>}
+                    <p className="text-xs text-gray-400 font-medium ml-1">Paste a direct link to an image if you don't have it locally.</p>
+                  </div>
                   <div className="grid grid-cols-4 sm:grid-cols-5 gap-3">
                     {uploadedImages.map((url, index) => (
                       <div
@@ -1116,10 +1176,10 @@ export function RequestForm({
                 <Button
                   type="button"
                   onClick={proceedToNextStep}
-                  disabled={(currentStep === 1 && (!titleValue?.trim() || !categoryValue)) || (currentStep === 2 && !form.watch("budgetMax")) || isAutoSubmitting}
+                  disabled={(currentStep === 1 && (!titleValue?.trim() || !categoryValue)) || (currentStep === 2 && !form.watch("budgetMax")) || isPending || isAutoSubmitting}
                   className={cn(
                     "h-12 px-10 rounded-full font-semibold text-base min-w-[140px] shadow-lg shadow-gray-200/50 transition-all",
-                    ((currentStep === 1 && (!titleValue?.trim() || !categoryValue)) || (currentStep === 2 && !form.watch("budgetMax")) || isAutoSubmitting)
+                    ((currentStep === 1 && (!titleValue?.trim() || !categoryValue)) || (currentStep === 2 && !form.watch("budgetMax")) || isPending || isAutoSubmitting)
                       ? "bg-gray-100 text-gray-400 cursor-not-allowed shadow-none"
                       : "bg-[#222234] hover:bg-[#2a2a3f] text-white",
                     (currentStep === 1 && titleValue.length < 3) && "hidden", // Hide next button on step 1 until categories are displayed
@@ -1128,14 +1188,23 @@ export function RequestForm({
                     (currentStep === 8 && user) && "hidden" // Hide next button on auth step if user already logged in
                   )}
                 >
-                  {currentStep === 1 ? "Next: Budget" :
-                    currentStep === 2 ? "Next: Condition" :
-                      currentStep === 3 ? "Next: Preferences" :
-                        currentStep === 4 ? "Next: Dealbreakers" :
-                          currentStep === 5 ? "Next: Details" :
-                            currentStep === 6 ? "Next: Review" :
-                              currentStep === 7 ? (user ? "Publish" : "Finalize") :
-                                "Next"}
+                  {(isPending || isAutoSubmitting) ? (
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      <span>{currentStep === 7 ? "Publishing..." : "Finalizing..."}</span>
+                    </div>
+                  ) : (
+                    <>
+                      {currentStep === 1 ? "Next: Budget" :
+                        currentStep === 2 ? "Next: Condition" :
+                          currentStep === 3 ? "Next: Preferences" :
+                            currentStep === 4 ? "Next: Dealbreakers" :
+                              currentStep === 5 ? "Next: Details" :
+                                currentStep === 6 ? "Next: Review" :
+                                  currentStep === 7 ? (user ? "Publish" : "Finalize") :
+                                    "Next"}
+                    </>
+                  )}
                 </Button>
               )}
             </div>

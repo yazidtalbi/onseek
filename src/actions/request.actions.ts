@@ -155,7 +155,7 @@ export async function createRequestAction(formData: FormData) {
     country: parsed.data.country || userCountry,
     condition: parsed.data.condition,
     urgency: parsed.data.urgency,
-    status: "open" as const,
+    status: "pending" as const,
   };
   
   console.log("Insert data:", JSON.stringify(insertData, null, 2));
@@ -243,11 +243,18 @@ export async function markSolvedAction(formData: FormData) {
   const supabase = await createServerSupabaseClient();
   const { data: request } = await supabase
     .from("requests")
-    .select("status, winner_submission_id")
+    .select("status, winner_submission_id, user_id")
     .eq("id", requestId)
     .single();
+  
   if (!request || request.status === "solved") {
     return { error: "Request already solved." };
+  }
+
+  // Only owner can mark as solved
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user?.id !== request.user_id) {
+    return { error: "Unauthorized" };
   }
 
   const { error } = await supabase
@@ -278,6 +285,87 @@ export async function markSolvedAction(formData: FormData) {
   revalidatePath("/");
   revalidatePath("/requests");
   revalidatePath("/submissions");
+  return { success: true };
+}
+
+export async function approveRequestAction(requestId: string) {
+  const supabase = await createServerSupabaseClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) return { error: "Unauthorized" };
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("is_admin")
+    .eq("id", user.id)
+    .single();
+
+  if (!profile?.is_admin) return { error: "Admin only action" };
+
+  const { error } = await supabase
+    .from("requests")
+    .update({ status: "open" })
+    .eq("id", requestId);
+
+  if (error) return { error: error.message };
+
+  revalidatePath("/");
+  revalidatePath("/requests");
+  revalidatePath(`/requests/${requestId}`);
+  return { success: true };
+}
+
+export async function rejectRequestAction(requestId: string) {
+  const supabase = await createServerSupabaseClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) return { error: "Unauthorized" };
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("is_admin")
+    .eq("id", user.id)
+    .single();
+
+  if (!profile?.is_admin) return { error: "Admin only action" };
+
+  const { error } = await supabase
+    .from("requests")
+    .update({ status: "rejected" })
+    .eq("id", requestId);
+
+  if (error) return { error: error.message };
+
+  revalidatePath("/");
+  revalidatePath("/requests");
+  revalidatePath(`/requests/${requestId}`);
+  return { success: true };
+}
+
+export async function archiveRequestAction(requestId: string) {
+  const supabase = await createServerSupabaseClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) return { error: "Unauthorized" };
+
+  const { data: request } = await supabase
+    .from("requests")
+    .select("user_id")
+    .eq("id", requestId)
+    .single();
+
+  if (!request || request.user_id !== user.id) return { error: "Unauthorized" };
+
+  const { error } = await supabase
+    .from("requests")
+    .update({ status: "archived" })
+    .eq("id", requestId);
+
+  if (error) return { error: error.message };
+
+  revalidatePath("/");
+  revalidatePath("/requests");
+  revalidatePath(`/requests/${requestId}`);
   return { success: true };
 }
 

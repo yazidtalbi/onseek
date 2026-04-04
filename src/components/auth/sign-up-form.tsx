@@ -86,8 +86,10 @@ export function SignUpForm({ onSuccess }: { onSuccess?: () => void }) {
         const res = await signUpAction(formData);
         if (res?.error) {
           setError(res.error);
-        } else if (onSuccess) {
-          onSuccess();
+        } else {
+          if (onSuccess) {
+            onSuccess();
+          }
         }
       } catch (err) {
         // Handle NEXT_REDIRECT error from server action

@@ -65,6 +65,7 @@ interface RequestCardProps {
   headerActions?: React.ReactNode;
   disableHover?: boolean;
   priority?: boolean;
+  isAdmin?: boolean;
 }
 
 function RequestCardComponent({
@@ -87,6 +88,7 @@ function RequestCardComponent({
   headerActions,
   disableHover = false,
   priority = false,
+  isAdmin = false,
 }: RequestCardProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -198,6 +200,7 @@ function RequestCardComponent({
             requestUserId={request.user_id}
             status={request.status}
             categories={request.categories}
+            isAdmin={isAdmin}
           />
         </div>
       )}

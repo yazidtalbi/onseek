@@ -3,7 +3,8 @@ import { fetchInitialFeedData } from "@/lib/feed";
 
 export const dynamic = "force-dynamic";
 
-export default async function ForYouPage({ searchParams }: { searchParams: any }) {
+export default async function ForYouPage(props: { searchParams: Promise<any> }) {
+  const searchParams = await props.searchParams;
   const mode = "for_you";
   const initialData = await fetchInitialFeedData(mode, {
     ...searchParams,

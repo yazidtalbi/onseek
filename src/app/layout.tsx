@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { Inter, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/layout/providers";
@@ -24,6 +25,8 @@ export const metadata: Metadata = {
     "Request items and get community purchase links fast, clean, and mobile-first.",
   icons: [{ rel: "icon", url: "/favicon.ico" }],
 };
+
+import { Analytics } from "@vercel/analytics/react";
 
 export default async function RootLayout({
   children,
@@ -64,6 +67,11 @@ export default async function RootLayout({
           </Providers>
         </AuthProvider>
         <Toaster />
+        <Analytics />
+        <Script 
+          src="https://t.contentsquare.net/uxa/82b383ca1f434.js" 
+          strategy="afterInteractive" 
+        />
       </body>
     </html>
   );

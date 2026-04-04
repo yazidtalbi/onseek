@@ -36,6 +36,16 @@ export default async function InterceptedRequestPage({
     data: { user },
   } = await supabase.auth.getUser();
 
+  let isAdmin = false;
+  if (user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("is_admin")
+      .eq("id", user.id)
+      .single();
+    isAdmin = !!profile?.is_admin;
+  }
+
   const requestRes = await supabase
     .from("requests")
     .select("*, profiles(username)")
@@ -105,6 +115,7 @@ export default async function InterceptedRequestPage({
         initialSubmissions={initialSubmissions}
         user={user}
         isOwner={isOwner}
+        isAdmin={isAdmin}
         showSubmissionForm={showSubmissionForm}
         isFavorite={isFavorite}
         proposalCount={proposalCount}

@@ -5,16 +5,14 @@ import { getCategoryName } from "@/lib/utils/category-routing";
 
 export const dynamic = "force-dynamic";
 
-export default async function LatestCategoryPage({ 
-  params, 
-  searchParams 
-}: { 
+export default async function LatestCategoryPage(props: {
   params: Promise<{ category: string }>;
-  searchParams: any;
+  searchParams: Promise<any>;
 }) {
-  const { category: slug } = await params;
+  const { category: slug } = await props.params;
+  const searchParams = await props.searchParams;
   const categoryName = getCategoryName(slug);
-  
+
   if (!categoryName) return notFound();
 
   const mode = "latest";

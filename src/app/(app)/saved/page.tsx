@@ -17,11 +17,10 @@ type SearchParams = {
   country?: string;
 };
 
-export default async function SavedRequestsPage({
-  searchParams,
-}: {
-  searchParams: SearchParams;
+export default async function SavedRequestsPage(props: {
+  searchParams: Promise<SearchParams>;
 }) {
+  const searchParams = await props.searchParams;
   const supabase = await createServerSupabaseClient();
   const {
     data: { user },

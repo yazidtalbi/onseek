@@ -33,9 +33,10 @@ export function FavoriteButton({
     }
 
     startTransition(async () => {
+      const newFavoriteState = !optimisticFavorite;
       // Toggle optimistic state immediately
-      addOptimisticFavorite(!optimisticFavorite);
-      
+      addOptimisticFavorite(newFavoriteState);
+
       const formData = new FormData();
       formData.set("requestId", requestId);
       await toggleFavoriteAction(formData);

@@ -13,9 +13,10 @@ export type Profile = {
   contact_telegram?: string | null;
   contact_preferred?: "email" | "phone" | "whatsapp" | "telegram" | null;
   onboarding_completed?: boolean;
+  is_admin?: boolean;
 };
 
-export type RequestStatus = "open" | "closed" | "solved";
+export type RequestStatus = "pending" | "open" | "rejected" | "solved" | "archived";
 
 export type RequestItem = {
   id: string;

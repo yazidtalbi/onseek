@@ -17,13 +17,13 @@ const SEARCH_DATABASE = Object.entries(SUBCATEGORIES).flatMap(([main, subs]) =>
 
 // Map common brands/keywords to categories
 const BRAND_MAPPING = [
-  { keywords: ["mercedes", "benz", "merc", "bmw", "audi", "tesla"], parent: "Auto" },
-  { keywords: ["iphone", "apple", "smartphone", "phone", "samsung", "pixel"], parent: "Tech" },
-  { keywords: ["macbook", "laptop", "pc", "computer", "dell", "hp"], parent: "Tech" },
-  { keywords: ["rolex", "watch", "omega", "cartier"], parent: "Fashion" },
-  { keywords: ["nike", "jordan", "shoes", "sneakers", "adidas"], parent: "Fashion" },
-  { keywords: ["sony", "canon", "camera", "nikon"], parent: "Tech" },
-  { keywords: ["gamer", "ps5", "xbox", "nintendo"], parent: "Tech" },
+  { keywords: ["mercedes", "benz", "merc", "bmw", "audi", "tesla"], parent: "Automotive" },
+  { keywords: ["iphone", "apple", "smartphone", "phone", "samsung", "pixel"], parent: "Tech & Electronics" },
+  { keywords: ["macbook", "laptop", "pc", "computer", "dell", "hp"], parent: "Tech & Electronics" },
+  { keywords: ["rolex", "watch", "omega", "cartier"], parent: "Fashion & Accessories" },
+  { keywords: ["nike", "jordan", "shoes", "sneakers", "adidas"], parent: "Fashion & Accessories" },
+  { keywords: ["sony", "canon", "camera", "nikon"], parent: "Tech & Electronics" },
+  { keywords: ["gamer", "ps5", "xbox", "nintendo"], parent: "Gaming & Consoles" },
 ];
 
 export function CategoryCombobox({

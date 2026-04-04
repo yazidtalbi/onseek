@@ -13,11 +13,10 @@ type SearchParams = {
   sort?: string;
 };
 
-export default async function AppFeedPage({
-  searchParams,
-}: {
-  searchParams: SearchParams;
+export default async function AppFeedPage(props: {
+  searchParams: Promise<SearchParams>;
 }) {
+  const searchParams = await props.searchParams;
   const mode = (searchParams.mode === "for_you" ||
     searchParams.mode === "latest" ||
     searchParams.mode === "trending"
