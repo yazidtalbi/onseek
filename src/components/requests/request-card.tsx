@@ -563,23 +563,23 @@ function RequestCardComponent({
             {/* Render condition and budget right under tags for smallImages */}
             {smallImages && (shortMetadata || maxBudget) && (
               <div className="mt-5">
-                <div className="h-[6px] bg-[#f7f8f9] -mx-5 sm:-mx-6 mb-3" />
+                <div className="h-[6px] bg-[#f7f8f9] -mx-5 sm:-mx-6 mb-5" />
                 <div className="flex items-center">
                   {shortMetadata && (
-                    <div className="flex flex-col items-center flex-1 p-2 justify-center min-w-0">
-                      <span className="text-[13px] text-gray-500 leading-none mb-1.5 text-center">Condition</span>
-                      <span className="text-[14.5px] font-[650] text-[#7755FF] tracking-tight leading-tight text-center truncate w-full">
+                    <div className="flex flex-col items-center flex-1 py-1 justify-center min-w-0">
+                      <span className="text-[13px] text-gray-400 font-normal leading-none mb-1.5 text-center">Condition</span>
+                      <span className="text-[14.5px] font-[600] text-[#7755FF] tracking-tight leading-tight text-center truncate w-full">
                         {shortMetadata}
                       </span>
                     </div>
                   )}
                   {shortMetadata && maxBudget && (
-                    <div className="w-[1px] h-8 bg-gray-200 shrink-0 mx-2" />
+                    <div className="w-[1px] h-8 bg-gray-200/60 shrink-0 mx-2" />
                   )}
                   {maxBudget && (
-                    <div className="flex flex-col items-center flex-1 p-2 justify-center min-w-0">
-                      <span className="text-[13px] text-gray-500 leading-none mb-1.5 text-center">Budget</span>
-                      <span className="text-[14.5px] font-[650] text-[#7755FF] tracking-tight leading-tight text-center truncate w-full">
+                    <div className="flex flex-col items-center flex-1 py-1 justify-center min-w-0">
+                      <span className="text-[13px] text-gray-400 font-normal leading-none mb-1.5 text-center">Budget</span>
+                      <span className="text-[14.5px] font-[600] text-[#7755FF] tracking-tight leading-tight text-center truncate w-full">
                         {maxBudget}
                       </span>
                     </div>
