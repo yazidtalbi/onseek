@@ -39,6 +39,10 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
+        hostname: "images.pexels.com",
+      },
+      {
+        protocol: "https",
         hostname: "*.googleusercontent.com",
       },
     ],
@@ -51,11 +55,11 @@ const nextConfig: NextConfig = {
   webpack: (config) => {
     // Ensure webpack resolves modules from the project directory
     const projectRoot = path.resolve(__dirname);
-    
+
     // Set resolve roots to ensure modules are resolved from project directory
     // This prevents webpack from looking in parent directories
     config.resolve.roots = [projectRoot];
-    
+
     // Ensure node_modules resolution starts from project root
     if (Array.isArray(config.resolve.modules)) {
       config.resolve.modules = [
@@ -64,7 +68,7 @@ const nextConfig: NextConfig = {
         'node_modules',
       ];
     }
-    
+
     return config;
   },
 };

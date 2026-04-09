@@ -63,7 +63,7 @@ export function RequestModal({ children, requestId, requestSlug }: RequestModalP
           </div>
         </div>
 
-        <div className="pb-12 pt-6">
+        <div className="pb-12 pt-0">
           {children}
         </div>
       </DialogContent>

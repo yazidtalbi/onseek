@@ -89,7 +89,7 @@ export function RequestDetailView({
             </div>
           </div>
         ) : (
-          <div className="flex items-center justify-end gap-3 mb-6">
+          <div className="flex items-center justify-end gap-3 mb-2">
             <ShareButton requestId={request.id} />
             <div className="p-0.5 border border-gray-100 rounded-full bg-white shadow-sm">
               <FavoriteButton requestId={request.id} isFavorite={isFavorite} />

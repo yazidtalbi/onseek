@@ -195,7 +195,7 @@ export function PersonalizedFeed({
     } catch (error) {
       console.error("Error reading hidden requests:", error);
     }
-    
+
     return (!user && isHomePage) ? items.slice(0, 12) : items;
   }, [data, mounted, user, isHomePage]);
 

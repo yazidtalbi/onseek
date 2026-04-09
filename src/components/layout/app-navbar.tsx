@@ -218,13 +218,21 @@ function MobileCountrySelector({ onSelect }: { onSelect: () => void }) {
   );
 }
 
-export function AppNavbar() {
+export function AppNavbar({ 
+  hideSearch = false,
+  minimal = false,
+  ctaText = "Sign Up"
+}: { 
+  hideSearch?: boolean;
+  minimal?: boolean;
+  ctaText?: string;
+}) {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, profile } = useAuth();
   const { theme, toggleTheme } = useTheme();
-  const [showSearch, setShowSearch] = useState(false);
+  const [showSearch, setShowSearch] = useState(!hideSearch);
   const [searchType, setSearchType] = useState<"requests" | "items">("requests");
   const [isPending, startTransition] = useTransition();
   const [unreadCount, setUnreadCount] = useState(0);
@@ -234,6 +242,7 @@ export function AppNavbar() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const isHomePage = pathname === "/";
   const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
+
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -344,6 +353,10 @@ export function AppNavbar() {
 
   // Detect when hero section is out of view on home page
   useEffect(() => {
+    if (hideSearch) {
+      setShowSearch(false);
+      return;
+    }
     if (!isHomePage) {
       setShowSearch(true);
       return;
@@ -431,9 +444,11 @@ export function AppNavbar() {
               
               {/* Right: Plus, Hamburger */}
               <div className="flex items-center gap-2">
-                <Button onClick={() => setIsCreateModalOpen(true)} size="icon" className="h-9 w-9 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200">
-                  <SquarePlus className="h-4 w-4" />
-                </Button>
+                {!minimal && (
+                  <Button onClick={() => setIsCreateModalOpen(true)} size="icon" className="h-9 w-9 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200">
+                    <SquarePlus className="h-4 w-4" />
+                  </Button>
+                )}
                 <Button variant="ghost" size="icon" className="h-9 w-9 ml-1 -mr-2" onClick={() => setMobileMenuOpen(true)}>
                   <Menu className="h-5 w-5" />
                 </Button>
@@ -477,14 +492,16 @@ export function AppNavbar() {
                     </form>
                     
                     <div className="flex gap-2 w-full">
-                      <Button asChild className="flex-1 rounded-full bg-[#222234] text-white hover:bg-[#222234]/90 text-sm font-semibold h-11">
-                        <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
-                          Log In
-                        </Link>
-                      </Button>
+                      {!minimal && (
+                        <Button asChild className="flex-1 rounded-full bg-[#222234] text-white hover:bg-[#222234]/90 text-sm font-semibold h-11">
+                          <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
+                            Log In
+                          </Link>
+                        </Button>
+                      )}
                       <Button asChild className="flex-1 rounded-full bg-[#222234] text-white hover:bg-[#222234]/90 text-sm font-semibold h-11">
                         <Link href="/signup" onClick={() => setMobileMenuOpen(false)}>
-                          Sign Up
+                          {ctaText}
                         </Link>
                       </Button>
                     </div>
@@ -520,8 +537,9 @@ export function AppNavbar() {
                 {/* Scrollable Content */}
                 <div className="flex-1 overflow-y-auto">
                   {/* Explore Section with Accordion */}
-                  <div className="border-b border-[#e5e7eb]">
-                    <Accordion type="single" collapsible className="w-full">
+                  {!minimal && (
+                    <div className="border-b border-[#e5e7eb]">
+                      <Accordion type="single" collapsible className="w-full">
                       <AccordionItem value="explore" className="border-0">
                         <AccordionTrigger className="px-4 py-3 hover:no-underline">
                           <span className="font-medium">Explore</span>
@@ -579,9 +597,10 @@ export function AppNavbar() {
                       </AccordionItem>
                     </Accordion>
                   </div>
+                )}
 
 
-                  {/* Main Navigation */}
+                {/* Main Navigation */}
                   <nav className="space-y-1 p-4">
                     {user && (
                       <>
@@ -749,39 +768,41 @@ export function AppNavbar() {
             </span>
           </Link>
           {/* Explore Dropdown */}
-          <div className="hidden lg:block shrink-0">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  type="button"
-                  className="flex items-center gap-1.5 px-4 py-2 text-sm font-bold text-[#222222] hover:bg-gray-100 rounded-full transition-colors whitespace-nowrap"
-                >
-                  Explore
-                  <ChevronDown className="h-4 w-4" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-56 bg-white shadow-lg overflow-y-auto max-h-[70vh] z-[100]">
-                <DropdownMenuItem onClick={() => router.push("/popular")} className="font-medium">
-                  <TrendingUp className="h-4 w-4 mr-2" />
-                  Popular
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => router.push("/latest")} className="font-medium">
-                  <Sparkles className="h-4 w-4 mr-2" />
-                  New and Noteworthy
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                {categories.map((category) => (
-                  <DropdownMenuItem
-                    key={category}
-                    onClick={() => handleCategorySelect(category)}
-                    className="font-medium"
+          {!minimal && (
+            <div className="hidden lg:block shrink-0">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    className="flex items-center gap-1.5 px-4 py-2 text-sm font-bold text-[#222222] hover:bg-gray-100 rounded-full transition-colors whitespace-nowrap"
                   >
-                    {category}
+                    Explore
+                    <ChevronDown className="h-4 w-4" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-56 bg-white shadow-lg overflow-y-auto max-h-[70vh] z-[100]">
+                  <DropdownMenuItem onClick={() => router.push("/popular")} className="font-medium">
+                    <TrendingUp className="h-4 w-4 mr-2" />
+                    Popular
                   </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+                  <DropdownMenuItem onClick={() => router.push("/latest")} className="font-medium">
+                    <Sparkles className="h-4 w-4 mr-2" />
+                    New and Noteworthy
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  {categories.map((category) => (
+                    <DropdownMenuItem
+                      key={category}
+                      onClick={() => handleCategorySelect(category)}
+                      className="font-medium"
+                    >
+                      {category}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          )}
         </div>
 
         {/* Center Side: Search Bar - Centered Absolutely */}
@@ -829,7 +850,7 @@ export function AppNavbar() {
           <div className="flex items-center gap-2">
             {user ? (
               <>
-                <Button onClick={() => setIsCreateModalOpen(true)} className="hidden sm:flex h-11 rounded-full bg-transparent text-gray-900 hover:bg-gray-50 border border-gray-900 font-bold whitespace-nowrap px-6 items-center gap-2">
+                <Button onClick={() => setIsCreateModalOpen(true)} className="hidden sm:flex h-11 rounded-full bg-[#1e2330] text-white hover:bg-[#1e2330]/90 border-none font-bold whitespace-nowrap px-6 items-center gap-2">
                   <SquarePlus className="h-4 w-4" />
                   Request
                 </Button>
@@ -900,20 +921,24 @@ export function AppNavbar() {
               </>
             ) : (
               <>
-                <Button onClick={() => setIsCreateModalOpen(true)} className="hidden sm:flex h-11 rounded-full bg-transparent text-gray-900 hover:bg-gray-50 border border-gray-900 font-bold shrink-0 whitespace-nowrap px-6 items-center gap-2">
-                  <SquarePlus className="h-4 w-4" />
-                  Request
-                </Button>
+                {!minimal && (
+                  <Button onClick={() => setIsCreateModalOpen(true)} className="hidden sm:flex h-11 rounded-full bg-[#1e2330] text-white hover:bg-[#1e2330]/90 border-none font-bold shrink-0 whitespace-nowrap px-6 items-center gap-2">
+                    <SquarePlus className="h-4 w-4" />
+                    Request
+                  </Button>
+                )}
                 <Link href="/signup" className="shrink-0">
                   <Button variant="default" className="h-11 rounded-full px-6 bg-[#222234] text-white hover:bg-[#222234]/90 shrink-0 whitespace-nowrap text-sm font-semibold">
-                    Sign Up
+                    {ctaText}
                   </Button>
                 </Link>
-                <div className="ml-3">
-                  <Button asChild variant="outline" className="h-11 rounded-full px-6 bg-white hover:bg-gray-50 shrink-0 whitespace-nowrap text-sm font-semibold">
-                    <Link href="/login">Log In</Link>
-                  </Button>
-                </div>
+                {!minimal && (
+                  <div className="ml-3">
+                    <Button asChild variant="outline" className="h-11 rounded-full px-6 bg-white hover:bg-gray-50 shrink-0 whitespace-nowrap text-sm font-semibold">
+                      <Link href="/login">Log In</Link>
+                    </Button>
+                  </div>
+                )}
               </>
             )}
           </div>

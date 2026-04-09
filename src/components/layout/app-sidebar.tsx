@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { 
-  Home, 
+import {
+  Home,
   X,
   Settings,
   User,
@@ -64,7 +64,7 @@ const SidebarContext = createContext<{
   setOpen: (open: boolean) => void;
 }>({
   open: false,
-  setOpen: () => {},
+  setOpen: () => { },
 });
 
 export function useSidebar() {
@@ -137,9 +137,7 @@ function MobileSidebarContent({ onClose }: { onClose?: () => void }) {
     { href: "/requests", label: "Requests", icon: Hand },
     { href: "/submissions", label: "Proposals", icon: FileText },
     { href: "/inventory", label: "Inventory", icon: Library },
-    { href: "/messages", label: "Messages", icon: MessageCircleMore },
-    { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
-  ];
+    { href: "/messages", label: "Messages", icon: MessageCircleMore },];
 
   const hasUnreadMessages = useUnreadMessages();
 
@@ -148,10 +146,10 @@ function MobileSidebarContent({ onClose }: { onClose?: () => void }) {
       href={item.href}
       onClick={handleClose}
       className={cn(
-        "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
+        "flex items-center gap-3 px-3 py-2 rounded-md transition-colors relative",
         active
-          ? "bg-transparent text-[#7a61ff]"
-          : "text-gray-400 hover:text-foreground hover:bg-gray-50"
+          ? "bg-transparent text-[#1e2330]"
+          : "text-gray-400/70 hover:text-foreground hover:bg-gray-50"
       )}
     >
       <div className="relative">
@@ -186,13 +184,26 @@ function MobileSidebarContent({ onClose }: { onClose?: () => void }) {
         {user ? (
           <>
             <Link
+              href="/leaderboard"
+              onClick={handleClose}
+              className={cn(
+                "flex items-center gap-3 px-3 py-2 rounded-md transition-colors relative",
+                pathname === "/leaderboard"
+                  ? "bg-transparent text-[#1e2330]"
+                  : "text-gray-400/70 hover:text-foreground hover:bg-gray-50"
+              )}
+            >
+              <Trophy className="h-5 w-5" />
+              <span>Leaderboard</span>
+            </Link>
+            <Link
               href="/settings"
               onClick={handleClose}
               className={cn(
-                "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
+                "flex items-center gap-3 px-3 py-2 rounded-md transition-colors relative",
                 pathname === "/settings"
-                  ? "bg-transparent text-[#7a61ff]"
-                  : "text-gray-400 hover:text-foreground hover:bg-gray-50"
+                  ? "bg-transparent text-[#1e2330]"
+                  : "text-gray-400/70 hover:text-foreground hover:bg-gray-50"
               )}
             >
               <Settings className="h-5 w-5" />
@@ -232,16 +243,14 @@ function DesktopSidebarContent() {
     { href: "/requests", label: "Requests", icon: Hand },
     { href: "/submissions", label: "Proposals", icon: FileText },
     { href: "/inventory", label: "Inventory", icon: Library },
-    { href: "/messages", label: "Messages", icon: MessageCircleMore },
-    { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
-  ];
+    { href: "/messages", label: "Messages", icon: MessageCircleMore },];
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="flex flex-col h-full items-center py-4 gap-1">
+      <div className="flex flex-col h-full items-center pt-6 pb-4 gap-1">
 
         {/* Main nav */}
-        <nav className="flex flex-col items-center gap-6 flex-1 w-full px-2">
+        <nav className="flex flex-col items-center gap-6 flex-1 w-full px-0">
           {mainNavItems.map((item) => {
             const isActive =
               pathname === item.href ||
@@ -252,10 +261,10 @@ function DesktopSidebarContent() {
                   <Link
                     href={item.href}
                     className={cn(
-                      "flex items-center justify-center w-12 h-12 rounded-md transition-colors",
+                      "flex items-center justify-center w-full h-12 transition-colors relative",
                       isActive
-                        ? "bg-transparent text-[#7a61ff]"
-                        : "text-gray-400 hover:text-foreground hover:bg-gray-50"
+                        ? "bg-transparent text-[#1e2330]"
+                        : "text-gray-400/70 hover:text-foreground hover:bg-gray-50"
                     )}
                   >
                     <div className="relative">
@@ -275,17 +284,35 @@ function DesktopSidebarContent() {
         </nav>
 
         {/* Bottom actions */}
-        <div className="flex flex-col items-center gap-6 w-full px-2">
+        <div className="flex flex-col items-center gap-6 w-full px-0">
           {user ? (
             <>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Link
+                    href="/leaderboard"
+                    className={cn(
+                      "flex items-center justify-center w-full h-12 transition-colors relative",
+                      pathname === "/leaderboard"
+                        ? "bg-transparent text-[#1e2330]"
+                        : "text-gray-400/70 hover:text-foreground hover:bg-gray-50"
+                    )}
+                  >
+                    <Trophy className="h-6 w-6" />
+                  </Link>
+                </TooltipTrigger>
+                <TooltipContent side="right" sideOffset={8} className="bg-[#212733] text-white border-[#212733]">
+                  Leaderboard
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Link
                     href="/settings"
                     className={cn(
-                      "flex items-center justify-center w-12 h-12 rounded-md transition-colors",
+                      "flex items-center justify-center w-full h-12 transition-colors relative",
                       pathname === "/settings"
-                        ? "bg-transparent text-[#7a61ff]"
+                        ? "bg-transparent text-[#1e2330]"
                         : "text-gray-400 hover:text-foreground hover:bg-gray-50"
                     )}
                   >

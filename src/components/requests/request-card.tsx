@@ -12,7 +12,7 @@ import { FavoriteButton } from "@/components/requests/favorite-button";
 import { RequestMenu } from "@/components/requests/request-menu";
 import type { RequestItem } from "@/lib/types";
 import Image from "next/image";
-import { MapPin, Check, X, Sparkles, Laptop, Gamepad2, ShoppingBag, HeartPulse, Baby, Home, Shovel, Car, Apple, Package, Watch, Smartphone, Tv, Gem, Headphones, Camera, Footprints, LockKeyhole } from "lucide-react";
+import { MapPin, Check, X, Sparkles, Laptop, Gamepad2, ShoppingBag, HeartPulse, Baby, Home, Shovel, Car, Apple, Package, Watch, Smartphone, Tv, Gem, Headphones, Camera, Footprints, LockKeyhole, Wallet } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ImagePreviewDialog } from "@/components/ui/image-preview-dialog";
 import { Badge } from "@/components/ui/badge";
@@ -135,9 +135,9 @@ function RequestCardComponent({
 
   const formattedCondition = (() => {
     const cond = request.condition?.toLowerCase();
-    if (cond === "new") return "New condition";
-    if (cond === "used") return "Used condition";
-    if (cond === "either") return "Any condition";
+    if (cond === "new") return "New";
+    if (cond === "used") return "Used";
+    if (cond === "either") return "New & Used";
     return request.condition;
   })();
 
@@ -207,13 +207,132 @@ function RequestCardComponent({
     </div>
   );
 
-  const cardContent = (
+  const isFeedView = variant === "feed" && !isPreview;
+
+  const cardContent = isFeedView ? (
+    <div className="flex flex-col h-full rounded-[24px] bg-[#f7f8f9] p-2 sm:p-2.5 overflow-hidden shadow-sm hover:bg-[#f2f3f5] transition-colors relative">
+      <div className="px-3 pt-3 pb-3">
+        <h3 className="font-[650] leading-snug text-neutral-900 transition-colors font-[family-name:var(--font-inter-display)] text-[18px] sm:text-[20px] pr-8">
+          {request.title}
+        </h3>
+      </div>
+      <div className="bg-white rounded-[20px] p-5 flex flex-col flex-1 shrink-0 border border-black/[0.04] shadow-sm relative">
+        {request.matchReason && (
+          <div className="mb-4 flex items-center gap-2 text-xs text-[#7755FF] bg-[#7755FF]/10 px-3 py-1.5 rounded-full w-fit">
+            <Sparkles className="h-3.5 w-3.5" />
+            <span>{request.matchReason}</span>
+          </div>
+        )}
+
+        <div className="flex w-full">
+          <div className="flex-1 flex flex-col gap-3 min-w-0 mb-6">
+            {visiblePreferences.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {visiblePreferences.map((pref: { label: string }, idx: number) => (
+                  <div key={idx} className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#ebfbee] text-[#166534] text-[13px] font-medium">
+                    <Check className="h-3.5 w-3.5 shrink-0" strokeWidth={2.5} />
+                    {pref.label.charAt(0).toUpperCase() + pref.label.slice(1)}
+                  </div>
+                ))}
+                {remainingPreferences > 0 && (
+                  <span className="inline-flex items-center px-3.5 py-1.5 rounded-full bg-[#ebfbee]/70 text-[13px] font-medium text-[#166534]">
+                    +{remainingPreferences} more
+                  </span>
+                )}
+              </div>
+            )}
+            {visibleDealbreakers.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {visibleDealbreakers.map((deal: { label: string }, idx: number) => (
+                  <div key={idx} className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#fff4eb] text-[#b45309] text-[13px] font-medium">
+                    <X className="h-3.5 w-3.5 shrink-0" strokeWidth={2.5} />
+                    {deal.label.charAt(0).toUpperCase() + deal.label.slice(1)}
+                  </div>
+                ))}
+                {remainingDealbreakers > 0 && (
+                  <span className="inline-flex items-center px-3.5 py-1.5 rounded-full bg-[#fff4eb]/70 text-[13px] font-medium text-[#b45309]">
+                    +{remainingDealbreakers} more
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="flex w-full items-center gap-2 flex-wrap mb-4">
+          {shortMetadata && (
+            <span className="inline-flex items-center px-3.5 py-1.5 rounded-full text-[13px] font-medium bg-[#f8f9fa] text-gray-500 shrink-0">
+              {shortMetadata}
+            </span>
+          )}
+          {budgetDisplay && (
+            <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[13px] font-medium bg-[#f4f0ff] text-[#7755FF] shrink-0">
+              {parsedPrefs.priceLock === "locked" && <LockKeyhole className="h-3.5 w-3.5" />}
+              {budgetDisplay}
+            </span>
+          )}
+        </div>
+
+        <div className="flex-1 shrink-0 min-h-[0px]" />
+
+        {visibleImages.length > 0 && (
+          <div className="mt-auto mb-5 flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
+            {visibleImages.map((imgUrl, index) => (
+              <button
+                key={index}
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setPreviewImageIndex(index);
+                  setPreviewImage(imgUrl);
+                }}
+                className="relative w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0 rounded-md bg-gray-50 overflow-hidden cursor-pointer hover:opacity-90 transition-opacity border border-gray-100"
+              >
+                <Image src={imgUrl} alt={`${request.title} - Image ${index + 1}`} fill className="object-cover" sizes="(max-width: 640px) 40px, 48px" />
+              </button>
+            ))}
+          </div>
+        )}
+
+        <div
+          className="flex items-center justify-between gap-3 flex-wrap mt-auto pt-6"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+          }}
+        >
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-gray-400 font-medium">
+              {request.submissionCount !== undefined && request.submissionCount > 0
+                ? formatSubmissionCount(request.submissionCount)
+                : "Open for proposals"}
+            </span>
+            <div className="w-[1px] h-3 bg-gray-300/60 shrink-0" />
+          </div>
+
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+            <FavoriteButton
+              requestId={request.id}
+              isFavorite={isFavorite}
+            />
+            <RequestMenu
+              requestId={request.id}
+              requestUserId={request.user_id}
+              status={request.status}
+              categories={request.categories}
+              isAdmin={isAdmin}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  ) : (
     <CardContent className={cn(
       "flex flex-col h-full",
       noPadding ? "p-0" : (isFeed ? "p-5" : variant === "detail" ? (smallImages ? (hasContent ? "px-5 py-4 sm:px-6 sm:py-5" : "px-5 py-3.5 sm:px-6 sm:py-4") : "p-6 sm:p-8 pb-24") : "p-6")
     )}>
       {/* Header Section */}
-      <section>
+      <section className={cn(smallImages && !request.profiles?.username && !request.title && "hidden")}>
         <div className="flex items-start gap-4">
           {/* Content - Left side */}
           <div className="flex-1 min-w-0">
@@ -233,16 +352,34 @@ function RequestCardComponent({
                   )}
                   {/* Title & Category Row */}
                   {/* Title: Truncated to one line in preview modes */}
-                  <h3
-                    className={cn(
-                      "font-semibold leading-snug text-foreground transition-colors font-[family-name:var(--font-inter-display)]",
-                      variant === "detail" && !smallImages ? "text-4xl" : "text-[18px]",
-                      !headerActions && "pr-24"
+                  <div className={cn(smallImages ? "flex items-center justify-between gap-3 mb-2" : "block")}>
+                    <h3
+                      className={cn(
+                        "font-semibold leading-snug text-foreground transition-colors",
+                        variant === "detail" && !smallImages ? "text-4xl" : "text-[18px]",
+                        smallImages && "line-clamp-2 pr-4",
+                        !headerActions && !smallImages && "pr-24"
+                      )}
+                      style={{
+                        fontFamily: "'Zalando Sans', sans-serif",
+                        ...(variant === "detail" && !smallImages ? { letterSpacing: '-1.2px' } : {})
+                      }}
+                    >
+                      {request.title}
+                    </h3>
+                    {smallImages && visibleImages.length > 0 && (
+                      <div className="relative w-12 h-12 flex-shrink-0 rounded-md bg-gray-50 overflow-hidden border border-gray-100 shadow-sm">
+                        <Image
+                          src={visibleImages[0]}
+                          alt={request.title}
+                          fill
+                          className="object-cover"
+                          sizes="48px"
+                          priority={priority}
+                        />
+                      </div>
                     )}
-                    style={variant === "detail" && !smallImages ? { letterSpacing: '-1.2px' } : undefined}
-                  >
-                    {request.title}
-                  </h3>
+                  </div>
                 </div>
                 {variant === "detail" && headerActions && (
                   <div className="flex-shrink-0 pt-1">
@@ -251,19 +388,21 @@ function RequestCardComponent({
                 )}
               </div>
               {/* Concise preview metadata: Condition - Location */}
-              <div className="flex items-center gap-2 mt-2.5 flex-wrap">
-                {(isFeed || smallImages) && shortMetadata && (
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[13px] font-medium bg-[#f9f9f9] text-gray-500 shrink-0 tracking-tight">
-                    {shortMetadata}
-                  </span>
-                )}
-                {(isFeed || smallImages) && budgetDisplay && (
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[13px] font-medium bg-[#f8f7ff] text-[#785ffe] shrink-0 tracking-tight">
-                    {parsedPrefs.priceLock === "locked" && <LockKeyhole className="h-3.5 w-3.5" />}
-                    {budgetDisplay}
-                  </span>
-                )}
-              </div>
+              {isFeed && (
+                <div className="flex items-center gap-2 mt-2.5 flex-wrap">
+                  {shortMetadata && (
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[13px] font-medium bg-[#f9f9f9] text-gray-500 shrink-0 tracking-tight">
+                      {shortMetadata}
+                    </span>
+                  )}
+                  {budgetDisplay && (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[13px] font-medium bg-[#f8f7ff] text-[#785ffe] shrink-0 tracking-tight">
+                      {parsedPrefs.priceLock === "locked" && <LockKeyhole className="h-3.5 w-3.5" />}
+                      {budgetDisplay}
+                    </span>
+                  )}
+                </div>
+              )}
               {/* Detailed budget/location only for non-preview feed cards if needed, 
                   but we'll prioritize the new single-line metadata for now */}
               {isFeed && !shortMetadata && (budgetText || request.country || timeAgo) && (
@@ -304,7 +443,7 @@ function RequestCardComponent({
         {/* Preferences and Dealbreakers - only show on feed variant */}
         {variant === "feed" && (visiblePreferences.length > 0 || visibleDealbreakers.length > 0) && (
           <div className={cn(
-            "border-l border-dashed border-neutral-300/60 pl-4 mt-4 mb-3 flex gap-2",
+            "mt-4 mb-5 flex gap-2",
             isInline ? "flex-wrap items-center" : "flex-col gap-3"
           )}>
             {visiblePreferences.length > 0 && (
@@ -346,7 +485,7 @@ function RequestCardComponent({
 
         {/* Expanded Details Section - only show on detail variant */}
         {variant === "detail" && (
-          <div className="space-y-5 pt-3">
+          <div className={cn("space-y-5", !smallImages && "pt-3")}>
             {/* Budget, Location, and Condition - now redundant on home page previews */}
             {!smallImages && (budgetText || request.country || request.condition) && (
               <div className="flex gap-10 w-full justify-start">
@@ -379,7 +518,7 @@ function RequestCardComponent({
 
             {(preferences.length > 0 || dealbreakers.length > 0) && (
               <div className={cn(
-                variant === "detail" && !smallImages ? "space-y-6 pt-2" : "border-l border-dashed border-neutral-300/60 pl-5 mt-4 mb-4",
+                variant === "detail" && !smallImages ? "space-y-6 pt-2" : "mt-3 mb-5",
                 isInline && variant !== "detail" ? "flex flex-wrap gap-2" : (variant === "detail" && !smallImages ? "space-y-5" : "space-y-4")
               )}>
                 {preferences.length > 0 && (
@@ -418,6 +557,34 @@ function RequestCardComponent({
                     </div>
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* Render condition and budget right under tags for smallImages */}
+            {smallImages && (shortMetadata || maxBudget) && (
+              <div className="mt-5">
+                <div className="h-[6px] bg-[#f7f8f9] -mx-5 sm:-mx-6 mb-3" />
+                <div className="flex items-center">
+                  {shortMetadata && (
+                    <div className="flex flex-col items-center flex-1 p-2 justify-center min-w-0">
+                      <span className="text-[13px] text-gray-500 leading-none mb-1.5 text-center">Condition</span>
+                      <span className="text-[14.5px] font-[650] text-[#7755FF] tracking-tight leading-tight text-center truncate w-full">
+                        {shortMetadata}
+                      </span>
+                    </div>
+                  )}
+                  {shortMetadata && maxBudget && (
+                    <div className="w-[1px] h-8 bg-gray-200 shrink-0 mx-2" />
+                  )}
+                  {maxBudget && (
+                    <div className="flex flex-col items-center flex-1 p-2 justify-center min-w-0">
+                      <span className="text-[13px] text-gray-500 leading-none mb-1.5 text-center">Budget</span>
+                      <span className="text-[14.5px] font-[650] text-[#7755FF] tracking-tight leading-tight text-center truncate w-full">
+                        {maxBudget}
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
@@ -481,7 +648,7 @@ function RequestCardComponent({
       </section>
 
       {/* Images at the absolute bottom for feed cards */}
-      {(isFeed || smallImages) && visibleImages.length > 0 && (
+      {isFeed && visibleImages.length > 0 && (
         <div className="mt-auto pt-4 flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
           {visibleImages.map((imgUrl, index) => (
             <button
@@ -517,39 +684,44 @@ function RequestCardComponent({
       {variant === "detail" ? (
         <div className="flex flex-col gap-3">
           {smallImages ? (
-            <Link
-              href={createRequestUrl(request.slug, searchParams)}
-              prefetch={true}
-              scroll={false}
-              className="block h-full group/card"
-            >
-              <Card
-                ref={cardRef}
-                className={cn(
-                  "flex flex-col relative w-full bg-white shadow-none transition-all duration-300 ease-out",
-                  !noRounding && "overflow-hidden rounded-2xl",
-                  noRounding && "rounded-none",
-                  noBorder ? "!border-none !shadow-none bg-white" : "border border-[#e5e7eb]",
-                  hasContent ? "h-full" : "h-fit",
-                  smallImages && !noBorder && !disableHover && "group-hover/card:scale-[1.02]"
-                )}
+            <div className="flex flex-col gap-3">
+              <Link
+                href={createRequestUrl(request.slug, searchParams)}
+                prefetch={true}
+                scroll={false}
+                className="flex flex-col h-full group/card bg-[#f5f6f9] rounded-[20px]"
               >
-                {cardContent}
-                {isOverflowing && smallImages && (
-                  <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-white via-white/95 to-transparent flex items-end justify-center pb-6 z-10 pointer-events-none rounded-b-2xl">
-                    <span className="text-sm font-medium text-[#7755FF] bg-white backdrop-blur-sm px-6 py-2 rounded-full shadow-[0_4px_14px_0_rgba(0,0,0,0.05)] border border-[#e5e7eb]">
-                      View more...
-                    </span>
-                  </div>
-                )}
-              </Card>
-            </Link>
+                <Card
+                  ref={cardRef}
+                  className={cn(
+                    "flex flex-col relative w-full bg-white shadow-none transition-all duration-300 ease-out",
+                    !noRounding && "overflow-hidden rounded-[20px]",
+                    noRounding && "rounded-none",
+                    noBorder ? "!border-none !shadow-none bg-white" : "border border-[#e5e7eb]",
+                    hasContent ? "h-full" : "h-fit",
+                    smallImages && !noBorder && !disableHover && "group-hover/card:scale-[1.02]"
+                  )}
+                >
+                  {cardContent}
+                  {isOverflowing && smallImages && (
+                    <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-white via-white/95 to-transparent flex items-end justify-center pb-6 z-10 pointer-events-none rounded-b-2xl">
+                      <span className="text-sm font-medium text-[#7755FF] bg-white backdrop-blur-sm px-6 py-2 rounded-full shadow-[0_4px_14px_0_rgba(0,0,0,0.05)] border border-[#e5e7eb]">
+                        View more...
+                      </span>
+                    </div>
+                  )}
+                </Card>
+              </Link>
+              <div className="px-2 pt-1 pb-1">
+                {footerSection}
+              </div>
+            </div>
           ) : (
             <Card
               ref={cardRef}
               className={cn(
                 "flex flex-col relative w-full bg-white shadow-none transition-all duration-300 ease-out",
-                !noRounding && "overflow-hidden rounded-2xl",
+                !noRounding && "overflow-hidden rounded-[20px]",
                 noRounding && "rounded-none",
                 noBorder ? "!border-none !shadow-none bg-white" : "border border-[#e5e7eb]",
                 hasContent ? "h-full" : "h-fit"
@@ -557,11 +729,6 @@ function RequestCardComponent({
             >
               {cardContent}
             </Card>
-          )}
-          {smallImages && (
-            <div className="px-4">
-              {footerSection}
-            </div>
           )}
         </div>
       ) : isPreview ? (
@@ -600,12 +767,14 @@ function RequestCardComponent({
               "flex flex-col transition-all duration-300 ease-out relative group",
               !noBorder && !disableHover && "hover:scale-[1.02]",
               hasContent ? "h-full" : "h-fit",
-              !noBorder && !isFeed && !noRounding ? "rounded-2xl" : "",
-              !noBorder && isFeed && isFirst && isLast && !noRounding ? "rounded-2xl" : "",
-              !noBorder && isFeed && isFirst && !isLast && !noRounding ? "rounded-t-2xl rounded-b-none" : "",
-              !noBorder && isFeed && isLast && !isFirst && !noRounding ? "rounded-b-2xl rounded-t-none border-t-0" : "",
-              !noBorder && isFeed && !isFirst && !isLast ? "rounded-none border-t-0" : "",
-              noBorder && cn("!border-none !shadow-none bg-white", noRounding ? "rounded-none" : "rounded-2xl")
+              isFeedView ? "border-0 bg-transparent shadow-none" : cn(
+                !noBorder && !isFeed && !noRounding ? "rounded-2xl" : "",
+                !noBorder && isFeed && isFirst && isLast && !noRounding ? "rounded-2xl" : "",
+                !noBorder && isFeed && isFirst && !isLast && !noRounding ? "rounded-t-2xl rounded-b-none" : "",
+                !noBorder && isFeed && isLast && !isFirst && !noRounding ? "rounded-b-2xl rounded-t-none border-t-0" : "",
+                !noBorder && isFeed && !isFirst && !isLast ? "rounded-none border-t-0" : "",
+                noBorder && cn("!border-none !shadow-none bg-white", noRounding ? "rounded-none" : "rounded-2xl")
+              )
             )}
           >
             {cardContent}
