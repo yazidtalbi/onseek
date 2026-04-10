@@ -228,28 +228,7 @@ export function PersonalizedFeed({
     return () => window.removeEventListener("scroll", handleScroll);
   }, [hasNextPage, isFetchingNextPage, isFetching, fetchNextPage, user, isHomePage]);
 
-  // Scroll tracking for Categories Strip hide/show behavior
-  const [showCategories, setShowCategories] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      if (typeof window !== 'undefined') {
-        const currentScrollY = window.scrollY;
-        setLastScrollY((prevScrollY) => {
-          if (currentScrollY > prevScrollY && currentScrollY > 100) {
-            setShowCategories(false);
-          } else if (currentScrollY < prevScrollY) {
-            setShowCategories(true);
-          }
-          return currentScrollY;
-        });
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
 
   return (
@@ -262,151 +241,214 @@ export function PersonalizedFeed({
         />
       )}
 
-      {/* Categories Strip */}
-      <div className={cn(
-        "py-2 min-h-[70px] flex flex-col justify-center mb-0 sticky top-16 z-[15] bg-white transition-transform duration-300",
-        !showCategories && "-translate-y-[150%]"
-      )}>
-        <div className="mx-auto w-full text-center flex flex-col items-center relative z-10 max-w-full px-0">
-          <div className="w-full flex flex-col items-stretch">
-            <CategoryPills
-              mode={mode}
-              hasPreferences={hasPreferences}
-              viewMode={viewMode}
-              onViewModeChange={setViewMode}
-              hideViewToggle={false}
-            />
+      <div className="max-w-7xl mx-auto w-full px-4 md:px-6">
+        {/* Categories Strip */}
+        <div className="py-2 min-h-[70px] flex flex-col justify-center mb-6 bg-white transition-all duration-300">
+          <div className="mx-auto w-full text-center flex flex-col items-center relative z-10 w-full px-0">
+            <div className="w-full flex flex-col items-stretch">
+              <CategoryPills
+                mode={mode}
+                hasPreferences={hasPreferences}
+                viewMode={viewMode}
+                onViewModeChange={setViewMode}
+                hideViewToggle={false}
+              />
+            </div>
           </div>
         </div>
+
+        {/* Error state */}
+        {isError ? (
+          <div className="mx-auto w-full">
+            <div className="rounded-lg border border-dashed border-[#e5e7eb]  p-8 text-center">
+              <p className="text-sm text-gray-600 mb-2">Failed to load feed</p>
+              {error && (
+                <p className="text-xs text-red-500 mb-4">
+                  {error instanceof Error ? error.message : "Unknown error"}
+                </p>
+              )}
+              <Button onClick={() => refetch()} variant="outline">
+                Try again
+              </Button>
+            </div>
+          </div>
+        ) : allItems.length === 0 ? (
+          <div className="mx-auto w-full">
+            <div className="rounded-lg border border-dashed border-[#e5e7eb]  p-8 text-center">
+              {mode === "for_you" && !hasPreferences ? (
+                <div className="space-y-4">
+                  <p className="text-sm text-gray-600">
+                    Personalize your feed by selecting your interests
+                  </p>
+                  <Button asChild className="bg-[#7755FF] hover:bg-[#6644EE]">
+                    <Link href="/settings">Choose Categories</Link>
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <p className="text-sm text-gray-600">No requests found</p>
+                  <Button onClick={() => refetch()} variant="outline" size="sm">
+                    Refresh
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+        ) : allItems.length > 0 ? (
+          <div className="relative group w-full flex flex-col text-left">
+            {/* Show subtle loading indicator while fetching */}
+            {isFetching && !isLoading && (
+              <div className="absolute top-0 left-0 right-0 z-20 flex justify-center py-2 pointer-events-none">
+                <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+              </div>
+            )}
+
+            <div className={cn("pb-4 w-full", viewMode === "grid" ? "columns-[360px] gap-6" : "flex flex-col gap-4 max-w-2xl mx-auto")}>
+              {/* Inject textarea for creation at top of masonry if logged in */}
+              {user && isHomePage && (
+                <div className="break-inside-avoid mb-6">
+                  <div
+                    role="button"
+                    tabIndex={-1}
+                    onClick={() => {
+                      window.dispatchEvent(new CustomEvent('open-create-request-modal'));
+                    }}
+                    className="w-full rounded-2xl bg-white border border-[#e6e7eb] shadow-none transition-all duration-300 min-h-[140px] flex flex-col p-4 cursor-pointer"
+                  >
+                    <div className="flex items-center gap-3 flex-1 mb-2">
+                      <div className="flex items-center justify-center h-10 w-10 rounded-full bg-gray-200 text-foreground font-medium text-base shrink-0">
+                        {profile?.username?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase() || "U"}
+                      </div>
+                      <span className="text-[#a5abb7] text-[16px] font-medium font-sans">
+                        What are you looking for, {profile?.username || "Guest"}?
+                      </span>
+                    </div>
+                    <div className="flex justify-end mt-auto">
+                      <div className="rounded-full bg-[#1e2330] hover:bg-[#2a303f] text-white px-6 py-2.5 text-[15px] font-medium flex items-center justify-center transition-colors shadow-sm">
+                        Request
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {allItems.map((request: RequestItem, index: number) => {
+                const requestWithExtras = request as RequestItem & { images?: string[]; links?: string[] };
+                return (
+                  <div key={request.id} className="break-inside-avoid mb-6 bg-[#f5f6f9] rounded-[20px] p-[6px] transition-all duration-300 ease-out hover:scale-[1.02] shadow-none hover:shadow-none">
+                    <RequestCard
+                      request={request}
+                      variant="detail"
+                      images={requestWithExtras.images || []}
+                      links={requestWithExtras.links || []}
+                      smallImages={true}
+                      noBorder={true}
+                      priority={index < 6}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Bottom CTA for guests - now integrated at the end of the feed */}
+            <div className="w-full flex justify-center py-12">
+              {(!user && isHomePage) ? (
+                <Button
+                  onClick={() => router.push("/login")}
+                  variant="outline"
+                  className="rounded-full font-semibold h-12 px-10 border border-gray-200 text-[#1e2330] bg-white hover:bg-gray-50 transition-all hover:scale-105 active:scale-95 shadow-none"
+                >
+                  Explore
+                </Button>
+              ) : (
+                isFetchingNextPage && <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+              )}
+            </div>
+
+          </div>
+        ) : null}
       </div>
 
-      {/* Error state */}
-      {isError ? (
-        <div className="mx-auto w-full">
-          <div className="rounded-lg border border-dashed border-[#e5e7eb]  p-8 text-center">
-            <p className="text-sm text-gray-600 mb-2">Failed to load feed</p>
-            {error && (
-              <p className="text-xs text-red-500 mb-4">
-                {error instanceof Error ? error.message : "Unknown error"}
-              </p>
-            )}
-            <Button onClick={() => refetch()} variant="outline">
-              Try again
-            </Button>
-          </div>
-        </div>
-      ) : allItems.length === 0 ? (
-        <div className="mx-auto w-full">
-          <div className="rounded-lg border border-dashed border-[#e5e7eb]  p-8 text-center">
-            {mode === "for_you" && !hasPreferences ? (
-              <div className="space-y-4">
-                <p className="text-sm text-gray-600">
-                  Personalize your feed by selecting your interests
-                </p>
-                <Button asChild className="bg-[#7755FF] hover:bg-[#6644EE]">
-                  <Link href="/settings">Choose Categories</Link>
-                </Button>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <p className="text-sm text-gray-600">No requests found</p>
-                <Button onClick={() => refetch()} variant="outline" size="sm">
-                  Refresh
-                </Button>
-              </div>
-            )}
-          </div>
-        </div>
-      ) : allItems.length > 0 ? (
-        <div className="relative group w-full flex flex-col">
-          {/* Show subtle loading indicator while fetching */}
-          {isFetching && !isLoading && (
-            <div className="absolute top-0 left-0 right-0 z-20 flex justify-center py-2 pointer-events-none">
-              <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
-            </div>
-          )}
-
-          <div className={cn("pb-4 w-full", viewMode === "grid" ? "columns-[360px] gap-6" : "flex flex-col gap-4 max-w-2xl mx-auto")}>
-            {/* Inject textarea for creation at top of masonry if logged in */}
-            {user && isHomePage && (
-              <div className="break-inside-avoid mb-6">
-                <div
-                  role="button"
-                  tabIndex={-1}
-                  onClick={() => {
-                    window.dispatchEvent(new CustomEvent('open-create-request-modal'));
-                  }}
-                  className="w-full rounded-2xl bg-white border border-[#e6e7eb] shadow-none transition-all duration-300 min-h-[140px] flex flex-col p-4 cursor-pointer"
-                >
-                  <div className="flex items-center gap-3 flex-1 mb-2">
-                    <div className="flex items-center justify-center h-10 w-10 rounded-full bg-gray-200 text-foreground font-medium text-base shrink-0">
-                      {profile?.username?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase() || "U"}
-                    </div>
-                    <span className="text-[#a5abb7] text-[16px] font-medium font-sans">
-                      What are you looking for, {profile?.username || "Guest"}?
-                    </span>
-                  </div>
-                  <div className="flex justify-end mt-auto">
-                    <div className="rounded-full bg-[#1e2330] hover:bg-[#2a303f] text-white px-6 py-2.5 text-[15px] font-medium flex items-center justify-center transition-colors shadow-sm">
-                      Request
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {allItems.map((request: RequestItem, index: number) => {
-              const requestWithExtras = request as RequestItem & { images?: string[]; links?: string[] };
-              return (
-                <div key={request.id} className="break-inside-avoid mb-6 bg-[#f5f6f9] rounded-[20px] p-[6px] transition-all duration-300 ease-out hover:scale-[1.02] shadow-none hover:shadow-none">
-                  <RequestCard
-                    request={request}
-                    variant="detail"
-                    images={requestWithExtras.images || []}
-                    links={requestWithExtras.links || []}
-                    smallImages={true}
-                    noBorder={true}
-                    priority={index < 6}
-                  />
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="w-full flex justify-center py-8">
-            {(!user && isHomePage) ? (
-              <Button
-                onClick={() => router.push("/login")}
-                variant="outline"
-                className="rounded-full font-medium h-10 px-6 border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 flex items-center shadow-sm"
-              >
-                Explore projects
-              </Button>
-            ) : (
-              isFetchingNextPage && <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
-            )}
-          </div>
-
-          {showHero && <FaqSection />}
-
-          {showHero && (
-            <div className="w-full bg-[#785ffe] rounded-[32px] px-8 py-24 sm:px-16 mt-16 mb-8 flex flex-col items-center text-center justify-center min-h-[400px]">
-              <h2 className="text-4xl lg:text-6xl tracking-tight text-white mb-10 max-w-2xl" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 500 }}>
-                Let your item come fiiind you
+      {showHero && (
+        <div className="flex flex-col w-full bg-white">
+          {/* Why Onseek Section - High Vertical Padding, No border/rounded */}
+          <section className="py-32 px-10 overflow-hidden mt-8">
+            <div className="max-w-6xl mx-auto text-center">
+              <h2 className="text-[40px] md:text-[56px] leading-[1.05] mb-6 text-[#1A1A1A] font-extrabold tracking-[-0.03em]" style={{ fontFamily: 'var(--font-expanded)' }}>
+                Why Onseek?
               </h2>
-              <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
-                <Button size="lg" className="rounded-full bg-white hover:bg-white/90 text-[#785ffe] px-10 h-14 text-[16px] font-bold w-full sm:w-auto shadow-sm" onClick={() => router.push(user ? '/new' : '/signup')}>
-                  Join the community now
+              <p className="text-xl text-gray-400 font-medium max-w-3xl mx-auto mb-20 leading-relaxed">
+                We&apos;re built for people who value their time. Post a Request, set your budget, <br className="hidden md:block" />
+                and we&apos;ll help you find exactly what you&apos;re looking for by bringing the market to you.
+              </p>
+
+              <div className="grid md:grid-cols-3 gap-16 lg:gap-24">
+                <div className="flex flex-col items-center group">
+                  <div className="w-32 h-32 mb-8 overflow-hidden rounded-3xl transition-transform duration-500 hover:scale-110">
+                    <img src="/illustrations/onseek_magnet_purple.png" alt="Sellers Compete" className="w-full h-full object-contain" />
+                  </div>
+                  <h3 className="text-2xl font-semibold mb-4 tracking-tight" style={{ fontFamily: 'var(--font-expanded)' }}>Sellers compete for you</h3>
+                  <p className="text-gray-500 font-medium leading-relaxed text-sm md:text-base">
+                    Instead of hunting for prices, you set your own budget and let verified sellers send you their best offers directly.
+                  </p>
+                </div>
+
+                <div className="flex flex-col items-center group">
+                  <div className="w-32 h-32 mb-8 overflow-hidden rounded-3xl transition-transform duration-500 hover:scale-110">
+                    <img src="/illustrations/onseek_flower_purple.png" alt="Protect your peace" className="w-full h-full object-contain" />
+                  </div>
+                  <h3 className="text-2xl font-semibold mb-4 tracking-tight" style={{ fontFamily: 'var(--font-expanded)' }}>Protect your peace</h3>
+                  <p className="text-gray-500 font-medium leading-relaxed text-sm md:text-base">
+                    Your time is valuable. Our request-first model eliminates the friction of traditional marketplaces, letting you focus on what matters.
+                  </p>
+                </div>
+
+                <div className="flex flex-col items-center group">
+                  <div className="w-32 h-32 mb-8 overflow-hidden rounded-3xl transition-transform duration-500 hover:scale-110">
+                    <img src="/illustrations/onseek_city_purple.png" alt="Verified Marketplace" className="w-full h-full object-contain" />
+                  </div>
+                  <h3 className="text-2xl font-semibold mb-4 tracking-tight" style={{ fontFamily: 'var(--font-expanded)' }}>Verified marketplace</h3>
+                  <p className="text-gray-500 font-medium leading-relaxed text-sm md:text-base">
+                    Every provider on Onseek is manually vetted to ensure quality, reliability, and a completely secure transaction experience.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <div className="max-w-7xl mx-auto w-full px-6 md:px-12">
+            <FaqSection />
+          </div>
+
+          {/* CTA Section - Removed border/rounded/crop */}
+          <section className="py-24 px-6 overflow-hidden mt-16 mb-8">
+            <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-16 md:gap-24">
+              <div className="flex-[1.3] order-2 md:order-1">
+                <img
+                  src="/illustrations/onseek_man_requests.png"
+                  alt="Seek faster, find smarter"
+                  className="w-full max-w-7xl mx-auto drop-shadow-sm scale-110 origin-center"
+                />
+              </div>
+              <div className="flex-1 order-1 md:order-2 text-left">
+                <h2 className="text-[40px] md:text-[64px] leading-[1.05] font-extrabold tracking-[-0.03em] mb-8 text-[#222026]" style={{ fontFamily: 'var(--font-expanded)' }}>
+                  Seek faster. <br /> Find smarter.
+                </h2>
+                <p className="text-xl text-gray-500 font-medium mb-12 leading-relaxed max-w-xl">
+                  Skip the endless scrolling. Post your request, define your needs, and let the most qualified partners come to you. High-signal connections, zero noise.
+                </p>
+                <Button asChild className="bg-[#232833] hover:bg-[#232833]/90 text-white px-12 py-9 text-lg rounded-full font-medium shadow-none transition-all hover:scale-105 active:scale-95 border-0">
+                  <Link href="/signup">Post your request now</Link>
                 </Button>
               </div>
             </div>
-          )}
+          </section>
 
           <div className="flex justify-center py-4 mt-8">
             <p className="text-xs text-gray-400">&copy; 2026 OnSeek</p>
           </div>
         </div>
-      ) : null}
+      )}
       {isAuthModalOpen && (
         <AuthModal
           open={isAuthModalOpen}

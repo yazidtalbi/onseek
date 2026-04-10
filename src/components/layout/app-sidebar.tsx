@@ -15,11 +15,12 @@ import {
   Trophy,
   LogOut,
   Bell,
-  Library,
+  Package2,
   Hand,
   Handshake,
   MessageCircleMore,
-  FileText
+  FileText,
+  Binoculars
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/components/layout/auth-provider";
@@ -134,9 +135,9 @@ function MobileSidebarContent({ onClose }: { onClose?: () => void }) {
 
   const mainNavItems = [
     { href: "/", label: "Home", icon: Home },
-    { href: "/requests", label: "Requests", icon: Hand },
+    { href: "/requests", label: "Requests", icon: Binoculars },
     { href: "/submissions", label: "Proposals", icon: FileText },
-    { href: "/inventory", label: "Inventory", icon: Library },
+    { href: "/inventory", label: "Inventory", icon: Package2 },
     { href: "/messages", label: "Messages", icon: MessageCircleMore },];
 
   const hasUnreadMessages = useUnreadMessages();
@@ -240,9 +241,9 @@ function DesktopSidebarContent() {
 
   const mainNavItems = [
     { href: "/", label: "Home", icon: Home },
-    { href: "/requests", label: "Requests", icon: Hand },
+    { href: "/requests", label: "Requests", icon: Binoculars },
     { href: "/submissions", label: "Proposals", icon: FileText },
-    { href: "/inventory", label: "Inventory", icon: Library },
+    { href: "/inventory", label: "Inventory", icon: Package2 },
     { href: "/messages", label: "Messages", icon: MessageCircleMore },];
 
   return (

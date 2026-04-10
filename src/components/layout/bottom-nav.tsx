@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, PlusCircle, ClipboardList, Send, User, Package } from "lucide-react";
+import { Home, PlusCircle, ClipboardList, Send, User, Package2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/components/layout/auth-provider";
 
@@ -14,7 +14,7 @@ export function BottomNav() {
     { href: "/", label: "Home", icon: Home },
     { href: "/requests", label: "My Requests", icon: ClipboardList },
     { href: "/new", label: "New", icon: PlusCircle, cta: true },
-    { href: "/personal-items", label: "Items", icon: Package },
+    { href: "/personal-items", label: "Items", icon: Package2 },
     {
       href: profile?.username ? `/profile/${profile.username}` : "/settings",
       label: "Profile",
@@ -40,8 +40,8 @@ export function BottomNav() {
                 item.cta
                   ? "rounded-2xl bg-gray-200 px-3 py-2 text-gray-700 hover:bg-gray-300"
                   : isActive
-                  ? "text-[#7755FF]"
-                  : "text-gray-600 hover:text-[#7755FF]"
+                    ? "text-[#7755FF]"
+                    : "text-gray-600 hover:text-[#7755FF]"
               )}
             >
               <Icon className="h-5 w-5" />

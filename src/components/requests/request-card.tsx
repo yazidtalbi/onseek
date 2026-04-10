@@ -492,7 +492,7 @@ function RequestCardComponent({
                 {budgetText && (
                   <div>
                     <h4 className="text-sm font-semibold text-gray-400 mb-1.5">Budget</h4>
-                    <div className="flex items-center gap-1.5 text-sm text-neutral-900">
+                    <div className="flex items-center gap-1.5 text-[15.5px] font-medium text-neutral-900">
                       {parsedPrefs.priceLock === "locked" && <LockKeyhole className="h-3.5 w-3.5 text-gray-400" />}
                       <span>{budgetText}</span>
                     </div>
@@ -501,7 +501,7 @@ function RequestCardComponent({
                 {request.country && (
                   <div>
                     <h4 className="text-sm font-semibold text-gray-400 mb-1.5">Location</h4>
-                    <div className="flex items-center gap-1.5 text-sm text-neutral-900">
+                    <div className="flex items-center gap-1.5 text-[15.5px] font-medium text-neutral-900">
                       <MapPin className="h-4 w-4" />
                       <span>{request.country}</span>
                     </div>
@@ -510,7 +510,7 @@ function RequestCardComponent({
                 {request.condition && (
                   <div>
                     <h4 className="text-sm font-semibold text-gray-400 mb-1.5">Condition</h4>
-                    <p className="text-sm text-neutral-900">{formattedCondition}</p>
+                    <p className="text-[15.5px] font-medium text-neutral-900">{formattedCondition}</p>
                   </div>
                 )}
               </div>
@@ -568,7 +568,7 @@ function RequestCardComponent({
                   {shortMetadata && (
                     <div className="flex flex-col items-center flex-1 py-1 justify-center min-w-0">
                       <span className="text-[13px] text-gray-400 font-normal leading-none mb-1.5 text-center">Condition</span>
-                      <span className="text-[14.5px] font-[600] text-[#7755FF] tracking-tight leading-tight text-center truncate w-full">
+                      <span className="text-[15.5px] font-[600] text-[#7755FF] tracking-tight leading-tight text-center truncate w-full">
                         {shortMetadata}
                       </span>
                     </div>
@@ -579,7 +579,7 @@ function RequestCardComponent({
                   {maxBudget && (
                     <div className="flex flex-col items-center flex-1 py-1 justify-center min-w-0">
                       <span className="text-[13px] text-gray-400 font-normal leading-none mb-1.5 text-center">Budget</span>
-                      <span className="text-[14.5px] font-[600] text-[#7755FF] tracking-tight leading-tight text-center truncate w-full">
+                      <span className="text-[15.5px] font-[600] text-[#7755FF] tracking-tight leading-tight text-center truncate w-full">
                         {maxBudget}
                       </span>
                     </div>

@@ -171,7 +171,7 @@ export function CategoryPills({
     <div className="w-full flex flex-col gap-3">
       <div className="flex items-center justify-between w-full">
         {/* Categories Scroller - far left */}
-        <div className="flex-1 min-w-0 pr-4 flex items-center relative group max-w-[720px]">
+        <div className="flex-1 min-w-0 pr-4 flex items-center relative group">
           {/* Left gradient overlay */}
           {canScrollCategoriesLeft && (
             <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-white via-white/80 to-transparent pointer-events-none z-10" />

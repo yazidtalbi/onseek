@@ -25,7 +25,7 @@ export function FaqSection() {
   return (
     <div className="w-full mx-auto py-24 mb-12">
       <div className="max-w-[1240px] mx-auto px-6">
-        <div className="flex flex-col lg:flex-row gap-12 lg:gap-24 items-start">
+        <div className="flex flex-col lg:flex-row gap-12 lg:gap-24 items-center">
           {/* Left: Title */}
           <div className="lg:w-[40%]">
             <h2 className="text-[40px] md:text-[56px] leading-[1.05] font-medium tracking-[-0.03em] text-foreground" style={{ fontFamily: 'var(--font-expanded)' }}>

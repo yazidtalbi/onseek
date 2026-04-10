@@ -5,7 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Bell, Plus, ChevronDown, TrendingUp, Sparkles, Moon, Sun, LogOut, Bookmark, User, Send, Settings, ClipboardList, Package, Menu, X, Home, Trophy, Globe, MessageCircle, MessageCircleMore, SquarePlus } from "lucide-react";
+import { Search, Bell, Plus, ChevronDown, TrendingUp, Sparkles, Moon, Sun, LogOut, Bookmark, User, Send, Settings, ClipboardList, FileText, Package, Package2, Menu, X, Home, Trophy, Globe, MessageCircle, MessageCircleMore, SquarePlus, Binoculars } from "lucide-react";
 import { useAuth } from "@/components/layout/auth-provider";
 import { useTheme } from "@/components/layout/theme-provider";
 import { signOutAction } from "@/actions/auth.actions";
@@ -89,8 +89,8 @@ function MobileCountrySelector({ onSelect }: { onSelect: () => void }) {
     const lowerQuery = searchQuery.toLowerCase();
     const allFiltered = searchQuery
       ? countryLabels.filter((country) =>
-          country.toLowerCase().includes(lowerQuery)
-        )
+        country.toLowerCase().includes(lowerQuery)
+      )
       : countryLabels;
 
     const popular = allFiltered.filter((country) =>
@@ -218,11 +218,11 @@ function MobileCountrySelector({ onSelect }: { onSelect: () => void }) {
   );
 }
 
-export function AppNavbar({ 
+export function AppNavbar({
   hideSearch = false,
   minimal = false,
   ctaText = "Sign Up"
-}: { 
+}: {
   hideSearch?: boolean;
   minimal?: boolean;
   ctaText?: string;
@@ -265,7 +265,7 @@ export function AppNavbar({
   useEffect(() => {
     const handleOpenCreateModal = () => setIsCreateModalOpen(true);
     window.addEventListener('open-create-request-modal', handleOpenCreateModal);
-    
+
     // Fallback for direct URL access
     if (searchParams.get("new") === "true") {
       setIsCreateModalOpen(true);
@@ -274,7 +274,7 @@ export function AppNavbar({
       const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
       router.replace(newUrl, { scroll: false });
     }
-    
+
     return () => window.removeEventListener('open-create-request-modal', handleOpenCreateModal);
   }, [searchParams, pathname, router]);
 
@@ -282,14 +282,14 @@ export function AppNavbar({
     try {
       const supabase = createBrowserSupabaseClient();
       await supabase.auth.signOut();
-      
+
       // Force hard refresh to root
       window.location.href = "/";
     } catch (error) {
       console.error("Error signing out:", error);
     }
   };
-  
+
   const navItems: { href: string; label: string }[] = [];
 
   const isActive = (href: string) => {
@@ -323,7 +323,7 @@ export function AppNavbar({
         .select("*", { count: "exact", head: true })
         .eq("user_id", user.id)
         .eq("read", false);
-      
+
       setUnreadCount(count || 0);
     };
 
@@ -441,7 +441,7 @@ export function AppNavbar({
                 <Image src="/logo.png" alt="onseek" width={100} height={28} className="h-6 w-auto" priority />
                 <span className="text-lg text-black" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>onseek</span>
               </Link>
-              
+
               {/* Right: Plus, Hamburger */}
               <div className="flex items-center gap-2">
                 {!minimal && (
@@ -470,292 +470,291 @@ export function AppNavbar({
       </div>
 
       <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-            <SheetContent side="left" fullScreen={true} noBlur={true} className="w-full p-0 bg-white">
-              <div className="flex flex-col h-full">
-                {/* Header */}
-                <div className="flex items-center justify-between p-4 border-b border-[#e5e7eb]">
-                  <h2 className="text-lg font-semibold">Menu</h2>
-                  <SheetClose asChild>
-                    <Button variant="ghost" size="icon">
-                      <X className="h-5 w-5" />
-                    </Button>
-                  </SheetClose>
-                </div>
+        <SheetContent side="left" fullScreen={true} noBlur={true} className="w-full p-0 bg-white">
+          <div className="flex flex-col h-full">
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 border-b border-[#e5e7eb]">
+              <h2 className="text-lg font-semibold">Menu</h2>
+              <SheetClose asChild>
+                <Button variant="ghost" size="icon">
+                  <X className="h-5 w-5" />
+                </Button>
+              </SheetClose>
+            </div>
 
-                {/* Guest layout - Search and Auth */}
-                {!user && (
-                  <div className="px-4 py-4 border-b border-[#e5e7eb] space-y-4">
-                    <form action="/search" method="get" className="relative w-full flex items-center">
-                      <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                      <Input name="q" placeholder="Search..." defaultValue={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9 pr-4 bg-gray-100 border-transparent rounded-full h-10 w-full text-sm focus-visible:ring-1 focus-visible:ring-gray-300 transition-shadow" />
-                      <input type="hidden" name="type" value={searchType} />
-                    </form>
-                    
-                    <div className="flex gap-2 w-full">
-                      {!minimal && (
-                        <Button asChild className="flex-1 rounded-full bg-[#222234] text-white hover:bg-[#222234]/90 text-sm font-semibold h-11">
-                          <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
-                            Log In
-                          </Link>
-                        </Button>
-                      )}
-                      <Button asChild className="flex-1 rounded-full bg-[#222234] text-white hover:bg-[#222234]/90 text-sm font-semibold h-11">
-                        <Link href="/signup" onClick={() => setMobileMenuOpen(false)}>
-                          {ctaText}
-                        </Link>
-                      </Button>
-                    </div>
-                  </div>
-                )}
+            {/* Guest layout - Search and Auth */}
+            {!user && (
+              <div className="px-4 py-4 border-b border-[#e5e7eb] space-y-4">
+                <form action="/search" method="get" className="relative w-full flex items-center">
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input name="q" placeholder="Search..." defaultValue={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9 pr-4 bg-gray-100 border-transparent rounded-full h-10 w-full text-sm focus-visible:ring-1 focus-visible:ring-gray-300 transition-shadow" />
+                  <input type="hidden" name="type" value={searchType} />
+                </form>
 
-                {/* User Info Section */}
-                {user && (
-                  <div className="p-4 border-b border-[#e5e7eb]">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-700 font-bold text-sm overflow-hidden relative">
-                        {profile?.avatar_url && !avatarError ? (
-                          <img 
-                            src={profile.avatar_url} 
-                            alt={profile.username || "User"} 
-                            className="w-full h-full object-cover"
-                            onError={() => setAvatarError(true)}
-                          />
-                        ) : (
-                          profile?.username?.charAt(0).toUpperCase() || "U"
-                        )}
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">{profile?.username || "User"}</p>
-                        <p className="text-xs text-muted-foreground">{user.email}</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-                {/* Rest of the mobile menu content... */}
-
-
-                {/* Scrollable Content */}
-                <div className="flex-1 overflow-y-auto">
-                  {/* Explore Section with Accordion */}
+                <div className="flex gap-2 w-full">
                   {!minimal && (
-                    <div className="border-b border-[#e5e7eb]">
-                      <Accordion type="single" collapsible className="w-full">
-                      <AccordionItem value="explore" className="border-0">
-                        <AccordionTrigger className="px-4 py-3 hover:no-underline">
-                          <span className="font-medium">Explore</span>
-                        </AccordionTrigger>
-                        <AccordionContent>
-                          <div className="px-4 pb-2 space-y-0.5">
-                            <Link
-                              href="/popular"
-                              onClick={() => setMobileMenuOpen(false)}
-                              className={cn(
-                                "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
-                                pathname.startsWith("/popular")
-                                  ? "bg-gray-100 text-foreground font-medium"
-                                  : "text-muted-foreground hover:text-foreground hover:bg-gray-50"
-                              )}
-                            >
-                              <TrendingUp className="h-5 w-5 shrink-0" />
-                              Popular
-                            </Link>
-                            <Link
-                              href="/latest"
-                              onClick={() => setMobileMenuOpen(false)}
-                              className={cn(
-                                "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
-                                pathname.startsWith("/latest")
-                                  ? "bg-gray-100 text-foreground font-medium"
-                                  : "text-muted-foreground hover:text-foreground hover:bg-gray-50"
-                              )}
-                            >
-                              <Sparkles className="h-5 w-5 shrink-0" />
-                              New and Noteworthy
-                            </Link>
-                            {categories.map((category) => {
-                              const { getCategorySlug } = require("@/lib/utils/category-routing");
-                              const categoryPath = `/popular/${getCategorySlug(category)}`;
-                              const isActive = pathname === categoryPath;
-                              return (
-                                <Link
-                                  key={category}
-                                  href={categoryPath}
-                                  onClick={() => setMobileMenuOpen(false)}
-                                  className={cn(
-                                    "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
-                                    isActive
-                                      ? "bg-gray-100 text-foreground font-medium"
-                                      : "text-muted-foreground hover:text-foreground hover:bg-gray-50"
-                                  )}
-                                >
-                                  {category}
-                                </Link>
-                              );
-                            })}
-                          </div>
-                        </AccordionContent>
-                      </AccordionItem>
-                    </Accordion>
+                    <Button asChild className="flex-1 rounded-full bg-[#222234] text-white hover:bg-[#222234]/90 text-sm font-semibold h-11">
+                      <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
+                        Log In
+                      </Link>
+                    </Button>
+                  )}
+                  <Button asChild className="flex-1 rounded-full bg-[#222234] text-white hover:bg-[#222234]/90 text-sm font-semibold h-11">
+                    <Link href="/signup" onClick={() => setMobileMenuOpen(false)}>
+                      {ctaText}
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* User Info Section */}
+            {user && (
+              <div className="p-4 border-b border-[#e5e7eb]">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-700 font-bold text-sm overflow-hidden relative">
+                    {profile?.avatar_url && !avatarError ? (
+                      <img
+                        src={profile.avatar_url}
+                        alt={profile.username || "User"}
+                        className="w-full h-full object-cover"
+                        onError={() => setAvatarError(true)}
+                      />
+                    ) : (
+                      profile?.username?.charAt(0).toUpperCase() || "U"
+                    )}
                   </div>
-                )}
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">{profile?.username || "User"}</p>
+                    <p className="text-xs text-muted-foreground">{user.email}</p>
+                  </div>
+                </div>
+              </div>
+            )}
 
 
-                {/* Main Navigation */}
-                  <nav className="space-y-1 p-4">
-                    {user && (
-                      <>
-                        <Link
-                          href="/requests"
-                          onClick={() => setMobileMenuOpen(false)}
-                          className={cn(
-                            "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
-                            pathname === "/requests" || pathname.startsWith("/requests/")
-                              ? "bg-gray-100 text-foreground font-medium"
-                              : "text-muted-foreground hover:text-foreground hover:bg-gray-50"
-                          )}
-                        >
-                          <ClipboardList className="h-5 w-5 shrink-0" />
-                          My Requests
-                        </Link>
-                        <Link
-                          href="/submissions"
-                          onClick={() => setMobileMenuOpen(false)}
-                          className={cn(
-                            "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
-                            pathname === "/submissions"
-                              ? "bg-gray-100 text-foreground font-medium"
-                              : "text-muted-foreground hover:text-foreground hover:bg-gray-50"
-                          )}
-                        >
-                          <Send className="h-5 w-5 shrink-0" />
-                          Proposals
-                        </Link>
-                        <Link
-                          href="/messages"
-                          onClick={() => setMobileMenuOpen(false)}
-                          className={cn(
-                            "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
-                            pathname === "/messages" || pathname.startsWith("/messages/")
-                              ? "bg-gray-100 text-foreground font-medium"
-                              : "text-muted-foreground hover:text-foreground hover:bg-gray-50"
-                          )}
-                        >
-                          <MessageCircle className="h-5 w-5 shrink-0" />
-                          Messages
-                        </Link>
-                        <Link
-                          href="/personal-items"
-                          onClick={() => setMobileMenuOpen(false)}
-                          className={cn(
-                            "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
-                            pathname === "/personal-items"
-                              ? "bg-gray-100 text-foreground font-medium"
-                              : "text-muted-foreground hover:text-foreground hover:bg-gray-50"
-                          )}
-                        >
-                          <Package className="h-5 w-5 shrink-0" />
-                          Inventory
-                        </Link>
-                        <Link
-                          href="/saved"
-                          onClick={() => setMobileMenuOpen(false)}
-                          className={cn(
-                            "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
-                            pathname === "/saved"
-                              ? "bg-gray-100 text-foreground font-medium"
-                              : "text-muted-foreground hover:text-foreground hover:bg-gray-50"
-                          )}
-                        >
-                          <Bookmark className={cn(
-                            "h-5 w-5 shrink-0",
-                            pathname === "/saved" && "fill-current"
-                          )} />
-                          Saved
-                        </Link>
-                        <NotificationsDrawer>
-                          <button
+            {/* Scrollable Content */}
+            <div className="flex-1 overflow-y-auto">
+              {/* Explore Section with Accordion */}
+              {!minimal && (
+                <div className="border-b border-[#e5e7eb]">
+                  <Accordion type="single" collapsible className="w-full">
+                    <AccordionItem value="explore" className="border-0">
+                      <AccordionTrigger className="px-4 py-3 hover:no-underline">
+                        <span className="font-medium">Explore</span>
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <div className="px-4 pb-2 space-y-0.5">
+                          <Link
+                            href="/popular"
                             onClick={() => setMobileMenuOpen(false)}
                             className={cn(
-                              "flex w-full items-center gap-3 px-3 py-2 rounded-md transition-colors relative text-left",
-                              pathname === "/notifications"
+                              "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
+                              pathname.startsWith("/popular")
                                 ? "bg-gray-100 text-foreground font-medium"
                                 : "text-muted-foreground hover:text-foreground hover:bg-gray-50"
                             )}
                           >
-                            <Bell className="h-5 w-5 shrink-0" />
-                            Notifications
-                            {unreadCount > 0 && (
-                              <span className="ml-auto h-5 w-5 rounded-full bg-[#7755FF] text-white text-[10px] font-semibold flex items-center justify-center shrink-0">
-                                {unreadCount > 9 ? "9+" : unreadCount}
-                              </span>
+                            <TrendingUp className="h-5 w-5 shrink-0" />
+                            Popular
+                          </Link>
+                          <Link
+                            href="/latest"
+                            onClick={() => setMobileMenuOpen(false)}
+                            className={cn(
+                              "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
+                              pathname.startsWith("/latest")
+                                ? "bg-gray-100 text-foreground font-medium"
+                                : "text-muted-foreground hover:text-foreground hover:bg-gray-50"
                             )}
-                          </button>
-                        </NotificationsDrawer>
-                        <Link
-                          href="/leaderboard"
-                          onClick={() => setMobileMenuOpen(false)}
-                          className={cn(
-                            "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
-                            pathname === "/leaderboard"
-                              ? "bg-gray-100 text-foreground font-medium"
-                              : "text-muted-foreground hover:text-foreground hover:bg-gray-50"
-                          )}
-                        >
-                          <Trophy className="h-5 w-5 shrink-0" />
-                          Leaderboard
-                        </Link>
-                      </>
-                    )}
-                  </nav>
-
-                  {/* Account Section */}
-                  {user && (
-                    <div className="border-t border-[#e5e7eb] p-4 space-y-1">
-                      <Link
-                        href={profile?.username ? `/profile/${profile.username}` : "/settings"}
-                        onClick={() => setMobileMenuOpen(false)}
-                        className={cn(
-                          "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
-                          pathname.startsWith("/profile/")
-                            ? "bg-gray-100 text-foreground font-medium"
-                            : "text-muted-foreground hover:text-foreground hover:bg-gray-50"
-                        )}
-                      >
-                        <User className="h-5 w-5 shrink-0" />
-                        Profile
-                      </Link>
-                      <Link
-                        href="/settings"
-                        onClick={() => setMobileMenuOpen(false)}
-                        className={cn(
-                          "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
-                          pathname === "/settings"
-                            ? "bg-gray-100 text-foreground font-medium"
-                            : "text-muted-foreground hover:text-foreground hover:bg-gray-50"
-                        )}
-                      >
-                        <Settings className="h-5 w-5 shrink-0" />
-                        Settings
-                      </Link>
-                      <Button
-                        variant="ghost"
-                        onClick={() => {
-                          handleSignOut();
-                          setMobileMenuOpen(false);
-                        }}
-                        disabled={isPending}
-                        className="w-full justify-start gap-3 px-3 py-2 text-muted-foreground hover:text-foreground hover:bg-gray-50"
-                      >
-                        <LogOut className="h-5 w-5 shrink-0" />
-                        Sign out
-                      </Button>
-                    </div>
-                  )}
-
+                          >
+                            <Sparkles className="h-5 w-5 shrink-0" />
+                            New and Noteworthy
+                          </Link>
+                          {categories.map((category) => {
+                            const { getCategorySlug } = require("@/lib/utils/category-routing");
+                            const categoryPath = `/popular/${getCategorySlug(category)}`;
+                            const isActive = pathname === categoryPath;
+                            return (
+                              <Link
+                                key={category}
+                                href={categoryPath}
+                                onClick={() => setMobileMenuOpen(false)}
+                                className={cn(
+                                  "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
+                                  isActive
+                                    ? "bg-gray-100 text-foreground font-medium"
+                                    : "text-muted-foreground hover:text-foreground hover:bg-gray-50"
+                                )}
+                              >
+                                {category}
+                              </Link>
+                            );
+                          })}
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
                 </div>
-              </div>
-            </SheetContent>
-          </Sheet>
+              )}
+
+
+              {/* Main Navigation */}
+              <nav className="space-y-1 p-4">
+                {user && (
+                  <>
+                    <Link
+                      href="/requests"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={cn(
+                        "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
+                        pathname === "/requests" || pathname.startsWith("/requests/")
+                          ? "bg-gray-100 text-foreground font-medium"
+                          : "text-muted-foreground hover:text-foreground hover:bg-gray-50"
+                      )}
+                    >
+                      <ClipboardList className="h-5 w-5 shrink-0" />
+                      My Requests
+                    </Link>
+                    <Link
+                      href="/submissions"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={cn(
+                        "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
+                        pathname === "/submissions"
+                          ? "bg-gray-100 text-foreground font-medium"
+                          : "text-muted-foreground hover:text-foreground hover:bg-gray-50"
+                      )}
+                    >
+                      <FileText className="h-5 w-5 shrink-0" />
+                      Proposals
+                    </Link>
+                    <Link
+                      href="/messages"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={cn(
+                        "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
+                        pathname === "/messages" || pathname.startsWith("/messages/")
+                          ? "bg-gray-100 text-foreground font-medium"
+                          : "text-muted-foreground hover:text-foreground hover:bg-gray-50"
+                      )}
+                    >
+                      <MessageCircle className="h-5 w-5 shrink-0" />
+                      Messages
+                    </Link>
+                    <Link
+                      href="/personal-items"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={cn(
+                        "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
+                        pathname === "/personal-items"
+                          ? "bg-gray-100 text-foreground font-medium"
+                          : "text-muted-foreground hover:text-foreground hover:bg-gray-50"
+                      )}
+                    >
+                      <Package2 className="h-5 w-5 shrink-0" />
+                      Inventory
+                    </Link>
+                    <Link
+                      href="/saved"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={cn(
+                        "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
+                        pathname === "/saved"
+                          ? "bg-gray-100 text-foreground font-medium"
+                          : "text-muted-foreground hover:text-foreground hover:bg-gray-50"
+                      )}
+                    >
+                      <Bookmark className={cn(
+                        "h-5 w-5 shrink-0",
+                        pathname === "/saved" && "fill-current"
+                      )} />
+                      Saved
+                    </Link>
+                    <NotificationsDrawer>
+                      <button
+                        onClick={() => setMobileMenuOpen(false)}
+                        className={cn(
+                          "flex w-full items-center gap-3 px-3 py-2 rounded-md transition-colors relative text-left",
+                          pathname === "/notifications"
+                            ? "bg-gray-100 text-foreground font-medium"
+                            : "text-muted-foreground hover:text-foreground hover:bg-gray-50"
+                        )}
+                      >
+                        <Bell className="h-5 w-5 shrink-0" />
+                        Notifications
+                        {unreadCount > 0 && (
+                          <span className="ml-auto h-5 w-5 rounded-full bg-[#7755FF] text-white text-[10px] font-semibold flex items-center justify-center shrink-0">
+                            {unreadCount > 9 ? "9+" : unreadCount}
+                          </span>
+                        )}
+                      </button>
+                    </NotificationsDrawer>
+                    <Link
+                      href="/leaderboard"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={cn(
+                        "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
+                        pathname === "/leaderboard"
+                          ? "bg-gray-100 text-foreground font-medium"
+                          : "text-muted-foreground hover:text-foreground hover:bg-gray-50"
+                      )}
+                    >
+                      <Trophy className="h-5 w-5 shrink-0" />
+                      Leaderboard
+                    </Link>
+                  </>
+                )}
+              </nav>
+
+              {/* Account Section */}
+              {user && (
+                <div className="border-t border-[#e5e7eb] p-4 space-y-1">
+                  <Link
+                    href={profile?.username ? `/profile/${profile.username}` : "/settings"}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={cn(
+                      "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
+                      pathname.startsWith("/profile/")
+                        ? "bg-gray-100 text-foreground font-medium"
+                        : "text-muted-foreground hover:text-foreground hover:bg-gray-50"
+                    )}
+                  >
+                    <User className="h-5 w-5 shrink-0" />
+                    Profile
+                  </Link>
+                  <Link
+                    href="/settings"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={cn(
+                      "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
+                      pathname === "/settings"
+                        ? "bg-gray-100 text-foreground font-medium"
+                        : "text-muted-foreground hover:text-foreground hover:bg-gray-50"
+                    )}
+                  >
+                    <Settings className="h-5 w-5 shrink-0" />
+                    Settings
+                  </Link>
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      handleSignOut();
+                      setMobileMenuOpen(false);
+                    }}
+                    disabled={isPending}
+                    className="w-full justify-start gap-3 px-3 py-2 text-muted-foreground hover:text-foreground hover:bg-gray-50"
+                  >
+                    <LogOut className="h-5 w-5 shrink-0" />
+                    Sign out
+                  </Button>
+                </div>
+              )}
+
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
 
       {/* Desktop Navbar */}
       <div className="hidden md:flex w-full px-4 h-16 items-center relative">
@@ -836,8 +835,8 @@ export function AppNavbar({
                   prefetch={true}
                   className={cn(
                     "px-3 py-2 text-sm font-medium transition-colors whitespace-nowrap",
-                    active 
-                      ? "text-[#7755FF]" 
+                    active
+                      ? "text-[#7755FF]"
                       : "text-gray-600 hover:text-[#7755FF]"
                   )}
                 >
@@ -874,9 +873,9 @@ export function AppNavbar({
                     <button className="flex items-center gap-2 pl-2 pr-1 h-10 hover:bg-gray-50 rounded-full transition-colors outline-none shrink-0">
                       <div className="flex items-center justify-center h-8 w-8 rounded-full bg-gray-100 text-gray-700 font-bold text-xs shrink-0 overflow-hidden relative">
                         {profile?.avatar_url && !avatarError ? (
-                          <img 
-                            src={profile.avatar_url} 
-                            alt={profile.username || "User"} 
+                          <img
+                            src={profile.avatar_url}
+                            alt={profile.username || "User"}
                             className="w-full h-full object-cover"
                             onError={() => setAvatarError(true)}
                           />
@@ -891,9 +890,9 @@ export function AppNavbar({
                     <div className="flex items-center gap-3 p-2 mb-2">
                       <div className="flex items-center justify-center h-10 w-10 rounded-full bg-gray-100 text-gray-700 font-bold text-sm shrink-0 overflow-hidden relative">
                         {profile?.avatar_url && !avatarError ? (
-                          <img 
-                            src={profile.avatar_url} 
-                            alt={profile.username || "User"} 
+                          <img
+                            src={profile.avatar_url}
+                            alt={profile.username || "User"}
                             className="w-full h-full object-cover"
                             onError={() => setAvatarError(true)}
                           />
@@ -944,8 +943,8 @@ export function AppNavbar({
           </div>
         </div>
       </div>
-      <CreateRequestModal 
-        open={isCreateModalOpen} 
+      <CreateRequestModal
+        open={isCreateModalOpen}
         onOpenChange={setIsCreateModalOpen}
         userCountry={searchParams.get("country")}
       />
