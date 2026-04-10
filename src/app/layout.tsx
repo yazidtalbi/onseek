@@ -70,7 +70,7 @@ export default async function RootLayout({
         <Analytics />
         <Script 
           src="https://t.contentsquare.net/uxa/82b383ca1f434.js" 
-          strategy="afterInteractive" 
+          strategy="lazyOnload" 
         />
       </body>
     </html>

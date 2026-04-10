@@ -8,7 +8,7 @@ const nextConfig: NextConfig = {
   compress: true,
   // Enable experimental optimizations
   experimental: {
-    optimizePackageImports: ["lucide-react", "@radix-ui/react-dialog", "@radix-ui/react-select"],
+    optimizePackageImports: ["lucide-react", "@radix-ui/react-dialog", "@radix-ui/react-select", "framer-motion", "clsx", "tailwind-merge"],
     serverActions: {
       bodySizeLimit: "2mb",
     },

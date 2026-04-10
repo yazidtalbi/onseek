@@ -49,10 +49,53 @@ const defaultContent = {
   },
 };
 
+import { Suspense } from "react";
+
 export default async function LandingPage() {
   const supabase = await createServerSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();
 
+  return (
+    <div className="min-h-screen bg-background">
+      <PublicNavbar />
+      <main className="mx-auto w-full max-w-6xl px-6 pb-24 pt-14">
+        <Suspense fallback={<LandingSkeleton user={!!user} />}>
+          <LandingContent user={user as any} />
+        </Suspense>
+      </main>
+      <footer className="border-t border-border bg-background/80">
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-6 py-8 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+          <span>Onseek © 2026</span>
+          <div className="flex gap-4">
+            <Link href="/terms">Terms</Link>
+            <Link href="/privacy">Privacy</Link>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+function LandingSkeleton({ user }: { user: boolean }) {
+  return (
+    <div className={cn(
+      "grid gap-10 lg:grid-cols-[1.2fr_0.8fr] lg:items-start animate-pulse",
+      user && "lg:grid-cols-1"
+    )}>
+      <div className="space-y-6">
+        <div className="h-6 w-32 bg-gray-200 rounded-full" />
+        <div className="h-12 w-3/4 bg-gray-200 rounded-lg" />
+        <div className="h-20 w-full bg-gray-200 rounded-lg" />
+        <div className="flex gap-4">
+          <div className="h-12 w-32 bg-gray-200 rounded-lg" />
+          <div className="h-12 w-32 bg-gray-200 rounded-lg" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+async function LandingContent({ user }: { user: any }) {
   // Try to fetch content from Strapi, fallback to default
   let content = defaultContent;
   try {
@@ -109,70 +152,56 @@ export default async function LandingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <PublicNavbar />
-      <main className="mx-auto w-full max-w-6xl px-6 pb-24 pt-14">
-        <div className={cn(
-          "grid gap-10 lg:grid-cols-[1.2fr_0.8fr] lg:items-start",
-          user && "lg:grid-cols-1"
-        )}>
-          {!user && (
-            <div className="space-y-6">
-              <Badge variant="muted" className="w-fit">
-                {content.heroBadge}
-              </Badge>
-              <h1 className="text-4xl font-semibold leading-tight text-foreground sm:text-5xl">
-                {content.heroTitle}
-              </h1>
-              <p className="max-w-xl text-lg text-muted-foreground">
-                {content.heroDescription}
-              </p>
-              <div className="flex flex-wrap gap-4">
-                <Button asChild variant="accent" size="lg">
-                  <Link href={content.ctaPrimaryLink}>{content.ctaPrimaryText}</Link>
-                </Button>
-                <Button asChild variant="outline" size="lg">
-                  <Link href={content.ctaSecondaryLink}>
-                    {content.ctaSecondaryText}
-                  </Link>
-                </Button>
+    <div className={cn(
+      "grid gap-10 lg:grid-cols-[1.2fr_0.8fr] lg:items-start",
+      user && "lg:grid-cols-1"
+    )}>
+      {!user && (
+        <div className="space-y-6">
+          <Badge variant="muted" className="w-fit">
+            {content.heroBadge}
+          </Badge>
+          <h1 className="text-4xl font-semibold leading-tight text-foreground sm:text-5xl">
+            {content.heroTitle}
+          </h1>
+          <p className="max-w-xl text-lg text-muted-foreground">
+            {content.heroDescription}
+          </p>
+          <div className="flex flex-wrap gap-4">
+            <Button asChild variant="accent" size="lg">
+              <Link href={content.ctaPrimaryLink}>{content.ctaPrimaryText}</Link>
+            </Button>
+            <Button asChild variant="outline" size="lg">
+              <Link href={content.ctaSecondaryLink}>
+                {content.ctaSecondaryText}
+              </Link>
+            </Button>
+          </div>
+          <div className="grid gap-3 text-sm text-muted-foreground sm:grid-cols-3">
+            {content.features.map((feature) => (
+              <div key={feature.id}>
+                <span className="text-lg font-semibold text-foreground">
+                  {feature.title}
+                </span>
+                <p>{feature.description}</p>
               </div>
-              <div className="grid gap-3 text-sm text-muted-foreground sm:grid-cols-3">
-                {content.features.map((feature) => (
-                  <div key={feature.id}>
-                    <span className="text-lg font-semibold text-foreground">
-                      {feature.title}
-                    </span>
-                    <p>{feature.description}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-          {!user && <PromotionalSidebar />}
-          
-          {user && (
-            <div className="py-12 flex flex-col items-center justify-center text-center space-y-6">
-              <h1 className="text-3xl font-semibold">Welcome back to Onseek</h1>
-              <p className="text-muted-foreground max-w-md">
-                Explore the latest requests and submissions from the community.
-              </p>
-              <Button asChild variant="accent" size="lg">
-                <Link href="/">Go to Dashboard</Link>
-              </Button>
-            </div>
-          )}
-        </div>
-      </main>
-      <footer className="border-t border-border bg-background/80">
-        <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-6 py-8 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-          <span>Onseek © 2026</span>
-          <div className="flex gap-4">
-            <Link href="/terms">Terms</Link>
-            <Link href="/privacy">Privacy</Link>
+            ))}
           </div>
         </div>
-      </footer>
+      )}
+      {!user && <PromotionalSidebar />}
+      
+      {user && (
+        <div className="py-12 flex flex-col items-center justify-center text-center space-y-6">
+          <h1 className="text-3xl font-semibold">Welcome back to Onseek</h1>
+          <p className="text-muted-foreground max-w-md">
+            Explore the latest requests and submissions from the community.
+          </p>
+          <Button asChild variant="accent" size="lg">
+            <Link href="/">Go to Dashboard</Link>
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
