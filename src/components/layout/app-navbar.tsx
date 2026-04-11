@@ -389,9 +389,15 @@ export function AppNavbar({
   const [avatarError, setAvatarError] = useState(false);
 
   return (
-    <header className="sticky top-0 z-20 w-full bg-white border-b border-[#e5e7eb]">
+    <header className={cn(
+      "sticky top-0 z-20 w-full transition-all",
+      user ? "bg-white border-b border-[#e5e7eb]" : "bg-transparent border-none pt-4 pb-2"
+    )}>
       {/* Mobile Navbar Container */}
-      <div className="md:hidden flex flex-col w-full relative z-20 bg-white">
+      <div className={cn(
+        "md:hidden flex flex-col w-full relative z-20",
+        user ? "bg-white" : "bg-transparent"
+      )}>
         {/* Top bar */}
         <div className="flex items-center justify-between py-3 px-4 w-full">
           {user ? (
@@ -402,8 +408,8 @@ export function AppNavbar({
                   <Menu className="h-5 w-5" />
                 </Button>
                 <Link href="/" prefetch={true} className="shrink-0 flex items-center gap-2">
-                  <Image src="/logo.png" alt="onseek" width={100} height={28} className="h-6 w-auto" priority />
-                  <span className="text-lg text-black" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>onseek</span>
+                  <Image src="/logo.png" alt="Onseek" width={100} height={28} className="h-6 w-auto" priority unoptimized quality={100} />
+                  <span className="text-lg text-black" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>Onseek</span>
                 </Link>
               </div>
 
@@ -438,8 +444,8 @@ export function AppNavbar({
               {/* Guest Layout */}
               {/* Left: Logo */}
               <Link href="/" prefetch={true} className="shrink-0 flex items-center gap-2">
-                <Image src="/logo.png" alt="onseek" width={100} height={28} className="h-6 w-auto" priority />
-                <span className="text-lg text-black" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>onseek</span>
+                <Image src="/logo.png" alt="Onseek" width={100} height={28} className="h-6 w-auto" priority unoptimized quality={100} />
+                <span className="text-lg text-black" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>Onseek</span>
               </Link>
 
               {/* Right: Plus, Hamburger */}
@@ -757,7 +763,10 @@ export function AppNavbar({
       </Sheet>
 
       {/* Desktop Navbar */}
-      <div className="hidden md:flex w-full px-4 h-16 items-center relative">
+      <div className={cn(
+        "hidden md:flex w-full px-4 h-16 items-center relative",
+        !user && "max-w-[1360px] mx-auto px-0 sm:px-4"
+      )}>
         {/* Left Side: Space for sidebar on desktop */}
         <div className="flex items-center shrink-0 gap-6">
           <Link href="/" className="hidden md:flex items-center gap-2">
@@ -810,15 +819,29 @@ export function AppNavbar({
             "w-full transition-all duration-300 pointer-events-auto",
             showSearch ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4 pointer-events-none"
           )}>
-            <div className="relative flex items-center w-full bg-white border border-gray-200 rounded-full h-11">
-              <Search className="ml-4 h-5 w-5 text-gray-900 shrink-0" strokeWidth={1.5} />
+            <div className="relative flex items-center w-full bg-white border border-gray-200 rounded-full h-11 pr-1">
               <Input
                 name="q"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="What are you looking for today?"
-                className="flex-1 bg-transparent border-none focus-visible:ring-0 text-sm h-full pl-2 shadow-none placeholder:text-slate-500"
+                className="flex-1 bg-transparent border-none focus-visible:ring-0 text-sm h-full pl-6 shadow-none placeholder:text-slate-500"
               />
+              <button 
+                type="submit" 
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (searchQuery.trim()) {
+                    const params = new URLSearchParams(searchParams.toString());
+                    params.set("q", searchQuery.trim());
+                    params.delete("page");
+                    router.push(`/search?${params.toString()}`);
+                  }
+                }}
+                className="w-9 h-9 bg-[#6925DC] rounded-full flex items-center justify-center shrink-0 hover:bg-[#6925DC]/90 transition-colors"
+               >
+                 <Search className="h-4 w-4 text-white" strokeWidth={2} />
+              </button>
             </div>
           </div>
         </div>
@@ -849,8 +872,8 @@ export function AppNavbar({
           <div className="flex items-center gap-2">
             {user ? (
               <>
-                <Button onClick={() => setIsCreateModalOpen(true)} className="hidden sm:flex h-11 rounded-full bg-[#1e2330] text-white hover:bg-[#1e2330]/90 border-none font-bold whitespace-nowrap px-6 items-center gap-2">
-                  <SquarePlus className="h-4 w-4" />
+                <Button onClick={() => setIsCreateModalOpen(true)} className="hidden sm:flex h-11 rounded-full bg-transparent text-[#1e2330] hover:bg-gray-100 font-bold whitespace-nowrap px-6 items-center gap-2">
+                  <SquarePlus className="h-5 w-5" />
                   Request
                 </Button>
                 <NotificationsDrawer>
@@ -921,8 +944,8 @@ export function AppNavbar({
             ) : (
               <>
                 {!minimal && (
-                  <Button onClick={() => setIsCreateModalOpen(true)} className="hidden sm:flex h-11 rounded-full bg-[#1e2330] text-white hover:bg-[#1e2330]/90 border-none font-bold shrink-0 whitespace-nowrap px-6 items-center gap-2">
-                    <SquarePlus className="h-4 w-4" />
+                  <Button onClick={() => setIsCreateModalOpen(true)} className="hidden sm:flex h-11 rounded-full bg-transparent text-[#1e2330] hover:bg-gray-100 font-bold shrink-0 whitespace-nowrap px-6 items-center gap-2">
+                    <SquarePlus className="h-5 w-5" />
                     Request
                   </Button>
                 )}
@@ -932,7 +955,7 @@ export function AppNavbar({
                   </Button>
                 </Link>
                 {!minimal && (
-                  <div className="ml-3">
+                  <div className="ml-3 hidden">
                     <Button asChild variant="outline" className="h-11 rounded-full px-6 bg-white hover:bg-gray-50 shrink-0 whitespace-nowrap text-sm font-semibold">
                       <Link href="/login">Log In</Link>
                     </Button>

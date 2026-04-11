@@ -10,6 +10,7 @@ import dynamic from "next/dynamic";
 import { RequestCard } from "@/components/requests/request-card";
 import { FeedModeTabs } from "@/components/requests/feed-mode-tabs";
 import { HeroSection } from "@/components/requests/hero-section";
+import { HeroSectionV2 } from "@/components/requests/hero-section-v2";
 import { REVERSE_MODE_MAP, getCategorySlug } from "@/lib/utils/category-routing";
 import type { RequestItem, FeedMode } from "@/lib/types";
 import { useAuth } from "@/components/layout/auth-provider";
@@ -100,13 +101,15 @@ export function PersonalizedFeed({
 
     const currentMode = searchParams.get("mode");
 
-    // If mode is "for_you" but no preferences, switch to latest
     if (mode === "for_you" && !hasPreferences) {
       if (currentMode !== "latest") {
-        const params = new URLSearchParams(searchParams.toString());
-        params.set("mode", "latest");
-        hasUpdatedUrlRef.current = true;
-        router.replace(`?${params.toString()}`, { scroll: false });
+        if (currentMode === "for_you") {
+          const params = new URLSearchParams(searchParams.toString());
+          params.delete("mode");
+          hasUpdatedUrlRef.current = true;
+          const queryStr = params.toString();
+          router.replace(queryStr ? `?${queryStr}` : window.location.pathname, { scroll: false });
+        }
         setMode("latest");
       }
     } else if (currentMode !== mode && mode !== "for_you") {
@@ -234,14 +237,14 @@ export function PersonalizedFeed({
   return (
     <div className="flex flex-col w-full">
       {showHero && (
-        <HeroSection
+        <HeroSectionV2
           user={user}
           tradeMode={tradeMode}
           setTradeMode={setTradeMode}
         />
       )}
 
-      <div className="max-w-7xl mx-auto w-full px-4 md:px-6">
+      <div className="max-w-[1360px] mx-auto w-full px-4 md:px-6">
         {/* Categories Strip */}
         <div className="py-2 min-h-[70px] flex flex-col justify-center mb-6 bg-white transition-all duration-300">
           <div className="mx-auto w-full text-center flex flex-col items-center relative z-10 w-full px-0">
@@ -416,8 +419,10 @@ export function PersonalizedFeed({
             </div>
           </section>
 
-          <div className="max-w-7xl mx-auto w-full px-6 md:px-12">
-            <FaqSection />
+          <div className="w-full bg-gray-50 py-16 mt-8">
+            <div className="max-w-[1360px] mx-auto w-full px-4 md:px-6">
+              <FaqSection />
+            </div>
           </div>
 
           {/* CTA Section - Removed border/rounded/crop */}

@@ -111,6 +111,7 @@ export async function createRequestAction(formData: FormData) {
     exactPrice: parsed.data.exactPrice || false,
     preferences: preferencesList,
     dealbreakers: dealbreakersList,
+    editedFields: [],
   };
   const preferencesJson = JSON.stringify(preferences);
   // Append preferences as hidden metadata to description
@@ -362,6 +363,162 @@ export async function archiveRequestAction(requestId: string) {
     .eq("id", requestId);
 
   if (error) return { error: error.message };
+
+  revalidatePath("/");
+  revalidatePath("/requests");
+  revalidatePath(`/requests/${requestId}`);
+  return { success: true };
+}
+
+export async function deleteRequestAction(requestId: string) {
+  const supabase = await createServerSupabaseClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) return { error: "Unauthorized" };
+
+  const { data: request } = await supabase
+    .from("requests")
+    .select("user_id")
+    .eq("id", requestId)
+    .single();
+
+  if (!request || request.user_id !== user.id) return { error: "Unauthorized" };
+
+  // Delete related data first (images and links)
+  await supabase.from("request_images").delete().eq("request_id", requestId);
+  await supabase.from("request_links").delete().eq("request_id", requestId);
+  
+  // Delete the request
+  const { error } = await supabase
+    .from("requests")
+    .delete()
+    .eq("id", requestId);
+
+  if (error) return { error: error.message };
+
+  revalidatePath("/");
+  revalidatePath("/requests");
+  revalidatePath(`/requests/${requestId}`);
+  return { success: true };
+}
+
+export async function updateRequestAction(requestId: string, formData: FormData) {
+  const supabase = await createServerSupabaseClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) return { error: "Unauthorized" };
+
+  const { data: existingRequest } = await supabase
+    .from("requests")
+    .select("*")
+    .eq("id", requestId)
+    .single();
+
+  if (!existingRequest || existingRequest.user_id !== user.id) {
+    return { error: "Unauthorized or request not found" };
+  }
+
+  const payload = {
+    title: String(formData.get("title") || ""),
+    description: String(formData.get("description") || ""),
+    category: String(formData.get("category") || ""),
+    budgetMax: formData.get("budgetMax") ? Number(formData.get("budgetMax")) : null,
+    priceLock: String(formData.get("priceLock") || "open") as "open" | "locked",
+    exactItem: formData.get("exactItem") === "true",
+    exactSpecification: formData.get("exactSpecification") === "true",
+    exactPrice: formData.get("exactPrice") === "true",
+    country: String(formData.get("country") || "") || null,
+    condition: String(formData.get("condition") || "") || null,
+    urgency: String(formData.get("urgency") || "") || null,
+  };
+
+  const parsed = requestSchema.safeParse(payload);
+  if (!parsed.success) {
+    return { error: "Validation failed." };
+  }
+
+  // Parse existing metadata to track changes
+  let existingMeta: any = {};
+  const metaMatch = existingRequest.description.match(/<!--REQUEST_PREFS:({.*?})-->/);
+  if (metaMatch) {
+    try {
+      existingMeta = JSON.parse(metaMatch[1]);
+    } catch (e) {}
+  }
+
+  const newEditedFields = new Set<string>(existingMeta.editedFields || []);
+  
+  // Track modified fields
+  if (parsed.data.title !== existingRequest.title) newEditedFields.add("Title");
+  if (parsed.data.category !== existingRequest.category) newEditedFields.add("Category");
+  if (parsed.data.budgetMax !== existingRequest.budget_max) newEditedFields.add("Budget");
+  if (parsed.data.condition !== existingRequest.condition) newEditedFields.add("Condition");
+  if (parsed.data.country !== existingRequest.country) newEditedFields.add("Location");
+
+  // Re-build metadata
+  let preferencesList = [];
+  let dealbreakersList = [];
+  try {
+    const prefsJson = formData.get("preferences");
+    const dbJson = formData.get("dealbreakers");
+    if (prefsJson) preferencesList = JSON.parse(String(prefsJson));
+    if (dbJson) dealbreakersList = JSON.parse(String(dbJson));
+  } catch (e) {}
+
+  const preferences = {
+    priceLock: parsed.data.priceLock || "open",
+    exactItem: parsed.data.exactItem,
+    exactSpecification: parsed.data.exactSpecification,
+    exactPrice: parsed.data.exactPrice,
+    preferences: preferencesList,
+    dealbreakers: dealbreakersList,
+    editedFields: Array.from(newEditedFields),
+  };
+
+  const preferencesJson = JSON.stringify(preferences);
+  const descriptionWithMetadata = `${parsed.data.description}\n\n<!--REQUEST_PREFS:${preferencesJson}-->`;
+
+  const { error } = await supabase
+    .from("requests")
+    .update({
+      title: parsed.data.title,
+      description: descriptionWithMetadata,
+      category: parsed.data.category,
+      budget_max: parsed.data.budgetMax,
+      country: parsed.data.country,
+      condition: parsed.data.condition,
+      urgency: parsed.data.urgency,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", requestId);
+
+  if (error) return { error: error.message };
+
+  // Update links
+  const links = parseLinks(String(formData.get("referenceLinks") || ""));
+  if (links.length >= 0) {
+    await supabase.from("request_links").delete().eq("request_id", requestId);
+    if (links.length > 0) {
+      await supabase.from("request_links").insert(
+        links.map((url) => ({ request_id: requestId, url }))
+      );
+    }
+  }
+
+  // Update images
+  const imageUrls = formData.getAll("imageUrls") as string[];
+  if (imageUrls.length >= 0) {
+    await supabase.from("request_images").delete().eq("request_id", requestId);
+    if (imageUrls.length > 0) {
+      await supabase.from("request_images").insert(
+        imageUrls.map((url, index) => ({
+          request_id: requestId,
+          image_url: url,
+          image_order: index,
+        }))
+      );
+    }
+  }
 
   revalidatePath("/");
   revalidatePath("/requests");

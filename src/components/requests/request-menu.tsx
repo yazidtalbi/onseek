@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { MoreHorizontal, EyeOff, Flag, Share2, Ban, Archive as ArchiveIcon } from "lucide-react";
+import { MoreHorizontal, EyeOff, Flag, Share2, Ban, Archive as ArchiveIcon, Pencil, Trash2, Eye } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,13 +20,14 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ReportDialog } from "@/components/reports/report-dialog";
-import { archiveRequestAction, approveRequestAction, rejectRequestAction } from "@/actions/request.actions";
+import { archiveRequestAction, approveRequestAction, rejectRequestAction, deleteRequestAction } from "@/actions/request.actions";
+import { EditRequestModal } from "./edit-request-modal";
 import { hideCategoryAction } from "@/actions/preference.actions";
 import { useAuth } from "@/components/layout/auth-provider";
 import { useTransition } from "react";
-import type { Category, RequestStatus } from "@/lib/types";
 import { useToast } from "@/components/ui/use-toast";
 import { Check, XCircle } from "lucide-react";
+import type { Category, RequestStatus, RequestItem } from "@/lib/types";
 
 export function RequestMenu({
   requestId,
@@ -34,12 +35,14 @@ export function RequestMenu({
   status,
   isAdmin,
   categories,
+  initialData,
 }: {
   requestId: string;
   requestUserId: string;
   status: RequestStatus;
   isAdmin?: boolean;
   categories?: Category[];
+  initialData?: RequestItem & { images?: string[]; links?: string[] };
 }) {
   const router = useRouter();
   const { user } = useAuth();
@@ -48,6 +51,8 @@ export function RequestMenu({
   const [isHidingCategory, setIsHidingCategory] = React.useState(false);
   const [showReportDialog, setShowReportDialog] = React.useState(false);
   const [showCloseConfirmDialog, setShowCloseConfirmDialog] = React.useState(false);
+  const [showDeleteConfirmDialog, setShowDeleteConfirmDialog] = React.useState(false);
+  const [showEditModal, setShowEditModal] = React.useState(false);
   const [showHideCategoryDialog, setShowHideCategoryDialog] = React.useState(false);
   const [categoryToHide, setCategoryToHide] = React.useState<Category | null>(null);
 
@@ -63,6 +68,19 @@ export function RequestMenu({
       if (!res?.error) {
         setShowCloseConfirmDialog(false);
         router.refresh();
+      }
+    });
+  };
+
+  const handleDeleteRequest = () => {
+    startTransition(async () => {
+      const res = await deleteRequestAction(requestId);
+      if (!res?.error) {
+        setShowDeleteConfirmDialog(false);
+        router.push("/app/requests");
+        router.refresh();
+      } else {
+        toast({ title: "Error", description: res.error });
       }
     });
   };
@@ -236,24 +254,66 @@ export function RequestMenu({
             <Flag className="h-4 w-4 mr-2" />
             Report
           </DropdownMenuItem>
-          {isOwner && (status === "open" || status === "solved") && (
+          {isOwner && (status === "open" || status === "solved" || status === "pending") && (
             <>
               <DropdownMenuSeparator />
+              <div className="px-2 py-1.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                Manage Request
+              </div>
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  router.push(`/app/requests/${requestId}`);
+                }}
+                className="cursor-pointer"
+              >
+                <Eye className="h-4 w-4 mr-2" />
+                View details
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowEditModal(true);
+                }}
+                className="cursor-pointer"
+              >
+                <Pencil className="h-4 w-4 mr-2" />
+                Edit request
+              </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={(e) => {
                   e.stopPropagation();
                   setShowCloseConfirmDialog(true);
                 }}
                 disabled={isPending}
-                className="cursor-pointer text-gray-600 focus:text-gray-900"
+                className="cursor-pointer text-gray-600"
               >
                 <ArchiveIcon className="h-4 w-4 mr-2" />
                 Archive request
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowDeleteConfirmDialog(true);
+                }}
+                disabled={isPending}
+                className="cursor-pointer text-red-600 focus:text-red-700 focus:bg-red-50"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete request
               </DropdownMenuItem>
             </>
           )}
         </DropdownMenuContent>
       </DropdownMenu>
+
+      {isOwner && initialData && (
+        <EditRequestModal
+          open={showEditModal}
+          onOpenChange={setShowEditModal}
+          initialData={initialData}
+        />
+      )}
       <ReportDialog
         type="request"
         targetId={requestId}
@@ -285,6 +345,34 @@ export function RequestMenu({
               className="bg-gray-900 hover:bg-gray-800 text-white"
             >
               {isPending ? "Archiving..." : "Archive request"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Request Confirmation Dialog */}
+      <Dialog open={showDeleteConfirmDialog} onOpenChange={setShowDeleteConfirmDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete request?</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this request? This action cannot be undone and all data will be lost.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteConfirmDialog(false)}
+              disabled={isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteRequest}
+              disabled={isPending}
+            >
+              {isPending ? "Deleting..." : "Delete request"}
             </Button>
           </DialogFooter>
         </DialogContent>

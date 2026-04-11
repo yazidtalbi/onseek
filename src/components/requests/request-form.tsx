@@ -10,7 +10,7 @@ import { SignUpForm } from "@/components/auth/sign-up-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { z } from "zod";
 import { requestSchema } from "@/lib/validators";
-import { createRequestAction } from "@/actions/request.actions";
+import { createRequestAction, updateRequestAction } from "@/actions/request.actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -46,19 +46,20 @@ import { RequestCard } from "@/components/requests/request-card";
 import type { RequestItem } from "@/lib/types";
 
 type RequestValues = z.infer<typeof requestSchema>;
-
 export function RequestForm({
   onSuccess,
   userCountry,
   isModal = false,
   onCancel,
-  onStepChange
+  onStepChange,
+  initialData
 }: {
   onSuccess?: () => void,
   userCountry?: string | null,
   isModal?: boolean,
   onCancel?: () => void,
-  onStepChange?: (step: number) => void
+  onStepChange?: (step: number) => void,
+  initialData?: RequestItem & { images?: string[]; links?: string[] }
 }) {
   const { user } = useAuth();
   const router = useRouter();
@@ -177,12 +178,45 @@ export function RequestForm({
   const categoryValue = form.watch("category");
   const urgencyValue = form.watch("urgency") || "Standard";
 
+  // Sync initialData prop to state
+  React.useEffect(() => {
+    if (initialData) {
+      form.reset({
+        title: initialData.title,
+        description: "", // Description is auto-generated
+        category: initialData.category,
+        budgetMax: initialData.budget_max,
+        country: initialData.country || "",
+        condition: initialData.condition,
+        urgency: initialData.urgency || "Standard",
+        referenceLinks: "", // Populated separately
+      });
+
+      // Parse metadata from description
+      const metaMatch = initialData.description.match(/<!--REQUEST_PREFS:({.*?})-->/);
+      if (metaMatch) {
+        try {
+          const meta = JSON.parse(metaMatch[1]);
+          setPreferences(meta.preferences || []);
+          setDealbreakers(meta.dealbreakers || []);
+          form.setValue("priceLock", meta.priceLock || "open");
+          form.setValue("exactItem", !!meta.exactItem);
+          form.setValue("exactSpecification", !!meta.exactSpecification);
+          form.setValue("exactPrice", !!meta.exactPrice);
+        } catch (e) {}
+      }
+
+      setReferenceLinks(initialData.links || []);
+      setUploadedImages(initialData.images || []);
+    }
+  }, [initialData, form]);
+
   // Sync userCountry prop to form state if it changes or arrives after initial render
   React.useEffect(() => {
-    if (userCountry && !form.getValues("country")) {
+    if (userCountry && !form.getValues("country") && !initialData) {
       form.setValue("country", userCountry);
     }
-  }, [userCountry, form]);
+  }, [userCountry, form, initialData]);
   const urgency = form.watch("urgency");
 
   // Character counter for title
@@ -339,8 +373,8 @@ export function RequestForm({
 
   // Dynamic CTA label
   const getCTALabel = () => {
-    if (isPending) return "Submitting...";
-    return "Submit";
+    if (isPending) return initialData ? "Updating..." : "Submitting...";
+    return initialData ? "Update Request" : "Submit";
   };
 
   const onSubmit = async (values: RequestValues) => {
@@ -396,7 +430,9 @@ export function RequestForm({
       queryClient.invalidateQueries({ queryKey: ["requests"] });
 
       try {
-        const res = await createRequestAction(formData);
+        const res = initialData 
+          ? await updateRequestAction(initialData.id, formData)
+          : await createRequestAction(formData);
 
         if (res?.error) {
           setError(res.error);
@@ -493,10 +529,10 @@ export function RequestForm({
             <div className="mb-12 flex items-center justify-between">
               <div>
                 <h1 className="text-3xl font-bold tracking-tight mb-1 text-foreground" style={{ fontFamily: 'var(--font-expanded)' }}>
-                  Create a request
+                  {initialData ? "Edit your request" : "Create a request"}
                 </h1>
                 <p className="text-sm text-gray-500">
-                  Tell us what you're looking for to receive offers
+                  {initialData ? "Update your details to get better offers" : "Tell us what you're looking for to receive offers"}
                 </p>
               </div>
             </div>

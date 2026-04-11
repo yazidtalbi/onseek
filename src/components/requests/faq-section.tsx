@@ -27,7 +27,8 @@ export function FaqSection() {
       <div className="max-w-[1240px] mx-auto px-6">
         <div className="flex flex-col lg:flex-row gap-12 lg:gap-24 items-center">
           {/* Left: Title */}
-          <div className="lg:w-[40%]">
+          <div className="lg:w-[40%] flex flex-col items-start">
+            <img src="/illustrations/faq-cat.png" alt="Questions" className="w-20 md:w-24 h-auto object-contain opacity-90 mb-6" />
             <h2 className="text-[40px] md:text-[56px] leading-[1.05] font-medium tracking-[-0.03em] text-foreground" style={{ fontFamily: 'var(--font-expanded)' }}>
               Frequently asked<br />questions
             </h2>

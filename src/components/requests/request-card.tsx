@@ -127,6 +127,7 @@ function RequestCardComponent({
 
   const preferences = parsedPrefs.preferences || [];
   const dealbreakers = parsedPrefs.dealbreakers || [];
+  const editedFields = parsedPrefs.editedFields as string[] || [];
 
   const budgetText = formatBudget(request.budget_min, request.budget_max);
   const maxBudget = request.budget_max ? `$${request.budget_max}` : budgetText;
@@ -201,6 +202,7 @@ function RequestCardComponent({
             status={request.status}
             categories={request.categories}
             isAdmin={isAdmin}
+            initialData={{ ...request, images, links }}
           />
         </div>
       )}
@@ -212,8 +214,11 @@ function RequestCardComponent({
   const cardContent = isFeedView ? (
     <div className="flex flex-col h-full rounded-[24px] bg-[#f7f8f9] p-2 sm:p-2.5 overflow-hidden shadow-sm hover:bg-[#f2f3f5] transition-colors relative">
       <div className="px-3 pt-3 pb-3">
-        <h3 className="font-[650] leading-snug text-neutral-900 transition-colors font-[family-name:var(--font-inter-display)] text-[18px] sm:text-[20px] pr-8">
+        <h3 className="font-[650] leading-snug text-neutral-900 transition-colors font-[family-name:var(--font-inter-display)] text-[18px] sm:text-[20px] pr-8 flex items-center gap-2">
           {request.title}
+          {editedFields.length > 0 && (
+            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest bg-gray-100 px-1.5 py-0.5 rounded">Edited</span>
+          )}
         </h3>
       </div>
       <div className="bg-white rounded-[20px] p-5 flex flex-col flex-1 shrink-0 border border-black/[0.04] shadow-sm relative">
@@ -321,6 +326,7 @@ function RequestCardComponent({
               status={request.status}
               categories={request.categories}
               isAdmin={isAdmin}
+              initialData={{ ...request, images, links }}
             />
           </div>
         </div>
@@ -366,6 +372,9 @@ function RequestCardComponent({
                       }}
                     >
                       {request.title}
+                      {editedFields.length > 0 && (
+                        <span className="ml-3 text-xs font-bold text-gray-400 uppercase tracking-widest bg-gray-100 px-2 py-1 rounded inline-flex items-center">Edited</span>
+                      )}
                     </h3>
                     {smallImages && visibleImages.length > 0 && (
                       <div className="relative w-12 h-12 flex-shrink-0 rounded-md bg-gray-50 overflow-hidden border border-gray-100 shadow-sm">
@@ -563,10 +572,10 @@ function RequestCardComponent({
             {/* Render condition and budget right under tags for smallImages */}
             {smallImages && (shortMetadata || maxBudget) && (
               <div className="mt-5">
-                <div className="h-[6px] bg-[#f7f8f9] -mx-5 sm:-mx-6 mb-5" />
-                <div className="flex items-center">
+                <div className="h-1 bg-[#f7f8f9] -mx-5 sm:-mx-6" />
+                <div className="flex items-stretch -mx-5 sm:-mx-6 -mb-4 sm:-mb-5">
                   {shortMetadata && (
-                    <div className="flex flex-col items-center flex-1 py-1 justify-center min-w-0">
+                    <div className="flex flex-col items-center flex-1 py-4 justify-center min-w-0 px-2">
                       <span className="text-[13px] text-gray-400 font-normal leading-none mb-1.5 text-center">Condition</span>
                       <span className="text-[15.5px] font-[600] text-[#7755FF] tracking-tight leading-tight text-center truncate w-full">
                         {shortMetadata}
@@ -574,10 +583,10 @@ function RequestCardComponent({
                     </div>
                   )}
                   {shortMetadata && maxBudget && (
-                    <div className="w-[1px] h-8 bg-gray-200/60 shrink-0 mx-2" />
+                    <div className="w-1 bg-[#f7f8f9] shrink-0" />
                   )}
                   {maxBudget && (
-                    <div className="flex flex-col items-center flex-1 py-1 justify-center min-w-0">
+                    <div className="flex flex-col items-center flex-1 py-4 justify-center min-w-0 px-2">
                       <span className="text-[13px] text-gray-400 font-normal leading-none mb-1.5 text-center">Budget</span>
                       <span className="text-[15.5px] font-[600] text-[#7755FF] tracking-tight leading-tight text-center truncate w-full">
                         {maxBudget}
