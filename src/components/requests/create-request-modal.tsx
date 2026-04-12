@@ -7,6 +7,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { RequestForm } from "./request-form";
 import { Sparkles, X } from "lucide-react";
@@ -64,6 +65,11 @@ export function CreateRequestModal({
               style={{ width: `${(currentStep / 8) * 100}%` }}
             />
           </div>
+
+          <DialogTitle className="sr-only">Create a request</DialogTitle>
+          <DialogDescription className="sr-only">
+            Follow the steps to tell us what you're looking for.
+          </DialogDescription>
 
           <div className={cn(
             "px-8 pb-0 pt-12",

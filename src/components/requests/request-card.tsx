@@ -214,8 +214,14 @@ function RequestCardComponent({
   const cardContent = isFeedView ? (
     <div className="flex flex-col h-full rounded-[24px] bg-[#f7f8f9] p-2 sm:p-2.5 overflow-hidden shadow-sm hover:bg-[#f2f3f5] transition-colors relative">
       <div className="px-3 pt-3 pb-3">
-        <h3 className="font-[650] leading-snug text-neutral-900 transition-colors font-[family-name:var(--font-inter-display)] text-[18px] sm:text-[20px] pr-8 flex items-center gap-2">
+        <h3 className="font-[650] leading-snug text-neutral-900 transition-colors font-[family-name:var(--font-inter-display)] text-[18px] sm:text-[20px] pr-8 flex items-center gap-2 flex-wrap">
           {request.title}
+          {request.status === "pending" && (
+            <span className="text-[10px] font-bold text-[#7755FF] uppercase tracking-widest bg-[#7755FF]/10 px-2 py-0.5 rounded-full border border-[#7755FF]/20 flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#7755FF] animate-pulse" />
+              Pending Review
+            </span>
+          )}
           {editedFields.length > 0 && (
             <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest bg-gray-100 px-1.5 py-0.5 rounded">Edited</span>
           )}
@@ -315,20 +321,22 @@ function RequestCardComponent({
             <div className="w-[1px] h-3 bg-gray-300/60 shrink-0" />
           </div>
 
-          <div className="flex items-center gap-1.5 flex-shrink-0">
-            <FavoriteButton
-              requestId={request.id}
-              isFavorite={isFavorite}
-            />
-            <RequestMenu
-              requestId={request.id}
-              requestUserId={request.user_id}
-              status={request.status}
-              categories={request.categories}
-              isAdmin={isAdmin}
-              initialData={{ ...request, images, links }}
-            />
-          </div>
+          {!isPreview && (
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              <FavoriteButton
+                requestId={request.id}
+                isFavorite={isFavorite}
+              />
+              <RequestMenu
+                requestId={request.id}
+                requestUserId={request.user_id}
+                status={request.status}
+                categories={request.categories}
+                isAdmin={isAdmin}
+                initialData={{ ...request, images, links }}
+              />
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -372,12 +380,18 @@ function RequestCardComponent({
                       }}
                     >
                       {request.title}
+                      {request.status === "pending" && (
+                        <span className="ml-3 text-[10px] font-bold text-[#7755FF] uppercase tracking-widest bg-[#7755FF]/10 px-2 py-0.5 rounded-full border border-[#7755FF]/20 inline-flex items-center gap-1 align-middle">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#7755FF] animate-pulse" />
+                          Pending Review
+                        </span>
+                      )}
                       {editedFields.length > 0 && (
                         <span className="ml-3 text-xs font-bold text-gray-400 uppercase tracking-widest bg-gray-100 px-2 py-1 rounded inline-flex items-center">Edited</span>
                       )}
                     </h3>
                     {smallImages && visibleImages.length > 0 && (
-                      <div className="relative w-12 h-12 flex-shrink-0 rounded-md bg-gray-50 overflow-hidden border border-gray-100 shadow-sm">
+                      <div className="relative w-12 h-12 flex-shrink-0 rounded-md bg-gray-50 overflow-hidden border border-gray-100">
                         <Image
                           src={visibleImages[0]}
                           alt={request.title}
@@ -439,55 +453,11 @@ function RequestCardComponent({
 
       {/* Main Content Section */}
       <section className={cn("flex flex-col justify-center", hasContent && "flex-1")}>
-        {/* Match Indicator - only show on feed variant if matched */}
-        {variant === "feed" && request.matchReason && (
-          <div className="mb-2 flex items-center gap-2 text-xs text-[#7755FF] bg-[#7755FF]/10 px-3 py-1.5 rounded-full w-fit">
-            <Sparkles className="h-3.5 w-3.5" />
-            <span>{request.matchReason}</span>
-          </div>
-        )}
+        {/* Match Indicator - only shown in feed view (which is now handled in the main if branch) */}
 
-        {/* Category Tags - hidden on home/requests page */}
 
-        {/* Preferences and Dealbreakers - only show on feed variant */}
-        {variant === "feed" && (visiblePreferences.length > 0 || visibleDealbreakers.length > 0) && (
-          <div className={cn(
-            "mt-4 mb-5 flex gap-2",
-            isInline ? "flex-wrap items-center" : "flex-col gap-3"
-          )}>
-            {visiblePreferences.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {visiblePreferences.map((pref: { label: string }, idx: number) => (
-                  <div key={idx} className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-green-50 text-[#015a25] text-sm">
-                    <Check className="h-3.5 w-3.5 shrink-0" strokeWidth={3} />
-                    {pref.label.charAt(0).toUpperCase() + pref.label.slice(1)}
-                  </div>
-                ))}
-                {remainingPreferences > 0 && (
-                  <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-green-50 text-sm text-[#015a25]">
-                    +{remainingPreferences} more
-                  </span>
-                )}
-              </div>
-            )}
+        {/* Preferences and Dealbreakers - feed view is handled in the main if branch */}
 
-            {visibleDealbreakers.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {visibleDealbreakers.map((deal: { label: string }, idx: number) => (
-                  <div key={idx} className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-amber-50 text-[#92400e] text-sm">
-                    <X className="h-3.5 w-3.5 shrink-0" strokeWidth={3} />
-                    {deal.label.charAt(0).toUpperCase() + deal.label.slice(1)}
-                  </div>
-                ))}
-                {remainingDealbreakers > 0 && (
-                  <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-amber-50 text-sm text-[#92400e]">
-                    +{remainingDealbreakers} more
-                  </span>
-                )}
-              </div>
-            )}
-          </div>
-        )}
 
 
 
@@ -656,32 +626,8 @@ function RequestCardComponent({
         )}
       </section>
 
-      {/* Images at the absolute bottom for feed cards */}
-      {isFeed && visibleImages.length > 0 && (
-        <div className="mt-auto pt-4 flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
-          {visibleImages.map((imgUrl, index) => (
-            <button
-              key={index}
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                setPreviewImageIndex(index);
-                setPreviewImage(imgUrl);
-              }}
-              className="relative w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0 rounded-md bg-gray-50 overflow-hidden cursor-pointer hover:opacity-90 transition-opacity border border-gray-100"
-            >
-              <Image
-                src={imgUrl}
-                alt={`${request.title} - Image ${index + 1}`}
-                fill
-                className="object-cover"
-                sizes="(max-width: 640px) 40px, 48px"
-                priority={priority && index === 0}
-              />
-            </button>
-          ))}
-        </div>
-      )}
+      {/* Images section for feed is now handled in the main if branch */}
+
 
       {/* Footer Section - rendered inside card only if NOT smallImages (detail page) */}
       {!smallImages && footerSection}

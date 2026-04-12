@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ProfileForm } from "@/components/profile/profile-form";
+import { AvatarUpload } from "@/components/profile/avatar-upload";
 import { ThemeToggle } from "@/components/settings/theme-toggle";
 import { CategoryPreferences } from "@/components/settings/category-preferences";
 import { Card, CardContent } from "@/components/ui/card";
@@ -104,10 +105,13 @@ export function SettingsContent({ user, profile }: SettingsContentProps) {
         {/* Main Content Area */}
         <main className="flex-1 min-w-0">
           <div className={activeTab === "profile" ? "block" : "hidden"}>
-            <div className="space-y-6">
-              <div className="space-y-1 pb-4">
-                <h2 className="text-lg font-bold text-gray-900">Public Profile</h2>
-                <p className="text-sm text-gray-500">This information will be displayed publicly.</p>
+            <div className="space-y-8">
+              <div className="flex flex-col sm:flex-row items-center gap-8 pb-6 border-b border-gray-100">
+                <AvatarUpload profile={profile} />
+                <div className="space-y-1 text-center sm:text-left">
+                  <h2 className="text-lg font-bold text-gray-900">Public Profile</h2>
+                  <p className="text-sm text-gray-500">This information will be displayed publicly.</p>
+                </div>
               </div>
               <ProfileForm profile={profile} />
             </div>

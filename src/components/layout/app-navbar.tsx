@@ -11,6 +11,7 @@ import { useTheme } from "@/components/layout/theme-provider";
 import { signOutAction } from "@/actions/auth.actions";
 import { LoginDropdown } from "@/components/auth/login-dropdown";
 import { CreateRequestModal } from "@/components/requests/create-request-modal";
+import { AIRequestModal } from "@/components/requests/ai-request-modal";
 import { NotificationsDrawer } from "@/components/notifications/notifications-drawer";
 import { cn } from "@/lib/utils";
 import {
@@ -240,6 +241,7 @@ export function AppNavbar({
   const [searchSheetOpen, setSearchSheetOpen] = useState(false);
   const [exploreOpen, setExploreOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isAIModalOpen, setIsAIModalOpen] = useState(false);
   const isHomePage = pathname === "/";
   const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
 
@@ -451,9 +453,14 @@ export function AppNavbar({
               {/* Right: Plus, Hamburger */}
               <div className="flex items-center gap-2">
                 {!minimal && (
-                  <Button onClick={() => setIsCreateModalOpen(true)} size="icon" className="h-9 w-9 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200">
-                    <SquarePlus className="h-4 w-4" />
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button onClick={() => setIsAIModalOpen(true)} size="icon" className="h-9 w-9 rounded-full bg-slate-50 text-[#6925DC] hover:bg-slate-100 border border-[#6925DC]/10">
+                      <Sparkles className="h-4 w-4" />
+                    </Button>
+                    <Button onClick={() => setIsCreateModalOpen(true)} size="icon" className="h-9 w-9 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200">
+                      <SquarePlus className="h-4 w-4" />
+                    </Button>
+                  </div>
                 )}
                 <Button variant="ghost" size="icon" className="h-9 w-9 ml-1 -mr-2" onClick={() => setMobileMenuOpen(true)}>
                   <Menu className="h-5 w-5" />
@@ -872,6 +879,9 @@ export function AppNavbar({
           <div className="flex items-center gap-2">
             {user ? (
               <>
+                <Button onClick={() => setIsAIModalOpen(true)} className="hidden sm:flex h-11 rounded-full bg-slate-50 text-[#6925DC] hover:bg-slate-100 font-bold whitespace-nowrap px-4 items-center gap-2 border border-[#6925DC]/10">
+                  <Sparkles className="h-4 w-4" />
+                </Button>
                 <Button onClick={() => setIsCreateModalOpen(true)} className="hidden sm:flex h-11 rounded-full bg-transparent text-[#1e2330] hover:bg-gray-100 font-bold whitespace-nowrap px-6 items-center gap-2">
                   <SquarePlus className="h-5 w-5" />
                   Request
@@ -970,6 +980,10 @@ export function AppNavbar({
         open={isCreateModalOpen}
         onOpenChange={setIsCreateModalOpen}
         userCountry={searchParams.get("country")}
+      />
+      <AIRequestModal 
+        open={isAIModalOpen}
+        onOpenChange={setIsAIModalOpen}
       />
     </header>
   );

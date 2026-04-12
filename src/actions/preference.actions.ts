@@ -225,8 +225,13 @@ export async function getPersonalizedFeedAction(
   // Simple query - just get requests
   let query = supabase
     .from("requests")
-    .select("*")
-    .eq("status", "open");
+    .select("*");
+
+  if (user) {
+    query = query.or(`status.eq.open,and(status.eq.pending,user_id.eq.${user.id})`);
+  } else {
+    query = query.eq("status", "open");
+  }
 
   // Apply filters
   if (filters.category && filters.category !== "All") {

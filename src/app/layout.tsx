@@ -56,9 +56,10 @@ export default async function RootLayout({
   } : null;
 
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${interDisplay.variable} ${geistMono.variable} min-h-screen bg-background text-foreground antialiased`}
+        suppressHydrationWarning
       >
         <AuthProvider user={serializedUser} profile={profile}>
           <Providers>

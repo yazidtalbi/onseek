@@ -434,7 +434,16 @@ export async function updateRequestAction(requestId: string, formData: FormData)
 
   const parsed = requestSchema.safeParse(payload);
   if (!parsed.success) {
-    return { error: "Validation failed." };
+    const fieldErrors = parsed.error.issues.reduce((acc, err) => {
+      const field = err.path[0] as string;
+      acc[field] = err.message;
+      return acc;
+    }, {} as Record<string, string>);
+
+    return { 
+      error: "Validation failed.",
+      fieldErrors
+    };
   }
 
   // Parse existing metadata to track changes

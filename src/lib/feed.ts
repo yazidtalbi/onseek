@@ -16,15 +16,21 @@ export async function fetchInitialFeedData(
   const supabase = await createServerSupabaseClient();
   const limit = 20;
   
+  const { data: { user } } = await supabase.auth.getUser();
+  
   let query = supabase
     .from("requests")
-    .select("*")
-    .eq("status", "open");
+    .select("*");
+
+  if (user) {
+    query = query.or(`status.eq.open,and(status.eq.pending,user_id.eq.${user.id})`);
+  } else {
+    query = query.eq("status", "open");
+  }
   
   if (filters.category && filters.category !== "All") {
     query = query.eq("category", filters.category);
   }
-  const { data: { user } } = await supabase.auth.getUser();
   let defaultCountry = null;
   if (user) {
     const { data: profile } = await supabase.from("profiles").select("country").eq("id", user.id).single();

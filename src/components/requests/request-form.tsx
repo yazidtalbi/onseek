@@ -437,8 +437,8 @@ export function RequestForm({
         if (res?.error) {
           setError(res.error);
           // If there are field-specific errors, set them
-          if (res.fieldErrors) {
-            setErrors(res.fieldErrors);
+          if ((res as any).fieldErrors) {
+            setErrors((res as any).fieldErrors);
           } else {
             // Try to parse field errors from the error message
             const fieldErrorMatch = res.error.match(/(\w+):\s*(.+?)(?:\.|$)/g);
@@ -460,8 +460,8 @@ export function RequestForm({
           if (onSuccess) {
             onSuccess();
           }
-          if (res.url) {
-            window.location.href = res.url;
+          if ((res as any).url) {
+            window.location.href = (res as any).url;
           } else {
             router.refresh();
           }
@@ -497,7 +497,7 @@ export function RequestForm({
     urgency: form.watch("urgency") || "Standard",
     status: "open",
     winner_submission_id: null,
-    created_at: new Date().toISOString(),
+    created_at: "2024-01-01T00:00:00.000Z", // Fixed date for preview to avoid hydration mismatch
     updated_at: new Date().toISOString(),
     submissionCount: 0,
   };
@@ -1072,11 +1072,13 @@ export function RequestForm({
                     <p className="text-sm text-gray-500">This is how sellers will see your request on the feed.</p>
                   </div>
 
-                  <div className="w-full max-w-[500px]">
+                  <div className="w-full max-w-[500px] bg-[#f5f6f9] rounded-[20px] p-[6px]">
                     <RequestCard
                       request={previewRequest}
-                      variant="feed"
+                      variant="detail"
                       images={uploadedImages}
+                      smallImages={true}
+                      noBorder={true}
                       isPreview={true}
                       isFirst={true}
                       isLast={true}
@@ -1257,11 +1259,13 @@ export function RequestForm({
               <h3 className="text-lg font-semibold tracking-tight">Live Preview</h3>
             </div>
 
-            <div className="pointer-events-none shadow-[0_20px_50px_-12px_rgba(0,0,0,0.15)] rounded-2xl">
+            <div className="pointer-events-none rounded-[20px] bg-[#f5f6f9] p-[6px]">
               <RequestCard
                 request={previewRequest}
-                variant="feed"
+                variant="detail"
                 images={uploadedImages}
+                smallImages={true}
+                noBorder={true}
                 isPreview={true}
                 isFirst={true}
                 isLast={true}

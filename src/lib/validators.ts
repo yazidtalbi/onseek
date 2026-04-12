@@ -66,6 +66,7 @@ export const profileSchema = z.object({
   username: z.string().min(3).max(24),
   bio: z.string().max(240).optional().nullable(),
   country: z.string().max(60).optional().nullable(),
+  avatar_url: z.string().url().optional().nullable(),
 });
 
 export const contactInfoSchema = z.object({

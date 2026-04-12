@@ -45,6 +45,14 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "*.googleusercontent.com",
       },
+      {
+        protocol: "https",
+        hostname: "preview.redd.it",
+      },
+      {
+        protocol: "https",
+        hostname: "i.redd.it",
+      },
     ],
   },
   // Turbopack config - set root to current directory to fix workspace warning

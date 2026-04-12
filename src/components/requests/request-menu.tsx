@@ -368,7 +368,8 @@ export function RequestMenu({
               Cancel
             </Button>
             <Button
-              variant="destructive"
+              variant="default"
+              className="bg-red-600 hover:bg-red-700 text-white"
               onClick={handleDeleteRequest}
               disabled={isPending}
             >
