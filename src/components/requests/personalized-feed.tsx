@@ -20,6 +20,12 @@ import { Button } from "@/components/ui/button";
 import { Loader2, Search, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { AnnouncementBar } from "@/components/landing/announcement-bar";
+import { RequestAnimationSection } from "@/components/landing/request-animation-section";
+import { HowItWorks } from "@/components/landing/how-it-works";
+import { Testimonials } from "@/components/landing/testimonials";
+import { UserChoiceSection } from "@/components/landing/user-choice-section";
+import { PublicFooter } from "@/components/layout/public-footer";
 
 const AuthModal = dynamic(() => import("@/components/auth/auth-modal").then(mod => mod.AuthModal), {
   ssr: false,
@@ -189,7 +195,7 @@ export function PersonalizedFeed({
 
     // Filter out hidden requests (client-side only, post-hydration)
     if (!mounted || typeof window === "undefined") {
-      return (!user && isHomePage) ? items.slice(0, 12) : items;
+      return (!user && isHomePage) ? items.slice(0, 6) : items;
     }
 
     try {
@@ -199,7 +205,7 @@ export function PersonalizedFeed({
       console.error("Error reading hidden requests:", error);
     }
 
-    return (!user && isHomePage) ? items.slice(0, 12) : items;
+    return (!user && isHomePage) ? items.slice(0, 6) : items;
   }, [data, mounted, user, isHomePage]);
 
   const handleModeChange = (newMode: FeedMode) => {
@@ -237,14 +243,29 @@ export function PersonalizedFeed({
   return (
     <div className="flex flex-col w-full">
       {showHero && (
-        <HeroSectionV2
-          user={user}
-          tradeMode={tradeMode}
-          setTradeMode={setTradeMode}
-        />
+        <>
+          <HeroSectionV2
+            user={user}
+            tradeMode={tradeMode}
+            setTradeMode={setTradeMode}
+          />
+          <div className="pb-4">
+            <AnnouncementBar />
+          </div>
+        </>
       )}
 
       <div className="max-w-[1360px] mx-auto w-full px-4 md:px-6">
+        {/* Editorial Title */}
+        <div className="text-left pt-16 pb-12">
+          <h2 
+            className="text-[40px] leading-[1.1] text-[#1A1A1A] font-bold tracking-tight max-w-4xl" 
+            style={{ fontFamily: 'var(--font-expanded)' }}
+          >
+            Discover what people <br className="hidden md:block" /> are looking for
+          </h2>
+        </div>
+
         {/* Categories Strip */}
         <div className="py-2 min-h-[70px] flex flex-col justify-center mb-6 bg-white transition-all duration-300">
           <div className="mx-auto w-full text-center flex flex-col items-center relative z-10 w-full px-0">
@@ -254,7 +275,8 @@ export function PersonalizedFeed({
                 hasPreferences={hasPreferences}
                 viewMode={viewMode}
                 onViewModeChange={setViewMode}
-                hideViewToggle={false}
+                hideViewToggle={true}
+                hideFilters={true}
               />
             </div>
           </div>
@@ -346,36 +368,43 @@ export function PersonalizedFeed({
                       links={requestWithExtras.links || []}
                       smallImages={true}
                       noBorder={true}
-                      priority={index < 6}
+                      priority={index < 3}
                     />
                   </div>
                 );
               })}
             </div>
 
-            {/* Bottom CTA for guests - now integrated at the end of the feed */}
-            <div className="w-full flex justify-center py-12">
-              {(!user && isHomePage) ? (
-                <Button
-                  onClick={() => router.push("/login")}
-                  variant="outline"
-                  className="rounded-full font-semibold h-12 px-10 border border-gray-200 text-[#1e2330] bg-white hover:bg-gray-50 transition-all hover:scale-105 active:scale-95 shadow-none"
-                >
-                  Explore
-                </Button>
-              ) : (
-                isFetchingNextPage && <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
-              )}
-            </div>
+            {/* Bottom CTA for guests - integrated to overlap masonry */}
+            {!user && isHomePage && (
+              <div className="relative w-full -mt-64 z-20">
+                <div className="absolute inset-x-0 bottom-0 h-[350px] bg-gradient-to-t from-white via-white/100 to-transparent pointer-events-none" />
+                <div className="relative flex justify-center pb-24 pt-32">
+                  <Button
+                    onClick={() => router.push("/signup")}
+                    variant="accent"
+                    className="rounded-full font-semibold h-11 px-8 text-sm transition-all hover:scale-105 active:scale-95 shadow-lg"
+                  >
+                    Sign up to explore
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {user && isHomePage && isFetchingNextPage && (
+              <div className="w-full flex justify-center py-12">
+                <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+              </div>
+            )}
 
           </div>
         ) : null}
       </div>
 
       {showHero && (
-        <div className="flex flex-col w-full bg-white">
+        <div className="flex flex-col w-full bg-white relative z-30">
           {/* Why Onseek Section - High Vertical Padding, No border/rounded */}
-          <section className="py-32 px-10 overflow-hidden mt-8">
+          <section className="py-16 px-10 overflow-hidden">
             <div className="max-w-6xl mx-auto text-center">
               <h2 className="text-[40px] md:text-[56px] leading-[1.05] mb-6 text-[#1A1A1A] font-extrabold tracking-[-0.03em]" style={{ fontFamily: 'var(--font-expanded)' }}>
                 Why Onseek?
@@ -419,7 +448,11 @@ export function PersonalizedFeed({
             </div>
           </section>
 
-          <div className="w-full bg-gray-50 py-16 mt-8">
+          <UserChoiceSection />
+          <HowItWorks />
+          <Testimonials />
+
+          <div className="w-full bg-gray-50 py-12">
             <div className="max-w-[1360px] mx-auto w-full px-4 md:px-6">
               <FaqSection />
             </div>
@@ -449,9 +482,7 @@ export function PersonalizedFeed({
             </div>
           </section>
 
-          <div className="flex justify-center py-4 mt-8">
-            <p className="text-xs text-gray-400">&copy; 2026 OnSeek</p>
-          </div>
+          <PublicFooter />
         </div>
       )}
       {isAuthModalOpen && (

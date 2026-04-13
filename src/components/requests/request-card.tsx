@@ -183,11 +183,16 @@ function RequestCardComponent({
       }}
     >
       <div className="flex items-center gap-3">
-        <span className="text-sm text-gray-400 font-medium">
-          {request.submissionCount !== undefined && request.submissionCount > 0
-            ? formatSubmissionCount(request.submissionCount)
-            : "Open for proposals"}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-gray-400 font-medium">
+            {request.submissionCount !== undefined && request.submissionCount > 0
+              ? formatSubmissionCount(request.submissionCount)
+              : "Open for proposals"}
+          </span>
+          <span className="text-[13px] text-gray-300 font-medium">
+            by @{request.profiles?.username || 'user'}
+          </span>
+        </div>
         {!isPreview && <div className="w-[1px] h-3 bg-gray-300/60 shrink-0" />}
       </div>
       {!isPreview && (
@@ -209,124 +214,123 @@ function RequestCardComponent({
     </div>
   );
 
-  const isFeedView = variant === "feed" && !isPreview;
+  const isFeedView = variant === "feed";
 
   const cardContent = isFeedView ? (
-    <div className="flex flex-col h-full rounded-[24px] bg-[#f7f8f9] p-2 sm:p-2.5 overflow-hidden shadow-sm hover:bg-[#f2f3f5] transition-colors relative">
-      <div className="px-3 pt-3 pb-3">
-        <h3 className="font-[650] leading-snug text-neutral-900 transition-colors font-[family-name:var(--font-inter-display)] text-[18px] sm:text-[20px] pr-8 flex items-center gap-2 flex-wrap">
+    <div className="flex flex-col h-full bg-white border border-gray-100 shadow-none relative transition-colors hover:border-gray-200">
+      {/* Header with Title */}
+      <div className="px-6 pt-8 pb-4">
+        <h3
+          className="text-[22px] sm:text-[24px] font-bold leading-[1.1] text-[#7755FF] tracking-tight font-[family-name:var(--font-inter-display)] pr-8"
+          style={{ fontFamily: "'Zalando Sans', sans-serif" }}
+        >
           {request.title}
           {request.status === "pending" && (
-            <span className="text-[10px] font-bold text-[#7755FF] uppercase tracking-widest bg-[#7755FF]/10 px-2 py-0.5 rounded-full border border-[#7755FF]/20 flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#7755FF] animate-pulse" />
-              Pending Review
+            <span className="ml-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest border border-gray-200 px-2 py-0.5 rounded-sm inline-flex items-center gap-1.5 align-middle">
+              <span className="w-1.5 h-1.5 rounded-full bg-gray-300" />
+              Pending
             </span>
-          )}
-          {editedFields.length > 0 && (
-            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest bg-gray-100 px-1.5 py-0.5 rounded">Edited</span>
           )}
         </h3>
       </div>
-      <div className="bg-white rounded-[20px] p-5 flex flex-col flex-1 shrink-0 border border-black/[0.04] shadow-sm relative">
-        {request.matchReason && (
-          <div className="mb-4 flex items-center gap-2 text-xs text-[#7755FF] bg-[#7755FF]/10 px-3 py-1.5 rounded-full w-fit">
-            <Sparkles className="h-3.5 w-3.5" />
-            <span>{request.matchReason}</span>
-          </div>
-        )}
 
-        <div className="flex w-full">
-          <div className="flex-1 flex flex-col gap-3 min-w-0 mb-6">
-            {visiblePreferences.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {visiblePreferences.map((pref: { label: string }, idx: number) => (
-                  <div key={idx} className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#ebfbee] text-[#166534] text-[13px] font-medium">
-                    <Check className="h-3.5 w-3.5 shrink-0" strokeWidth={2.5} />
-                    {pref.label.charAt(0).toUpperCase() + pref.label.slice(1)}
+      <div className="px-6 flex flex-col flex-1">
+        {/* Editorial Requirements List */}
+        <div className="flex flex-col">
+          {(() => {
+            const allItems = [
+              ...visiblePreferences.map((p: { label: string }) => ({ ...p, type: 'pref' })),
+              ...visibleDealbreakers.map((d: { label: string }) => ({ ...d, type: 'deal' }))
+            ];
+            const displayedItems = allItems.slice(0, 5);
+            const remainingCount = allItems.length - 5;
+
+            return (
+              <>
+                {displayedItems.map((item: any, idx) => (
+                  <div
+                    key={`${item.type}-${idx}`}
+                    className={cn(
+                      "flex items-center gap-4 py-4 group/item",
+                      (idx !== displayedItems.length - 1 || remainingCount > 0) && "border-b border-dashed border-gray-200"
+                    )}
+                  >
+                    {item.type === 'pref' ? (
+                      <Check className="h-4 w-4 text-[#16a34a] shrink-0" strokeWidth={3} />
+                    ) : (
+                      <X className="h-4 w-4 text-gray-400 shrink-0" strokeWidth={3} />
+                    )}
+                    <span className={cn(
+                      "text-[16px] sm:text-[18px] font-medium leading-snug tracking-tight",
+                      item.type === 'pref' ? "text-[#1A1A1A]" : "text-gray-400"
+                    )}>
+                      {item.label.charAt(0).toUpperCase() + item.label.slice(1)}
+                    </span>
                   </div>
                 ))}
-                {remainingPreferences > 0 && (
-                  <span className="inline-flex items-center px-3.5 py-1.5 rounded-full bg-[#ebfbee]/70 text-[13px] font-medium text-[#166534]">
-                    +{remainingPreferences} more
-                  </span>
-                )}
-              </div>
-            )}
-            {visibleDealbreakers.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {visibleDealbreakers.map((deal: { label: string }, idx: number) => (
-                  <div key={idx} className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#fff4eb] text-[#b45309] text-[13px] font-medium">
-                    <X className="h-3.5 w-3.5 shrink-0" strokeWidth={2.5} />
-                    {deal.label.charAt(0).toUpperCase() + deal.label.slice(1)}
+                {remainingCount > 0 && (
+                  <div className="py-4 text-[16px] sm:text-[18px] font-medium text-gray-400">
+                    + {remainingCount} more {remainingCount === 1 ? 'requirement' : 'requirements'}
                   </div>
-                ))}
-                {remainingDealbreakers > 0 && (
-                  <span className="inline-flex items-center px-3.5 py-1.5 rounded-full bg-[#fff4eb]/70 text-[13px] font-medium text-[#b45309]">
-                    +{remainingDealbreakers} more
-                  </span>
                 )}
-              </div>
-            )}
-          </div>
+              </>
+            );
+          })()}
+
+          {/* Fallback if no requirements */}
+          {visiblePreferences.length === 0 && visibleDealbreakers.length === 0 && (
+            <div className="py-6 border-b border-gray-50 italic text-gray-400 text-sm">
+              No specific requirements listed.
+            </div>
+          )}
         </div>
 
-        <div className="flex w-full items-center gap-2 flex-wrap mb-4">
+        {/* Metadata Section */}
+        <div className="flex items-center gap-8 py-6">
           {shortMetadata && (
-            <span className="inline-flex items-center px-3.5 py-1.5 rounded-full text-[13px] font-medium bg-[#f8f9fa] text-gray-500 shrink-0">
-              {shortMetadata}
-            </span>
+            <div className="flex flex-col gap-1">
+              <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Condition</span>
+              <span className="text-[16px] sm:text-[18px] font-semibold text-[#d97706]">{shortMetadata}</span>
+            </div>
           )}
           {budgetDisplay && (
-            <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[13px] font-medium bg-[#f4f0ff] text-[#7755FF] shrink-0">
-              {parsedPrefs.priceLock === "locked" && <LockKeyhole className="h-3.5 w-3.5" />}
-              {budgetDisplay}
-            </span>
+            <div className="flex flex-col gap-1">
+              <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Budget</span>
+              <div className="flex items-center gap-1.5 text-[16px] sm:text-[18px] font-semibold text-[#d97706]">
+                {parsedPrefs.priceLock === "locked" && <LockKeyhole className="h-3.5 w-3.5" />}
+                {maxBudget}
+              </div>
+            </div>
           )}
         </div>
 
-        <div className="flex-1 shrink-0 min-h-[0px]" />
-
+        {/* Reference Images Inline */}
         {visibleImages.length > 0 && (
-          <div className="mt-auto mb-5 flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
+          <div className="mt-2 mb-6 flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
             {visibleImages.map((imgUrl, index) => (
-              <button
+              <div
                 key={index}
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setPreviewImageIndex(index);
-                  setPreviewImage(imgUrl);
-                }}
-                className="relative w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0 rounded-md bg-gray-50 overflow-hidden cursor-pointer hover:opacity-90 transition-opacity border border-gray-100"
+                className="relative w-12 h-12 flex-shrink-0 bg-gray-50 overflow-hidden border border-gray-100"
               >
-                <Image src={imgUrl} alt={`${request.title} - Image ${index + 1}`} fill className="object-cover" sizes="(max-width: 640px) 40px, 48px" />
-              </button>
+                <Image src={imgUrl} alt={`${request.title} - Image ${index + 1}`} fill className="object-cover grayscale hover:grayscale-0 transition-all duration-300" sizes="48px" />
+              </div>
             ))}
           </div>
         )}
 
-        <div
-          className="flex items-center justify-between gap-3 flex-wrap mt-auto pt-6"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-          }}
-        >
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-gray-400 font-medium">
+        {/* Footer Actions */}
+        <div className="mt-auto py-6 border-t border-gray-100 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <span className="text-[13px] font-bold text-black uppercase tracking-tight">
               {request.submissionCount !== undefined && request.submissionCount > 0
                 ? formatSubmissionCount(request.submissionCount)
-                : "Open for proposals"}
+                : "Active Board"}
             </span>
-            <div className="w-[1px] h-3 bg-gray-300/60 shrink-0" />
           </div>
 
           {!isPreview && (
-            <div className="flex items-center gap-1.5 flex-shrink-0">
-              <FavoriteButton
-                requestId={request.id}
-                isFavorite={isFavorite}
-              />
+            <div className="flex items-center gap-2">
+              <FavoriteButton requestId={request.id} isFavorite={isFavorite} />
               <RequestMenu
                 requestId={request.id}
                 requestUserId={request.user_id}
@@ -369,7 +373,7 @@ function RequestCardComponent({
                   <div className={cn(smallImages ? "flex items-center justify-between gap-3 mb-2" : "block")}>
                     <h3
                       className={cn(
-                        "font-semibold leading-snug text-foreground transition-colors",
+                        "font-semibold leading-snug text-[#7755FF] transition-colors",
                         variant === "detail" && !smallImages ? "text-4xl" : "text-[18px]",
                         smallImages && "line-clamp-2 pr-4",
                         !headerActions && !smallImages && "pr-24"
@@ -489,53 +493,53 @@ function RequestCardComponent({
                 {request.condition && (
                   <div>
                     <h4 className="text-sm font-semibold text-gray-400 mb-1.5">Condition</h4>
-                    <p className="text-[15.5px] font-medium text-neutral-900">{formattedCondition}</p>
+                    <p className="text-[16px] sm:text-[18px] font-semibold text-[#d97706]">{formattedCondition}</p>
                   </div>
                 )}
               </div>
             )}
 
             {(preferences.length > 0 || dealbreakers.length > 0) && (
-              <div className={cn(
-                variant === "detail" && !smallImages ? "space-y-6 pt-2" : "mt-3 mb-5",
-                isInline && variant !== "detail" ? "flex flex-wrap gap-2" : (variant === "detail" && !smallImages ? "space-y-5" : "space-y-4")
-              )}>
-                {preferences.length > 0 && (
-                  <div className="space-y-3">
-                    {variant === "detail" && !smallImages && <h4 className="text-sm font-semibold text-gray-400">Preferences</h4>}
-                    <div className="flex flex-wrap gap-2">
-                      {visiblePreferences.map((pref: { label: string }, idx: number) => (
-                        <div key={idx} className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-green-50 text-[#015a25] text-sm">
-                          <Check className="h-3.5 w-3.5 shrink-0" strokeWidth={3} />
-                          {pref.label.charAt(0).toUpperCase() + pref.label.slice(1)}
+              <div className="flex flex-col">
+                {(() => {
+                  const allItems = [
+                    ...visiblePreferences.map((p: { label: string }) => ({ ...p, type: 'pref' })),
+                    ...visibleDealbreakers.map((d: { label: string }) => ({ ...d, type: 'deal' }))
+                  ];
+                  const displayedItems = allItems.slice(0, 5);
+                  const remainingCount = allItems.length - 5;
+
+                  return (
+                    <>
+                      {displayedItems.map((item: any, idx) => (
+                        <div
+                          key={`${item.type}-detail-${idx}`}
+                          className={cn(
+                            "flex items-center gap-4 py-4 group/item",
+                            (idx !== displayedItems.length - 1 || remainingCount > 0) && "border-b border-dashed border-gray-200"
+                          )}
+                        >
+                          {item.type === 'pref' ? (
+                            <Check className="h-4 w-4 text-[#16a34a] shrink-0" strokeWidth={3} />
+                          ) : (
+                            <X className="h-4 w-4 text-gray-400 shrink-0" strokeWidth={3} />
+                          )}
+                          <span className={cn(
+                            "text-[16px] sm:text-[18px] font-medium leading-snug tracking-tight",
+                            item.type === 'pref' ? "text-[#1A1A1A]" : "text-gray-400"
+                          )}>
+                            {item.label.charAt(0).toUpperCase() + item.label.slice(1)}
+                          </span>
                         </div>
                       ))}
-                      {remainingPreferences > 0 && (
-                        <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-green-50 text-sm text-[#015a25]">
-                          +{remainingPreferences} more
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                )}
-                {dealbreakers.length > 0 && (
-                  <div className="space-y-3">
-                    {variant === "detail" && !smallImages && <h4 className="text-sm font-semibold text-gray-400">Dealbreakers</h4>}
-                    <div className="flex flex-wrap gap-2">
-                      {visibleDealbreakers.map((deal: { label: string }, idx: number) => (
-                        <div key={idx} className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-amber-50 text-[#92400e] text-sm">
-                          <X className="h-3.5 w-3.5 shrink-0" strokeWidth={3} />
-                          {deal.label.charAt(0).toUpperCase() + deal.label.slice(1)}
+                      {remainingCount > 0 && (
+                        <div className="py-4 text-[16px] sm:text-[18px] font-medium text-gray-400">
+                          + {remainingCount} more {remainingCount === 1 ? 'requirement' : 'requirements'}
                         </div>
-                      ))}
-                      {remainingDealbreakers > 0 && (
-                        <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-amber-50 text-sm text-[#92400e]">
-                          +{remainingDealbreakers} more
-                        </span>
                       )}
-                    </div>
-                  </div>
-                )}
+                    </>
+                  );
+                })()}
               </div>
             )}
 
@@ -547,7 +551,7 @@ function RequestCardComponent({
                   {shortMetadata && (
                     <div className="flex flex-col items-center flex-1 py-4 justify-center min-w-0 px-2">
                       <span className="text-[13px] text-gray-400 font-normal leading-none mb-1.5 text-center">Condition</span>
-                      <span className="text-[15.5px] font-[600] text-[#7755FF] tracking-tight leading-tight text-center truncate w-full">
+                      <span className="text-[16px] sm:text-[18px] font-semibold text-[#d97706] tracking-tight leading-tight text-center truncate w-full">
                         {shortMetadata}
                       </span>
                     </div>
@@ -558,7 +562,7 @@ function RequestCardComponent({
                   {maxBudget && (
                     <div className="flex flex-col items-center flex-1 py-4 justify-center min-w-0 px-2">
                       <span className="text-[13px] text-gray-400 font-normal leading-none mb-1.5 text-center">Budget</span>
-                      <span className="text-[15.5px] font-[600] text-[#7755FF] tracking-tight leading-tight text-center truncate w-full">
+                      <span className="text-[18px] sm:text-[20px] font-semibold text-[#d97706] tracking-tight leading-tight text-center truncate w-full">
                         {maxBudget}
                       </span>
                     </div>
@@ -676,8 +680,7 @@ function RequestCardComponent({
               ref={cardRef}
               className={cn(
                 "flex flex-col relative w-full bg-white shadow-none transition-all duration-300 ease-out",
-                !noRounding && "overflow-hidden rounded-[20px]",
-                noRounding && "rounded-none",
+                "overflow-hidden rounded-none",
                 noBorder ? "!border-none !shadow-none bg-white" : "border border-[#e5e7eb]",
                 hasContent ? "h-full" : "h-fit"
               )}
@@ -719,16 +722,11 @@ function RequestCardComponent({
         >
           <Card
             className={cn(
-              "flex flex-col transition-all duration-300 ease-out relative group",
-              !noBorder && !disableHover && "hover:scale-[1.02]",
+              "flex flex-col transition-all duration-300 ease-out relative group shadow-none",
               hasContent ? "h-full" : "h-fit",
-              isFeedView ? "border-0 bg-transparent shadow-none" : cn(
-                !noBorder && !isFeed && !noRounding ? "rounded-2xl" : "",
-                !noBorder && isFeed && isFirst && isLast && !noRounding ? "rounded-2xl" : "",
-                !noBorder && isFeed && isFirst && !isLast && !noRounding ? "rounded-t-2xl rounded-b-none" : "",
-                !noBorder && isFeed && isLast && !isFirst && !noRounding ? "rounded-b-2xl rounded-t-none border-t-0" : "",
-                !noBorder && isFeed && !isFirst && !isLast ? "rounded-none border-t-0" : "",
-                noBorder && cn("!border-none !shadow-none bg-white", noRounding ? "rounded-none" : "rounded-2xl")
+              isFeedView ? "border-0 bg-transparent" : cn(
+                "rounded-none",
+                noBorder && cn("!border-none !shadow-none bg-white", "rounded-none")
               )
             )}
           >

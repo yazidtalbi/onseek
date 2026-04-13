@@ -19,7 +19,7 @@ const buttonVariants = ({
     variant === "default" &&
       "bg-[#7755FF] text-white hover:bg-[#7755FF]/90",
     variant === "accent" &&
-      "bg-[#FF5F00] text-white hover:bg-[#FF5F00]/90",
+      "bg-[#1e2330] text-white hover:bg-[#1e2330]/90 shadow-sm",
     variant === "outline" &&
       "border border-border bg-transparent text-foreground hover:bg-gray-100",
     variant === "ghost" && "bg-transparent hover:bg-gray-100",
@@ -45,4 +45,3 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 Button.displayName = "Button";
 
 export { Button, buttonVariants };
-

@@ -392,14 +392,11 @@ export function AppNavbar({
 
   return (
     <header className={cn(
-      "sticky top-0 z-20 w-full transition-all",
-      user ? "bg-white border-b border-[#e5e7eb]" : "bg-transparent border-none pt-4 pb-2"
+      "sticky top-0 z-50 w-full transition-all",
+      "bg-white"
     )}>
       {/* Mobile Navbar Container */}
-      <div className={cn(
-        "md:hidden flex flex-col w-full relative z-20",
-        user ? "bg-white" : "bg-transparent"
-      )}>
+      <div className="md:hidden flex flex-col w-full relative z-20 bg-white">
         {/* Top bar */}
         <div className="flex items-center justify-between py-3 px-4 w-full">
           {user ? (
@@ -779,7 +776,7 @@ export function AppNavbar({
           <Link href="/" className="hidden md:flex items-center gap-2">
             <Image src="/logo.png" alt="onseek" width={24} height={24} className="h-6 w-auto" priority />
             <span className="text-xl text-black" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>
-              onseek
+              Onseek
             </span>
           </Link>
           {/* Explore Dropdown */}

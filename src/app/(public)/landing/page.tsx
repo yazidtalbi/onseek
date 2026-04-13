@@ -7,6 +7,7 @@ import { getLandingPageContent } from "@/lib/strapi/content";
 import { PromotionalSidebar } from "@/components/requests/promotional-sidebar";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
+import { Suspense } from "react";
 
 // Default fallback content
 const defaultContent = {
@@ -48,8 +49,6 @@ const defaultContent = {
     },
   },
 };
-
-import { Suspense } from "react";
 
 export default async function LandingPage() {
   const supabase = await createServerSupabaseClient();

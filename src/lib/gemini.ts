@@ -42,29 +42,33 @@ export async function extractRequestData(userText: string) {
 
   const prompt = `
 # Role
-You are the Onseek Extraction Engine. Your goal is to transform raw user intent into a structured "Demand" artifact for our request-first marketplace.
+You are the Onseek Extraction Engine. Your goal is to transform raw user intent into a structured "Demand" artifact.
 
 # Logic Rules
-1. **Title**: Create a sharp, professional 5-8 word title. (Example: "Refurbished Steam Deck OLED 512GB")
-2. **Category**: Match to the closest one from this list: [${CATEGORIES.join(", ")}].
-3. **Budget**: Extract numerical value and currency. If vague, use "Negotiable".
-4. **Condition**: Match to: [New, Used, Either]. Default to "Either" if not specified.
-5. **Preferences**: (Nice-to-haves) Identify phrases like "ideally," "would love," "if possible."
-6. **Dealbreakers**: (Strict Requirements) Identify phrases like "must," "only," "required," "needs to be."
-7. **Tone**: Minimalist and analytical. 
+1. **Title**: Professional, high-end title. If the user says "I'm looking for X", the title should be "X" (properly capitalized). Do NOT add redundant descriptive words if they are already implied (e.g., don't add "Laptop" if "MacBook Pro" is present).
+2. **Category**: Match to the closest one from the list below.
+3. **Budget**: Extract numerical value. If vague or missing, return "Negotiable".
+4. **Condition**: Match to: [New, Used, Either]. Default to "Either".
+5. **Preferences**: (Nice-to-haves) Attributes the user likes but hasn't strictly demanded. 
+6. **Dealbreakers**: (STRICT Requirements) ONLY identify these if the user uses exclusionary or absolute language like "Must be", "No", "Not", "Only", "Strictly". If no such language is used, move attributes to Preferences or the Title.
+
+# Categories
+[${CATEGORIES.join(", ")}]
 
 # Input
-User text: "${userText}"
+User intent: "${userText}"
 
 # Output Requirement
-Return ONLY a JSON object with the following fields:
-- title: string
-- category: string
-- budget: string
-- condition: string ("New", "Used", or "Either")
-- preferences: string[]
-- dealbreakers: string[]
-- original_text: string (the input text)
+Return ONLY a JSON object:
+{
+  "title": string,
+  "category": string,
+  "budget": number | "Negotiable",
+  "condition": "New" | "Used" | "Either",
+  "preferences": string[],
+  "dealbreakers": string[],
+  "description": string (A professional summary of the request)
+}
 `;
 
   const result = await model.generateContent(prompt);

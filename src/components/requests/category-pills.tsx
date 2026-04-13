@@ -26,13 +26,15 @@ export function CategoryPills({
   hasPreferences = false,
   viewMode,
   onViewModeChange,
-  hideViewToggle = false
+  hideViewToggle = false,
+  hideFilters = false
 }: {
   mode?: FeedMode;
   hasPreferences?: boolean;
   viewMode?: "list" | "grid";
   onViewModeChange?: (mode: "list" | "grid") => void;
   hideViewToggle?: boolean;
+  hideFilters?: boolean;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -204,7 +206,7 @@ export function CategoryPills({
                       : "bg-transparent text-gray-400 hover:text-gray-600 font-medium"
                   )}
                 >
-                  {category}
+                  {category.split(' ')[0]}
                 </button>
               );
             })}
@@ -227,58 +229,60 @@ export function CategoryPills({
         </div>
 
         {/* Far Right Nav - View, Sort, Filter */}
-        <div className="shrink-0 flex items-center gap-2">
-          {/* Filter Button */}
-          <button
-            onClick={() => setFiltersOpen(!filtersOpen)}
-            className={cn(
-              "w-9 h-9 p-0 flex items-center justify-center rounded-full text-sm font-medium transition-colors border",
-              hasActiveFilters || filtersOpen
-                ? "bg-gray-100 text-gray-900 border-gray-300"
-                : "bg-white border-transparent text-gray-600 hover:text-gray-900"
+        {!hideFilters && (
+          <div className="shrink-0 flex items-center gap-2">
+            {/* Filter Button */}
+            <button
+              onClick={() => setFiltersOpen(!filtersOpen)}
+              className={cn(
+                "w-9 h-9 p-0 flex items-center justify-center rounded-full text-sm font-medium transition-colors border",
+                hasActiveFilters || filtersOpen
+                  ? "bg-gray-100 text-gray-900 border-gray-300"
+                  : "bg-white border-transparent text-gray-600 hover:text-gray-900"
+              )}
+              title="Filters"
+            >
+              <ListFilter className="h-4 w-4" />
+            </button>
+
+            {/* Sort (Latest) */}
+            <Select value={mode === "for_you" ? "latest" : mode} onValueChange={handleModeChange}>
+              <SelectTrigger className="px-3 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors flex items-center gap-2 border-transparent bg-white text-gray-600 hover:text-gray-900 h-9 shadow-none focus:ring-0 w-auto">
+                <span className="truncate">
+                  {mode === "trending" ? "Trending" : "Latest"}
+                </span>
+              </SelectTrigger>
+              <SelectContent className="bg-white min-w-[150px]">
+                <SelectItem value="latest">Latest</SelectItem>
+                <SelectItem value="trending">Trending</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {/* View Toggle */}
+            {!hideViewToggle && viewMode !== undefined && onViewModeChange && (
+              <div className="flex items-center gap-1 rounded-full bg-gray-100 p-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onViewModeChange("list")}
+                  className={cn("h-7 w-7 p-0 rounded-full", viewMode === "list" ? "bg-white text-gray-900" : "bg-transparent text-gray-500 hover:text-gray-900")}
+                  title="List view"
+                >
+                  <Rows3 className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onViewModeChange("grid")}
+                  className={cn("h-7 w-7 p-0 rounded-full", viewMode === "grid" ? "bg-white text-gray-900" : "bg-transparent text-gray-500 hover:text-gray-900")}
+                  title="Grid view"
+                >
+                  <LayoutGrid className="h-4 w-4" />
+                </Button>
+              </div>
             )}
-            title="Filters"
-          >
-            <ListFilter className="h-4 w-4" />
-          </button>
-
-          {/* Sort (Latest) */}
-          <Select value={mode === "for_you" ? "latest" : mode} onValueChange={handleModeChange}>
-            <SelectTrigger className="px-3 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors flex items-center gap-2 border-transparent bg-white text-gray-600 hover:text-gray-900 h-9 shadow-none focus:ring-0 w-auto">
-              <span className="truncate">
-                {mode === "trending" ? "Trending" : "Latest"}
-              </span>
-            </SelectTrigger>
-            <SelectContent className="bg-white min-w-[150px]">
-              <SelectItem value="latest">Latest</SelectItem>
-              <SelectItem value="trending">Trending</SelectItem>
-            </SelectContent>
-          </Select>
-
-          {/* View Toggle */}
-          {!hideViewToggle && viewMode !== undefined && onViewModeChange && (
-            <div className="flex items-center gap-1 rounded-full bg-gray-100 p-1">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onViewModeChange("list")}
-                className={cn("h-7 w-7 p-0 rounded-full", viewMode === "list" ? "bg-white text-gray-900" : "bg-transparent text-gray-500 hover:text-gray-900")}
-                title="List view"
-              >
-                <Rows3 className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onViewModeChange("grid")}
-                className={cn("h-7 w-7 p-0 rounded-full", viewMode === "grid" ? "bg-white text-gray-900" : "bg-transparent text-gray-500 hover:text-gray-900")}
-                title="Grid view"
-              >
-                <LayoutGrid className="h-4 w-4" />
-              </Button>
-            </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Expanded Inline Filters */}
