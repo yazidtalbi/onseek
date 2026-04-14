@@ -364,7 +364,7 @@ export function AppNavbar({
       return;
     }
 
-    const heroSection = document.getElementById("hero-search-section");
+    const heroSection = document.getElementById("onseek-hero");
     if (!heroSection) {
       setShowSearch(true);
       return;
@@ -377,7 +377,7 @@ export function AppNavbar({
       },
       {
         threshold: 0,
-        rootMargin: "-100px 0px 0px 0px", // Trigger slightly before completely out of view
+        rootMargin: "0px", // Show only when hero is completely out of view
       }
     );
 
@@ -389,11 +389,34 @@ export function AppNavbar({
   }, [isHomePage]);
 
   const [avatarError, setAvatarError] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+
+  useEffect(() => {
+    const controlNavbar = () => {
+      if (typeof window !== 'undefined') {
+        if (window.scrollY > lastScrollY && window.scrollY > 100) { // scrolling down
+          setIsVisible(false);
+        } else { // scrolling up
+          setIsVisible(true);
+        }
+        setLastScrollY(window.scrollY);
+      }
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('scroll', controlNavbar);
+      return () => {
+        window.removeEventListener('scroll', controlNavbar);
+      };
+    }
+  }, [lastScrollY]);
 
   return (
     <header className={cn(
-      "sticky top-0 z-50 w-full transition-all",
-      "bg-white"
+      "fixed top-0 left-0 right-0 z-50 w-full transition-all duration-300 pt-4 px-4",
+      "bg-transparent",
+      !isVisible && "-translate-y-full"
     )}>
       {/* Mobile Navbar Container */}
       <div className="md:hidden flex flex-col w-full relative z-20 bg-white">
@@ -407,7 +430,7 @@ export function AppNavbar({
                   <Menu className="h-5 w-5" />
                 </Button>
                 <Link href="/" prefetch={true} className="shrink-0 flex items-center gap-2">
-                  <Image src="/logo.png" alt="Onseek" width={100} height={28} className="h-6 w-auto" priority unoptimized quality={100} />
+                  <Image src="/onseek-logo-spy.png" alt="Onseek" width={36} height={36} className="h-9 w-auto" priority unoptimized quality={100} />
                   <span className="text-lg text-black" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>Onseek</span>
                 </Link>
               </div>
@@ -766,15 +789,14 @@ export function AppNavbar({
         </SheetContent>
       </Sheet>
 
-      {/* Desktop Navbar */}
+      {/* Desktop Navbar - Pill Shape */}
       <div className={cn(
-        "hidden md:flex w-full px-4 h-16 items-center relative",
-        !user && "max-w-[1360px] mx-auto px-0 sm:px-4"
+        "hidden md:flex w-full max-w-[1360px] mx-auto h-20 items-center relative rounded-full bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100/50 px-10",
       )}>
         {/* Left Side: Space for sidebar on desktop */}
         <div className="flex items-center shrink-0 gap-6">
           <Link href="/" className="hidden md:flex items-center gap-2">
-            <Image src="/logo.png" alt="onseek" width={24} height={24} className="h-6 w-auto" priority />
+            <Image src="/onseek-logo-spy.png" alt="onseek" width={44} height={44} className="h-11 w-auto" priority />
             <span className="text-xl text-black" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>
               Onseek
             </span>
@@ -817,8 +839,8 @@ export function AppNavbar({
           )}
         </div>
 
-        {/* Center Side: Search Bar - Centered Absolutely */}
-        <div className="absolute left-1/2 -translate-x-1/2 hidden lg:flex items-center w-full max-w-sm justify-center z-10 pointer-events-none">
+        {/* Center Side: Search Bar - Temporarily Hidden */}
+        <div className="absolute left-1/2 -translate-x-1/2 hidden items-center w-full max-w-sm justify-center z-10 pointer-events-none">
           <div className={cn(
             "w-full transition-all duration-300 pointer-events-auto",
             showSearch ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4 pointer-events-none"
@@ -831,8 +853,8 @@ export function AppNavbar({
                 placeholder="What are you looking for today?"
                 className="flex-1 bg-transparent border-none focus-visible:ring-0 text-sm h-full pl-6 shadow-none placeholder:text-slate-500"
               />
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 onClick={(e) => {
                   e.preventDefault();
                   if (searchQuery.trim()) {
@@ -843,8 +865,8 @@ export function AppNavbar({
                   }
                 }}
                 className="w-9 h-9 bg-[#6925DC] rounded-full flex items-center justify-center shrink-0 hover:bg-[#6925DC]/90 transition-colors"
-               >
-                 <Search className="h-4 w-4 text-white" strokeWidth={2} />
+              >
+                <Search className="h-4 w-4 text-white" strokeWidth={2} />
               </button>
             </div>
           </div>
@@ -978,7 +1000,7 @@ export function AppNavbar({
         onOpenChange={setIsCreateModalOpen}
         userCountry={searchParams.get("country")}
       />
-      <AIRequestModal 
+      <AIRequestModal
         open={isAIModalOpen}
         onOpenChange={setIsAIModalOpen}
       />

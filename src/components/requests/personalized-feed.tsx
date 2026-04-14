@@ -26,6 +26,7 @@ import { HowItWorks } from "@/components/landing/how-it-works";
 import { Testimonials } from "@/components/landing/testimonials";
 import { UserChoiceSection } from "@/components/landing/user-choice-section";
 import { PublicFooter } from "@/components/layout/public-footer";
+import { getRequestTheme } from "@/lib/utils/request-themes";
 
 const AuthModal = dynamic(() => import("@/components/auth/auth-modal").then(mod => mod.AuthModal), {
   ssr: false,
@@ -249,22 +250,22 @@ export function PersonalizedFeed({
             tradeMode={tradeMode}
             setTradeMode={setTradeMode}
           />
-          <div className="pb-4">
+          {/* <div className="pb-4">
             <AnnouncementBar />
-          </div>
+          </div> */}
         </>
       )}
 
       <div className="max-w-[1360px] mx-auto w-full px-4 md:px-6">
-        {/* Editorial Title */}
-        <div className="text-left pt-16 pb-12">
+        {/* Editorial Title - Hidden as requested */}
+        {/* <div className="text-left pt-16 pb-12">
           <h2 
             className="text-[40px] leading-[1.1] text-[#1A1A1A] font-bold tracking-tight max-w-4xl" 
             style={{ fontFamily: 'var(--font-expanded)' }}
           >
             Discover what people <br className="hidden md:block" /> are looking for
           </h2>
-        </div>
+        </div> */}
 
         {/* Categories Strip */}
         <div className="py-2 min-h-[70px] flex flex-col justify-center mb-6 bg-white transition-all duration-300">
@@ -360,7 +361,7 @@ export function PersonalizedFeed({
               {allItems.map((request: RequestItem, index: number) => {
                 const requestWithExtras = request as RequestItem & { images?: string[]; links?: string[] };
                 return (
-                  <div key={request.id} className="break-inside-avoid mb-6 bg-[#f5f6f9] rounded-[20px] p-[6px] transition-all duration-300 ease-out hover:scale-[1.02] shadow-none hover:shadow-none">
+                  <div key={request.id} className="break-inside-avoid mb-6 transition-all duration-300 ease-out hover:scale-[1.02]">
                     <RequestCard
                       request={request}
                       variant="detail"
@@ -448,8 +449,8 @@ export function PersonalizedFeed({
             </div>
           </section>
 
-          <UserChoiceSection />
           <HowItWorks />
+          <UserChoiceSection />
           <Testimonials />
 
           <div className="w-full bg-gray-50 py-12">

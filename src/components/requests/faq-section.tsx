@@ -25,43 +25,45 @@ export function FaqSection() {
   return (
     <div className="w-full mx-auto py-24 mb-12">
       <div className="max-w-[1240px] mx-auto px-6">
-        <div className="flex flex-col lg:flex-row gap-12 lg:gap-24 items-center">
-          {/* Left: Title */}
-          <div className="lg:w-[40%] flex flex-col items-start">
-            <img src="/illustrations/faq-cat.png" alt="Questions" className="w-20 md:w-24 h-auto object-contain opacity-90 mb-6" />
-            <h2 className="text-[40px] md:text-[56px] leading-[1.05] font-medium tracking-[-0.03em] text-foreground" style={{ fontFamily: 'var(--font-expanded)' }}>
-              Frequently asked<br />questions
+        <div className="flex flex-col gap-16">
+          {/* Top: Title and Image Flexed */}
+          <div className="flex flex-col md:flex-row items-center justify-between gap-8 mb-4">
+            <h2 className="text-[36px] sm:text-[48px] md:text-[56px] leading-[1.05] font-bold tracking-[-0.03em] text-[#1A1A1A] max-w-2xl" style={{ fontFamily: 'var(--font-expanded)' }}>
+              Frequently asked<br className="hidden sm:block" /> questions
             </h2>
+            <div className="shrink-0 scale-110 md:scale-125 origin-center md:origin-right transform px-8">
+              <img src="/illustrations/faq-cat.png" alt="Questions" className="w-20 md:w-28 h-auto object-contain opacity-90" />
+            </div>
           </div>
 
-          {/* Right: Accordion */}
-          <div className="flex-1 border-t border-gray-100 w-full">
+          {/* Bottom: Accordion Full Width */}
+          <div className="w-full">
             {faqs.map((faq, index) => {
               const isOpen = openIndex === index;
               return (
                 <div 
                   key={index} 
-                  className="border-b border-gray-100"
+                  className="border-b border-gray-100 last:border-0"
                 >
                   <button
                     onClick={() => setOpenIndex(isOpen ? null : index)}
-                    className="w-full flex items-center justify-between py-5 text-left focus:outline-none group"
+                    className="w-full flex items-center justify-between py-6 text-left focus:outline-none group"
                   >
                     <span 
-                      className="text-[18px] md:text-[20px] font-medium text-foreground tracking-[-0.01em] pr-8 transition-colors group-hover:text-gray-600"
+                      className="text-[19px] md:text-[22px] font-semibold text-[#1A1A1A] tracking-[-0.01em] pr-8 transition-colors group-hover:text-gray-600"
                       style={{ fontFamily: 'var(--font-expanded)' }}
                     >
                       {faq.question}
                     </span>
-                    <ChevronDown className={cn("w-5 h-5 text-foreground transition-transform duration-300 shrink-0", isOpen && "rotate-180")} />
+                    <ChevronDown className={cn("w-5 h-5 text-gray-400 transition-transform duration-300 shrink-0", isOpen && "rotate-180 text-[#6925DC]")} />
                   </button>
                   <div 
                     className={cn(
                       "overflow-hidden transition-all duration-300 ease-in-out",
-                      isOpen ? "max-h-[200px] opacity-100 pb-8" : "max-h-0 opacity-0"
+                      isOpen ? "max-h-[300px] opacity-100 pb-10" : "max-h-0 opacity-0"
                     )}
                   >
-                    <div className="text-[16px] md:text-[17px] text-gray-500 leading-relaxed font-normal max-w-xl">
+                    <div className="text-[17px] md:text-[18px] text-gray-500 leading-relaxed font-medium max-w-4xl">
                       {faq.answer}
                     </div>
                   </div>

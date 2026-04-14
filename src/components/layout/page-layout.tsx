@@ -11,8 +11,8 @@ export function PageLayout({ children }: { children: React.ReactNode }) {
   if (!showPromotional) {
     return (
       <div className={cn(
-        "flex-1 w-full mx-auto px-4 md:px-6 pb-8",
-        pathname === "/" || pathname === "/landing" ? "pt-0 md:pt-2" : "pt-8 md:pt-14"
+        "flex-1 w-full mx-auto pb-8",
+        pathname === "/" || pathname === "/landing" ? "px-0 pt-0" : "px-4 md:px-6 pt-8 md:pt-14"
       )}>
         {children}
       </div>

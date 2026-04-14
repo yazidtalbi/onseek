@@ -41,16 +41,15 @@ export async function extractRequestData(userText: string) {
     console.log("Model initialized: gemini-3.1-flash-lite-preview");
 
   const prompt = `
-# Role
-You are the Onseek Extraction Engine. Your goal is to transform raw user intent into a structured "Demand" artifact.
-
 # Logic Rules
-1. **Title**: Professional, high-end title. If the user says "I'm looking for X", the title should be "X" (properly capitalized). Do NOT add redundant descriptive words if they are already implied (e.g., don't add "Laptop" if "MacBook Pro" is present).
+1. **Title**: Professional, high-end title. If the user says "I'm looking for X", the title should be "X" (properly capitalized).
 2. **Category**: Match to the closest one from the list below.
 3. **Budget**: Extract numerical value. If vague or missing, return "Negotiable".
 4. **Condition**: Match to: [New, Used, Either]. Default to "Either".
-5. **Preferences**: (Nice-to-haves) Attributes the user likes but hasn't strictly demanded. 
-6. **Dealbreakers**: (STRICT Requirements) ONLY identify these if the user uses exclusionary or absolute language like "Must be", "No", "Not", "Only", "Strictly". If no such language is used, move attributes to Preferences or the Title.
+5. **Preferences (INCLUDES)**: Identify every single positive requirement or feature the user is looking for.
+6. **Dealbreakers (EXCLUDES)**: Identify every single negative constraint or exclusion. 
+   - CRITICAL RULE: If a user says 'I don't want,' 'No,' 'Avoid,' 'Dealbreaker,' 'Exception,' or uses any negative descriptors, it MUST be categorized as a Dealbreaker.
+   - Do NOT omit any specific physical features, colors, materials, or brands mentioned as exclusions.
 
 # Categories
 [${CATEGORIES.join(", ")}]

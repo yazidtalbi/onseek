@@ -9,6 +9,7 @@ import { RequestCard } from "@/components/requests/request-card";
 import type { RequestItem } from "@/lib/types";
 import { createRequestAction } from "@/actions/request.actions";
 import { useQueryClient } from "@tanstack/react-query";
+import { getRequestTheme } from "@/lib/utils/request-themes";
 import { useRouter } from "next/navigation";
 import { SignInForm } from "@/components/auth/sign-in-form";
 import { SignUpForm } from "@/components/auth/sign-up-form";
@@ -28,6 +29,7 @@ export function AIRequestFlow({ initialText, onClose, user }: AIRequestFlowProps
   const [urgency, setUrgency] = React.useState<string | null>(null);
   const [budget, setBudget] = React.useState<number | null>(null);
   const [error, setError] = React.useState<string | null>(null);
+  const [editingField, setEditingField] = React.useState<'title' | 'condition' | 'budget' | 'preferences' | 'dealbreakers' | 'images' | null>(null);
   const queryClient = useQueryClient();
   const router = useRouter();
 
@@ -85,6 +87,17 @@ export function AIRequestFlow({ initialText, onClose, user }: AIRequestFlowProps
           if (!response.ok) throw new Error("Extraction failed");
           
           const data = await response.json();
+          
+          // Add stable IDs for DnD
+          data.preferences = (data.preferences || []).map((p: string) => ({ 
+            label: p, 
+            id: `pref-${Math.random().toString(36).slice(2, 9)}` 
+          }));
+          data.dealbreakers = (data.dealbreakers || []).map((d: string) => ({ 
+            label: d, 
+            id: `deal-${Math.random().toString(36).slice(2, 9)}` 
+          }));
+
           setExtractedData(data);
           
           // Determine next step based on data completeness
@@ -121,8 +134,8 @@ export function AIRequestFlow({ initialText, onClose, user }: AIRequestFlowProps
     formData.set("country", user?.profile?.country || "");
     
     // Preferences/Dealbreakers
-    formData.set("preferences", JSON.stringify(extractedData?.preferences?.map((p: string) => ({ label: p })) || []));
-    formData.set("dealbreakers", JSON.stringify(extractedData?.dealbreakers?.map((d: string) => ({ label: d })) || []));
+    formData.set("preferences", JSON.stringify(extractedData?.preferences?.map((p: any) => ({ label: p.label })) || []));
+    formData.set("dealbreakers", JSON.stringify(extractedData?.dealbreakers?.map((d: any) => ({ label: d.label })) || []));
 
     try {
       const res = await createRequestAction(formData);
@@ -161,7 +174,7 @@ export function AIRequestFlow({ initialText, onClose, user }: AIRequestFlowProps
         <div className="flex-1 max-w-md mx-8">
            <div className="h-1 w-full bg-gray-100 rounded-full overflow-hidden">
               <motion.div 
-                className="h-full bg-black" 
+                className="h-full bg-[#6925DC]" 
                 initial={{ width: "0%" }}
                 animate={{ width: `${currentProgress}%` }}
                 transition={{ duration: 0.8, ease: "circOut" }}
@@ -222,7 +235,7 @@ export function AIRequestFlow({ initialText, onClose, user }: AIRequestFlowProps
                    type="number"
                    autoFocus
                    placeholder="Enter amount"
-                   className="w-full h-24 bg-gray-50 border-2 border-gray-100 rounded-[2rem] px-14 text-4xl font-black outline-none focus:border-black transition-all"
+                   className="w-full h-24 bg-gray-50 border-2 border-gray-100 rounded-2xl px-14 text-4xl font-bold outline-none focus:border-black transition-all placeholder:font-medium placeholder:text-gray-300"
                    onChange={(e) => setBudget(Number(e.target.value))}
                    onKeyDown={(e) => e.key === "Enter" && setStep("urgency")}
                  />
@@ -231,7 +244,7 @@ export function AIRequestFlow({ initialText, onClose, user }: AIRequestFlowProps
               <Button 
                 onClick={() => setStep("urgency")}
                 size="lg"
-                className="h-16 px-12 rounded-full bg-black text-white hover:bg-black/90 text-lg font-bold shadow-2xl transition-all"
+                className="h-16 px-12 rounded-2xl bg-black text-white hover:bg-black/90 text-lg font-bold shadow-2xl transition-all"
               >
                 Continue <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
@@ -266,7 +279,7 @@ export function AIRequestFlow({ initialText, onClose, user }: AIRequestFlowProps
                         setStep("preview");
                      }}
                      className={cn(
-                       "group flex items-center gap-4 px-10 py-6 rounded-[2rem] border-2 transition-all duration-300",
+                       "group flex items-center gap-4 px-10 py-6 rounded-2xl border-2 transition-all duration-300",
                        urgency === opt.id 
                         ? "border-black bg-black text-white scale-105 shadow-xl" 
                         : "border-gray-100 bg-gray-50 text-gray-600 hover:border-black/20 hover:scale-[1.02]"
@@ -297,7 +310,10 @@ export function AIRequestFlow({ initialText, onClose, user }: AIRequestFlowProps
                 {/* Decorative glow behind the card */}
                 <div className="absolute inset-x-0 inset-y-8 bg-[#6925DC]/5 blur-[60px] rounded-full pointer-events-none" />
                 
-                <div className="relative transform hover:scale-[1.01] transition-all duration-300">
+                <div className={cn(
+                  "relative transform transition-all duration-300 p-[6px] rounded-[20px] shadow-none",
+                  getRequestTheme(extractedData?.category).bg
+                )}>
                   <RequestCard 
                     request={{
                       id: "preview",
@@ -309,8 +325,8 @@ export function AIRequestFlow({ initialText, onClose, user }: AIRequestFlowProps
                         exactItem: false,
                         exactSpecification: false,
                         exactPrice: false,
-                        preferences: extractedData?.preferences?.map((p: string) => ({ label: p })) || [],
-                        dealbreakers: extractedData?.dealbreakers?.map((d: string) => ({ label: d })) || [],
+                        preferences: extractedData?.preferences || [],
+                        dealbreakers: extractedData?.dealbreakers || [],
                       })}-->`,
                       category: extractedData?.category || "Other",
                       budget_min: null,
@@ -327,16 +343,42 @@ export function AIRequestFlow({ initialText, onClose, user }: AIRequestFlowProps
                         username: user?.profile?.username || "guest"
                       }
                     } as any}
-                    variant="feed"
+                    variant="detail"
+                    smallImages={true}
                     isPreview={true}
-                    noBorder={true}
+                    disableHover={true}
+                    showAllRequirements={true}
+                    onUpdateTitle={(newTitle) => setExtractedData({ ...extractedData, title: newTitle })}
+                    onUpdateRequirement={(idx, newLabel) => {
+                      const prefs = extractedData?.preferences || [];
+                      const deals = extractedData?.dealbreakers || [];
+                      if (idx < prefs.length) {
+                        const newPrefs = [...prefs];
+                        newPrefs[idx] = { ...newPrefs[idx], label: newLabel };
+                        setExtractedData({ ...extractedData, preferences: newPrefs });
+                      } else {
+                        const newDeals = [...deals];
+                        const dealIdx = idx - prefs.length;
+                        newDeals[dealIdx] = { ...newDeals[dealIdx], label: newLabel };
+                        setExtractedData({ ...extractedData, dealbreakers: newDeals });
+                      }
+                    }}
+                    onReorderRequirements={(newItems) => {
+                      const newPrefs = newItems.filter(i => i.type === 'pref').map(i => ({ label: i.label, id: i.id }));
+                      const newDeals = newItems.filter(i => i.type === 'deal').map(i => ({ label: i.label, id: i.id }));
+                      setExtractedData({ ...extractedData, preferences: newPrefs, dealbreakers: newDeals });
+                    }}
+                    onEditField={(field) => setEditingField(field)}
                   />
                 </div>
               </div>
 
               <div className="flex items-center gap-10">
                  <button 
-                   onClick={onClose}
+                   onClick={() => {
+                     sessionStorage.removeItem(STORAGE_KEY);
+                     onClose();
+                   }}
                    className="text-gray-400 hover:text-black font-bold transition-colors text-lg"
                  >
                    Discard
@@ -344,7 +386,7 @@ export function AIRequestFlow({ initialText, onClose, user }: AIRequestFlowProps
                  <Button 
                    onClick={handleFinish}
                    size="lg"
-                   className="h-20 px-16 rounded-full bg-black text-white hover:bg-black/90 text-2xl font-black shadow-[0_20px_50px_rgba(0,0,0,0.2)] transition-all hover:scale-[1.02] flex items-center gap-4 group"
+                   className="h-20 px-16 rounded-2xl bg-black text-white hover:bg-black/90 text-2xl font-black shadow-[0_20px_50px_rgba(0,0,0,0.2)] transition-all hover:scale-[1.02] flex items-center gap-4 group"
                  >
                    <span>Launch Request</span>
                    <ArrowRight className="h-6 w-6 transition-transform group-hover:translate-x-1" />
@@ -450,6 +492,85 @@ export function AIRequestFlow({ initialText, onClose, user }: AIRequestFlowProps
            Onseek AI Engine v1.0
          </span>
       </div>
+
+      {/* Inline Edit Dialog */}
+      <AnimatePresence>
+        {editingField && (
+          <div className="fixed inset-0 z-[150] flex items-center justify-center p-6 sm:p-12">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setEditingField(null)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-lg bg-white rounded-3xl p-10 shadow-3xl overflow-hidden"
+            >
+              <h3 className="text-2xl font-black mb-6 tracking-tight" style={{ fontFamily: 'var(--font-expanded)' }}>
+                Edit {editingField.charAt(0).toUpperCase() + editingField.slice(1)}
+              </h3>
+
+              {editingField === 'title' && (
+                <div className="space-y-6">
+                  <textarea 
+                    autoFocus
+                    className="w-full min-h-[120px] p-6 bg-gray-50 border-2 border-gray-100 rounded-2xl text-lg font-semibold focus:border-black outline-none resize-none transition-all"
+                    defaultValue={extractedData?.title || initialText.slice(0, 60)}
+                    onChange={(e) => setExtractedData({ ...extractedData, title: e.target.value })}
+                  />
+                </div>
+              )}
+
+              {editingField === 'budget' && (
+                <div className="relative">
+                  <span className="absolute left-6 top-1/2 -translate-y-1/2 text-2xl font-bold text-gray-300">$</span>
+                  <input 
+                    type="number"
+                    autoFocus
+                    placeholder="Enter budget"
+                    className="w-full h-20 bg-gray-50 border-2 border-gray-100 rounded-2xl px-12 text-2xl font-bold outline-none focus:border-black transition-all"
+                    defaultValue={budget || extractedData?.budget || ""}
+                    onChange={(e) => setBudget(Number(e.target.value))}
+                  />
+                </div>
+              )}
+
+              {editingField === 'condition' && (
+                <div className="flex flex-col gap-3">
+                  {['New', 'Used', 'Either'].map((c) => (
+                    <button
+                      key={c}
+                      onClick={() => {
+                        setExtractedData({ ...extractedData, condition: c });
+                        setEditingField(null);
+                      }}
+                      className={cn(
+                        "w-full py-4 px-6 rounded-xl border-2 font-bold transition-all text-left",
+                        (extractedData?.condition || 'Either') === c ? "border-black bg-black text-white" : "border-gray-100 bg-gray-50 text-gray-600 hover:border-gray-200"
+                      )}
+                    >
+                      {c}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              <div className="mt-10 flex gap-4">
+                <Button 
+                  onClick={() => setEditingField(null)}
+                  className="flex-1 h-16 rounded-2xl bg-black text-white font-bold text-lg"
+                >
+                  Save Changes
+                </Button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
