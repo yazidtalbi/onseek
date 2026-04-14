@@ -7,7 +7,12 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "seed": "tsx scripts/seed.ts"
+    "seed": "tsx scripts/seed.ts",
+    "seed:launch": "tsx scripts/seed-launch.ts",
+    "seed:different": "tsx scripts/seed-different.ts",
+    "seed:batch": "tsx scripts/seed-batch.ts",
+    "seed:cleanup": "tsx scripts/cleanup-seed.ts",
+    "seed:large": "tsx scripts/seed-large.ts"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

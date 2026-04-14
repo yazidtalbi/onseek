@@ -237,12 +237,16 @@ export function AppNavbar({
   const [searchType, setSearchType] = useState<"requests" | "items">("requests");
   const [isPending, startTransition] = useTransition();
   const [unreadCount, setUnreadCount] = useState(0);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  // mobileOpen removed - using SidebarContext
   const [searchSheetOpen, setSearchSheetOpen] = useState(false);
   const [exploreOpen, setExploreOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isAIModalOpen, setIsAIModalOpen] = useState(false);
   const isHomePage = pathname === "/";
+  const { 
+    mobileOpen, setMobileOpen,
+    expanded: isSidebarExpanded, setExpanded: setSidebarSidebarExpanded 
+  } = require("@/components/layout/app-sidebar").useSidebar();
   const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
 
 
@@ -402,11 +406,8 @@ export function AppNavbar({
           setIsScrolled(false);
         }
         
-        if (window.scrollY > lastScrollY && window.scrollY > 100) { // scrolling down
-          setIsVisible(false);
-        } else { // scrolling up
-          setIsVisible(true);
-        }
+        // Removed visible/hidden logic as requested for fixed topbar
+        setIsVisible(true);
         setLastScrollY(window.scrollY);
       }
     };
@@ -421,14 +422,13 @@ export function AppNavbar({
 
   return (
     <header className={cn(
-      "fixed top-0 left-0 right-0 z-50 w-full transition-all duration-300",
-      isScrolled ? "pt-4 px-4 bg-transparent" : "pt-0 px-0 bg-transparent",
+      "fixed top-0 left-0 right-0 z-50 w-full transition-all duration-300 bg-white h-20",
       !isVisible && "-translate-y-full"
     )}>
       {/* Mobile Navbar Container */}
       <div className={cn(
         "md:hidden flex flex-col w-full relative z-20 transition-all duration-300",
-        isScrolled ? "bg-white shadow-md" : "bg-transparent shadow-none"
+        isScrolled ? "bg-white" : "bg-transparent"
       )}>
         {/* Top bar */}
         <div className="flex items-center justify-between py-3 px-4 w-full">
@@ -436,7 +436,7 @@ export function AppNavbar({
             <>
               {/* Left: Hamburger, Logo */}
               <div className="flex items-center gap-3">
-                <Button variant="ghost" size="icon" className="h-9 w-9 -ml-2" onClick={() => setMobileMenuOpen(true)}>
+                <Button variant="ghost" size="icon" className="h-9 w-9 -ml-2" onClick={() => setMobileOpen(true)}>
                   <Menu className="h-5 w-5" />
                 </Button>
                 <Link href="/" prefetch={true} className="shrink-0 flex items-center gap-2">
@@ -477,7 +477,7 @@ export function AppNavbar({
               {/* Left: Logo */}
               <Link href="/" prefetch={true} className="shrink-0 flex items-center gap-2">
                 <Image src="/logo.png" alt="Onseek" width={100} height={28} className="h-6 w-auto" priority unoptimized quality={100} />
-                <span className="text-lg text-black" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>Onseek</span>
+                <span className="text-lg text-[#6925DC]" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>Onseek</span>
               </Link>
 
               {/* Right: Plus, Hamburger */}
@@ -492,7 +492,7 @@ export function AppNavbar({
                     </Button>
                   </div>
                 )}
-                <Button variant="ghost" size="icon" className="h-9 w-9 ml-1 -mr-2" onClick={() => setMobileMenuOpen(true)}>
+                <Button variant="ghost" size="icon" className="h-9 w-9 ml-1 -mr-2" onClick={() => setMobileOpen(true)}>
                   <Menu className="h-5 w-5" />
                 </Button>
               </div>
@@ -512,341 +512,68 @@ export function AppNavbar({
         )}
       </div>
 
-      <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-        <SheetContent side="left" fullScreen={true} noBlur={true} className="w-full p-0 bg-white">
-          <div className="flex flex-col h-full">
-            {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-[#e5e7eb]">
-              <h2 className="text-lg font-semibold">Menu</h2>
-              <SheetClose asChild>
-                <Button variant="ghost" size="icon">
-                  <X className="h-5 w-5" />
-                </Button>
-              </SheetClose>
-            </div>
+      {/* Redundant Mobile Sheet Handled by AppSidebar */}
 
-            {/* Guest layout - Search and Auth */}
-            {!user && (
-              <div className="px-4 py-4 border-b border-[#e5e7eb] space-y-4">
-                <form action="/search" method="get" className="relative w-full flex items-center">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input name="q" placeholder="Search..." defaultValue={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9 pr-4 bg-gray-100 border-transparent rounded-full h-10 w-full text-sm focus-visible:ring-1 focus-visible:ring-gray-300 transition-shadow" />
-                  <input type="hidden" name="type" value={searchType} />
-                </form>
-
-                <div className="flex gap-2 w-full">
-                  {!minimal && (
-                    <Button asChild className="flex-1 rounded-full bg-[#222234] text-white hover:bg-[#222234]/90 text-sm font-semibold h-11">
-                      <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
-                        Log In
-                      </Link>
-                    </Button>
-                  )}
-                  <Button asChild className="flex-1 rounded-full bg-[#222234] text-white hover:bg-[#222234]/90 text-sm font-semibold h-11">
-                    <Link href="/signup" onClick={() => setMobileMenuOpen(false)}>
-                      {ctaText}
-                    </Link>
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {/* User Info Section */}
-            {user && (
-              <div className="p-4 border-b border-[#e5e7eb]">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-700 font-bold text-sm overflow-hidden relative">
-                    {profile?.avatar_url && !avatarError ? (
-                      <img
-                        src={profile.avatar_url}
-                        alt={profile.username || "User"}
-                        className="w-full h-full object-cover"
-                        onError={() => setAvatarError(true)}
-                      />
-                    ) : (
-                      profile?.username?.charAt(0).toUpperCase() || "U"
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">{profile?.username || "User"}</p>
-                    <p className="text-xs text-muted-foreground">{user.email}</p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-
-            {/* Scrollable Content */}
-            <div className="flex-1 overflow-y-auto">
-              {/* Explore Section with Accordion */}
-              {!minimal && (
-                <div className="border-b border-[#e5e7eb]">
-                  <Accordion type="single" collapsible className="w-full">
-                    <AccordionItem value="explore" className="border-0">
-                      <AccordionTrigger className="px-4 py-3 hover:no-underline">
-                        <span className="font-medium">Explore</span>
-                      </AccordionTrigger>
-                      <AccordionContent>
-                        <div className="px-4 pb-2 space-y-0.5">
-                          <Link
-                            href="/popular"
-                            onClick={() => setMobileMenuOpen(false)}
-                            className={cn(
-                              "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
-                              pathname.startsWith("/popular")
-                                ? "bg-gray-100 text-foreground font-medium"
-                                : "text-muted-foreground hover:text-foreground hover:bg-gray-50"
-                            )}
-                          >
-                            <TrendingUp className="h-5 w-5 shrink-0" />
-                            Popular
-                          </Link>
-                          <Link
-                            href="/latest"
-                            onClick={() => setMobileMenuOpen(false)}
-                            className={cn(
-                              "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
-                              pathname.startsWith("/latest")
-                                ? "bg-gray-100 text-foreground font-medium"
-                                : "text-muted-foreground hover:text-foreground hover:bg-gray-50"
-                            )}
-                          >
-                            <Sparkles className="h-5 w-5 shrink-0" />
-                            New and Noteworthy
-                          </Link>
-                          {categories.map((category) => {
-                            const { getCategorySlug } = require("@/lib/utils/category-routing");
-                            const categoryPath = `/popular/${getCategorySlug(category)}`;
-                            const isActive = pathname === categoryPath;
-                            return (
-                              <Link
-                                key={category}
-                                href={categoryPath}
-                                onClick={() => setMobileMenuOpen(false)}
-                                className={cn(
-                                  "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
-                                  isActive
-                                    ? "bg-gray-100 text-foreground font-medium"
-                                    : "text-muted-foreground hover:text-foreground hover:bg-gray-50"
-                                )}
-                              >
-                                {category}
-                              </Link>
-                            );
-                          })}
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
-                  </Accordion>
-                </div>
-              )}
-
-
-              {/* Main Navigation */}
-              <nav className="space-y-1 p-4">
-                {user && (
-                  <>
-                    <Link
-                      href="/requests"
-                      onClick={() => setMobileMenuOpen(false)}
-                      className={cn(
-                        "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
-                        pathname === "/requests" || pathname.startsWith("/requests/")
-                          ? "bg-gray-100 text-foreground font-medium"
-                          : "text-muted-foreground hover:text-foreground hover:bg-gray-50"
-                      )}
-                    >
-                      <ClipboardList className="h-5 w-5 shrink-0" />
-                      My Requests
-                    </Link>
-                    <Link
-                      href="/submissions"
-                      onClick={() => setMobileMenuOpen(false)}
-                      className={cn(
-                        "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
-                        pathname === "/submissions"
-                          ? "bg-gray-100 text-foreground font-medium"
-                          : "text-muted-foreground hover:text-foreground hover:bg-gray-50"
-                      )}
-                    >
-                      <FileText className="h-5 w-5 shrink-0" />
-                      Proposals
-                    </Link>
-                    <Link
-                      href="/messages"
-                      onClick={() => setMobileMenuOpen(false)}
-                      className={cn(
-                        "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
-                        pathname === "/messages" || pathname.startsWith("/messages/")
-                          ? "bg-gray-100 text-foreground font-medium"
-                          : "text-muted-foreground hover:text-foreground hover:bg-gray-50"
-                      )}
-                    >
-                      <MessageCircle className="h-5 w-5 shrink-0" />
-                      Messages
-                    </Link>
-                    <Link
-                      href="/personal-items"
-                      onClick={() => setMobileMenuOpen(false)}
-                      className={cn(
-                        "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
-                        pathname === "/personal-items"
-                          ? "bg-gray-100 text-foreground font-medium"
-                          : "text-muted-foreground hover:text-foreground hover:bg-gray-50"
-                      )}
-                    >
-                      <Package2 className="h-5 w-5 shrink-0" />
-                      Inventory
-                    </Link>
-                    <Link
-                      href="/saved"
-                      onClick={() => setMobileMenuOpen(false)}
-                      className={cn(
-                        "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
-                        pathname === "/saved"
-                          ? "bg-gray-100 text-foreground font-medium"
-                          : "text-muted-foreground hover:text-foreground hover:bg-gray-50"
-                      )}
-                    >
-                      <Bookmark className={cn(
-                        "h-5 w-5 shrink-0",
-                        pathname === "/saved" && "fill-current"
-                      )} />
-                      Saved
-                    </Link>
-                    <NotificationsDrawer>
-                      <button
-                        onClick={() => setMobileMenuOpen(false)}
-                        className={cn(
-                          "flex w-full items-center gap-3 px-3 py-2 rounded-md transition-colors relative text-left",
-                          pathname === "/notifications"
-                            ? "bg-gray-100 text-foreground font-medium"
-                            : "text-muted-foreground hover:text-foreground hover:bg-gray-50"
-                        )}
-                      >
-                        <Bell className="h-5 w-5 shrink-0" />
-                        Notifications
-                        {unreadCount > 0 && (
-                          <span className="ml-auto h-5 w-5 rounded-full bg-[#7755FF] text-white text-[10px] font-semibold flex items-center justify-center shrink-0">
-                            {unreadCount > 9 ? "9+" : unreadCount}
-                          </span>
-                        )}
-                      </button>
-                    </NotificationsDrawer>
-                    <Link
-                      href="/leaderboard"
-                      onClick={() => setMobileMenuOpen(false)}
-                      className={cn(
-                        "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
-                        pathname === "/leaderboard"
-                          ? "bg-gray-100 text-foreground font-medium"
-                          : "text-muted-foreground hover:text-foreground hover:bg-gray-50"
-                      )}
-                    >
-                      <Trophy className="h-5 w-5 shrink-0" />
-                      Leaderboard
-                    </Link>
-                  </>
-                )}
-              </nav>
-
-              {/* Account Section */}
-              {user && (
-                <div className="border-t border-[#e5e7eb] p-4 space-y-1">
-                  <Link
-                    href={profile?.username ? `/profile/${profile.username}` : "/settings"}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={cn(
-                      "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
-                      pathname.startsWith("/profile/")
-                        ? "bg-gray-100 text-foreground font-medium"
-                        : "text-muted-foreground hover:text-foreground hover:bg-gray-50"
-                    )}
-                  >
-                    <User className="h-5 w-5 shrink-0" />
-                    Profile
-                  </Link>
-                  <Link
-                    href="/settings"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={cn(
-                      "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
-                      pathname === "/settings"
-                        ? "bg-gray-100 text-foreground font-medium"
-                        : "text-muted-foreground hover:text-foreground hover:bg-gray-50"
-                    )}
-                  >
-                    <Settings className="h-5 w-5 shrink-0" />
-                    Settings
-                  </Link>
-                  <Button
-                    variant="ghost"
-                    onClick={() => {
-                      handleSignOut();
-                      setMobileMenuOpen(false);
-                    }}
-                    disabled={isPending}
-                    className="w-full justify-start gap-3 px-3 py-2 text-muted-foreground hover:text-foreground hover:bg-gray-50"
-                  >
-                    <LogOut className="h-5 w-5 shrink-0" />
-                    Sign out
-                  </Button>
-                </div>
-              )}
-
-            </div>
-          </div>
-        </SheetContent>
-      </Sheet>
-
-      {/* Desktop Navbar - Pill Shape */}
+      {/* Desktop Navbar - Fixed Full Width */}
       <div className={cn(
-        "hidden md:flex w-full mx-auto h-24 items-center relative transition-all duration-300",
-        isScrolled 
-          ? "max-w-[1360px] h-20 rounded-full bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100/50 px-10" 
-          : "max-w-none h-24 rounded-none bg-transparent shadow-none border-transparent px-8",
+        "hidden md:flex w-full h-20 items-center relative transition-all duration-300 pr-8 bg-white",
       )}>
-        {/* Left Side: Space for sidebar on desktop */}
-        <div className="flex items-center shrink-0 gap-6">
-          <Link href="/" className="hidden md:flex items-center gap-2">
-            <Image src="/logo-2.svg" alt="onseek" width={32} height={32} className="h-8 w-auto mb-[10px]" priority />
+        {/* Left Side: Sidebar Toggle & Logo */}
+        <div className="flex items-center shrink-0">
+          <div className="absolute left-0 top-0 bottom-0 w-[72px] flex items-center justify-center z-20">
+            {user && (
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-10 w-10 text-gray-900 hover:bg-gray-100 rounded-xl"
+                onClick={() => setSidebarSidebarExpanded(!isSidebarExpanded)}
+              >
+                <Menu className="h-5 w-5" />
+              </Button>
+            )}
+          </div>
+          <div className="w-[72px] shrink-0" /> {/* Spacer */}
+          <Link href="/" className="flex items-center gap-2 group ml-6">
+            <div className="w-9 h-9 flex items-center justify-center">
+              <Image src="/logo-2.svg" alt="onseek" width={28} height={28} className="h-7 w-auto" priority />
+            </div>
             <span className="text-xl text-black" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>
               onseek
             </span>
           </Link>
         </div>
 
-        {/* Center Side: Search Bar - Temporarily Hidden */}
-        <div className="absolute left-1/2 -translate-x-1/2 hidden items-center w-full max-w-sm justify-center z-10 pointer-events-none">
-          <div className={cn(
-            "w-full transition-all duration-300 pointer-events-auto",
-            showSearch ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4 pointer-events-none"
-          )}>
-            <div className="relative flex items-center w-full bg-white border border-gray-200 rounded-full h-11 pr-1">
+        {/* Center Side: Search Bar */}
+        <div className="absolute left-1/2 -translate-x-1/2 flex items-center w-full max-w-md justify-center z-10 pointer-events-none">
+          <form 
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (searchQuery.trim()) {
+                const params = new URLSearchParams(searchParams.toString());
+                params.set("q", searchQuery.trim());
+                params.delete("page");
+                router.push(`/search?${params.toString()}`);
+              }
+            }}
+            className="w-full transition-all duration-300 pointer-events-auto"
+          >
+            <div className="relative flex items-center w-full bg-gray-50 border border-gray-100 rounded-2xl h-11 pr-1 group focus-within:bg-white focus-within:border-[#6925DC]/20 transition-all">
+              <Search className="absolute left-4 h-4 w-4 text-gray-400 group-focus-within:text-[#6925DC] transition-colors" strokeWidth={2.5} />
               <Input
                 name="q"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="What are you looking for today?"
-                className="flex-1 bg-transparent border-none focus-visible:ring-0 text-sm h-full pl-6 shadow-none placeholder:text-slate-500"
+                placeholder="What are you looking for?"
+                className="flex-1 bg-transparent border-none focus-visible:ring-0 text-sm h-full pl-11 shadow-none placeholder:text-gray-400"
               />
               <button
                 type="submit"
-                onClick={(e) => {
-                  e.preventDefault();
-                  if (searchQuery.trim()) {
-                    const params = new URLSearchParams(searchParams.toString());
-                    params.set("q", searchQuery.trim());
-                    params.delete("page");
-                    router.push(`/search?${params.toString()}`);
-                  }
-                }}
-                className="w-9 h-9 bg-[#6925DC] rounded-full flex items-center justify-center shrink-0 hover:bg-[#6925DC]/90 transition-colors"
+                className="w-9 h-9 bg-black rounded-xl flex items-center justify-center shrink-0 hover:bg-[#6925DC] transition-colors"
               >
-                <Search className="h-4 w-4 text-white" strokeWidth={2} />
+                <Plus className="h-4 w-4 text-white" strokeWidth={3} />
               </button>
             </div>
-          </div>
+          </form>
         </div>
 
         {/* Right Side: Navigation & Actions */}
@@ -950,7 +677,7 @@ export function AppNavbar({
             ) : (
               <>
                 {!minimal && (
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-6 mr-4">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <button
@@ -990,7 +717,7 @@ export function AppNavbar({
                   </div>
                 )}
                 <Link href="/signup" className="shrink-0">
-                  <Button variant="default" className="h-11 rounded-full px-6 bg-[#222234] text-white hover:bg-[#222234]/90 shrink-0 whitespace-nowrap text-sm font-semibold">
+                  <Button variant="default" className="h-11 rounded-full px-8 bg-[#222234] text-white hover:bg-[#222234]/90 shrink-0 whitespace-nowrap text-sm font-bold">
                     {ctaText}
                   </Button>
                 </Link>

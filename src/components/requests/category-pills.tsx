@@ -18,8 +18,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CountryCombobox } from "@/components/ui/country-combobox";
-import { Rows3, LayoutGrid } from "lucide-react";
+import { Rows3, LayoutGrid, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export function CategoryPills({
   mode = "for_you",
@@ -67,7 +73,7 @@ export function CategoryPills({
     const pathParts = pathname.split('/');
     const lastPart = pathParts.pop();
     const isCategoryPath = pathname.includes('/popular/') || pathname.includes('/latest/');
-    
+
     // Ignore words that are path roots like 'for-you', 'popular', 'latest'
     const isSpecialRoot = lastPart === 'for-you' || lastPart === 'popular' || lastPart === 'latest';
 
@@ -152,7 +158,9 @@ export function CategoryPills({
 
   const priceMax = searchParams.get("priceMax") || "";
   const country = searchParams.get("country") || "";
-  const categories = ["Discover", ...(user ? ["For You", "My saves"] : []), ...MAIN_CATEGORIES];
+  const allCategories = ["Discover", ...(user ? ["For You", "My saves"] : []), ...MAIN_CATEGORIES];
+  const categories = allCategories.slice(0, 7);
+  const moreCategories = allCategories.slice(7);
   const [filtersOpen, setFiltersOpen] = React.useState(false);
   const hasActiveFilters = searchParams.get("priceMin") || searchParams.get("priceMax") || searchParams.get("country");
 
@@ -191,10 +199,14 @@ export function CategoryPills({
 
           <div
             ref={scrollContainerRef}
-            className="flex items-center gap-2 overflow-x-auto scrollbar-hide scroll-smooth w-full px-2 justify-start"
+            className="flex items-center gap-2 overflow-x-auto scrollbar-hide scroll-smooth w-full justify-start"
           >
             {categories.map((category) => {
               const isActive = selectedCategory === category;
+              const displayText = (category === "For You" || category === "My saves" || category === "Discover") 
+                ? category 
+                : category.split(' ')[0];
+                
               return (
                 <button
                   key={category}
@@ -206,10 +218,42 @@ export function CategoryPills({
                       : "bg-transparent text-gray-400 hover:text-gray-600 font-medium"
                   )}
                 >
-                  {category.split(' ')[0]}
+                  {displayText}
                 </button>
               );
             })}
+
+            {moreCategories.length > 0 && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    className={cn(
+                      "px-4 py-2 text-[15px] whitespace-nowrap transition-all duration-200 flex items-center gap-1.5",
+                      moreCategories.includes(selectedCategory)
+                        ? "bg-gray-100 text-black rounded-full font-bold"
+                        : "bg-transparent text-gray-400 hover:text-gray-600 font-medium"
+                    )}
+                  >
+                    +more
+                    <ChevronDown className="h-3.5 w-3.5" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="max-h-[300px] overflow-y-auto bg-white border-gray-200">
+                  {moreCategories.map((category) => (
+                    <DropdownMenuItem
+                      key={category}
+                      onClick={() => handleCategorySelect(category)}
+                      className={cn(
+                        "text-[14px]",
+                        selectedCategory === category ? "font-bold text-black" : "text-gray-600"
+                      )}
+                    >
+                      {category}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
 
           {/* Right gradient overlay */}
@@ -290,10 +334,10 @@ export function CategoryPills({
         <div className="w-full flex items-center justify-end gap-6 p-4 bg-[#f8f9fa] border border-[#e5e7eb] rounded-[16px] transition-all">
           <div className="flex-1 max-w-[240px]">
             <Label className="text-[13px] font-semibold text-gray-700 mb-1.5 block">Max Budget ($)</Label>
-            <Input 
-              type="number" 
-              placeholder="No limit" 
-              value={priceMax || ""} 
+            <Input
+              type="number"
+              placeholder="No limit"
+              value={priceMax || ""}
               onChange={(e) => updateParam("priceMax", e.target.value)}
               className="h-10 rounded-xl bg-white"
             />

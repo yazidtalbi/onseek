@@ -50,7 +50,7 @@ export function HeroSectionV2({ user, tradeMode, setTradeMode }: HeroSectionV2Pr
           <div className="w-full h-full flex flex-col lg:flex-row items-stretch relative z-10">
             {/* Content Side */}
             <div className="flex-1 lg:flex-[0.6] flex flex-col justify-center items-start py-12 lg:py-20 pl-10 lg:pl-16 pr-4 lg:pr-6 mr-auto">
-              <AnimatePresence>
+              <AnimatePresence initial={false}>
                 {!searchValue && (
                   <motion.div
                     initial={{ opacity: 0, y: -20, height: 0 }}

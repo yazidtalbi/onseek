@@ -61,11 +61,15 @@ function useUnreadMessages() {
 }
 
 const SidebarContext = createContext<{
-  open: boolean;
-  setOpen: (open: boolean) => void;
+  mobileOpen: boolean;
+  setMobileOpen: (open: boolean) => void;
+  expanded: boolean;
+  setExpanded: (open: boolean) => void;
 }>({
-  open: false,
-  setOpen: () => { },
+  mobileOpen: false,
+  setMobileOpen: () => { },
+  expanded: false,
+  setExpanded: () => { },
 });
 
 export function useSidebar() {
@@ -73,9 +77,16 @@ export function useSidebar() {
 }
 
 export function SidebarProvider({ children }: { children: ReactNode }) {
-  const [open, setOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  
   return (
-    <SidebarContext.Provider value={{ open, setOpen }}>
+    <SidebarContext.Provider value={{ 
+      mobileOpen, 
+      setMobileOpen, 
+      expanded, 
+      setExpanded 
+    }}>
       {children}
     </SidebarContext.Provider>
   );
@@ -118,11 +129,11 @@ function NavIcon({
 function MobileSidebarContent({ onClose }: { onClose?: () => void }) {
   const pathname = usePathname();
   const { user, profile } = useAuth();
-  const { setOpen } = useSidebar();
+  const { setMobileOpen } = useSidebar();
   const [isPending, startTransition] = useTransition();
 
   const handleClose = () => {
-    setOpen(false);
+    setMobileOpen(false);
     onClose?.();
   };
 
@@ -168,7 +179,7 @@ function MobileSidebarContent({ onClose }: { onClose?: () => void }) {
       <div className="px-4 mb-6">
         <Link href="/" onClick={handleClose} className="flex items-center gap-2 group">
           <Image src="/logo.png" alt="onseek" width={100} height={24} className="h-6 w-auto" priority />
-          <span className="text-xl text-black" style={{ fontFamily: "var(--font-expanded)", fontWeight: 600 }}>
+          <span className="text-xl text-[#6925DC]" style={{ fontFamily: "var(--font-expanded)", fontWeight: 600 }}>
             onseek
           </span>
         </Link>
@@ -230,6 +241,7 @@ function MobileSidebarContent({ onClose }: { onClose?: () => void }) {
 function DesktopSidebarContent() {
   const pathname = usePathname();
   const { user, profile } = useAuth();
+  const { expanded: isExpanded } = useSidebar();
   const [isPending, startTransition] = useTransition();
   const hasUnreadMessages = useUnreadMessages();
 
@@ -248,10 +260,13 @@ function DesktopSidebarContent() {
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="flex flex-col h-full items-center pt-6 pb-4 gap-1">
+      <div className={cn(
+        "flex flex-col h-full pt-3 pb-4 transition-all duration-300 overflow-hidden",
+        isExpanded ? "px-4 items-stretch" : "items-center"
+      )}>
 
         {/* Main nav */}
-        <nav className="flex flex-col items-center gap-6 flex-1 w-full px-0">
+        <nav className="flex flex-col gap-4 flex-1 w-full">
           {mainNavItems.map((item) => {
             const isActive =
               pathname === item.href ||
@@ -262,85 +277,93 @@ function DesktopSidebarContent() {
                   <Link
                     href={item.href}
                     className={cn(
-                      "flex items-center justify-center w-full h-12 transition-colors relative",
+                      "flex items-center transition-all relative group/item rounded-2xl h-12 w-12",
+                      isExpanded ? "w-full pl-6 pr-4 gap-4 h-12" : "justify-center mx-auto",
                       isActive
-                        ? "bg-transparent text-[#1e2330]"
-                        : "text-gray-400/70 hover:text-foreground hover:bg-gray-50"
+                        ? "bg-gray-100 text-[#1e2330]"
+                        : "text-gray-400/80 hover:text-foreground hover:bg-gray-50"
                     )}
                   >
-                    <div className="relative">
+                    <div className="relative shrink-0">
                       <item.icon className="h-6 w-6" />
                       {item.href === "/messages" && hasUnreadMessages && (
                         <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full border-2 border-white" />
                       )}
                     </div>
+                    {isExpanded && (
+                      <span className="text-sm font-semibold whitespace-nowrap overflow-hidden text-ellipsis">
+                        {item.label}
+                      </span>
+                    )}
                   </Link>
                 </TooltipTrigger>
-                <TooltipContent side="right" sideOffset={8} className="bg-[#212733] text-white border-[#212733]">
-                  {item.label}
-                </TooltipContent>
+                {!isExpanded && (
+                  <TooltipContent side="right" sideOffset={8} className="bg-[#212733] text-white border-[#212733]">
+                    {item.label}
+                  </TooltipContent>
+                )}
               </Tooltip>
             );
           })}
         </nav>
 
         {/* Bottom actions */}
-        <div className="flex flex-col items-center gap-6 w-full px-0">
-          {user ? (
+        <div className="flex flex-col gap-4 w-full mt-auto">
+          {user && (
             <>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Link
                     href="/leaderboard"
                     className={cn(
-                      "flex items-center justify-center w-full h-12 transition-colors relative",
+                      "flex items-center transition-all relative group/item rounded-2xl h-12 w-12",
+                      isExpanded ? "w-full pl-6 pr-4 gap-4 h-12" : "justify-center mx-auto",
                       pathname === "/leaderboard"
-                        ? "bg-transparent text-[#1e2330]"
-                        : "text-gray-400/70 hover:text-foreground hover:bg-gray-50"
+                        ? "bg-gray-100 text-[#1e2330]"
+                        : "text-gray-400/80 hover:text-foreground hover:bg-gray-50"
                     )}
                   >
-                    <Trophy className="h-6 w-6" />
+                    <Trophy className="h-6 w-6 shrink-0" />
+                    {isExpanded && (
+                      <span className="text-sm font-semibold whitespace-nowrap overflow-hidden text-ellipsis">
+                        Leaderboard
+                      </span>
+                    )}
                   </Link>
                 </TooltipTrigger>
-                <TooltipContent side="right" sideOffset={8} className="bg-[#212733] text-white border-[#212733]">
-                  Leaderboard
-                </TooltipContent>
+                {!isExpanded && (
+                  <TooltipContent side="right" sideOffset={8} className="bg-[#212733] text-white border-[#212733]">
+                    Leaderboard
+                  </TooltipContent>
+                )}
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Link
                     href="/settings"
                     className={cn(
-                      "flex items-center justify-center w-full h-12 transition-colors relative",
+                      "flex items-center transition-all relative group/item rounded-2xl h-12 w-12",
+                      isExpanded ? "w-full pl-6 pr-4 gap-4 h-12" : "justify-center mx-auto",
                       pathname === "/settings"
-                        ? "bg-transparent text-[#1e2330]"
-                        : "text-gray-400 hover:text-foreground hover:bg-gray-50"
+                        ? "bg-gray-100 text-[#1e2330]"
+                        : "text-gray-400/80 hover:text-foreground hover:bg-gray-50"
                     )}
                   >
-                    <Settings className="h-6 w-6" />
+                    <Settings className="h-6 w-6 shrink-0" />
+                    {isExpanded && (
+                      <span className="text-sm font-semibold whitespace-nowrap overflow-hidden text-ellipsis">
+                        Settings
+                      </span>
+                    )}
                   </Link>
                 </TooltipTrigger>
-                <TooltipContent side="right" sideOffset={8} className="bg-[#212733] text-white border-[#212733]">
-                  Settings
-                </TooltipContent>
+                {!isExpanded && (
+                  <TooltipContent side="right" sideOffset={8} className="bg-[#212733] text-white border-[#212733]">
+                    Settings
+                  </TooltipContent>
+                )}
               </Tooltip>
             </>
-          ) : (
-            <div className="flex flex-col items-center gap-1">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Link
-                    href="/signup"
-                    className="flex items-center justify-center w-12 h-12 rounded-md bg-[#7755FF] text-white hover:bg-[#6644EE] transition-colors"
-                  >
-                    <User className="h-[22px] w-[22px]" />
-                  </Link>
-                </TooltipTrigger>
-                <TooltipContent side="right" sideOffset={8} className="bg-[#212733] text-white border-[#212733]">
-                  Sign Up
-                </TooltipContent>
-              </Tooltip>
-            </div>
           )}
         </div>
       </div>
@@ -350,13 +373,13 @@ function DesktopSidebarContent() {
 
 // ─── Root export ─────────────────────────────────────────────────────────────
 export function AppSidebar({ children }: { children: React.ReactNode }) {
-  const { open, setOpen } = useSidebar();
+  const { mobileOpen, setMobileOpen, expanded } = useSidebar();
   const { user } = useAuth();
 
   return (
     <>
       {/* Mobile: Sheet Menu */}
-      <Sheet open={open} onOpenChange={setOpen}>
+      <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
         <SheetContent side="left" className="w-64 p-0">
           <div className="flex h-full flex-col space-y-6 py-4">
             <div className="px-4 flex items-center justify-between">
@@ -372,15 +395,25 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
         </SheetContent>
       </Sheet>
 
-      {/* Desktop: Compact icon-only sidebar (72px wide) */}
+      {/* Desktop: Compact icon-only sidebar */}
       {user && (
-        <aside className="hidden md:flex md:fixed md:top-16 md:bottom-0 md:left-0 md:z-30 md:w-[72px] md:border-r md:border-border md:bg-card flex-col">
+        <aside 
+          className={cn(
+            "hidden md:flex md:fixed md:top-20 md:bottom-0 md:left-0 md:z-30 md:bg-white flex-col transition-all duration-300 ease-in-out border-none outline-none",
+            expanded ? "md:w-[240px]" : "md:w-[72px]"
+          )}
+        >
           <DesktopSidebarContent />
         </aside>
       )}
 
-      {/* Main Content offset by compact sidebar */}
-      <div className={cn("flex-1 w-full min-w-0 transition-all duration-300", user && "md:ml-[72px]")}>
+      {/* Main Content offset */}
+      <div 
+        className={cn(
+          "flex-1 w-full min-w-0 transition-all duration-300 ease-in-out pt-20", 
+          user && (expanded ? "md:ml-[240px]" : "md:ml-[72px]")
+        )}
+      >
         {children}
       </div>
     </>

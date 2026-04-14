@@ -97,6 +97,7 @@ async function seedRequest() {
       condition: "New",
       urgency: "Standard",
       status: "open",
+      is_seeded: true,
     })
     .select()
     .single();
@@ -166,6 +167,7 @@ async function seedRequest() {
       .insert({
         request_id: request.id,
         user_id: userId,
+        is_seeded: true,
         ...submission,
       })
       .select()

@@ -36,11 +36,11 @@ const footerLinks = [
 export function PublicFooter() {
   return (
     <footer className="bg-white border-t border-gray-100 pt-24 pb-12">
-      <div className="max-w-[1360px] mx-auto px-6">
+      <div className="max-w-[1280px] mx-auto px-6">
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-12 mb-24">
           <div className="col-span-2 lg:col-span-2 space-y-6">
             <Link href="/" className="text-2xl font-bold tracking-tight text-[#1A1A1A]" style={{ fontFamily: 'var(--font-expanded)' }}>
-              Onseek
+              onseek
             </Link>
             <p className="text-gray-500 max-w-xs text-base leading-relaxed">
               The fastest way to crowdsource purchase links from an expert community. Request anything, find it instantly.

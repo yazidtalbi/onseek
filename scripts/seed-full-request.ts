@@ -144,6 +144,7 @@ I'm open to different color variations but prefer the classic black/silver combi
     condition: requestData.condition,
     urgency: requestData.urgency,
     status: "open" as const,
+    is_seeded: true,
   };
 
   const { data: request, error: requestError } = await supabase

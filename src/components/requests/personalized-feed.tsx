@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef, Fragment } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { getUserPreferencesAction } from "@/actions/preference.actions";
@@ -254,7 +254,7 @@ export function PersonalizedFeed({
         </>
       )}
 
-      <div className="max-w-[1360px] mx-auto w-full px-4 md:px-6">
+      <div className={cn("mx-auto w-full px-4 md:px-6", !user && "max-w-[1360px]")}>
         {/* Editorial Title - Hidden as requested */}
         {/* <div className="text-left pt-16 pb-12">
           <h2 
@@ -361,17 +361,56 @@ export function PersonalizedFeed({
               {allItems.map((request: RequestItem, index: number) => {
                 const requestWithExtras = request as RequestItem & { images?: string[]; links?: string[] };
                 return (
-                  <div key={request.id} className="break-inside-avoid mb-6 transition-all duration-300 ease-out hover:scale-[1.02]">
-                    <RequestCard
-                      request={request}
-                      variant="detail"
-                      images={requestWithExtras.images || []}
-                      links={requestWithExtras.links || []}
-                      smallImages={true}
-                      noBorder={true}
-                      priority={index < 3}
-                    />
+                  <Fragment key={request.id}>
+                    {/* Brand CTA Card injected after some items */}
+            {/* Select a random illustration for the CTA card */}
+            {(() => {
+              const illustrations = ["onseek_magnet_purple.png", "onseek_flower_purple.png", "onseek_city_purple.png"];
+              const randomIll = illustrations[index % illustrations.length]; // Use index to keep it stable but different across the feed
+              
+              return index === 2 && (
+                <div 
+                  onClick={() => window.dispatchEvent(new CustomEvent('open-create-request-modal'))}
+                  className="break-inside-avoid mb-6 aspect-square rounded-[32px] bg-[#FDF9ED] p-8 flex flex-col justify-between text-[#1A1A1A] relative overflow-hidden group/cta cursor-pointer shadow-none transition-all duration-300 hover:scale-[1.02]"
+                >
+                  {/* Random illustration as background element */}
+                  <div className="absolute top-1/2 -translate-y-1/2 -right-12 w-48 h-48 opacity-[0.08] pointer-events-none group-hover/cta:scale-110 transition-transform duration-500">
+                    <img src={`/illustrations/${randomIll}`} alt="" className="w-full h-full object-contain" />
                   </div>
+                  
+                  {/* Abstract background decor */}
+                  <div className="absolute -top-12 -right-12 w-48 h-48 bg-[#6925DC]/5 rounded-full blur-3xl pointer-events-none" />
+                  <div className="absolute -bottom-12 -left-12 w-48 h-48 bg-[#6925DC]/5 rounded-full blur-3xl pointer-events-none" />
+                  
+                  <div className="relative z-10 mt-2">
+                    <h3 className="text-[28px] md:text-[32px] font-semibold leading-[1.1] mb-4 tracking-tight" style={{ fontFamily: 'var(--font-expanded)' }}>
+                      Can&apos;t find it?<br/>Request it.
+                    </h3>
+                    <p className="text-gray-500 text-[15px] font-medium leading-relaxed max-w-[220px]">
+                      Describe what you need and let our sellers find you.
+                    </p>
+                  </div>
+                  
+                  <div className="relative z-10 flex justify-end">
+                     <div className="bg-[#1A1A1A] text-white w-12 h-12 rounded-2xl flex items-center justify-center group-hover/cta:scale-110 transition-all shadow-md">
+                       <ChevronRight className="w-6 h-6" strokeWidth={3} />
+                     </div>
+                  </div>
+                </div>
+              );
+            })()}
+                    <div className="break-inside-avoid mb-6 transition-all duration-300 ease-out hover:scale-[1.02]">
+                      <RequestCard
+                        request={request}
+                        variant="detail"
+                        images={requestWithExtras.images || []}
+                        links={requestWithExtras.links || []}
+                        smallImages={true}
+                        noBorder={true}
+                        priority={index < 3}
+                      />
+                    </div>
+                  </Fragment>
                 );
               })}
             </div>
@@ -417,7 +456,7 @@ export function PersonalizedFeed({
 
               <div className="grid md:grid-cols-3 gap-16 lg:gap-24">
                 <div className="flex flex-col items-center group">
-                  <div className="w-32 h-32 mb-8 overflow-hidden rounded-3xl transition-transform duration-500 hover:scale-110">
+                  <div className="w-32 h-32 mb-8 overflow-hidden rounded-3xl">
                     <img src="/illustrations/onseek_magnet_purple.png" alt="Sellers Compete" className="w-full h-full object-contain" />
                   </div>
                   <h3 className="text-2xl font-semibold mb-4 tracking-tight" style={{ fontFamily: 'var(--font-expanded)' }}>Sellers compete for you</h3>
@@ -427,7 +466,7 @@ export function PersonalizedFeed({
                 </div>
 
                 <div className="flex flex-col items-center group">
-                  <div className="w-32 h-32 mb-8 overflow-hidden rounded-3xl transition-transform duration-500 hover:scale-110">
+                  <div className="w-32 h-32 mb-8 overflow-hidden rounded-3xl">
                     <img src="/illustrations/onseek_flower_purple.png" alt="Protect your peace" className="w-full h-full object-contain" />
                   </div>
                   <h3 className="text-2xl font-semibold mb-4 tracking-tight" style={{ fontFamily: 'var(--font-expanded)' }}>Protect your peace</h3>
@@ -437,7 +476,7 @@ export function PersonalizedFeed({
                 </div>
 
                 <div className="flex flex-col items-center group">
-                  <div className="w-32 h-32 mb-8 overflow-hidden rounded-3xl transition-transform duration-500 hover:scale-110">
+                  <div className="w-32 h-32 mb-8 overflow-hidden rounded-3xl">
                     <img src="/illustrations/onseek_city_purple.png" alt="Verified Marketplace" className="w-full h-full object-contain" />
                   </div>
                   <h3 className="text-2xl font-semibold mb-4 tracking-tight" style={{ fontFamily: 'var(--font-expanded)' }}>Verified marketplace</h3>
@@ -451,14 +490,14 @@ export function PersonalizedFeed({
 
 
 
-          <div className="w-full bg-transparent py-4">
+          <div className="w-full bg-transparent py-16">
             <div className="max-w-[1360px] mx-auto w-full px-4 md:px-6">
               <FaqSection />
             </div>
           </div>
 
           {/* New Freelancer CTA */}
-          <div className="max-w-[1280px] mx-auto w-full px-4 md:px-6 mb-16 mt-4">
+          <div className="max-w-[1280px] mx-auto w-full px-4 md:px-6 mb-24 mt-16">
             <div className="w-full bg-[#6925DC] rounded-[32px] py-20 px-8 text-center shadow-none flex flex-col items-center justify-center gap-10 overflow-hidden relative">
               <h2 className="relative z-10 text-white text-[32px] md:text-[48px] tracking-tight font-black max-w-3xl leading-[1.1]" style={{ fontFamily: 'var(--font-expanded)' }}>
                 Find freelancers who can help you build what's next

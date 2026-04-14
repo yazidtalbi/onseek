@@ -60,6 +60,19 @@ const requestTitles = [
   "Need a local electrician",
   "Searching for a 4K monitor",
   "Want a smart doorbell",
+  "Looking for a 4K monitor",
+];
+
+const samplePreferences = [
+  "New condition", "Authentic brand", "Fast shipping", "Under warranty",
+  "High quality", "Low power consumption", "Silver/Black color", "Classic design",
+  "Eco-friendly materials", "Includes accessories", "Easy to install", "Quiet operation"
+];
+
+const sampleDealbreakers = [
+  "No major defects", "Must be genuine", "No water damage", "No scratches",
+  "Non-smoker household", "All parts included", "Working battery", "Original packaging",
+  "No refurbished items", "Must be local"
 ];
 
 const storeNames = [
@@ -175,13 +188,50 @@ async function seed() {
     ];
     const description = descriptions[Math.floor(Math.random() * descriptions.length)];
 
+    // Generate random preferences and dealbreakers for seed variety
+    const numPrefs = Math.floor(Math.random() * 3) + 2; // 2-4
+    const numDeals = Math.floor(Math.random() * 2) + 1; // 1-2
+    
+    const prefs = Array.from({ length: numPrefs }, () => ({
+      label: samplePreferences[Math.floor(Math.random() * samplePreferences.length)],
+      note: Math.random() > 0.5 ? "Important requirement" : undefined
+    }));
+    
+    const deals = Array.from({ length: numDeals }, () => ({
+      label: sampleDealbreakers[Math.floor(Math.random() * sampleDealbreakers.length)],
+      note: "Strict requirement"
+    }));
+
+    const requestId = randomUUID();
+    const shortId = requestId.replace(/-/g, "").substring(0, 8);
+    const cleanTitle = title
+      .toLowerCase()
+      .replace(/[^\w\s-]/g, "")
+      .replace(/[\s_]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+    const slug = `${shortId}-${cleanTitle}`;
+
+    const preferencesMetadata = {
+      priceLock: Math.random() > 0.7 ? "locked" : "open",
+      exactItem: Math.random() > 0.8,
+      exactSpecification: Math.random() > 0.5,
+      exactPrice: Math.random() > 0.9,
+      preferences: prefs,
+      dealbreakers: deals,
+      editedFields: [],
+    };
+    
+    const descriptionWithMetadata = `${description}\n\n<!--REQUEST_PREFS:${JSON.stringify(preferencesMetadata)}-->`;
+
     try {
       const { data: request, error } = await supabase
         .from("requests")
         .insert({
+          id: requestId,
           user_id: randomUser,
           title,
-          description,
+          slug,
+          description: descriptionWithMetadata,
           category,
           budget_min: budgetMin,
           budget_max: budgetMax,
@@ -190,6 +240,7 @@ async function seed() {
           urgency,
           status,
           created_at: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(), // Random date in last 30 days
+          is_seeded: true,
         })
         .select()
         .single();
@@ -242,6 +293,7 @@ async function seed() {
             shipping_cost: shippingCost,
             notes,
             created_at: new Date(Date.now() - Math.random() * 20 * 24 * 60 * 60 * 1000).toISOString(),
+            is_seeded: true,
           })
           .select()
           .single();
