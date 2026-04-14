@@ -23,17 +23,13 @@ export function FaqSection() {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
-    <div className="w-full mx-auto py-24 mb-12">
+    <div className="w-full mx-auto py-8">
       <div className="max-w-[1240px] mx-auto px-6">
-        <div className="flex flex-col gap-16">
-          {/* Top: Title and Image Flexed */}
-          <div className="flex flex-col md:flex-row items-center justify-between gap-8 mb-4">
+        <div className="flex flex-col gap-8">
+          <div className="mb-2">
             <h2 className="text-[36px] sm:text-[48px] md:text-[56px] leading-[1.05] font-bold tracking-[-0.03em] text-[#1A1A1A] max-w-2xl" style={{ fontFamily: 'var(--font-expanded)' }}>
-              Frequently asked<br className="hidden sm:block" /> questions
+              FAQ
             </h2>
-            <div className="shrink-0 scale-110 md:scale-125 origin-center md:origin-right transform px-8">
-              <img src="/illustrations/faq-cat.png" alt="Questions" className="w-20 md:w-28 h-auto object-contain opacity-90" />
-            </div>
           </div>
 
           {/* Bottom: Accordion Full Width */}

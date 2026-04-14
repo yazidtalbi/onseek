@@ -250,9 +250,7 @@ export function PersonalizedFeed({
             tradeMode={tradeMode}
             setTradeMode={setTradeMode}
           />
-          <div className="pt-8 pb-4 px-4 md:px-6 w-full max-w-[1280px] mx-auto">
-            <AnnouncementBar />
-          </div>
+          {/* Announcement Bar removed as requested */}
         </>
       )}
 
@@ -451,39 +449,25 @@ export function PersonalizedFeed({
             </div>
           </section>
 
-          <HowItWorks />
-          <UserChoiceSection />
-          <Testimonials />
 
-          <div className="w-full bg-gray-50 py-12">
+
+          <div className="w-full bg-transparent py-4">
             <div className="max-w-[1360px] mx-auto w-full px-4 md:px-6">
               <FaqSection />
             </div>
           </div>
 
-          {/* CTA Section - Removed border/rounded/crop */}
-          <section className="py-24 px-6 overflow-hidden mt-16 mb-8">
-            <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-16 md:gap-24">
-              <div className="flex-[1.3] order-2 md:order-1">
-                <img
-                  src="/illustrations/onseek_man_requests.png"
-                  alt="Seek faster, find smarter"
-                  className="w-full max-w-7xl mx-auto drop-shadow-sm scale-110 origin-center"
-                />
-              </div>
-              <div className="flex-1 order-1 md:order-2 text-left">
-                <h2 className="text-[40px] md:text-[64px] leading-[1.05] font-extrabold tracking-[-0.03em] mb-8 text-[#222026]" style={{ fontFamily: 'var(--font-expanded)' }}>
-                  Seek faster. <br /> Find smarter.
-                </h2>
-                <p className="text-xl text-gray-500 font-medium mb-12 leading-relaxed max-w-xl">
-                  Skip the endless scrolling. Post your request, define your needs, and let the most qualified partners come to you. High-signal connections, zero noise.
-                </p>
-                <Button asChild className="bg-[#232833] hover:bg-[#232833]/90 text-white px-12 py-9 text-lg rounded-full font-medium shadow-none transition-all hover:scale-105 active:scale-95 border-0">
-                  <Link href="/signup">Post your request now</Link>
-                </Button>
-              </div>
+          {/* New Freelancer CTA */}
+          <div className="max-w-[1280px] mx-auto w-full px-4 md:px-6 mb-16 mt-4">
+            <div className="w-full bg-[#6925DC] rounded-[32px] py-20 px-8 text-center shadow-none flex flex-col items-center justify-center gap-10 overflow-hidden relative">
+              <h2 className="relative z-10 text-white text-[32px] md:text-[48px] tracking-tight font-black max-w-3xl leading-[1.1]" style={{ fontFamily: 'var(--font-expanded)' }}>
+                Find freelancers who can help you build what's next
+              </h2>
+              <Button asChild className="relative z-10 bg-white text-[#6925DC] hover:bg-white/90 border-0 rounded-full h-14 px-10 text-base font-bold transition-all hover:scale-105 active:scale-95 shadow-none">
+                <Link href="/popular">Explore freelancers</Link>
+              </Button>
             </div>
-          </section>
+          </div>
 
           <PublicFooter />
         </div>

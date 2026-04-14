@@ -814,42 +814,6 @@ export function AppNavbar({
               onseek
             </span>
           </Link>
-          {/* Explore Dropdown */}
-          {!minimal && (
-            <div className="hidden lg:block shrink-0">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button
-                    type="button"
-                    className="flex items-center gap-1.5 px-4 py-2 text-sm font-bold text-[#222222] hover:bg-gray-100 rounded-full transition-colors whitespace-nowrap"
-                  >
-                    Explore
-                    <ChevronDown className="h-4 w-4" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-56 bg-white shadow-lg overflow-y-auto max-h-[70vh] z-[100]">
-                  <DropdownMenuItem onClick={() => router.push("/popular")} className="font-medium">
-                    <TrendingUp className="h-4 w-4 mr-2" />
-                    Popular
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => router.push("/latest")} className="font-medium">
-                    <Sparkles className="h-4 w-4 mr-2" />
-                    New and Noteworthy
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  {categories.map((category) => (
-                    <DropdownMenuItem
-                      key={category}
-                      onClick={() => handleCategorySelect(category)}
-                      className="font-medium"
-                    >
-                      {category}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          )}
         </div>
 
         {/* Center Side: Search Bar - Temporarily Hidden */}
@@ -985,19 +949,51 @@ export function AppNavbar({
               </>
             ) : (
               <>
-                {!minimal && null}
+                {!minimal && (
+                  <div className="flex items-center gap-4">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          type="button"
+                          className="flex items-center gap-1.5 px-4 py-2 text-sm font-bold text-[#222222] hover:bg-gray-100 rounded-full transition-colors whitespace-nowrap"
+                        >
+                          Explore
+                          <ChevronDown className="h-4 w-4" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-56 bg-white shadow-lg overflow-y-auto max-h-[70vh] z-[100]">
+                        <DropdownMenuItem onClick={() => router.push("/popular")} className="font-medium">
+                          <TrendingUp className="h-4 w-4 mr-2" />
+                          Popular
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => router.push("/latest")} className="font-medium">
+                          <Sparkles className="h-4 w-4 mr-2" />
+                          New and Noteworthy
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        {categories.map((category) => (
+                          <DropdownMenuItem
+                            key={category}
+                            onClick={() => handleCategorySelect(category)}
+                            className="font-medium"
+                          >
+                            {category}
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                    <Link href="/login" className="shrink-0">
+                      <Button variant="ghost" className="h-11 rounded-full px-6 text-sm font-bold text-[#222222] hover:bg-gray-100">
+                        Log In
+                      </Button>
+                    </Link>
+                  </div>
+                )}
                 <Link href="/signup" className="shrink-0">
                   <Button variant="default" className="h-11 rounded-full px-6 bg-[#222234] text-white hover:bg-[#222234]/90 shrink-0 whitespace-nowrap text-sm font-semibold">
                     {ctaText}
                   </Button>
                 </Link>
-                {!minimal && (
-                  <div className="ml-3 hidden">
-                    <Button asChild variant="outline" className="h-11 rounded-full px-6 bg-white hover:bg-gray-50 shrink-0 whitespace-nowrap text-sm font-semibold">
-                      <Link href="/login">Log In</Link>
-                    </Button>
-                  </div>
-                )}
               </>
             )}
           </div>
