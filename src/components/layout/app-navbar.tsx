@@ -390,11 +390,18 @@ export function AppNavbar({
 
   const [avatarError, setAvatarError] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
+  const [isScrolled, setIsScrolled] = useState(false);
   const [lastScrollY, setLastScrollY] = useState(0);
 
   useEffect(() => {
     const controlNavbar = () => {
       if (typeof window !== 'undefined') {
+        if (window.scrollY > 0) {
+          setIsScrolled(true);
+        } else {
+          setIsScrolled(false);
+        }
+        
         if (window.scrollY > lastScrollY && window.scrollY > 100) { // scrolling down
           setIsVisible(false);
         } else { // scrolling up
@@ -414,12 +421,15 @@ export function AppNavbar({
 
   return (
     <header className={cn(
-      "fixed top-0 left-0 right-0 z-50 w-full transition-all duration-300 pt-4 px-4",
-      "bg-transparent",
+      "fixed top-0 left-0 right-0 z-50 w-full transition-all duration-300",
+      isScrolled ? "pt-4 px-4 bg-transparent" : "pt-0 px-0 bg-transparent",
       !isVisible && "-translate-y-full"
     )}>
       {/* Mobile Navbar Container */}
-      <div className="md:hidden flex flex-col w-full relative z-20 bg-white">
+      <div className={cn(
+        "md:hidden flex flex-col w-full relative z-20 transition-all duration-300",
+        isScrolled ? "bg-white shadow-md" : "bg-transparent shadow-none"
+      )}>
         {/* Top bar */}
         <div className="flex items-center justify-between py-3 px-4 w-full">
           {user ? (
@@ -430,8 +440,8 @@ export function AppNavbar({
                   <Menu className="h-5 w-5" />
                 </Button>
                 <Link href="/" prefetch={true} className="shrink-0 flex items-center gap-2">
-                  <Image src="/onseek-logo-spy.png" alt="Onseek" width={36} height={36} className="h-9 w-auto" priority unoptimized quality={100} />
-                  <span className="text-lg text-black" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>Onseek</span>
+                  <Image src="/logo-2.svg" alt="onseek" width={28} height={28} className="h-7 w-auto mb-[10px]" priority unoptimized quality={100} />
+                  <span className="text-lg text-black" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>onseek</span>
                 </Link>
               </div>
 
@@ -791,14 +801,17 @@ export function AppNavbar({
 
       {/* Desktop Navbar - Pill Shape */}
       <div className={cn(
-        "hidden md:flex w-full max-w-[1360px] mx-auto h-20 items-center relative rounded-full bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100/50 px-10",
+        "hidden md:flex w-full mx-auto h-24 items-center relative transition-all duration-300",
+        isScrolled 
+          ? "max-w-[1360px] h-20 rounded-full bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100/50 px-10" 
+          : "max-w-none h-24 rounded-none bg-transparent shadow-none border-transparent px-8",
       )}>
         {/* Left Side: Space for sidebar on desktop */}
         <div className="flex items-center shrink-0 gap-6">
           <Link href="/" className="hidden md:flex items-center gap-2">
-            <Image src="/onseek-logo-spy.png" alt="onseek" width={44} height={44} className="h-11 w-auto" priority />
+            <Image src="/logo-2.svg" alt="onseek" width={32} height={32} className="h-8 w-auto mb-[10px]" priority />
             <span className="text-xl text-black" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>
-              Onseek
+              onseek
             </span>
           </Link>
           {/* Explore Dropdown */}
@@ -972,12 +985,7 @@ export function AppNavbar({
               </>
             ) : (
               <>
-                {!minimal && (
-                  <Button onClick={() => setIsCreateModalOpen(true)} className="hidden sm:flex h-11 rounded-full bg-transparent text-[#1e2330] hover:bg-gray-100 font-bold shrink-0 whitespace-nowrap px-6 items-center gap-2">
-                    <SquarePlus className="h-5 w-5" />
-                    Request
-                  </Button>
-                )}
+                {!minimal && null}
                 <Link href="/signup" className="shrink-0">
                   <Button variant="default" className="h-11 rounded-full px-6 bg-[#222234] text-white hover:bg-[#222234]/90 shrink-0 whitespace-nowrap text-sm font-semibold">
                     {ctaText}

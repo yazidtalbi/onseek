@@ -250,9 +250,9 @@ export function PersonalizedFeed({
             tradeMode={tradeMode}
             setTradeMode={setTradeMode}
           />
-          {/* <div className="pb-4">
+          <div className="pt-8 pb-4 px-4 md:px-6 w-full max-w-[1280px] mx-auto">
             <AnnouncementBar />
-          </div> */}
+          </div>
         </>
       )}
 
@@ -266,6 +266,8 @@ export function PersonalizedFeed({
             Discover what people <br className="hidden md:block" /> are looking for
           </h2>
         </div> */}
+
+
 
         {/* Categories Strip */}
         <div className="py-2 min-h-[70px] flex flex-col justify-center mb-6 bg-white transition-all duration-300">
