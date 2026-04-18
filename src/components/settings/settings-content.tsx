@@ -17,7 +17,8 @@ import {
   Phone, 
   Sparkles,
   Settings,
-  ChevronRight
+  ChevronRight,
+  Bell
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
@@ -27,7 +28,7 @@ interface SettingsContentProps {
   profile: any;
 }
 
-type SettingsTab = "profile" | "contact" | "interests" | "appearance" | "account" | "delete";
+type SettingsTab = "profile" | "contact" | "interests" | "notifications" | "appearance" | "account" | "delete";
 
 export function SettingsContent({ user, profile }: SettingsContentProps) {
   const [activeTab, setActiveTab] = useState<SettingsTab>("profile");
@@ -35,6 +36,7 @@ export function SettingsContent({ user, profile }: SettingsContentProps) {
   const menuItems = [
     { id: "profile", label: "Edit Profile", icon: User },
     { id: "interests", label: "Interests", icon: Sparkles },
+    { id: "notifications", label: "Notifications", icon: Bell },
     { id: "appearance", label: "Appearance", icon: Palette },
     { id: "account", label: "Account & Security", icon: Lock },
     { id: "delete", label: "Delete Account", icon: Trash2, variant: "danger" as const },
@@ -124,6 +126,37 @@ export function SettingsContent({ user, profile }: SettingsContentProps) {
                 <p className="text-sm text-gray-500">Pick categories you're interested in.</p>
               </div>
               <CategoryPreferences />
+            </div>
+          </div>
+
+          <div className={activeTab === "notifications" ? "block" : "hidden"}>
+            <div className="space-y-8">
+              <div className="space-y-1 pb-4">
+                <h2 className="text-lg font-bold text-gray-900">Notifications</h2>
+                <p className="text-sm text-gray-500">Manage how you receive alerts and updates.</p>
+              </div>
+              
+              <div className="p-6 border border-[#e5e7eb] rounded-xl bg-gray-50/50 space-y-6">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <p className="text-sm font-bold text-gray-900">Platform Notifications</p>
+                    <p className="text-sm text-gray-500">Alerts in the app for new proposals and messages.</p>
+                  </div>
+                  <div className="w-11 h-6 bg-[#7755FF] rounded-full relative cursor-pointer">
+                    <div className="absolute right-1 top-1 w-4 h-4 bg-white rounded-full" />
+                  </div>
+                </div>
+                
+                <div className="pt-6 border-t border-[#e5e7eb] flex items-center justify-between">
+                  <div className="space-y-1">
+                    <p className="text-sm font-bold text-gray-900">Email Notifications</p>
+                    <p className="text-sm text-gray-500">Get notified via email for important activity.</p>
+                  </div>
+                  <div className="w-11 h-6 bg-gray-200 rounded-full relative cursor-pointer">
+                    <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full" />
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 

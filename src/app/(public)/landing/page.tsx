@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { PublicNavbar } from "@/components/layout/public-navbar";
+import { PublicFooter } from "@/components/layout/public-footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -62,18 +63,11 @@ export default async function LandingPage() {
           <LandingContent user={user as any} />
         </Suspense>
       </main>
-      <footer className="border-t border-border bg-background/80">
-        <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-6 py-8 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-          <span>Onseek © 2026</span>
-          <div className="flex gap-4">
-            <Link href="/terms">Terms</Link>
-            <Link href="/privacy">Privacy</Link>
-          </div>
-        </div>
-      </footer>
+      <PublicFooter />
     </div>
   );
 }
+
 
 function LandingSkeleton({ user }: { user: boolean }) {
   return (

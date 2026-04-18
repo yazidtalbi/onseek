@@ -30,7 +30,7 @@ export default async function ProfilePage({
   // Fetch all requests created by user
   const { data: requests } = await supabase
     .from("requests")
-    .select("*")
+    .select("*, profiles(username, avatar_url)")
     .eq("user_id", profile.id)
     .order("created_at", { ascending: false });
 
@@ -274,13 +274,13 @@ export default async function ProfilePage({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column: Profile Card with Stats */}
         <div className="lg:col-span-1 space-y-4">
-          <Card className="border-[#e5e7eb] ">
-            <CardContent className="p-6 space-y-4">
-              <div className="flex items-start gap-4">
+          <div className="space-y-6">
+            <div className="p-0 space-y-4">
+              <div className="flex flex-col items-start text-left gap-5">
                 {/* Avatar */}
                 <div className="flex-shrink-0">
                   {profile.avatar_url ? (
-                    <div className="relative w-16 h-16 rounded-full overflow-hidden border border-[#e5e7eb]">
+                    <div className="relative w-24 h-24 rounded-full overflow-hidden border-2 border-[#e5e7eb]">
                       <img
                         src={profile.avatar_url}
                         alt={profile.display_name || profile.username}
@@ -288,58 +288,62 @@ export default async function ProfilePage({
                       />
                     </div>
                   ) : (
-                    <div className="w-16 h-16 rounded-full bg-gray-100 border border-[#e5e7eb] flex items-center justify-center">
-                      <span className="text-lg font-semibold text-gray-600">
+                    <div className="w-24 h-24 rounded-full bg-gray-100 border-2 border-[#e5e7eb] flex items-center justify-center">
+                      <span className="text-2xl font-semibold text-gray-600">
                         {(profile.display_name || profile.username)[0].toUpperCase()}
                       </span>
                     </div>
                   )}
                 </div>
                 {/* Profile Info */}
-                <div className="flex-1 min-w-0">
-                  <h1 className="text-2xl font-semibold">@{profile.username}</h1>
+                <div className="min-w-0">
+                  <h1 className="text-3xl font-bold text-[#1A1A1A] tracking-tight">
+                    {profile.username}
+                  </h1>
                   {profile.display_name && profile.display_name !== profile.username && (
-                    <p className="text-base text-muted-foreground mt-1">{profile.display_name}</p>
+                    <p className="text-lg font-medium text-gray-900 mt-1">{profile.display_name}</p>
                   )}
                   {profile.bio && (
-                    <p className="text-sm text-muted-foreground mt-2">{profile.bio}</p>
+                    <p className="text-sm text-gray-500 mt-3 max-w-sm">{profile.bio}</p>
                   )}
-                  <p className="text-xs text-muted-foreground mt-3">
+                  <p className="text-xs text-gray-400 mt-4 font-medium">
                     Member since {new Date(profile.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
                   </p>
                 </div>
               </div>
 
               {/* Stats */}
-              <div className="grid grid-cols-2 gap-4 py-4 border-y border-[#e5e7eb]">
-                <div>
-                  <p className="text-xs text-muted-foreground">Points</p>
-                  <p className="text-xl font-semibold">{points}</p>
+              <div className="grid grid-cols-2 gap-x-8 gap-y-6 py-6 mt-4 transition-all duration-300">
+                <div className="flex flex-col items-start text-left">
+                  <p className="text-[11px] font-bold text-gray-400 mb-1">Points</p>
+                  <p className="text-2xl font-bold text-[#1A1A1A]">{points}</p>
                 </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Requests</p>
-                  <p className="text-xl font-semibold">{requestsCount}</p>
+                <div className="flex flex-col items-start text-left">
+                  <p className="text-[11px] font-bold text-gray-400 mb-1">Requests</p>
+                  <p className="text-2xl font-bold text-[#1A1A1A]">{requestsCount}</p>
                 </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Submissions</p>
-                  <p className="text-xl font-semibold">{submissionsCount}</p>
+                <div className="flex flex-col items-start text-left">
+                  <p className="text-[11px] font-bold text-gray-400 mb-1">Submissions</p>
+                  <p className="text-2xl font-bold text-[#1A1A1A]">{submissionsCount}</p>
                 </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Winners</p>
-                  <p className="text-xl font-semibold">{winnersCount}</p>
+                <div className="flex flex-col items-start text-left">
+                  <p className="text-[11px] font-bold text-gray-400 mb-1">Winners</p>
+                  <p className="text-2xl font-bold text-[#1A1A1A]">{winnersCount}</p>
                 </div>
               </div>
 
               {/* Edit Profile Button for Owner */}
               {user?.id === profile.id && (
-                <Link href="/settings" className="block w-full">
-                  <Button variant="outline" className="w-full text-sm font-medium">
-                    Edit Profile
-                  </Button>
-                </Link>
+                <div className="pt-2">
+                  <Link href="/settings" className="block w-full">
+                    <Button variant="outline" className="w-full h-11 rounded-full text-sm font-bold border-gray-200 hover:bg-gray-50 transition-colors">
+                      Edit Profile
+                    </Button>
+                  </Link>
+                </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
 
         {/* Right Column: Tabs for Activity, Requests, Submissions, Winners */}

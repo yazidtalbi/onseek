@@ -329,14 +329,19 @@ export function SubmissionForm({ requestId, requestBudgetMax, requestDescription
   return (
     <>
       {!hideButton && (
-        <Button
-          type="button"
-          id="submission-form-trigger"
-          className="w-full h-10 rounded-full bg-[#212733] text-white hover:bg-[#212733]/90 text-sm font-medium"
+        <div 
+          className="w-full flex items-center gap-3 p-1.5 pl-3 border border-[#e5e7eb] rounded-full bg-white cursor-text hover:border-gray-300 transition-colors"
           onClick={() => handleOpenChange(true)}
         >
-          Submit proposal
-        </Button>
+          <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 bg-gray-100 flex items-center justify-center text-[10px] font-bold text-gray-400">
+            {user?.user_metadata?.avatar_url ? (
+              <img src={user.user_metadata.avatar_url} alt="You" className="w-full h-full object-cover" />
+            ) : (
+              (user?.user_metadata?.display_name || user?.user_metadata?.full_name || user?.email || 'U').charAt(0).toUpperCase()
+            )}
+          </div>
+          <span className="text-gray-400 text-[15px] font-medium flex-1 px-1 py-1.5">What are you offering..</span>
+        </div>
       )}
       {hideButton && (
         <Button

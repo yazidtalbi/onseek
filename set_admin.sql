@@ -3,4 +3,4 @@
 
 update profiles 
 set is_admin = true 
-where username = 'YOUR_USERNAME';
+where username = 'mti.yazid';

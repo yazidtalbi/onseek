@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { requestSchema } from "@/lib/validators";
 import { createRequestUrl, generateSlug } from "@/lib/utils/slug";
+import { inferIconName } from "@/lib/utils/icons";
 
 function parseLinks(raw?: string | null) {
   if (!raw) return [];
@@ -28,9 +29,12 @@ export async function createRequestAction(formData: FormData) {
     description: String(formData.get("description") || ""),
     category: String(formData.get("category") || ""),
     budgetMin: null,
-    budgetMax: formData.get("budgetMax")
-      ? Number(formData.get("budgetMax"))
-      : null,
+    budgetMax: (() => {
+      const val = formData.get("budgetMax");
+      if (!val) return null;
+      const num = Number(val);
+      return isNaN(num) ? null : num;
+    })(),
     priceLock: String(formData.get("priceLock") || "open") as "open" | "locked",
     exactItem: formData.get("exactItem") === "true",
     exactSpecification: formData.get("exactSpecification") === "true",
@@ -157,6 +161,7 @@ export async function createRequestAction(formData: FormData) {
     condition: parsed.data.condition,
     urgency: parsed.data.urgency,
     status: "pending" as const,
+    icon: inferIconName(parsed.data.title, parsed.data.category),
   };
   
   console.log("Insert data:", JSON.stringify(insertData, null, 2));
@@ -422,7 +427,12 @@ export async function updateRequestAction(requestId: string, formData: FormData)
     title: String(formData.get("title") || ""),
     description: String(formData.get("description") || ""),
     category: String(formData.get("category") || ""),
-    budgetMax: formData.get("budgetMax") ? Number(formData.get("budgetMax")) : null,
+    budgetMax: (() => {
+      const val = formData.get("budgetMax");
+      if (!val) return null;
+      const num = Number(val);
+      return isNaN(num) ? null : num;
+    })(),
     priceLock: String(formData.get("priceLock") || "open") as "open" | "locked",
     exactItem: formData.get("exactItem") === "true",
     exactSpecification: formData.get("exactSpecification") === "true",
@@ -497,6 +507,7 @@ export async function updateRequestAction(requestId: string, formData: FormData)
       country: parsed.data.country,
       condition: parsed.data.condition,
       urgency: parsed.data.urgency,
+      icon: inferIconName(parsed.data.title, parsed.data.category),
       updated_at: new Date().toISOString(),
     })
     .eq("id", requestId);

@@ -134,11 +134,11 @@ export default async function LookingForItemPage({ params }: PageProps) {
           </div>
         </section>
 
-        {/* Redesigned Why Onseek? Section (Mailchimp Style) */}
+        {/* Redesigned What is Onseek? Section (Mailchimp Style) */}
         <section className="py-32 px-6 bg-white">
           <div className="max-w-6xl mx-auto text-center">
             <h2 className="text-[40px] md:text-[56px] leading-[1.05] mb-6 text-[#1A1A1A] font-extrabold tracking-[-0.03em]" style={{ fontFamily: 'var(--font-expanded)' }}>
-              Why Onseek?
+              What is Onseek?
             </h2>
             <p className="text-xl text-gray-400 font-medium max-w-3xl mx-auto mb-20 leading-relaxed">
               We're built for people who value their time. Post a Request, set your budget, <br className="hidden md:block" />

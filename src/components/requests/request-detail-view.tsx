@@ -13,8 +13,10 @@ import { cn } from "@/lib/utils";
 import { Flag, CheckCircle2, XCircle, Clock, Archive, Check } from "lucide-react";
 import { approveRequestAction, rejectRequestAction, archiveRequestAction } from "@/actions/request.actions";
 import { useToast } from "@/components/ui/use-toast";
+import * as React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ReportDialog } from "@/components/reports/report-dialog";
 
 interface RequestDetailViewProps {
   request: any;
@@ -52,6 +54,7 @@ export function RequestDetailView({
   isModal = false,
 }: RequestDetailViewProps) {
   const { toast } = useToast();
+  const [showReportDialog, setShowReportDialog] = React.useState(false);
   return (
     <div className="w-full space-y-6">
       {/* Centered Content: Request & Proposals */}
@@ -76,15 +79,18 @@ export function RequestDetailView({
               <div className="p-0.5 border border-gray-100 rounded-full bg-white shadow-sm hover:shadow-md transition-shadow">
                 <FavoriteButton requestId={request.id} isFavorite={isFavorite} />
               </div>
-              <div className="flex items-center gap-1.5 px-3 py-1.5 border border-gray-100 rounded-full bg-white shadow-sm hover:shadow-md transition-all">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Manage</span>
-                <RequestMenu
-                  requestId={request.id}
-                  requestUserId={request.user_id}
-                  status={request.status}
-                  isAdmin={isAdmin}
-                  categories={request.categories}
-                />
+              <div className="p-0.5 border border-gray-100 rounded-full bg-white shadow-sm hover:shadow-md transition-shadow">
+                <button
+                  type="button"
+                  className="flex items-center justify-center p-2 rounded-full hover:bg-red-50 hover:text-red-500 transition-colors text-gray-400 focus:outline-none"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setShowReportDialog(true);
+                  }}
+                  title="Report"
+                >
+                  <Flag className="h-4 w-4" />
+                </button>
               </div>
             </div>
           </div>
@@ -95,13 +101,17 @@ export function RequestDetailView({
               <FavoriteButton requestId={request.id} isFavorite={isFavorite} />
             </div>
             <div className="p-0.5 border border-gray-100 rounded-full bg-white shadow-sm">
-              <RequestMenu
-                requestId={request.id}
-                requestUserId={request.user_id}
-                status={request.status}
-                isAdmin={isAdmin}
-                categories={request.categories}
-              />
+                <button
+                  type="button"
+                  className="flex items-center justify-center p-2 rounded-full hover:bg-red-50 hover:text-red-500 transition-colors text-gray-400 focus:outline-none"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setShowReportDialog(true);
+                  }}
+                  title="Report"
+                >
+                  <Flag className="h-4 w-4" />
+                </button>
             </div>
           </div>
         )}
@@ -110,7 +120,7 @@ export function RequestDetailView({
         <div className="flex flex-col lg:flex-row gap-8 lg:gap-14 items-start relative pb-24 sm:pb-0">
           {/* Left Column: Request Details - Sticky on scroll */}
           <div className={cn(
-            "w-full lg:w-[55%] space-y-6 flex-shrink-0 self-start lg:sticky lg:top-20"
+            "w-full lg:w-[40%] space-y-6 flex-shrink-0 self-start lg:sticky lg:top-20"
           )}>
             <div className="relative">
               <div className="absolute top-0 right-0 z-10 flex gap-2">
@@ -227,6 +237,13 @@ export function RequestDetailView({
           </div>
         </div>
       )}
+
+      <ReportDialog
+        type="request"
+        targetId={request.id}
+        open={showReportDialog}
+        onOpenChange={setShowReportDialog}
+      />
     </div>
   );
 }

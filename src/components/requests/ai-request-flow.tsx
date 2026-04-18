@@ -47,7 +47,7 @@ export function AIRequestFlow({ initialText, onClose, user }: AIRequestFlowProps
         
         // If we were at auth and now have user, go to submitting
         if (parsed.step === "auth" && user) {
-          setStep("submitting");
+          setStep("auth"); // This will trigger the auto-submit useEffect
         } else {
           setStep(parsed.step);
         }
@@ -89,19 +89,37 @@ export function AIRequestFlow({ initialText, onClose, user }: AIRequestFlowProps
           const data = await response.json();
           
           // Add stable IDs for DnD
-          data.preferences = (data.preferences || []).map((p: string) => ({ 
-            label: p, 
-            id: `pref-${Math.random().toString(36).slice(2, 9)}` 
+          data.preferences = (data.preferences || []).map((p: any) => ({ 
+            label: String(p), 
+            id: `pref-${Math.random().toString(36).slice(2, 9)}`,
+            type: 'pref'
           }));
-          data.dealbreakers = (data.dealbreakers || []).map((d: string) => ({ 
-            label: d, 
-            id: `deal-${Math.random().toString(36).slice(2, 9)}` 
+          data.dealbreakers = (data.dealbreakers || []).map((d: any) => ({ 
+            label: String(d), 
+            id: `deal-${Math.random().toString(36).slice(2, 9)}`,
+            type: 'deal'
           }));
 
-          setExtractedData(data);
+          // Ensure budget is handled correctly
+          let extractedBudget = data.budget;
+          if (typeof extractedBudget === "string") {
+            const numeric = parseFloat(extractedBudget.replace(/[^0-9.]/g, ""));
+            if (!isNaN(numeric)) extractedBudget = numeric;
+          }
+
+          setExtractedData({
+            ...data,
+            budget: extractedBudget
+          });
+          
+          if (typeof extractedBudget === "number" && extractedBudget > 0) {
+            setBudget(extractedBudget);
+          }
           
           // Determine next step based on data completeness
-          if (!data.budget || data.budget === "Negotiable" || data.budget === "Not specified") {
+          const hasValidBudget = typeof extractedBudget === "number" && extractedBudget > 0;
+          
+          if (!hasValidBudget) {
             setStep("budget");
           } else if (!data.urgency) {
             setStep("urgency");
@@ -110,7 +128,16 @@ export function AIRequestFlow({ initialText, onClose, user }: AIRequestFlowProps
           }
         } catch (err) {
           setError("AI extraction encountered a minor hiccup. Let's try manually.");
-          setStep("preview"); // Fallback to preview where they can edit
+          setExtractedData({
+            title: initialText.slice(0, 60),
+            description: initialText,
+            category: "Other",
+            condition: "Either",
+            budget: "Negotiable",
+            preferences: [],
+            dealbreakers: []
+          });
+          setStep("preview");
         }
       }, 1500); // Artificial delay for "magic" feel
       return () => clearTimeout(timer);
@@ -128,14 +155,21 @@ export function AIRequestFlow({ initialText, onClose, user }: AIRequestFlowProps
     formData.set("title", extractedData?.title || initialText.slice(0, 50));
     formData.set("description", extractedData?.description || initialText);
     formData.set("category", extractedData?.category || "Other");
-    formData.set("budgetMax", String(budget || extractedData?.budget || ""));
+    
+    // Prioritize the numeric budget state, then extracted data, then empty
+    const finalBudget = budget !== null ? budget : extractedData?.budget;
+    formData.set("budgetMax", finalBudget !== "Negotiable" ? String(finalBudget || "") : "");
+    
     formData.set("condition", extractedData?.condition || "Either");
     formData.set("urgency", urgency || extractedData?.urgency || "Standard");
     formData.set("country", user?.profile?.country || "");
     
     // Preferences/Dealbreakers
-    formData.set("preferences", JSON.stringify(extractedData?.preferences?.map((p: any) => ({ label: p.label })) || []));
-    formData.set("dealbreakers", JSON.stringify(extractedData?.dealbreakers?.map((d: any) => ({ label: d.label })) || []));
+    const prefs = (extractedData?.preferences || []).map((p: any) => ({ label: p.label || p }));
+    const deals = (extractedData?.dealbreakers || []).map((d: any) => ({ label: d.label || d }));
+    
+    formData.set("preferences", JSON.stringify(prefs));
+    formData.set("dealbreakers", JSON.stringify(deals));
 
     try {
       const res = await createRequestAction(formData);
@@ -164,7 +198,14 @@ export function AIRequestFlow({ initialText, onClose, user }: AIRequestFlowProps
       {/* Header */}
       <div className="relative w-full py-6 px-8 flex items-center justify-between z-20">
         <button 
-          onClick={() => step === "extracting" ? onClose() : setStep("extracting")} 
+          onClick={() => {
+            if (step === "extracting") {
+              sessionStorage.removeItem(STORAGE_KEY);
+              onClose();
+            } else {
+              setStep("extracting");
+            }
+          }} 
           className="flex items-center gap-2 text-gray-500 hover:text-black transition-colors font-semibold"
         >
           <ChevronLeft className="h-5 w-5" />

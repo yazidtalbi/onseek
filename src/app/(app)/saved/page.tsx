@@ -44,7 +44,7 @@ export default async function SavedRequestsPage(props: {
   if (favoriteRequestIds.length > 0) {
     let query = supabase
       .from("requests")
-      .select("*")
+      .select("*, profiles(username, avatar_url)")
       .in("id", favoriteRequestIds);
 
     // Apply filters

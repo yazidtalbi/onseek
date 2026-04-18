@@ -6,16 +6,28 @@ import { cn } from "@/lib/utils";
 
 const faqs = [
   {
-    question: "What is Onseek?",
-    answer: "Onseek is a reverse marketplace where buyers state exactly what they need, and sellers compete to offer the best matches. It cuts through the noise of traditional searching."
+    question: "Is it free?",
+    answer: "Yes, it is completely free to post requests and submit offers. No hidden fees or commissions."
+  },
+  {
+    question: "Who can post a request?",
+    answer: "Anyone. Whether you're looking for a physical product, a digital service, or something in between — if you know what you need, just describe it and let sellers find you."
   },
   {
     question: "How do I become a seller?",
     answer: "For the moment, every user can submit proposals from their inventory. Official shops are currently in our roadmap."
   },
   {
-    question: "Is it free?",
-    answer: "Yes, it is completely free to post requests and submit offers."
+    question: "How long until I get proposals?",
+    answer: "Most requests receive their first offer within 24 hours. The average time to find a perfect match is 3–5 days."
+  },
+  {
+    question: "Can I cancel my request?",
+    answer: "Yes. You can close your request at any time — if you found the item elsewhere or changed your mind, simply mark it as closed from your dashboard."
+  },
+  {
+    question: "How do payments work?",
+    answer: "We recommend using our integrated escrow system, which holds funds securely until you verify the item upon delivery. Safe for both sides."
   }
 ];
 

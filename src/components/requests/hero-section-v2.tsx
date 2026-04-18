@@ -45,8 +45,8 @@ export function HeroSectionV2({ user, tradeMode, setTradeMode }: HeroSectionV2Pr
 
   return (
     <>
-      <section id="onseek-hero" className="w-full h-auto py-2 px-4 md:px-6 mt-20 lg:mt-24">
-        <div className="mx-auto w-full max-w-[1280px] min-h-[600px] lg:h-[75vh] bg-[#6925DC] rounded-[32px] overflow-hidden relative flex items-center shadow-[0_32px_80px_-16px_rgba(0,0,0,0.15)]">
+      <section id="onseek-hero" className="w-full h-auto px-4 md:px-6 mt-5">
+        <div className="mx-auto w-full max-w-[1280px] min-h-[600px] lg:h-[75vh] bg-[#6925DC] rounded-[32px] overflow-hidden relative flex items-center">
           <div className="w-full h-full flex flex-col lg:flex-row items-stretch relative z-10">
             {/* Content Side */}
             <div className="flex-1 lg:flex-[0.6] flex flex-col justify-center items-start py-12 lg:py-20 pl-10 lg:pl-16 pr-4 lg:pr-6 mr-auto">
@@ -73,8 +73,8 @@ export function HeroSectionV2({ user, tradeMode, setTradeMode }: HeroSectionV2Pr
                       <div className="shrink-0">
                         <Image src="/hero/hour.png" alt="Hourglass" width={28} height={28} className="object-contain" />
                       </div>
-                      <p className="text-white text-xl font-semibold leading-relaxed">
-                        Post a request, receive proposals, compare deals & connect with the right seller.
+                      <p className="text-white/75 text-xl font-medium leading-relaxed">
+                        Post a request. Get proposals. Pick the best.
                       </p>
                     </div>
                   </motion.div>
@@ -129,7 +129,7 @@ export function HeroSectionV2({ user, tradeMode, setTradeMode }: HeroSectionV2Pr
                       }}
                       className="absolute bottom-5 right-5 h-11 px-6 gap-2 bg-[#1A1A1A] hover:bg-black text-white rounded-full font-bold shadow-none"
                     >
-                      <span>Next</span>
+                      <span>Post Request</span>
                       <Sparkles className="h-4 w-4" />
                     </Button>
                   </div>

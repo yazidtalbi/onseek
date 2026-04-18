@@ -532,8 +532,8 @@ export function AppNavbar({
               </Button>
             )}
           </div>
-          <div className="w-[72px] shrink-0" /> {/* Spacer */}
-          <Link href="/" className="flex items-center gap-2 group ml-6">
+          {user && <div className="w-[72px] shrink-0" />} {/* Spacer */}
+          <Link href="/" className={cn("flex items-center gap-2 group", user ? "ml-6" : "ml-8")}>
             <div className="w-9 h-9 flex items-center justify-center">
               <Image src="/logo-2.svg" alt="onseek" width={28} height={28} className="h-7 w-auto" priority />
             </div>
@@ -544,37 +544,33 @@ export function AppNavbar({
         </div>
 
         {/* Center Side: Search Bar */}
-        <div className="absolute left-1/2 -translate-x-1/2 flex items-center w-full max-w-md justify-center z-10 pointer-events-none">
-          <form 
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (searchQuery.trim()) {
-                const params = new URLSearchParams(searchParams.toString());
-                params.set("q", searchQuery.trim());
-                params.delete("page");
-                router.push(`/search?${params.toString()}`);
-              }
-            }}
-            className="w-full transition-all duration-300 pointer-events-auto"
-          >
-            <div className="relative flex items-center w-full bg-gray-50 border border-gray-100 rounded-2xl h-11 pr-1 group focus-within:bg-white focus-within:border-[#6925DC]/20 transition-all">
-              <Search className="absolute left-4 h-4 w-4 text-gray-400 group-focus-within:text-[#6925DC] transition-colors" strokeWidth={2.5} />
-              <Input
-                name="q"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="What are you looking for?"
-                className="flex-1 bg-transparent border-none focus-visible:ring-0 text-sm h-full pl-11 shadow-none placeholder:text-gray-400"
-              />
-              <button
-                type="submit"
-                className="w-9 h-9 bg-black rounded-xl flex items-center justify-center shrink-0 hover:bg-[#6925DC] transition-colors"
-              >
-                <Plus className="h-4 w-4 text-white" strokeWidth={3} />
-              </button>
-            </div>
-          </form>
-        </div>
+        {user && (
+          <div className="absolute left-1/2 -translate-x-1/2 flex items-center w-full max-w-md justify-center z-10 pointer-events-none">
+            <form 
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (searchQuery.trim()) {
+                  const params = new URLSearchParams(searchParams.toString());
+                  params.set("q", searchQuery.trim());
+                  params.delete("page");
+                  router.push(`/search?${params.toString()}`);
+                }
+              }}
+              className="w-full transition-all duration-300 pointer-events-auto"
+            >
+              <div className="relative flex items-center w-full bg-gray-50 border border-gray-100 rounded-full h-11 group focus-within:bg-white focus-within:border-[#6925DC]/20 transition-all">
+                <Search className="absolute left-4 h-4 w-4 text-gray-400 group-focus-within:text-[#6925DC] transition-colors" strokeWidth={2.5} />
+                <Input
+                  name="q"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="What are you looking for?"
+                  className="flex-1 bg-transparent border-none focus-visible:ring-0 text-sm h-full pl-11 pr-4 shadow-none placeholder:text-gray-400"
+                />
+              </div>
+            </form>
+          </div>
+        )}
 
         {/* Right Side: Navigation & Actions */}
         <div className="flex items-center gap-6 ml-auto shrink-0 relative z-20">
@@ -602,10 +598,7 @@ export function AppNavbar({
           <div className="flex items-center gap-2">
             {user ? (
               <>
-                <Button onClick={() => setIsAIModalOpen(true)} className="hidden sm:flex h-11 rounded-full bg-slate-50 text-[#6925DC] hover:bg-slate-100 font-bold whitespace-nowrap px-4 items-center gap-2 border border-[#6925DC]/10">
-                  <Sparkles className="h-4 w-4" />
-                </Button>
-                <Button onClick={() => setIsCreateModalOpen(true)} className="hidden sm:flex h-11 rounded-full bg-transparent text-[#1e2330] hover:bg-gray-100 font-bold whitespace-nowrap px-6 items-center gap-2">
+                <Button onClick={() => setIsAIModalOpen(true)} className="hidden sm:flex h-11 rounded-full bg-transparent text-[#6925DC] hover:bg-[#6925DC]/5 font-bold whitespace-nowrap px-6 items-center gap-2 border border-[#6925DC]/30">
                   <SquarePlus className="h-5 w-5" />
                   Request
                 </Button>

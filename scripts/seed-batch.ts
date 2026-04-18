@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import { randomUUID } from "node:crypto";
 import { config } from "dotenv";
 import { resolve } from "node:path";
+import { inferIconName } from "../src/lib/utils/icons";
 
 // Load environment variables from .env.local
 config({ path: resolve(process.cwd(), ".env.local") });
@@ -258,6 +259,7 @@ async function seedBatch() {
         urgency: reqData.urgency || "Standard",
         status: "open",
         is_seeded: true,
+        icon: inferIconName(reqData.title, reqData.category),
       })
       .select()
       .single();

@@ -40,6 +40,7 @@ export type RequestItem = {
   matchedCategories?: Category[];
   personalizationScore?: number;
   matchReason?: string;
+  icon?: string | null;
 };
 
 export type Submission = {

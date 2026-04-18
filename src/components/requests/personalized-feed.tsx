@@ -17,7 +17,8 @@ import { useAuth } from "@/components/layout/auth-provider";
 import { usePathname } from "next/navigation";
 import { FaqSection } from "@/components/requests/faq-section";
 import { Button } from "@/components/ui/button";
-import { Loader2, Search, ChevronRight } from "lucide-react";
+import { Loader2, Search, ChevronRight, Sparkles } from "lucide-react";
+import { AIRequestFlow } from "./ai-request-flow";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { AnnouncementBar } from "@/components/landing/announcement-bar";
@@ -69,7 +70,17 @@ export function PersonalizedFeed({
   const [tradeMode, setTradeMode] = useState<"buy" | "sell">("buy");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isAIFlowOpen, setIsAIFlowOpen] = useState(false);
+  const [searchValue, setSearchValue] = useState("");
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const hasUpdatedUrlRef = useRef(false);
+
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  }, [searchValue]);
 
   // Load user preferences to check if they have any
   useEffect(() => {
@@ -94,6 +105,8 @@ export function PersonalizedFeed({
     }
     loadPreferences();
   }, []);
+
+  // Auto-resume removed to prevent unexpected modal openings on refresh
 
   // Update URL when mode changes (but don't cause infinite loops)
   useEffect(() => {
@@ -242,7 +255,7 @@ export function PersonalizedFeed({
 
 
   return (
-    <div className="flex flex-col w-full">
+    <div className="flex flex-col w-full flex-1">
       {showHero && (
         <>
           <HeroSectionV2
@@ -250,11 +263,13 @@ export function PersonalizedFeed({
             tradeMode={tradeMode}
             setTradeMode={setTradeMode}
           />
-          {/* Announcement Bar removed as requested */}
+          <div className="pb-4">
+            <AnnouncementBar />
+          </div>
         </>
       )}
 
-      <div className={cn("mx-auto w-full px-4 md:px-6", !user && "max-w-[1360px]")}>
+      <div className={cn("mx-auto w-full px-4 md:px-6", !user && "max-w-[1280px]")}>
         {/* Editorial Title - Hidden as requested */}
         {/* <div className="text-left pt-16 pb-12">
           <h2 
@@ -322,6 +337,25 @@ export function PersonalizedFeed({
           </div>
         ) : allItems.length > 0 ? (
           <div className="relative group w-full flex flex-col text-left">
+            {/* Section Header */}
+            <div className="flex flex-row items-center justify-between mb-8 pb-4">
+              <div className="flex flex-col gap-1">
+                <h3 className="text-2xl md:text-3xl font-semibold text-[#1A1A1A] tracking-tighter" style={{ fontFamily: 'var(--font-expanded)' }}>
+                  Requests we love
+                </h3>
+                <p className="text-sm md:text-base text-gray-400 font-medium">
+                  Standout requests making waves around the platform
+                </p>
+              </div>
+              <Link 
+                href="/popular" 
+                className="text-sm font-bold text-[#1A1A1A] hover:underline flex items-center gap-1 shrink-0"
+              >
+                View more
+                <ChevronRight className="h-4 w-4" />
+              </Link>
+            </div>
+
             {/* Show subtle loading indicator while fetching */}
             {isFetching && !isLoading && (
               <div className="absolute top-0 left-0 right-0 z-20 flex justify-center py-2 pointer-events-none">
@@ -330,29 +364,45 @@ export function PersonalizedFeed({
             )}
 
             <div className={cn("pb-4 w-full", viewMode === "grid" ? "columns-[360px] gap-6" : "flex flex-col gap-4 max-w-2xl mx-auto")}>
-              {/* Inject textarea for creation at top of masonry if logged in */}
               {user && isHomePage && (
                 <div className="break-inside-avoid mb-6">
-                  <div
-                    role="button"
-                    tabIndex={-1}
-                    onClick={() => {
-                      window.dispatchEvent(new CustomEvent('open-create-request-modal'));
-                    }}
-                    className="w-full rounded-2xl bg-white border border-[#e6e7eb] shadow-none transition-all duration-300 min-h-[140px] flex flex-col p-4 cursor-pointer"
-                  >
-                    <div className="flex items-center gap-3 flex-1 mb-2">
-                      <div className="flex items-center justify-center h-10 w-10 rounded-full bg-gray-200 text-foreground font-medium text-base shrink-0">
-                        {profile?.username?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase() || "U"}
+                  <div className="w-full rounded-[24px] bg-white border border-[#e6e7eb] shadow-none min-h-[140px] flex flex-col p-5">
+                    <div className="flex gap-4">
+                      <div className="flex items-center justify-center h-10 w-10 mt-1 rounded-full bg-gray-100 text-foreground font-medium text-base shrink-0 overflow-hidden relative">
+                        {profile?.avatar_url ? (
+                          <img
+                            src={profile.avatar_url}
+                            alt={profile.username || "User"}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          profile?.username?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase() || "U"
+                        )}
                       </div>
-                      <span className="text-[#a5abb7] text-[16px] font-medium font-sans">
-                        What are you looking for, {profile?.username || "Guest"}?
-                      </span>
+                      <textarea
+                        ref={textareaRef}
+                        placeholder={`What are you looking for, ${profile?.username || "Guest"}?`}
+                        value={searchValue}
+                        onChange={(e) => setSearchValue(e.target.value)}
+                        rows={2}
+                        className="bg-transparent border-none outline-none w-full text-[#1A1A1A] placeholder:text-[#a5abb7] placeholder:text-[18px] text-[18px] font-medium resize-none overflow-hidden leading-relaxed pt-1.5"
+                      />
                     </div>
-                    <div className="flex justify-end mt-auto">
-                      <div className="rounded-full bg-[#1e2330] hover:bg-[#2a303f] text-white px-6 py-2.5 text-[15px] font-medium flex items-center justify-center transition-colors shadow-sm">
+                    <div className="flex justify-end mt-4">
+                      <Button
+                        type="button"
+                        onClick={() => {
+                          if (searchValue.trim()) {
+                            setIsAIFlowOpen(true);
+                          } else {
+                            window.dispatchEvent(new CustomEvent('open-create-request-modal'));
+                          }
+                        }}
+                        className="rounded-full bg-[#1A1A1A] hover:bg-black text-white px-6 h-11 text-[15px] font-bold flex items-center justify-center gap-2 transition-colors shadow-none"
+                      >
                         Request
-                      </div>
+                        <Sparkles className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -363,43 +413,53 @@ export function PersonalizedFeed({
                 return (
                   <Fragment key={request.id}>
                     {/* Brand CTA Card injected after some items */}
-            {/* Select a random illustration for the CTA card */}
-            {(() => {
-              const illustrations = ["onseek_magnet_purple.png", "onseek_flower_purple.png", "onseek_city_purple.png"];
-              const randomIll = illustrations[index % illustrations.length]; // Use index to keep it stable but different across the feed
-              
-              return index === 2 && (
-                <div 
-                  onClick={() => window.dispatchEvent(new CustomEvent('open-create-request-modal'))}
-                  className="break-inside-avoid mb-6 aspect-square rounded-[32px] bg-[#FDF9ED] p-8 flex flex-col justify-between text-[#1A1A1A] relative overflow-hidden group/cta cursor-pointer shadow-none transition-all duration-300 hover:scale-[1.02]"
-                >
-                  {/* Random illustration as background element */}
-                  <div className="absolute top-1/2 -translate-y-1/2 -right-12 w-48 h-48 opacity-[0.08] pointer-events-none group-hover/cta:scale-110 transition-transform duration-500">
-                    <img src={`/illustrations/${randomIll}`} alt="" className="w-full h-full object-contain" />
-                  </div>
-                  
-                  {/* Abstract background decor */}
-                  <div className="absolute -top-12 -right-12 w-48 h-48 bg-[#6925DC]/5 rounded-full blur-3xl pointer-events-none" />
-                  <div className="absolute -bottom-12 -left-12 w-48 h-48 bg-[#6925DC]/5 rounded-full blur-3xl pointer-events-none" />
-                  
-                  <div className="relative z-10 mt-2">
-                    <h3 className="text-[28px] md:text-[32px] font-semibold leading-[1.1] mb-4 tracking-tight" style={{ fontFamily: 'var(--font-expanded)' }}>
-                      Can&apos;t find it?<br/>Request it.
-                    </h3>
-                    <p className="text-gray-500 text-[15px] font-medium leading-relaxed max-w-[220px]">
-                      Describe what you need and let our sellers find you.
-                    </p>
-                  </div>
-                  
-                  <div className="relative z-10 flex justify-end">
-                     <div className="bg-[#1A1A1A] text-white w-12 h-12 rounded-2xl flex items-center justify-center group-hover/cta:scale-110 transition-all shadow-md">
-                       <ChevronRight className="w-6 h-6" strokeWidth={3} />
-                     </div>
-                  </div>
-                </div>
-              );
-            })()}
-                    <div className="break-inside-avoid mb-6 transition-all duration-300 ease-out hover:scale-[1.02]">
+                    {/* Select a random illustration for the CTA card */}
+                    {(() => {
+                      const illustrations = ["onseek_magnet_purple.png", "onseek_flower_purple.png", "onseek_city_purple.png"];
+                      const randomIll = illustrations[index % illustrations.length]; // Use index to keep it stable but different across the feed
+
+                      return user && index === 2 && (
+                        <div
+                          onClick={() => window.dispatchEvent(new CustomEvent('open-create-request-modal'))}
+                          className="break-inside-avoid mb-6 aspect-square rounded-[32px] bg-[#FF8C5A] p-10 flex flex-col justify-between text-[#1A1A1A] relative overflow-hidden group/cta cursor-pointer shadow-none transition-all duration-300 hover:scale-[1.02]"
+                        >
+                          {/* Top: Avatar Stack */}
+                          <div className="relative flex items-center -space-x-4 mb-6 z-10">
+                            {[1, 2, 3, 4].map((i) => (
+                              <div key={i} className="w-12 h-12 rounded-full border-[3px] border-[#FF8C5A] overflow-hidden bg-white/20">
+                                <img
+                                  src={`https://i.pravatar.cc/150?u=${i + 10}`}
+                                  alt="User"
+                                  className="w-full h-full object-cover saturate-[1.2] transition-all cursor-pointer"
+                                />
+                              </div>
+                            ))}
+                          </div>
+
+                          <div className="relative z-10 flex-1 flex flex-col justify-center">
+                            <h3
+                              className="text-[36px] md:text-[42px] leading-[0.95] mb-2 tracking-tighter text-black"
+                              style={{ fontFamily: "'Zalando Sans SemiExpanded', sans-serif", fontWeight: 600 }}
+                            >
+                              Can&apos;t find it? <br /> Request it.
+                            </h3>
+                            <p className="text-black/60 text-[16px] font-bold leading-tight mt-2 max-w-[240px]">
+                              Join thousands of seekers and get exposure to the best sellers.
+                            </p>
+                          </div>
+
+                          <div className="relative z-10 pt-8">
+                            <div className="inline-flex items-center bg-white text-black px-8 py-4 rounded-full text-[15px] font-black tracking-tight hover:bg-white/90 transition-all shadow-sm">
+                              Start requesting
+                            </div>
+                          </div>
+
+                          {/* Decorative background element as seen in image */}
+                          <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl" />
+                        </div>
+                      );
+                    })()}
+                    <div className="break-inside-avoid mb-6">
                       <RequestCard
                         request={request}
                         variant="detail"
@@ -415,18 +475,17 @@ export function PersonalizedFeed({
               })}
             </div>
 
-            {/* Bottom CTA for guests - integrated to overlap masonry */}
+            {/* Guest CTA Gradient Overlay */}
             {!user && isHomePage && (
               <div className="relative w-full -mt-64 z-20">
                 <div className="absolute inset-x-0 bottom-0 h-[350px] bg-gradient-to-t from-white via-white/100 to-transparent pointer-events-none" />
                 <div className="relative flex justify-center pb-24 pt-32">
-                  <Button
-                    onClick={() => router.push("/signup")}
-                    variant="accent"
-                    className="rounded-full font-semibold h-11 px-8 text-sm transition-all hover:scale-105 active:scale-95 shadow-lg"
+                  <button
+                    onClick={() => setIsAuthModalOpen(true)}
+                    className="inline-flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring bg-[#1e2330] text-white hover:bg-[#1e2330]/90 rounded-full font-semibold h-11 px-8 text-sm transition-all hover:scale-105 active:scale-95 shadow-lg"
                   >
                     Sign up to explore
-                  </Button>
+                  </button>
                 </div>
               </div>
             )}
@@ -447,41 +506,40 @@ export function PersonalizedFeed({
           <section className="py-16 px-10 overflow-hidden">
             <div className="max-w-6xl mx-auto text-center">
               <h2 className="text-[40px] md:text-[56px] leading-[1.05] mb-6 text-[#1A1A1A] font-extrabold tracking-[-0.03em]" style={{ fontFamily: 'var(--font-expanded)' }}>
-                Why Onseek?
+                What is Onseek?
               </h2>
               <p className="text-xl text-gray-400 font-medium max-w-3xl mx-auto mb-20 leading-relaxed">
-                We&apos;re built for people who value their time. Post a Request, set your budget, <br className="hidden md:block" />
-                and we&apos;ll help you find exactly what you&apos;re looking for by bringing the market to you.
+                Onseek is a reverse marketplace where buyers state exactly what they need, and sellers compete to offer the best matches. It cuts through the noise of traditional searching.
               </p>
 
               <div className="grid md:grid-cols-3 gap-16 lg:gap-24">
                 <div className="flex flex-col items-center group">
                   <div className="w-32 h-32 mb-8 overflow-hidden rounded-3xl">
-                    <img src="/illustrations/onseek_magnet_purple.png" alt="Sellers Compete" className="w-full h-full object-contain" />
+                    <img src="/illustrations/onseek_magnet_purple.png" alt="Sellers come to you" className="w-full h-full object-contain" />
                   </div>
-                  <h3 className="text-2xl font-semibold mb-4 tracking-tight" style={{ fontFamily: 'var(--font-expanded)' }}>Sellers compete for you</h3>
+                  <h3 className="text-2xl font-semibold mb-4 tracking-tight" style={{ fontFamily: 'var(--font-expanded)' }}>Sellers come to you</h3>
                   <p className="text-gray-500 font-medium leading-relaxed text-sm md:text-base">
-                    Instead of hunting for prices, you set your own budget and let verified sellers send you their best offers directly.
+                    Set your own budget and let verified sellers send you their best offers directly. No hunting, no comparing tabs — they come to you.
                   </p>
                 </div>
 
                 <div className="flex flex-col items-center group">
                   <div className="w-32 h-32 mb-8 overflow-hidden rounded-3xl">
-                    <img src="/illustrations/onseek_flower_purple.png" alt="Protect your peace" className="w-full h-full object-contain" />
+                    <img src="/illustrations/onseek_flower_purple.png" alt="Skip the scroll" className="w-full h-full object-contain" />
                   </div>
-                  <h3 className="text-2xl font-semibold mb-4 tracking-tight" style={{ fontFamily: 'var(--font-expanded)' }}>Protect your peace</h3>
+                  <h3 className="text-2xl font-semibold mb-4 tracking-tight" style={{ fontFamily: 'var(--font-expanded)' }}>Skip the scroll</h3>
                   <p className="text-gray-500 font-medium leading-relaxed text-sm md:text-base">
-                    Your time is valuable. Our request-first model eliminates the friction of traditional marketplaces, letting you focus on what matters.
+                    Your time is valuable. Our request-first model eliminates the friction of traditional marketplaces. Post once, let sellers find you.
                   </p>
                 </div>
 
                 <div className="flex flex-col items-center group">
                   <div className="w-32 h-32 mb-8 overflow-hidden rounded-3xl">
-                    <img src="/illustrations/onseek_city_purple.png" alt="Verified Marketplace" className="w-full h-full object-contain" />
+                    <img src="/illustrations/onseek_city_purple.png" alt="Vetted sellers only" className="w-full h-full object-contain" />
                   </div>
-                  <h3 className="text-2xl font-semibold mb-4 tracking-tight" style={{ fontFamily: 'var(--font-expanded)' }}>Verified marketplace</h3>
+                  <h3 className="text-2xl font-semibold mb-4 tracking-tight" style={{ fontFamily: 'var(--font-expanded)' }}>Vetted sellers only</h3>
                   <p className="text-gray-500 font-medium leading-relaxed text-sm md:text-base">
-                    Every provider on Onseek is manually vetted to ensure quality, reliability, and a completely secure transaction experience.
+                    Every seller on Onseek is manually reviewed. You get quality proposals, zero spam, and a completely secure transaction experience.
                   </p>
                 </div>
               </div>
@@ -491,24 +549,30 @@ export function PersonalizedFeed({
 
 
           <div className="w-full bg-transparent py-16">
-            <div className="max-w-[1360px] mx-auto w-full px-4 md:px-6">
+            <div className="max-w-[1280px] mx-auto w-full px-4 md:px-6">
               <FaqSection />
             </div>
           </div>
 
-          {/* New Freelancer CTA */}
+          {/* Bottom CTA Banner */}
           <div className="max-w-[1280px] mx-auto w-full px-4 md:px-6 mb-24 mt-16">
-            <div className="w-full bg-[#6925DC] rounded-[32px] py-20 px-8 text-center shadow-none flex flex-col items-center justify-center gap-10 overflow-hidden relative">
-              <h2 className="relative z-10 text-white text-[32px] md:text-[48px] tracking-tight font-black max-w-3xl leading-[1.1]" style={{ fontFamily: 'var(--font-expanded)' }}>
-                Find freelancers who can help you build what's next
+            <div className="w-full bg-[#6925DC] rounded-[32px] py-20 px-8 text-center shadow-none flex flex-col items-center justify-center gap-6 overflow-hidden relative">
+              <p className="relative z-10 text-white/60 text-[13px] font-bold tracking-[0.15em] uppercase">Physical product or digital service</p>
+              <h2 className="relative z-10 text-white text-[32px] md:text-[48px] tracking-tight font-black max-w-2xl leading-[1.05]" style={{ fontFamily: 'var(--font-expanded)' }}>
+                One request.<br />Endless possibilities.
               </h2>
-              <Button asChild className="relative z-10 bg-white text-[#6925DC] hover:bg-white/90 border-0 rounded-full h-14 px-10 text-base font-bold transition-all hover:scale-105 active:scale-95 shadow-none">
-                <Link href="/popular">Explore freelancers</Link>
+              <p className="relative z-10 text-white/70 text-lg font-medium max-w-xl">
+                Same box. Any category. The market delivers.
+              </p>
+              <Button asChild className="relative z-10 bg-white text-[#6925DC] hover:bg-white/90 border-0 rounded-full h-14 px-10 text-base font-bold transition-all hover:scale-105 active:scale-95 shadow-none mt-4">
+                <Link href="/signup">Start requesting</Link>
               </Button>
             </div>
           </div>
 
-          <PublicFooter />
+          <div className="mt-auto">
+            <PublicFooter />
+          </div>
         </div>
       )}
       {isAuthModalOpen && (
@@ -517,6 +581,16 @@ export function PersonalizedFeed({
           onOpenChange={setIsAuthModalOpen}
           title="Sell your items to the world"
           description="Sign in or create an account to start selling and track your inventory on Onseek."
+        />
+      )}
+      {isAIFlowOpen && (
+        <AIRequestFlow
+          initialText={searchValue}
+          onClose={() => {
+            setIsAIFlowOpen(false);
+            setSearchValue("");
+          }}
+          user={user}
         />
       )}
     </div>
