@@ -49,6 +49,8 @@ export function SubmissionCard({
   isOnlyOne = false,
   hideVotes = false,
   requestOwnerId,
+  hideTitle,
+  largeText,
 }: {
   submission: Submission;
   requestId: string;
@@ -62,6 +64,8 @@ export function SubmissionCard({
   isOnlyOne?: boolean;
   hideVotes?: boolean;
   requestOwnerId?: string;
+  hideTitle?: boolean;
+  largeText?: boolean;
 }) {
   const host = getHost(submission.url);
   const [thumbnailUrl, setThumbnailUrl] = React.useState<string | null>(null);
@@ -74,7 +78,7 @@ export function SubmissionCard({
   const { user } = useAuth();
   const searchParams = useSearchParams();
   const submittedAt = formatTimeAgo(submission.created_at);
-  
+
   // Check if current user is the request owner
   const isRequestOwner = user?.id === requestOwnerId;
 
@@ -140,9 +144,9 @@ export function SubmissionCard({
           .eq("id", submission.user_id)
           .single();
         if (profile && (
-          profile.contact_email || 
-          profile.contact_phone || 
-          profile.contact_whatsapp || 
+          profile.contact_email ||
+          profile.contact_phone ||
+          profile.contact_whatsapp ||
           profile.contact_telegram
         )) {
           setHasContactInfo(true);
@@ -159,10 +163,10 @@ export function SubmissionCard({
         isOnlyOne
           ? "rounded-2xl"
           : isFirst
-          ? "rounded-t-2xl rounded-b-none"
-          : isLast
-          ? "rounded-b-2xl rounded-t-none border-t-0"
-          : "rounded-none border-t-0"
+            ? "rounded-t-2xl rounded-b-none"
+            : isLast
+              ? "rounded-b-2xl rounded-t-none border-t-0"
+              : "rounded-none border-t-0"
       )}
     >
       <CardContent className="p-4 sm:p-5">
@@ -225,32 +229,43 @@ export function SubmissionCard({
 
           {/* Center: Content stack */}
           <div className="flex-1 min-w-0 space-y-1">
-            <div className="flex items-center gap-2 flex-wrap">
-                  <h3 className="font-medium text-neutral-900 line-clamp-1 text-base">
-                {storeName}
-              </h3>
-              {isPersonalItem ? (
-                <>
-                  <span className="text-xs text-neutral-400">•</span>
-                  <span className="text-xs text-neutral-500">Personal item</span>
-                </>
-              ) : domain ? (
-                <>
-                  <span className="text-xs text-neutral-400">•</span>
-                  <a
-                    href={submission.url || "#"}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs text-neutral-500 hover:text-neutral-700"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    {domain}
-                  </a>
-                </>
-              ) : null}
-            </div>
+            {!hideTitle && (
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className={cn(
+                  "line-clamp-1 font-bold text-neutral-900",
+                  largeText ? "text-xl" : "text-base"
+                )}>
+                  {storeName}
+                </h3>
+                {isPersonalItem ? (
+                  <>
+                    <span className="text-xs text-neutral-400">•</span>
+                    <span className="text-xs text-neutral-500">Personal item</span>
+                  </>
+                ) : domain ? (
+                  <>
+                    <span className={cn("text-neutral-400", largeText ? "text-xl" : "text-xs")}>•</span>
+                    <a
+                      href={submission.url || "#"}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={cn(
+                        "text-neutral-500 hover:text-neutral-700",
+                        largeText ? "text-xl font-medium" : "text-xs"
+                      )}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {domain}
+                    </a>
+                  </>
+                ) : null}
+              </div>
+            )}
             {description && (
-              <p className="text-sm text-neutral-600 line-clamp-2">
+              <p className={cn(
+                "line-clamp-none text-gray-500 font-medium leading-relaxed",
+                largeText ? "text-lg" : "text-sm line-clamp-2"
+              )}>
                 {description}
               </p>
             )}
@@ -259,7 +274,10 @@ export function SubmissionCard({
           {/* Right: Price aligned top-right */}
           {submission.price && (
             <div className="flex-shrink-0 text-right">
-              <span className="font-semibold text-neutral-900 text-lg sm:text-lg">
+              <span className={cn(
+                "font-semibold text-neutral-900",
+                largeText ? "text-xl" : "text-lg"
+              )}>
                 ${submission.price.toFixed(2)}
               </span>
             </div>

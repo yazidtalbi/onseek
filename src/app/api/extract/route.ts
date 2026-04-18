@@ -17,12 +17,16 @@ export async function POST(request: Request) {
     console.log("Extraction successful");
 
     return NextResponse.json(extractedData);
-  } catch (error) {
+  } catch (error: any) {
+    const isQuotaError = error?.message?.toLowerCase().includes("quota") || 
+                        error?.message?.includes("429");
+    
     const errorMessage = error instanceof Error ? error.message : "Internal Server Error";
-    console.error("Full Extraction Error Stack:", error);
+    console.error("Extraction Error:", errorMessage);
+
     return NextResponse.json(
       { error: errorMessage },
-      { status: 500 }
+      { status: isQuotaError ? 429 : 500 }
     );
   }
 }

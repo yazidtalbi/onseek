@@ -44,6 +44,7 @@ export function SubmissionList({
   requestStatus,
   requestOwnerId,
   hideTitle,
+  largeText,
 }: {
   requestId: string;
   requestTitle?: string;
@@ -53,6 +54,7 @@ export function SubmissionList({
   requestStatus?: "open" | "closed" | "solved";
   requestOwnerId?: string;
   hideTitle?: boolean;
+  largeText?: boolean;
 }) {
   const [localWinner, setLocalWinner] = React.useState<string | null>(
     winnerId ?? null
@@ -158,20 +160,20 @@ export function SubmissionList({
       {!hideTitle && (
         <h2 className="text-2xl font-semibold text-foreground tracking-tight" style={{ letterSpacing: '-0.8px' }}>Proposals</h2>
       )}
-      <div className="flex items-center justify-between mb-4">
-        <div className="text-sm text-neutral-400">
-          {data.length} {data.length === 1 ? 'proposal' : 'proposals'}
+      <div className="flex items-center justify-between mb-8">
+        <div className="text-[17px] font-medium text-gray-500" style={{ fontFamily: 'var(--font-inter-display)' }}>
+          {data.length} {data.length === 1 ? 'Proposal' : 'Proposals'}
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Sort by:</span>
+        <div className="flex items-center gap-3">
+          <span className="text-[13px] font-medium text-gray-500" style={{ fontFamily: 'var(--font-inter-display)' }}>Sort by</span>
           <Select value={sortBy} onValueChange={(value: "best" | "newest" | "price") => setSortBy(value)}>
-            <SelectTrigger className="w-[120px] h-9 rounded-full border border-[#e5e7eb]  text-sm font-medium">
+            <SelectTrigger className="w-[110px] h-10 rounded-xl border border-[#e5e7eb] bg-white text-sm font-bold shadow-sm">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="best">Best</SelectItem>
-              <SelectItem value="newest">Newest</SelectItem>
-              <SelectItem value="price">Price</SelectItem>
+            <SelectContent className="rounded-xl border-[#e5e7eb]">
+              <SelectItem value="best" className="text-sm font-medium">Best match</SelectItem>
+              <SelectItem value="newest" className="text-sm font-medium">Newest</SelectItem>
+              <SelectItem value="price" className="text-sm font-medium">Lowest price</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -194,10 +196,10 @@ export function SubmissionList({
             isLast={index === sorted.length - 1}
             isOnlyOne={sorted.length === 1}
             requestOwnerId={requestOwnerId}
+            largeText={largeText}
           />
         ))}
       </div>
     </div>
   );
 }
-

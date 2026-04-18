@@ -6,6 +6,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { requestSchema } from "@/lib/validators";
 import { createRequestUrl, generateSlug } from "@/lib/utils/slug";
 import { inferIconName } from "@/lib/utils/icons";
+import { sendRequestPublishedEmail } from "@/lib/emails";
 
 function parseLinks(raw?: string | null) {
   if (!raw) return [];
@@ -234,6 +235,16 @@ export async function createRequestAction(formData: FormData) {
   revalidatePath("/");
   
   const url = createRequestUrl(request.slug);
+
+  // Send "Request Published" email confirmation to the buyer
+  if (user.email) {
+    await sendRequestPublishedEmail(user.email, {
+      category: request.category || "General",
+      budget: request.budget_max ? `${request.budget_max}` : "Open",
+      timeline: request.urgency || "Standard",
+    });
+  }
+
   return { success: true, url };
 }
 

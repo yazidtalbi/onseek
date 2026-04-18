@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { submissionSchema } from "@/lib/validators";
+import { sendProposalReceivedEmail } from "@/lib/emails";
 
 function parseStoreName(url: string, articleName?: string | null) {
   if (articleName?.trim()) return articleName.trim();
@@ -122,6 +123,27 @@ export async function createSubmissionAction(formData: FormData) {
   revalidatePath(`/requests/${requestId}`);
   revalidatePath("/submissions");
   revalidatePath("/");
+
+  // Fetch request owner's email to send "Proposal Received" notification
+  try {
+    const { data: requestOwner } = await supabase
+      .from("requests")
+      .select("user_id, profiles(contact_email, username)")
+      .eq("id", requestId)
+      .single();
+
+    const ownerEmail = (requestOwner?.profiles as any)?.contact_email;
+    
+    if (ownerEmail) {
+      await sendProposalReceivedEmail(ownerEmail, {
+        price: parsed.data.price ? `${parsed.data.price}` : "Contact for price",
+      });
+    }
+  } catch (emailError) {
+    console.error("Failed to send proposal notification email:", emailError);
+    // Don't fail the submission if email fails
+  }
+
   return { success: true };
 }
 

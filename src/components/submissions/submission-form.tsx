@@ -330,7 +330,7 @@ export function SubmissionForm({ requestId, requestBudgetMax, requestDescription
     <>
       {!hideButton && (
         <div 
-          className="w-full flex items-center gap-3 p-1.5 pl-3 border border-[#e5e7eb] rounded-full bg-white cursor-text hover:border-gray-300 transition-colors"
+          className="w-full flex items-center gap-3 p-2 pl-4 border border-black rounded-full bg-[#f9fafb] cursor-text hover:bg-white transition-all duration-200"
           onClick={() => handleOpenChange(true)}
         >
           <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 bg-gray-100 flex items-center justify-center text-[10px] font-bold text-gray-400">
