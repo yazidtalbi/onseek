@@ -246,8 +246,8 @@ function RequestCardComponent({
 
   // Limit display for feed variant
   const maxImages = 4;
-  const maxPreferences = isFeed || smallImages ? 3 : preferences.length;
-  const maxDealbreakers = isFeed || smallImages ? 3 : dealbreakers.length;
+  const maxPreferences = (isFeed || smallImages) && !(isPreview || showAllRequirements) ? 3 : preferences.length;
+  const maxDealbreakers = (isFeed || smallImages) && !(isPreview || showAllRequirements) ? 3 : dealbreakers.length;
 
   const visibleImages = images.slice(0, maxImages);
   const visiblePreferences = preferences.slice(0, maxPreferences);
@@ -523,7 +523,7 @@ function RequestCardComponent({
       <section className={cn("flex flex-col px-4", hasContent && "flex-1")}>
         {/* Empty space adjusted as category badge was removed */}
         {/* Title for detail page */}
-        {variant === "detail" && !smallImages && (
+        {variant === "detail" && (
           <div className={cn(smallImages ? "mb-4" : "mb-8")}>
             <h1
               className={cn(
@@ -778,14 +778,6 @@ function RequestCardComponent({
       )}
     >
       {cardContent}
-      {isOverflowing && smallImages && (
-        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-white via-white/95 to-transparent flex items-end justify-center pb-4 z-10 pointer-events-none rounded-b-[22px]">
-          <span className="text-xs font-semibold text-[#7755FF] bg-white backdrop-blur-sm px-5 py-2 rounded-full shadow-sm border border-[#e5e7eb] flex items-center gap-1.5 ml-2">
-            Explore
-            <ChevronRight className="h-3 w-3" />
-          </span>
-        </div>
-      )}
     </Card>
   );
 

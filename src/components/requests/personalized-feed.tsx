@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, useRef, Fragment } from "react";
+import AppLoading from "@/app/(app)/loading";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { getUserPreferencesAction } from "@/actions/preference.actions";
+import { getUserPreferencesAction, getPersonalizedFeedAction } from "@/actions/preference.actions";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { CategoryPills } from "@/components/requests/category-pills";
 import dynamic from "next/dynamic";
@@ -106,7 +107,23 @@ export function PersonalizedFeed({
     loadPreferences();
   }, []);
 
-  // Auto-resume removed to prevent unexpected modal openings on refresh
+  // Auto-resume AI flow if a draft exists in session storage
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const saved = sessionStorage.getItem("onseek_ai_draft");
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (parsed.initialText) {
+            setSearchValue(parsed.initialText);
+          }
+          setIsAIFlowOpen(true);
+        } catch (e) {
+          console.error("Failed to parse AI draft during resume", e);
+        }
+      }
+    }
+  }, []);
 
   // Update URL when mode changes (but don't cause infinite loops)
   useEffect(() => {
@@ -160,12 +177,9 @@ export function PersonalizedFeed({
     error,
     refetch,
   } = useInfiniteQuery({
-    queryKey: ["personalized-feed", mode, category, priceMin, priceMax, country, sort],
+    queryKey: ["personalized-feed", user?.id, mode, category, priceMin, priceMax, country, sort],
     queryFn: async ({ pageParam }) => {
       const limit = isHomePage ? 16 : 20;
-
-      // Import the action dynamically to avoid top-level issues if any
-      const { getPersonalizedFeedAction } = await import("@/actions/preference.actions");
 
       const response = await getPersonalizedFeedAction(
         mode,
@@ -298,8 +312,10 @@ export function PersonalizedFeed({
           </div>
         </div>
 
-        {/* Error state */}
-        {isError ? (
+        {/* Loading state */}
+        {(isLoading || hasPreferences === undefined) && allItems.length === 0 ? (
+          <AppLoading />
+        ) : isError ? (
           <div className="mx-auto w-full">
             <div className="rounded-lg border border-dashed border-[#e5e7eb]  p-8 text-center">
               <p className="text-sm text-gray-600 mb-2">Failed to load feed</p>
@@ -347,8 +363,8 @@ export function PersonalizedFeed({
                   Standout requests making waves around the platform
                 </p>
               </div>
-              <Link 
-                href="/popular" 
+              <Link
+                href="/popular"
                 className="text-sm font-bold text-[#1A1A1A] hover:underline flex items-center gap-1 shrink-0"
               >
                 View more
@@ -412,52 +428,81 @@ export function PersonalizedFeed({
                 const requestWithExtras = request as RequestItem & { images?: string[]; links?: string[] };
                 return (
                   <Fragment key={request.id}>
-                    {/* Brand CTA Card injected after some items */}
-                    {/* Select a random illustration for the CTA card */}
+                    {/* Brand CTA Cards injected at specific intervals */}
                     {(() => {
-                      const illustrations = ["onseek_magnet_purple.png", "onseek_flower_purple.png", "onseek_city_purple.png"];
-                      const randomIll = illustrations[index % illustrations.length]; // Use index to keep it stable but different across the feed
-
-                      return user && index === 2 && (
-                        <div
-                          onClick={() => window.dispatchEvent(new CustomEvent('open-create-request-modal'))}
-                          className="break-inside-avoid mb-6 aspect-square rounded-[32px] bg-[#FF8C5A] p-10 flex flex-col justify-between text-[#1A1A1A] relative overflow-hidden group/cta cursor-pointer shadow-none transition-all duration-300 hover:scale-[1.02]"
-                        >
-                          {/* Top: Avatar Stack */}
-                          <div className="relative flex items-center -space-x-4 mb-6 z-10">
-                            {[1, 2, 3, 4].map((i) => (
-                              <div key={i} className="w-12 h-12 rounded-full border-[3px] border-[#FF8C5A] overflow-hidden bg-white/20">
-                                <img
-                                  src={`https://i.pravatar.cc/150?u=${i + 10}`}
-                                  alt="User"
-                                  className="w-full h-full object-cover saturate-[1.2] transition-all cursor-pointer"
-                                />
-                              </div>
-                            ))}
-                          </div>
-
-                          <div className="relative z-10 flex-1 flex flex-col justify-center">
-                            <h3
-                              className="text-[36px] md:text-[42px] leading-[0.95] mb-2 tracking-tighter text-black"
-                              style={{ fontFamily: "'Zalando Sans SemiExpanded', sans-serif", fontWeight: 600 }}
-                            >
-                              Can&apos;t find it? <br /> Request it.
-                            </h3>
-                            <p className="text-black/60 text-[16px] font-bold leading-tight mt-2 max-w-[240px]">
-                              Join thousands of seekers and get exposure to the best sellers.
-                            </p>
-                          </div>
-
-                          <div className="relative z-10 pt-8">
-                            <div className="inline-flex items-center bg-white text-black px-8 py-4 rounded-full text-[15px] font-black tracking-tight hover:bg-white/90 transition-all shadow-sm">
-                              Start requesting
+                      // First CTA: Start Requesting (Orange)
+                      if (user && index === 2) {
+                        return (
+                          <div
+                            onClick={() => window.dispatchEvent(new CustomEvent('open-create-request-modal'))}
+                            className="break-inside-avoid mb-6 aspect-square rounded-[32px] bg-[#FF8C5A] p-10 flex flex-col justify-between text-[#1A1A1A] relative overflow-hidden group/cta cursor-pointer shadow-none transition-all duration-300"
+                          >
+                            {/* Top: Avatar Stack */}
+                            <div className="relative flex items-center -space-x-4 mb-6 z-10">
+                              {[1, 2, 3, 4].map((i) => (
+                                <div key={i} className="w-12 h-12 rounded-full border-[3px] border-[#FF8C5A] overflow-hidden bg-white/20">
+                                  <img
+                                    src={`https://i.pravatar.cc/150?u=${i + 10}`}
+                                    alt="User"
+                                    className="w-full h-full object-cover saturate-[1.2] transition-all cursor-pointer"
+                                  />
+                                </div>
+                              ))}
                             </div>
-                          </div>
 
-                          {/* Decorative background element as seen in image */}
-                          <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl" />
-                        </div>
-                      );
+                            <div className="relative z-10 flex-1 flex flex-col justify-center">
+                              <h3
+                                className="text-[36px] md:text-[42px] leading-[0.95] mb-2 tracking-tighter text-black"
+                                style={{ fontFamily: "'Zalando Sans SemiExpanded', sans-serif", fontWeight: 600 }}
+                              >
+                                Can&apos;t find it? <br /> Request it.
+                              </h3>
+                              <p className="text-black/60 text-[16px] font-bold leading-tight mt-2 max-w-[240px]">
+                                Join thousands of seekers and get exposure to the best sellers.
+                              </p>
+                            </div>
+
+                            <div className="relative z-10 pt-8">
+                              <div className="inline-flex items-center bg-white text-black px-8 py-4 rounded-full text-[15px] font-black tracking-tight hover:bg-white/90 transition-all shadow-sm">
+                                Start requesting
+                              </div>
+                            </div>
+
+                            {/* Decorative background element */}
+                            <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl" />
+                          </div>
+                        );
+                      }
+
+                      // Second CTA: Fulfill Requests (Purple) - New!
+                      if (user && index === 8) {
+                        return (
+                          <div
+                            className="break-inside-avoid mb-6 aspect-[10/11] rounded-[32px] bg-[#6825DA] p-10 flex flex-col text-white relative overflow-hidden group/cta cursor-pointer shadow-none transition-all duration-300"
+                          >
+                            <div className="relative z-10 max-w-[280px]">
+                              <h3
+                                className="text-[32px] md:text-[36px] leading-[0.95] tracking-tighter text-white"
+                                style={{ fontFamily: "'Zalando Sans SemiExpanded', sans-serif", fontWeight: 600 }}
+                              >
+                                Fulfill requests <br /> & earn points.
+                              </h3>
+                            </div>
+
+                            {/* Illustration: Guy with cards */}
+                            <img
+                              src="/illustrations/guy.png"
+                              alt="Fulfill requests"
+                              className="absolute bottom-0 left-0 w-full h-auto object-contain object-bottom pointer-events-none z-0"
+                            />
+
+                            {/* Decorative background pulse */}
+                            <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
+                          </div>
+                        );
+                      }
+
+                      return null;
                     })()}
                     <div className="break-inside-avoid mb-6">
                       <RequestCard
@@ -514,17 +559,17 @@ export function PersonalizedFeed({
 
               <div className="grid md:grid-cols-3 gap-16 lg:gap-24">
                 <div className="flex flex-col items-center group">
-                  <div className="w-32 h-32 mb-8 overflow-hidden rounded-3xl">
+                  <div className="w-32 h-32 mb-8 overflow-hidden">
                     <img src="/illustrations/onseek_magnet_purple.png" alt="Sellers come to you" className="w-full h-full object-contain" />
                   </div>
                   <h3 className="text-2xl font-semibold mb-4 tracking-tight" style={{ fontFamily: 'var(--font-expanded)' }}>Sellers come to you</h3>
                   <p className="text-gray-500 font-medium leading-relaxed text-sm md:text-base">
-                    Set your own budget and let verified sellers send you their best offers directly. No hunting, no comparing tabs — they come to you.
+                    Define your budget and skip the search. We’ve eliminated the friction of traditional marketplaces by making sellers apply to you.
                   </p>
                 </div>
 
                 <div className="flex flex-col items-center group">
-                  <div className="w-32 h-32 mb-8 overflow-hidden rounded-3xl">
+                  <div className="w-32 h-32 mb-8 overflow-hidden">
                     <img src="/illustrations/onseek_flower_purple.png" alt="Skip the scroll" className="w-full h-full object-contain" />
                   </div>
                   <h3 className="text-2xl font-semibold mb-4 tracking-tight" style={{ fontFamily: 'var(--font-expanded)' }}>Skip the scroll</h3>
@@ -534,12 +579,12 @@ export function PersonalizedFeed({
                 </div>
 
                 <div className="flex flex-col items-center group">
-                  <div className="w-32 h-32 mb-8 overflow-hidden rounded-3xl">
+                  <div className="w-32 h-32 mb-8 overflow-hidden">
                     <img src="/illustrations/onseek_city_purple.png" alt="Vetted sellers only" className="w-full h-full object-contain" />
                   </div>
-                  <h3 className="text-2xl font-semibold mb-4 tracking-tight" style={{ fontFamily: 'var(--font-expanded)' }}>Vetted sellers only</h3>
+                  <h3 className="text-2xl font-semibold mb-4 tracking-tight" style={{ fontFamily: 'var(--font-expanded)' }}>Marketplace Integrity</h3>
                   <p className="text-gray-500 font-medium leading-relaxed text-sm md:text-base">
-                    Every seller on Onseek is manually reviewed. You get quality proposals, zero spam, and a completely secure transaction experience.
+                    Through active community inputs and smart moderation, we maintain a marketplace of quality proposals where the best sellers rise to the top.
                   </p>
                 </div>
               </div>
@@ -591,6 +636,7 @@ export function PersonalizedFeed({
             setSearchValue("");
           }}
           user={user}
+          profile={profile}
         />
       )}
     </div>

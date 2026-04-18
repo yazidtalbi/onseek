@@ -159,8 +159,8 @@ export function CategoryPills({
   const priceMax = searchParams.get("priceMax") || "";
   const country = searchParams.get("country") || "";
   const allCategories = ["Discover", ...(user ? ["For You", "My saves"] : []), ...MAIN_CATEGORIES];
-  const categories = allCategories.slice(0, 7);
-  const moreCategories = allCategories.slice(7);
+  const categories = user ? allCategories : allCategories.slice(0, 7);
+  const moreCategories = user ? [] : allCategories.slice(7);
   const [filtersOpen, setFiltersOpen] = React.useState(false);
   const hasActiveFilters = searchParams.get("priceMin") || searchParams.get("priceMax") || searchParams.get("country");
 

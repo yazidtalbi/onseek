@@ -28,7 +28,7 @@ export const CATEGORIES = [
   "Services",
   "Travel",
   "Gaming & Consoles",
-  "Other"
+  "Other/General"
 ];
 
 export async function extractRequestData(userText: string) {
@@ -49,7 +49,7 @@ You are an expert data extractor for Onseek, a premium marketplace. Your task is
    - If they want an item: "Vintage Rolex Submariner"
    - If they want a service/project: "Apartment Renovation & Interior Design"
    - Avoid "I am looking for" or "Request for". Capitalize properly. Max 4-6 words.
-2. **Category**: Match to the closest one from the list below.
+2. **Category**: Match to the closest one from the list below. If no category fits well, use "Other/General".
 3. **Budget**: Extract numerical value. 
    - If they say "sixty thousand dollars", return 60000. 
    - Remove currency symbols and commas. 
@@ -96,7 +96,7 @@ Return ONLY a valid JSON object. Do not include markdown formatting or any other
       // Normalize common key variations from AI
       const normalized = {
         title: (parsed.title || parsed.Title || parsed.request_title || "").trim(),
-        category: (parsed.category || parsed.Category || "Other").trim(),
+        category: (parsed.category || parsed.Category || "Other/General").trim(),
         budget: parsed.budget || parsed.Budget || "Negotiable",
         condition: parsed.condition || parsed.Condition || "Either",
         preferences: parsed.preferences || parsed.Preferences || parsed.includes || [],

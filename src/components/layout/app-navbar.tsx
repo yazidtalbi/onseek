@@ -5,9 +5,43 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Bell, Plus, ChevronDown, TrendingUp, Sparkles, Moon, Sun, LogOut, Bookmark, User, Send, Settings, ClipboardList, FileText, Package, Package2, Menu, X, Home, Trophy, Globe, MessageCircle, MessageCircleMore, SquarePlus, Binoculars } from "lucide-react";
+import { 
+  Menu,
+  Bell,
+  Search,
+  Plus,
+  Compass,
+  LayoutGrid,
+  Settings,
+  User,
+  LogOut,
+  ChevronDown,
+  MessageCircle,
+  HelpCircle,
+  Shield,
+  CirclePlay,
+  FileText,
+  X,
+  TrendingUp,
+  Sparkles,
+  Moon,
+  Sun,
+  Bookmark,
+  Send,
+  ClipboardList,
+  Package,
+  Package2,
+  Home,
+  Trophy,
+  MessageCircleMore,
+  SquarePlus,
+  Binoculars,
+  Check,
+  Globe as GlobeIcon
+} from "lucide-react";
 import { useAuth } from "@/components/layout/auth-provider";
 import { useTheme } from "@/components/layout/theme-provider";
+import { useSidebar } from "@/components/layout/app-sidebar";
 import { signOutAction } from "@/actions/auth.actions";
 import { LoginDropdown } from "@/components/auth/login-dropdown";
 import { CreateRequestModal } from "@/components/requests/create-request-modal";
@@ -42,8 +76,6 @@ import * as React from "react";
 // @ts-ignore - react-select-country-list doesn't have type definitions
 import countryListFactory from "react-select-country-list";
 import Image from "next/image";
-import { Check, Globe as GlobeIcon } from "lucide-react";
-
 const categories = MAIN_CATEGORIES;
 
 // Initialize country list
@@ -246,7 +278,7 @@ export function AppNavbar({
   const { 
     mobileOpen, setMobileOpen,
     expanded: isSidebarExpanded, setExpanded: setSidebarSidebarExpanded 
-  } = require("@/components/layout/app-sidebar").useSidebar();
+  } = useSidebar();
   const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
 
 
@@ -393,6 +425,11 @@ export function AppNavbar({
   }, [isHomePage]);
 
   const [avatarError, setAvatarError] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   const [isVisible, setIsVisible] = useState(true);
   const [isScrolled, setIsScrolled] = useState(false);
   const [lastScrollY, setLastScrollY] = useState(0);
@@ -400,15 +437,22 @@ export function AppNavbar({
   useEffect(() => {
     const controlNavbar = () => {
       if (typeof window !== 'undefined') {
-        if (window.scrollY > 0) {
+        const currentScrollY = window.scrollY;
+
+        if (currentScrollY > 10) {
           setIsScrolled(true);
         } else {
           setIsScrolled(false);
         }
         
-        // Removed visible/hidden logic as requested for fixed topbar
-        setIsVisible(true);
-        setLastScrollY(window.scrollY);
+        // Hide on scroll down, show on scroll up
+        if (currentScrollY > lastScrollY && currentScrollY > 100) {
+          setIsVisible(false);
+        } else {
+          setIsVisible(true);
+        }
+        
+        setLastScrollY(currentScrollY);
       }
     };
 
@@ -450,25 +494,31 @@ export function AppNavbar({
                 <Link href="/messages" className="flex items-center justify-center h-9 w-9 rounded-full hover:bg-gray-100 transition-colors">
                   <MessageCircle className="h-5 w-5 text-gray-700" />
                 </Link>
-                <NotificationsDrawer>
-                  <Button variant="ghost" size="icon" className="relative h-9 w-9">
-                    <Bell className="h-5 w-5 text-gray-700" />
-                    {unreadCount > 0 && (
-                      <span className="absolute top-1 right-1 h-3.5 w-3.5 rounded-full bg-[#7755FF] text-white text-[9px] font-semibold flex items-center justify-center shrink-0">
-                        {unreadCount > 9 ? "9+" : unreadCount}
-                      </span>
-                    )}
-                  </Button>
-                </NotificationsDrawer>
-                <Link href={profile?.username ? `/profile/${profile.username}` : "/settings"} className="ml-1">
-                  <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-700 font-bold text-xs overflow-hidden border border-gray-200">
-                    {profile?.avatar_url && !avatarError ? (
-                      <img src={profile.avatar_url} alt={profile.username || "User"} className="w-full h-full object-cover" onError={() => setAvatarError(true)} />
-                    ) : (
-                      profile?.username?.charAt(0).toUpperCase() || "U"
-                    )}
-                  </div>
-                </Link>
+                {mounted ? (
+                  <>
+                    <NotificationsDrawer>
+                      <Button variant="ghost" size="icon" className="relative h-9 w-9" suppressHydrationWarning>
+                        <Bell className="h-5 w-5 text-gray-700" />
+                        {unreadCount > 0 && (
+                          <span className="absolute top-1 right-1 h-3.5 w-3.5 rounded-full bg-[#7755FF] text-white text-[9px] font-semibold flex items-center justify-center shrink-0">
+                            {unreadCount > 9 ? "9+" : unreadCount}
+                          </span>
+                        )}
+                      </Button>
+                    </NotificationsDrawer>
+                    <Link href={profile?.username ? `/profile/${profile.username}` : "/settings"} className="ml-1">
+                      <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-700 font-bold text-xs overflow-hidden border border-gray-200">
+                        {profile?.avatar_url && !avatarError ? (
+                          <img src={profile.avatar_url} alt={profile.username || "User"} className="w-full h-full object-cover" onError={() => setAvatarError(true)} />
+                        ) : (
+                          profile?.username?.charAt(0).toUpperCase() || "U"
+                        )}
+                      </div>
+                    </Link>
+                  </>
+                ) : (
+                  <div className="h-9 w-12" />
+                )}
               </div>
             </>
           ) : (
@@ -602,70 +652,87 @@ export function AppNavbar({
                   <SquarePlus className="h-5 w-5" />
                   Request
                 </Button>
-                <NotificationsDrawer>
-                  <Button variant="ghost" size="icon" className="relative">
-                    <Bell className="h-5 w-5" />
-                    {unreadCount > 0 && (
-                      <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-[#7755FF] text-white text-[10px] font-semibold flex items-center justify-center shadow-sm">
-                        {unreadCount > 9 ? "9+" : unreadCount}
-                      </span>
-                    )}
-                  </Button>
-                </NotificationsDrawer>
-                <div className="flex lg:hidden items-center">
-                  <Button variant="ghost" size="icon" className="relative" onClick={() => setSearchSheetOpen(true)}>
-                    <Search className="h-5 w-5" />
-                  </Button>
-                </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="flex items-center gap-2 pl-2 pr-1 h-10 hover:bg-gray-50 rounded-full transition-colors outline-none shrink-0">
-                      <div className="flex items-center justify-center h-8 w-8 rounded-full bg-gray-100 text-gray-700 font-bold text-xs shrink-0 overflow-hidden relative">
-                        {profile?.avatar_url && !avatarError ? (
-                          <img
-                            src={profile.avatar_url}
-                            alt={profile.username || "User"}
-                            className="w-full h-full object-cover"
-                            onError={() => setAvatarError(true)}
-                          />
-                        ) : (
-                          profile?.username?.charAt(0).toUpperCase() || "U"
+                {mounted && (
+                  <>
+                    <NotificationsDrawer>
+                      <Button variant="ghost" size="icon" className="relative" suppressHydrationWarning>
+                        <Bell className="h-5 w-5" />
+                        {unreadCount > 0 && (
+                          <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-[#7755FF] text-white text-[10px] font-semibold flex items-center justify-center shadow-sm">
+                            {unreadCount > 9 ? "9+" : unreadCount}
+                          </span>
                         )}
-                      </div>
-                      <ChevronDown className="h-4 w-4 text-gray-400 shrink-0" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56 p-2 bg-white shadow-lg border border-border mt-2">
-                    <div className="flex items-center gap-3 p-2 mb-2">
-                      <div className="flex items-center justify-center h-10 w-10 rounded-full bg-gray-100 text-gray-700 font-bold text-sm shrink-0 overflow-hidden relative">
-                        {profile?.avatar_url && !avatarError ? (
-                          <img
-                            src={profile.avatar_url}
-                            alt={profile.username || "User"}
-                            className="w-full h-full object-cover"
-                            onError={() => setAvatarError(true)}
-                          />
-                        ) : (
-                          profile?.username?.charAt(0).toUpperCase() || "U"
-                        )}
-                      </div>
-                      <div className="flex-1 overflow-hidden">
-                        <p className="text-sm font-medium truncate">{profile?.username || "User"}</p>
-                        <p className="text-xs text-muted-foreground truncate">{user.email}</p>
-                      </div>
+                      </Button>
+                    </NotificationsDrawer>
+                    <div className="flex lg:hidden items-center">
+                      <Button variant="ghost" size="icon" className="relative" onClick={() => setSearchSheetOpen(true)}>
+                        <Search className="h-5 w-5" />
+                      </Button>
                     </div>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => router.push(profile?.username ? `/profile/${profile.username}` : "/settings")} className="cursor-pointer font-medium py-2">
-                      <User className="h-4 w-4 mr-2 text-muted-foreground" />
-                      Profile
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleSignOut} disabled={isPending} className="cursor-pointer font-medium py-2 text-red-600 focus:text-red-600 focus:bg-red-50">
-                      <LogOut className="h-4 w-4 mr-2" />
-                      Sign out
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button className="flex items-center gap-2 pl-2 pr-1 h-10 hover:bg-gray-50 rounded-full transition-colors outline-none shrink-0">
+                          <div className="flex items-center justify-center h-8 w-8 rounded-full bg-gray-100 text-gray-700 font-bold text-xs shrink-0 overflow-hidden relative">
+                            {profile?.avatar_url && !avatarError ? (
+                              <img
+                                src={profile.avatar_url}
+                                alt={profile.username || "User"}
+                                className="w-full h-full object-cover"
+                                onError={() => setAvatarError(true)}
+                              />
+                            ) : (
+                              profile?.username?.charAt(0).toUpperCase() || "U"
+                            )}
+                          </div>
+                          <ChevronDown className="h-4 w-4 text-gray-400 shrink-0" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-56 p-2 bg-white shadow-lg border border-border mt-2">
+                        <div className="flex items-center gap-3 p-2 mb-2">
+                          <div className="flex items-center justify-center h-10 w-10 rounded-full bg-gray-100 text-gray-700 font-bold text-sm shrink-0 overflow-hidden relative">
+                            {profile?.avatar_url && !avatarError ? (
+                              <img
+                                src={profile.avatar_url}
+                                alt={profile.username || "User"}
+                                className="w-full h-full object-cover"
+                                onError={() => setAvatarError(true)}
+                              />
+                            ) : (
+                              profile?.username?.charAt(0).toUpperCase() || "U"
+                            )}
+                          </div>
+                          <div className="flex flex-col min-w-0">
+                            <span className="text-sm font-bold text-neutral-900 truncate">
+                              {profile?.username || "Account"}
+                            </span>
+                            <span className="text-xs text-neutral-500 truncate">
+                              View Profile
+                            </span>
+                          </div>
+                        </div>
+                        <DropdownMenuItem asChild>
+                          <Link href={profile?.username ? `/profile/${profile.username}` : "/settings"} className="flex items-center gap-2 p-2.5 rounded-lg cursor-pointer hover:bg-neutral-50">
+                            <User className="h-4 w-4" />
+                            <span>My Profile</span>
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link href="/settings" className="flex items-center gap-2 p-2.5 rounded-lg cursor-pointer hover:bg-neutral-50">
+                            <Settings className="h-4 w-4" />
+                            <span>Settings</span>
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => startTransition(async () => { await signOutAction(); })}
+                          className="flex items-center gap-2 p-2.5 rounded-lg cursor-pointer hover:bg-rose-50 text-rose-600 focus:text-rose-600 focus:bg-rose-50 transition-colors"
+                        >
+                          <LogOut className="h-4 w-4" />
+                          <span>Sign Out</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </>
+                )}
               </>
             ) : (
               <>

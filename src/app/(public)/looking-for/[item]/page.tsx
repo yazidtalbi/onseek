@@ -147,17 +147,17 @@ export default async function LookingForItemPage({ params }: PageProps) {
 
             <div className="grid md:grid-cols-3 gap-16 lg:gap-24">
               <div className="flex flex-col items-center group">
-                <div className="w-44 h-44 mb-8 overflow-hidden rounded-3xl transition-transform duration-500">
+                <div className="w-44 h-44 mb-8 overflow-hidden transition-transform duration-500">
                   <img src="/illustrations/onseek_magnet_purple.png" alt="Sellers Compete" className="w-full h-full object-contain" />
                 </div>
                 <h3 className="text-2xl font-semibold mb-4 tracking-tight" style={{ fontFamily: 'var(--font-expanded)' }}>Sellers compete for you</h3>
                 <p className="text-gray-500 font-medium leading-relaxed">
-                  Instead of hunting for prices, you set your own budget and let verified sellers send you their best offers directly.
+                  Define your budget and skip the search. We’ve eliminated the friction of traditional marketplaces by making sellers apply to you.
                 </p>
               </div>
 
               <div className="flex flex-col items-center group">
-                <div className="w-44 h-44 mb-8 overflow-hidden rounded-3xl transition-transform duration-500">
+                <div className="w-44 h-44 mb-8 overflow-hidden transition-transform duration-500">
                   <img src="/illustrations/onseek_flower_purple.png" alt="Protect your peace" className="w-full h-full object-contain" />
                 </div>
                 <h3 className="text-2xl font-semibold mb-4 tracking-tight" style={{ fontFamily: 'var(--font-expanded)' }}>Protect your peace</h3>
@@ -167,12 +167,12 @@ export default async function LookingForItemPage({ params }: PageProps) {
               </div>
 
               <div className="flex flex-col items-center group">
-                <div className="w-44 h-44 mb-8 overflow-hidden rounded-3xl transition-transform duration-500">
+                <div className="w-44 h-44 mb-8 overflow-hidden transition-transform duration-500">
                   <img src="/illustrations/onseek_city_purple.png" alt="Verified Marketplace" className="w-full h-full object-contain" />
                 </div>
-                <h3 className="text-2xl font-semibold mb-4 tracking-tight" style={{ fontFamily: 'var(--font-expanded)' }}>Verified marketplace</h3>
+                <h3 className="text-2xl font-semibold mb-4 tracking-tight" style={{ fontFamily: 'var(--font-expanded)' }}>Marketplace Integrity</h3>
                 <p className="text-gray-500 font-medium leading-relaxed">
-                  Every provider on Onseek is manually vetted to ensure quality, reliability, and a completely secure transaction experience.
+                  Through active community inputs and smart moderation, we maintain a marketplace of quality proposals where the best sellers rise to the top.
                 </p>
               </div>
             </div>

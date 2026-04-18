@@ -15,6 +15,9 @@ import { Pencil, Camera, ImagePlus, X, Loader2, ArrowRight, Check, Plus } from "
 import { createRequestAction } from "@/actions/request.actions";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/ui/use-toast";
+import { SignInForm } from "@/components/auth/sign-in-form";
+import { SignUpForm } from "@/components/auth/sign-up-form";
+import { useAuth } from "@/components/layout/auth-provider";
 
 interface AIRequestModalProps {
   open: boolean;
@@ -36,10 +39,21 @@ export function AIRequestModal({ open, onOpenChange }: AIRequestModalProps) {
   const [isExtracting, setIsExtracting] = React.useState(false);
   const [extractedData, setExtractedData] = React.useState<ExtractedData | null>(null);
   const [selectedImage, setSelectedImage] = React.useState<string | null>(null);
+  const [authMode, setAuthMode] = React.useState<'signup' | 'login'>('signup');
+  const [showAuth, setShowAuth] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const router = useRouter();
   const { toast } = useToast();
+  const { user } = useAuth();
+
+  // Auto-submit when user becomes available after showing auth
+  React.useEffect(() => {
+    if (showAuth && user && !isSubmitting) {
+      setShowAuth(false);
+      handleFinalize();
+    }
+  }, [user, showAuth]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -98,6 +112,11 @@ export function AIRequestModal({ open, onOpenChange }: AIRequestModalProps) {
   const handleFinalize = async () => {
     if (!extractedData) return;
 
+    if (!user) {
+      setShowAuth(true);
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const formData = new FormData();
@@ -151,6 +170,10 @@ export function AIRequestModal({ open, onOpenChange }: AIRequestModalProps) {
   };
 
   const handleClose = () => {
+    if (showAuth) {
+      setShowAuth(false);
+      return;
+    }
     // If there is progress, ask for confirmation
     const hasProgress = inputText.trim().length > 0 || extractedData;
     if (hasProgress && !isSubmitting) {
@@ -217,7 +240,7 @@ export function AIRequestModal({ open, onOpenChange }: AIRequestModalProps) {
               </DialogHeader>
             )}
 
-            <div className={cn("px-8 pb-10 flex-1", isExtracting && "pt-20")}>
+            <div className={cn("px-8 pb-10 flex-1", (isExtracting || showAuth) && "pt-20")}>
               {isExtracting ? (
                 <div className="h-[430px] flex flex-col items-center justify-center text-center space-y-10 animate-in fade-in zoom-in-95 duration-500">
                   <h2 className="text-3xl font-bold text-[#1A1A1A] tracking-tight" style={{ fontFamily: 'var(--font-expanded)' }}>
@@ -234,6 +257,32 @@ export function AIRequestModal({ open, onOpenChange }: AIRequestModalProps) {
                   <p className="text-gray-400 font-medium text-lg">
                     Our AI can take up to 60 seconds...
                   </p>
+                </div>
+              ) : showAuth ? (
+                <div className="flex flex-col items-center max-w-4xl mx-auto w-full py-8 space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
+                  <div className="text-center">
+                    <h2 className="text-3xl font-bold text-black mb-2 tracking-tight" style={{ fontFamily: 'var(--font-expanded)' }}>Just one more step</h2>
+                    <p className="text-gray-500 font-medium">Create an account to publish your request and start receiving offers.</p>
+                  </div>
+                  <div className="w-full max-w-md bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+                    {authMode === 'signup' ? (
+                      <div className="space-y-6">
+                        <SignUpForm onSuccess={() => {}} />
+                        <p className="text-sm text-center text-gray-400 font-medium">
+                          Already have an account?{" "}
+                          <button onClick={() => setAuthMode('login')} className="text-[#7755FF] font-bold hover:underline">Log in</button>
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-6">
+                        <SignInForm onSuccess={() => {}} />
+                        <p className="text-sm text-center text-gray-400 font-medium">
+                          Don't have an account?{" "}
+                          <button onClick={() => setAuthMode('signup')} className="text-[#7755FF] font-bold hover:underline">Sign up</button>
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               ) : !extractedData ? (
                 <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">

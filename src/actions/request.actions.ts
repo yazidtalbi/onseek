@@ -24,6 +24,7 @@ function parseLinks(raw?: string | null) {
 }
 
 export async function createRequestAction(formData: FormData) {
+  console.log("createRequestAction: Starting submission...");
   const payload = {
     title: String(formData.get("title") || ""),
     description: String(formData.get("description") || ""),
@@ -63,12 +64,10 @@ export async function createRequestAction(formData: FormData) {
       return acc;
     }, {} as Record<string, string>);
     
-    console.error("Formatted field errors:", fieldErrors);
+    console.error("[createRequestAction] Formatted field errors:", fieldErrors);
     
     return { 
-      error: errors.length > 0 
-        ? errors.join(". ") 
-        : "Please complete all required fields.",
+      error: `Validation failed: ${errors[0]}`,
       fieldErrors
     };
   }
@@ -81,12 +80,31 @@ export async function createRequestAction(formData: FormData) {
     return { error: "Unauthorized" };
   }
 
-  // Fetch user's country from profile
-  const { data: profile } = await supabase
+  // Ensure profile exists to avoid foreign key violations (common for new users)
+  let { data: profile } = await supabase
     .from("profiles")
-    .select("country")
+    .select("id, country")
     .eq("id", user.id)
     .single();
+
+  if (!profile) {
+    console.log("[createRequestAction] Profile not found for existing user, creating now...");
+    const { data: newProfile, error: profileError } = await supabase
+      .from("profiles")
+      .upsert({
+        id: user.id,
+        username: user.user_metadata?.username || user.email?.split("@")[0] || `user_${user.id.slice(0, 5)}`,
+        display_name: user.user_metadata?.full_name || user.email?.split("@")[0] || "User",
+      })
+      .select("id, country")
+      .single();
+    
+    if (profileError) {
+      console.error("[createRequestAction] Failed to create missing profile:", profileError);
+      return { error: "Failed to initialize user profile. Please try again." };
+    }
+    profile = newProfile;
+  }
 
   const userCountry = profile?.country || null;
 
@@ -160,7 +178,7 @@ export async function createRequestAction(formData: FormData) {
     country: parsed.data.country || userCountry,
     condition: parsed.data.condition,
     urgency: parsed.data.urgency,
-    status: "pending" as const,
+    status: "open" as const,
     icon: inferIconName(parsed.data.title, parsed.data.category),
   };
   

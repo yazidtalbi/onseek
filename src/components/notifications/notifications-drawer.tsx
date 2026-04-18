@@ -32,6 +32,11 @@ export function NotificationsDrawer({ children }: NotificationsDrawerProps) {
   const [loading, setLoading] = React.useState(false);
   const [showUnreadOnly, setShowUnreadOnly] = React.useState(false);
   const [activeTab, setActiveTab] = React.useState("All");
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
 
   React.useEffect(() => {
     if (!open || !user) return;
@@ -85,6 +90,8 @@ export function NotificationsDrawer({ children }: NotificationsDrawerProps) {
     setNotifications(prev => prev.filter(n => n.id !== id));
     await deleteNotificationAction(id);
   };
+
+  if (!mounted) return <>{children}</>;
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
