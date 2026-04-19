@@ -3,38 +3,25 @@ import { cn } from "@/lib/utils";
 
 export default function AppLoading() {
   return (
-    <div className="flex flex-col w-full animate-in fade-in duration-500">
-      {/* Category Pills Skeleton */}
-      <div className="w-full flex flex-col gap-3 py-2 mb-8">
-        <div className="flex items-center justify-between w-full">
-          <div className="flex items-center gap-2 overflow-hidden px-2">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <Skeleton key={i} className="h-9 w-24 rounded-full flex-shrink-0" />
-            ))}
-          </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <Skeleton className="h-9 w-9 rounded-full" />
-            <Skeleton className="h-9 w-24 rounded-full" />
-            <div className="flex items-center gap-1 rounded-full bg-gray-100 p-1">
-              <Skeleton className="h-7 w-7 rounded-full bg-white" />
-              <Skeleton className="h-7 w-7 rounded-full bg-transparent" />
-            </div>
-          </div>
+    <div className="flex flex-col w-full animate-in fade-in duration-500 pt-4">
+      {/* Abstract Header Silhouette */}
+      <div className="w-full flex items-center justify-between mb-12">
+        <div className="flex gap-4">
+          <Skeleton className="h-10 w-32 rounded-full bg-gray-100/80" />
+          <Skeleton className="h-10 w-24 rounded-full bg-gray-100/80" />
         </div>
+        <Skeleton className="h-10 w-10 rounded-full bg-gray-100/80" />
       </div>
 
-      {/* Grid Skeleton */}
-      <div className="columns-[360px] gap-6 pb-4 w-full">
-        {/* Mock Create Request Card - Simplified */}
-        <div className="break-inside-avoid mb-6 bg-gray-100/60 animate-pulse rounded-[28px] h-[160px]" />
-
-        {/* Mock Request Cards - Simplified Pinterest Style */}
-        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => (
+      {/* Grid Skeleton - Minimal Rounded Blocks */}
+      <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-6 pb-4 w-full">
+        {/* Variety of rounded blocks with different aspect ratios */}
+        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((i) => (
           <div 
             key={i} 
-            className="break-inside-avoid mb-6 bg-gray-100/60 animate-pulse rounded-[28px]" 
+            className="break-inside-avoid mb-6 bg-gray-100/60 animate-pulse rounded-[32px]" 
             style={{ 
-              height: i % 3 === 0 ? '380px' : i % 2 === 0 ? '280px' : '320px' 
+              height: i % 4 === 0 ? '420px' : i % 3 === 0 ? '300px' : i % 2 === 0 ? '360px' : '260px' 
             }} 
           />
         ))}

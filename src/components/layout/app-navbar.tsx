@@ -445,8 +445,8 @@ export function AppNavbar({
           setIsScrolled(false);
         }
         
-        // Hide on scroll down, show on scroll up
-        if (currentScrollY > lastScrollY && currentScrollY > 100) {
+        // Hide on scroll down, show on scroll up (only for guest users)
+        if (!user && currentScrollY > lastScrollY && currentScrollY > 100) {
           setIsVisible(false);
         } else {
           setIsVisible(true);
@@ -484,7 +484,7 @@ export function AppNavbar({
                   <Menu className="h-5 w-5" />
                 </Button>
                 <Link href="/" prefetch={true} className="shrink-0 flex items-center gap-2">
-                  <Image src="/logo-2.svg" alt="onseek" width={28} height={28} className="h-7 w-auto mb-[10px]" priority unoptimized quality={100} />
+                  <Image src="/logo-final.svg" alt="onseek" width={24} height={24} className="h-6 w-auto" priority />
                   <span className="text-lg text-black" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>onseek</span>
                 </Link>
               </div>
@@ -526,8 +526,8 @@ export function AppNavbar({
               {/* Guest Layout */}
               {/* Left: Logo */}
               <Link href="/" prefetch={true} className="shrink-0 flex items-center gap-2">
-                <Image src="/logo.png" alt="Onseek" width={100} height={28} className="h-6 w-auto" priority unoptimized quality={100} />
-                <span className="text-lg text-[#6925DC]" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>Onseek</span>
+                <Image src="/logo-final.svg" alt="Onseek" width={24} height={24} className="h-6 w-auto" priority />
+                <span className="text-lg text-[#6925DC]" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>onseek</span>
               </Link>
 
               {/* Right: Plus, Hamburger */}
@@ -585,7 +585,7 @@ export function AppNavbar({
           {user && <div className="w-[72px] shrink-0" />} {/* Spacer */}
           <Link href="/" className={cn("flex items-center gap-2 group", user ? "ml-6" : "ml-8")}>
             <div className="w-9 h-9 flex items-center justify-center">
-              <Image src="/logo-2.svg" alt="onseek" width={28} height={28} className="h-7 w-auto" priority />
+              <Image src="/logo-final.svg" alt="onseek" width={28} height={28} className="h-7 w-auto" priority />
             </div>
             <span className="text-xl text-black" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>
               onseek
@@ -648,8 +648,11 @@ export function AppNavbar({
           <div className="flex items-center gap-2">
             {user ? (
               <>
-                <Button onClick={() => setIsAIModalOpen(true)} className="hidden sm:flex h-11 rounded-full bg-transparent text-[#6925DC] hover:bg-[#6925DC]/5 font-bold whitespace-nowrap px-6 items-center gap-2 border border-[#6925DC]/30">
-                  <SquarePlus className="h-5 w-5" />
+                <Button 
+                  onClick={() => setIsAIModalOpen(true)} 
+                  className="hidden sm:flex h-11 rounded-full bg-transparent text-black font-bold whitespace-nowrap px-6 items-center gap-2 border border-black hover:bg-gray-50 shadow-none transition-all"
+                >
+                  <SquarePlus className="h-5 w-5 text-black" />
                   Request
                 </Button>
                 {mounted && (

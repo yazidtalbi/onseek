@@ -15,7 +15,7 @@ export function PublicFooter() {
           <div className="col-span-1 lg:col-span-2 space-y-6">
             <Link href="/" className="inline-flex items-center gap-2 group">
               <Image 
-                src="/logo-2.svg" 
+                src="/logo-final.svg" 
                 alt="Onseek" 
                 width={32} 
                 height={32} 

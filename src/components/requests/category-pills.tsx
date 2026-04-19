@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { ChevronRight, ChevronLeft, ListFilter } from "lucide-react";
+import { ChevronRight, ChevronLeft, ListFilter, Bookmark } from "lucide-react";
 import { MAIN_CATEGORIES } from "@/lib/categories";
 import { cn } from "@/lib/utils";
 import { FiltersModal } from "@/components/requests/filters-modal";
@@ -29,6 +29,7 @@ import {
 
 export function CategoryPills({
   mode = "for_you",
+  onModeChange,
   hasPreferences = false,
   viewMode,
   onViewModeChange,
@@ -36,6 +37,7 @@ export function CategoryPills({
   hideFilters = false
 }: {
   mode?: FeedMode;
+  onModeChange?: (mode: FeedMode) => void;
   hasPreferences?: boolean;
   viewMode?: "list" | "grid";
   onViewModeChange?: (mode: "list" | "grid") => void;
@@ -64,8 +66,14 @@ export function CategoryPills({
   if (isSavedPage) selectedCategory = "My saves";
 
   const handleModeChange = (newMode: string) => {
+    if (user && onModeChange) {
+      onModeChange(newMode as FeedMode);
+      return;
+    }
+
     const params = new URLSearchParams(searchParams.toString());
     params.delete("page");
+    params.delete("mode"); // Ensure we don't have ?mode=... in the target URL either
 
     const modePath = REVERSE_MODE_MAP[newMode as FeedMode] || "latest";
 
@@ -162,6 +170,12 @@ export function CategoryPills({
   const categories = user ? allCategories : allCategories.slice(0, 7);
   const moreCategories = user ? [] : allCategories.slice(7);
   const [filtersOpen, setFiltersOpen] = React.useState(false);
+  const [localPriceMax, setLocalPriceMax] = React.useState(priceMax);
+  
+  React.useEffect(() => {
+    setLocalPriceMax(priceMax);
+  }, [priceMax]);
+
   const hasActiveFilters = searchParams.get("priceMin") || searchParams.get("priceMax") || searchParams.get("country");
 
   const updateParam = (key: string, value: string) => {
@@ -212,12 +226,13 @@ export function CategoryPills({
                   key={category}
                   onClick={() => handleCategorySelect(category)}
                   className={cn(
-                    "px-4 py-2 text-[15px] whitespace-nowrap transition-all duration-200",
+                    "px-4 py-2 text-[15px] whitespace-nowrap transition-all duration-200 flex items-center gap-2",
                     isActive
                       ? "bg-gray-100 text-black rounded-full font-bold"
                       : "bg-transparent text-gray-400 hover:text-gray-600 font-medium"
                   )}
                 >
+                  {category === "My saves" && <Bookmark className="h-4 w-4" />}
                   {displayText}
                 </button>
               );
@@ -333,17 +348,32 @@ export function CategoryPills({
       {filtersOpen && (
         <div className="w-full flex items-center justify-end gap-6 p-4 bg-[#f8f9fa] border border-[#e5e7eb] rounded-[16px] transition-all">
           <div className="flex-1 max-w-[240px]">
-            <Label className="text-[13px] font-semibold text-gray-700 mb-1.5 block">Max Budget ($)</Label>
-            <Input
-              type="number"
-              placeholder="No limit"
-              value={priceMax || ""}
-              onChange={(e) => updateParam("priceMax", e.target.value)}
-              className="h-10 rounded-xl bg-white"
-            />
+            <Label className="text-[13px] font-semibold text-gray-700 mb-1.5 block text-left">Max Budget ($)</Label>
+            <div className="flex items-center gap-2">
+              <Input
+                type="number"
+                placeholder="No limit"
+                value={localPriceMax}
+                onChange={(e) => setLocalPriceMax(e.target.value)}
+                onBlur={() => updateParam("priceMax", localPriceMax)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    updateParam("priceMax", localPriceMax);
+                  }
+                }}
+                className="h-10 rounded-xl bg-white border-gray-200"
+              />
+              <Button 
+                onClick={() => updateParam("priceMax", localPriceMax)}
+                variant="outline"
+                className="h-10 rounded-xl px-4 font-bold text-xs bg-white hover:bg-gray-50 border-gray-200 shrink-0"
+              >
+                Apply
+              </Button>
+            </div>
           </div>
           <div className="flex-1 max-w-[240px]">
-            <Label className="text-[13px] font-semibold text-gray-700 mb-1.5 block">Country</Label>
+            <Label className="text-[13px] font-semibold text-gray-700 mb-1.5 block text-left">Country</Label>
             <CountryCombobox
               value={country}
               onChange={(val) => updateParam("country", val)}

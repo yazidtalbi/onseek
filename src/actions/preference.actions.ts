@@ -247,7 +247,7 @@ export async function getPersonalizedFeedAction(
       query = query.or(`budget_max.gte.${min},budget_max.is.null`);
     }
     if (max !== null && !isNaN(max)) {
-      query = query.or(`budget_min.lte.${max},budget_min.is.null`);
+      query = query.or(`budget_max.lte.${max},budget_max.is.null`);
     }
   }
 

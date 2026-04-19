@@ -123,14 +123,14 @@ export function NetworkSidebar() {
         className="flex items-center gap-2 mb-6"
       >
         <Image
-          src="/logo.png"
+          src="/logo-final.svg"
           alt="onseek"
-          width={120}
-          height={32}
-          className="h-8 w-auto"
+          width={28}
+          height={28}
+          className="h-7 w-auto"
           priority
         />
-        <span className="text-2xl text-black" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>
+        <span className="text-xl text-black" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>
           onseek
         </span>
       </Link>

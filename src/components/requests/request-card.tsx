@@ -18,7 +18,7 @@ import {
   Camera, Footprints, LockKeyhole, Wallet, Pencil, GripVertical, Plus,
   Cpu, Battery, Monitor, Leaf, Utensils, Truck, Scissors, Heart, Smile,
   ShieldCheck, Sofa, Lightbulb, Hammer, Trophy, Zap, Users, Gauge, Fuel,
-  Key, Activity, Stethoscope, Pill, Plane, Globe, Tent, Box,
+  Key, Activity, Stethoscope, Pill, Plane, Globe, Tent, Box, Eye,
   Keyboard, Book, Wrench, Brush, Code, ChevronRight
 } from "lucide-react";
 import { motion, Reorder } from "framer-motion";
@@ -149,6 +149,8 @@ interface RequestCardProps {
   onUpdateRequirement?: (index: number, label: string) => void;
   onReorderRequirements?: (newItems: any[]) => void;
   showAllRequirements?: boolean;
+  hideAuthOverlay?: boolean;
+  isLarge?: boolean;
 }
 
 function RequestCardComponent({
@@ -177,6 +179,8 @@ function RequestCardComponent({
   onUpdateRequirement,
   onReorderRequirements,
   showAllRequirements = false,
+  hideAuthOverlay = false,
+  isLarge = false,
 }: RequestCardProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -276,15 +280,15 @@ function RequestCardComponent({
           )}
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="text-[13px] font-bold text-[#1A1A1A]">
+          <span className={cn("font-bold text-[#1A1A1A]", isLarge ? "text-[15px]" : "text-[13px]")}>
             {request.profiles?.username || 'Username'}
           </span>
-          <span className="text-[12px] text-gray-400">
+          <span className={cn("text-gray-400", isLarge ? "text-[14px]" : "text-[12px]")}>
             · {timeAgo}
           </span>
         </div>
       </div>
-      
+
       {!isPreview && (
         <div className="flex items-center gap-1.5 flex-shrink-0">
           <FavoriteButton
@@ -314,11 +318,12 @@ function RequestCardComponent({
             <Badge
               variant="outline"
               className={cn(
-                "px-4 py-1.5 rounded-full text-[13px] sm:text-[14px] font-bold border shadow-none shrink-0 inline-flex items-center justify-center bg-transparent gap-2",
+                "rounded-full font-bold border shadow-none shrink-0 inline-flex items-center justify-center bg-transparent gap-2",
+                isLarge ? "px-5 py-2 text-[15px] sm:text-[16px]" : "px-4 py-1.5 text-[13px] sm:text-[14px]",
                 getTheme(request.category).text, "border-opacity-20"
               )}
             >
-              <span className="w-1.5 h-1.5 rounded-full bg-current" />
+              <span className={cn("rounded-full bg-current", isLarge ? "w-2 h-2" : "w-1.5 h-1.5")} />
               <span className="text-[#1A1A1A]">{request.category.charAt(0).toUpperCase() + request.category.slice(1)}</span>
             </Badge>
           )}
@@ -326,7 +331,8 @@ function RequestCardComponent({
           <Badge
             variant="outline"
             className={cn(
-              "px-4 py-1.5 rounded-full text-[13px] sm:text-[14px] font-bold border shadow-none shrink-0 inline-flex items-center gap-2 bg-transparent",
+              "rounded-full font-bold border shadow-none shrink-0 inline-flex items-center gap-2 bg-transparent",
+              isLarge ? "px-5 py-2 text-[15px] sm:text-[16px]" : "px-4 py-1.5 text-[13px] sm:text-[14px]",
               request.status === "solved" || request.winner_submission_id ? "border-[#6925DC] text-[#6925DC]" :
                 request.status === "pending" ? "border-[#FF8C5A] text-[#FF8C5A]" :
                   request.status === "open" ? cn("border-current", getTheme(request.category).text) :
@@ -345,10 +351,11 @@ function RequestCardComponent({
             {isPreview ? (
               <textarea
                 className={cn(
-                  "w-full text-[16px] sm:text-[18px] font-semibold leading-tight tracking-tight bg-transparent border-none outline-none resize-none overflow-hidden p-0",
+                  "w-full font-semibold leading-tight tracking-tight bg-transparent border-none outline-none resize-none overflow-hidden p-0",
+                  isLarge ? "text-[18px] sm:text-[20px]" : "text-[15px] sm:text-[17px]",
                   getTheme(request.category).text
                 )}
-                style={{ fontFamily: "'Zalando Sans', sans-serif" }}
+                style={{ fontFamily: "'Zalando Sans SemiExpanded', sans-serif", fontWeight: 600, maxWidth: '80%' }}
                 value={request.title}
                 onChange={(e) => onUpdateTitle?.(e.target.value)}
                 rows={1}
@@ -360,8 +367,11 @@ function RequestCardComponent({
               />
             ) : (
               <h3
-                className="text-[16px] sm:text-[18px] font-semibold leading-[1.15] tracking-tight relative transition-colors items-center text-[#1A1A1A]"
-                style={{ fontFamily: "'Zalando Sans', sans-serif" }}
+                className={cn(
+                  "font-semibold leading-[1.15] tracking-tight relative transition-colors items-center text-[#1A1A1A]",
+                  isLarge ? "text-[18px] sm:text-[20px]" : "text-[15px] sm:text-[17px]"
+                )}
+                style={{ fontFamily: "'Zalando Sans SemiExpanded', sans-serif", fontWeight: 600, maxWidth: '80%' }}
               >
                 {request.title}
               </h3>
@@ -423,20 +433,21 @@ function RequestCardComponent({
                     )}
                   >
                     {item.type === 'pref' ? (
-                      <Check className="h-4 w-4 text-emerald-500 shrink-0" strokeWidth={3} />
+                      <Check className={cn("text-emerald-500 shrink-0", isLarge ? "h-5 w-5" : "h-4 w-4")} strokeWidth={3} />
                     ) : (
-                      <X className="h-4 w-4 text-black/40 shrink-0" strokeWidth={3} />
+                      <X className={cn("shrink-0", isLarge ? "h-5 w-5" : "h-4 w-4", theme.text, "opacity-30")} strokeWidth={3} />
                     )}
                     <span className={cn(
-                      "text-[15px] sm:text-[17px] font-medium leading-snug tracking-tight flex items-center gap-2",
-                      item.type === 'pref' ? "text-[#1A1A1A]" : "text-black/40"
+                      "font-medium leading-snug tracking-tight flex items-center gap-2",
+                      isLarge ? "text-[17px] sm:text-[19px]" : "text-[15px] sm:text-[17px]",
+                      item.type === 'pref' ? "text-[#1A1A1A]" : cn(theme.text, "opacity-30")
                     )}>
                       {item.label.charAt(0).toUpperCase() + item.label.slice(1)}
                     </span>
                   </div>
                 ))}
                 {remainingCount > 0 && (
-                  <div className="py-2.5 px-4 text-[16px] sm:text-[18px] font-medium text-[#7755FF] opacity-80">
+                  <div className={cn("py-2.5 px-4 font-medium text-[#7755FF] opacity-80", isLarge ? "text-[18px] sm:text-[20px]" : "text-[16px] sm:text-[18px]")}>
                     + {remainingCount} more {remainingCount === 1 ? 'requirement' : 'requirements'}
                   </div>
                 )}
@@ -445,11 +456,11 @@ function RequestCardComponent({
           })()}
 
         </div>
-        
+
         {/* Auth Gating Overlay for Guest Users */}
-        {!currentUserId && !isPreview && (
+        {!currentUserId && !isPreview && !hideAuthOverlay && (
           <div className="absolute inset-x-0 bottom-0 h-[60%] bg-gradient-to-t from-white via-white/80 to-transparent flex items-end justify-center pb-8 z-[20] rounded-b-[22px] pointer-events-auto">
-            <button 
+            <button
               onClick={(e) => {
                 e.stopPropagation();
                 window.location.href = '/login';
@@ -463,7 +474,7 @@ function RequestCardComponent({
 
         {/* Separator - Full Width */}
         <div className={cn("h-px -mx-5 sm:-mx-6 mt-4", theme.text, "bg-current opacity-20")} />
-        
+
         {/* Metadata Section - 35/65 Layout for Request and Proposal */}
         <div className={cn(
           "grid grid-cols-[35%_65%] gap-0 pb-6 pt-6",
@@ -473,14 +484,14 @@ function RequestCardComponent({
           <div className={cn("flex flex-col pr-4 border-r border-current border-opacity-20 divide-y divide-current divide-opacity-20 items-start", getTheme(request.category).text)}>
             {shortMetadata && (
               <div className="flex flex-col gap-0 pb-3 items-start">
-                <span className="text-[16px] sm:text-[18px] font-semibold text-[#1A1A1A]">{shortMetadata}</span>
-                <span className="text-[13px] font-normal text-black/40">Condition</span>
+                <span className={cn("font-semibold text-[#1A1A1A]", isLarge ? "text-[18px] sm:text-[20px]" : "text-[16px] sm:text-[18px]")}>{shortMetadata}</span>
+                <span className={cn("font-normal text-black/40", isLarge ? "text-[15px]" : "text-[13px]")}>Condition</span>
               </div>
             )}
             {request.country && (
               <div className={cn("flex flex-col gap-0 items-start", shortMetadata ? "pt-3" : "")}>
-                <span className="text-[15px] sm:text-[16px] font-semibold text-[#1A1A1A]">{request.country}</span>
-                <span className="text-[13px] font-normal text-black/40">Location</span>
+                <span className={cn("font-semibold text-[#1A1A1A]", isLarge ? "text-[17px] sm:text-[18px]" : "text-[15px] sm:text-[16px]")}>{request.country}</span>
+                <span className={cn("font-normal text-black/40", isLarge ? "text-[15px]" : "text-[13px]")}>Location</span>
               </div>
             )}
           </div>
@@ -489,11 +500,11 @@ function RequestCardComponent({
           <div className="flex flex-col pl-6 items-start">
             {budgetDisplay && (
               <div className="flex flex-col gap-0 items-start">
-                <div className="flex items-center gap-1.5 text-[16px] sm:text-[18px] font-semibold text-[#1A1A1A]">
-                  {parsedPrefs.priceLock === "locked" && <LockKeyhole className="h-4 w-4" />}
+                <div className={cn("flex items-center gap-1.5 font-semibold text-[#1A1A1A]", isLarge ? "text-[18px] sm:text-[20px]" : "text-[16px] sm:text-[18px]")}>
+                  {parsedPrefs.priceLock === "locked" && <LockKeyhole className={cn(isLarge ? "h-5 w-5" : "h-4 w-4")} />}
                   {maxBudget}
                 </div>
-                <span className="text-[13px] font-normal text-black/40">Budget</span>
+                <span className={cn("text-[13px] font-normal", theme.text, "opacity-30", isLarge ? "text-[15px]" : "text-[13px]")}>Budget</span>
               </div>
             )}
           </div>
@@ -527,10 +538,10 @@ function RequestCardComponent({
           <div className={cn(smallImages ? "mb-4" : "mb-8")}>
             <h1
               className={cn(
-                "font-bold leading-[1.05] tracking-tight font-[family-name:var(--font-inter-display)] text-[#1A1A1A]",
-                smallImages ? "text-[24px] sm:text-[26px]" : "text-[28px] sm:text-[32px]"
+                "font-semibold leading-[1.05] text-[#1A1A1A]",
+                smallImages ? (isLarge ? "text-[26px] sm:text-[28px]" : "text-[22px] sm:text-[24px]") : (isLarge ? "text-[30px] sm:text-[36px]" : "text-[26px] sm:text-[30px]")
               )}
-              style={{ fontFamily: "'Zalando Sans', sans-serif", letterSpacing: '-0.03em' }}
+              style={{ fontFamily: "'Zalando Sans SemiExpanded', sans-serif", fontWeight: 600, letterSpacing: '-0.02em', maxWidth: '80%' }}
             >
               {request.title}
             </h1>
@@ -553,13 +564,13 @@ function RequestCardComponent({
                 {request.country && (
                   <div className="flex flex-col gap-0 items-start">
                     <span className="text-[16px] sm:text-[18px] font-semibold text-[#1A1A1A]">{request.country}</span>
-                    <span className="text-[13px] font-normal text-gray-400">Location</span>
+                    <span className={cn("text-[13px] font-normal", theme.text, "opacity-30")}>Location</span>
                   </div>
                 )}
                 {request.condition && (
                   <div className="flex flex-col gap-0 items-start">
                     <span className="text-[16px] sm:text-[18px] font-semibold text-[#1A1A1A]">{formattedCondition}</span>
-                    <span className="text-[13px] font-normal text-black/40">Condition</span>
+                    <span className={cn("text-[13px] font-normal", theme.text, "opacity-30")}>Condition</span>
                   </div>
                 )}
                 {budgetText && (
@@ -568,7 +579,7 @@ function RequestCardComponent({
                       {parsedPrefs.priceLock === "locked" && <LockKeyhole className="h-4 w-4 text-gray-400" />}
                       <span>{budgetText}</span>
                     </div>
-                    <span className="text-[13px] font-normal text-black/40">Budget</span>
+                    <span className={cn("text-[13px] font-normal", theme.text, "opacity-30")}>Budget</span>
                   </div>
                 )}
               </div>
@@ -629,11 +640,11 @@ function RequestCardComponent({
                           {item.type === 'pref' ? (
                             <Check className="h-4 w-4 text-emerald-500 shrink-0" strokeWidth={3} />
                           ) : (
-                            <X className="h-4 w-4 text-black/40 shrink-0" strokeWidth={3} />
+                            <X className={cn("h-4 w-4 shrink-0", theme.text, "opacity-30")} strokeWidth={3} />
                           )}
                           <span className={cn(
                             "text-[15px] sm:text-[17px] font-medium leading-snug tracking-tight",
-                            item.type === 'pref' ? "text-[#1A1A1A]" : "text-black/40"
+                            item.type === 'pref' ? "text-[#1A1A1A]" : cn(theme.text, "opacity-30")
                           )}>
                             {item.label.charAt(0).toUpperCase() + item.label.slice(1)}
                           </span>
@@ -670,7 +681,7 @@ function RequestCardComponent({
                           {shortMetadata}
                         </span>
                       )}
-                      <span className="text-[13px] font-normal text-black/40 leading-none mt-1">Condition</span>
+                      <span className={cn("text-[13px] font-normal leading-none mt-1", theme.text, "opacity-30")}>Condition</span>
                     </div>
                   )}
                   {(shortMetadata || maxBudget) && (
@@ -688,7 +699,7 @@ function RequestCardComponent({
                         {maxBudget}
                       </span>
                     )}
-                    <span className="text-[13px] font-normal text-black/40 leading-none mt-1">Budget</span>
+                    <span className={cn("text-[13px] font-normal leading-none mt-1", theme.text, "opacity-30")}>Budget</span>
                   </div>
                 </div>
               </div>
@@ -761,7 +772,7 @@ function RequestCardComponent({
     </CardContent>
   );
 
-  const cardLink = !isPreview ? createRequestUrl(request.slug || request.id, searchParams) : null;
+  const cardLink = !isPreview ? createRequestUrl(request.slug || request.id) : null;
 
   const mainCard = (
     <Card
@@ -795,27 +806,28 @@ function RequestCardComponent({
             {variant === "detail" && smallImages ? (
               <div className={cn("p-1 sm:p-1.5 rounded-[20px] flex flex-col gap-1", getTheme(request.category).bg)}>
                 {/* Header Section with Title */}
-                <section className={cn(smallImages && !request.title && "hidden", "px-3 py-5")}>
+                <section className={cn(smallImages && !request.title && "hidden", "px-3 pt-5 pb-2")}>
                   {/* Top Classification Row (Above Title) */}
-                  <div className="flex items-center justify-between w-full mb-6">
-                    {request.category && (
-                      <Badge
+                  <div className="flex items-center justify-between w-full">
+                    {request.category && (                      <Badge
                         variant="outline"
                         className={cn(
-                          "px-4 py-1.5 rounded-full text-[13px] sm:text-[14px] font-bold border shadow-none shrink-0 inline-flex items-center justify-center bg-transparent gap-2",
+                          "rounded-full font-bold border shadow-none shrink-0 inline-flex items-center justify-center bg-transparent gap-2",
+                          isLarge ? "px-5 py-2 text-[15px] sm:text-[16px]" : "px-4 py-1.5 text-[13px] sm:text-[14px]",
                           "border-gray-200/40",
                           getTheme(request.category).text
                         )}
                       >
-                        <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                        <span className={cn("rounded-full bg-current", isLarge ? "w-2 h-2" : "w-1.5 h-1.5")} />
                         <span className="text-[#1A1A1A]">{request.category.charAt(0).toUpperCase() + request.category.slice(1)}</span>
                       </Badge>
                     )}
-
+ 
                     <Badge
                       variant="outline"
                       className={cn(
-                        "px-4 py-1.5 rounded-full text-[13px] sm:text-[14px] font-bold border shadow-none shrink-0 inline-flex items-center gap-2 bg-transparent",
+                        "rounded-full font-bold border shadow-none shrink-0 inline-flex items-center gap-2 bg-transparent",
+                        isLarge ? "px-5 py-2 text-[15px] sm:text-[16px]" : "px-4 py-1.5 text-[13px] sm:text-[14px]",
                         request.status === "solved" || request.winner_submission_id ? "border-[#6925DC] text-[#6925DC]" :
                           request.status === "pending" ? "border-[#FF8C5A] text-[#FF8C5A]" :
                             request.status === "open" ? cn("border-current", getTheme(request.category).text) :
@@ -827,15 +839,6 @@ function RequestCardComponent({
                         {request.winner_submission_id ? "Solved" : request.status?.charAt(0).toUpperCase() + request.status?.slice(1)}
                       </span>
                     </Badge>
-                  </div>
-
-                  <div className="flex flex-row items-center gap-3">
-                    <h3
-                      className="font-semibold leading-[1.15] px-1 flex-1 transition-colors items-center text-[#1A1A1A] text-[16px] sm:text-[18px]"
-                      style={{ fontFamily: "'Zalando Sans', sans-serif" }}
-                    >
-                      {request.title}
-                    </h3>
                   </div>
                 </section>
                 {mainCard}

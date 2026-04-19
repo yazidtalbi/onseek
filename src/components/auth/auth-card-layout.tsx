@@ -21,7 +21,7 @@ export function AuthCardLayout({
       {/* Brand Logo - Top Left */}
       <div className="absolute top-8 left-8 md:top-12 md:left-12">
         <Link href="/" className="flex items-center gap-2 transition-opacity hover:opacity-80">
-          <Image src="/logo.png" alt="onseek" width={100} height={24} className="h-6 w-auto" priority />
+          <Image src="/logo-final.svg" alt="onseek" width={28} height={28} className="h-7 w-auto" priority />
           <span className="text-xl text-black" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>
             onseek
           </span>

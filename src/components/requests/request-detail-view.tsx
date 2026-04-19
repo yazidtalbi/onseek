@@ -87,14 +87,18 @@ export function RequestDetailView({
   return (
     <div className="w-full pb-20">
       {/* Centered Content: Request & Proposals */}
-      <div className={cn("max-w-[850px] w-full px-4 md:px-8", !isModal ? "ml-0" : "mx-auto")}>
+      <div className={cn("max-w-[1360px] w-full px-4 md:px-12 mx-auto")}>
 
-        {/* Header Navigation & Actions */}
+        {/* Header Navigation & Actions moved inside centered container */}
         {!isModal && (
-          <div className="flex items-center justify-between gap-4 mb-10">
+          <div className="flex items-center justify-between gap-4 mb-6 pt-2">
             <div className="flex items-center gap-4">
               <BackButton />
               <nav className="flex items-center gap-2 text-sm text-gray-500">
+                <Link href="/" className="hover:text-black transition-colors font-medium">Home</Link>
+                <span>/</span>
+                <Link href="/requests" className="hover:text-black transition-colors font-medium">Requests</Link>
+                <span>/</span>
                 <Link
                   href={`/category/${request.category.toLowerCase()}`}
                   className="hover:text-black transition-colors font-medium"
@@ -106,171 +110,65 @@ export function RequestDetailView({
 
             <div className="flex items-center gap-3">
               <ShareButton requestId={request.id} />
-              <div className="p-0.5 border border-gray-100 rounded-full bg-white shadow-sm hover:shadow-md transition-shadow">
+              <div className="p-0.5 border border-gray-100 rounded-full bg-white transition-colors hover:bg-gray-50">
                 <FavoriteButton requestId={request.id} isFavorite={isFavorite} />
               </div>
-              <button
-                type="button"
-                className="flex items-center justify-center p-2.5 rounded-full border border-gray-100 bg-white shadow-sm hover:bg-red-50 hover:text-red-500 transition-all text-gray-400"
-                onClick={() => setShowReportDialog(true)}
-              >
-                <Flag className="h-4 w-4" />
-              </button>
             </div>
           </div>
         )}
 
-        {/* STACKED LAYOUT START */}
-        <div className="space-y-10">
+        <div className="flex flex-col lg:flex-row gap-8 lg:gap-16 items-start relative pb-20">
+          
+          {/* LEFT COLUMN: REQUEST CARD SIDEBAR (480px, sticky) */}
+          <aside className="w-full lg:w-[480px] lg:sticky lg:top-24 space-y-6 shrink-0 h-fit">
+            <RequestCard
+              request={{
+                ...request,
+                submissionCount: proposalCount,
+              }}
+              variant="detail"
+              smallImages={true}
+              images={images.map(img => img.image_url)}
+              links={links.map(l => l.url)}
+              isFavorite={isFavorite}
+              noBorder={true}
+              hideAuthOverlay={true}
+              isLarge={true}
+            />
+          </aside>
 
-          {/* TOP SECTION: CUSTOM PREMIUM HEADER */}
-          <section className="space-y-6 relative">
-            {/* Title & Category Row */}
-            <div className="space-y-6 max-w-5xl">
-
-              <h1 className="text-4xl md:text-6xl font-black text-black leading-[1.05]" style={{ fontFamily: 'var(--font-expanded)' }}>
-                {request.title}
-              </h1>
-
-              {cleanDesc && (
-                <p className="text-xl text-gray-500 font-medium leading-relaxed max-w-3xl">
-                  {cleanDesc}
-                </p>
-              )}
-            </div>
-
-            {/* Meta Row (Location, Condition, Budget) */}
-            <div className="flex flex-wrap items-start gap-12 lg:gap-20 py-4">
-              {request.country && (
-                <div className="space-y-2">
-                  <span className="text-[13px] font-medium text-gray-500" style={{ fontFamily: 'var(--font-inter-display)' }}>Location</span>
-                  <div className="flex items-center gap-2 text-[17px] font-bold text-black">
-                    <MapPin className="h-4 w-4 text-gray-400" />
-                    <span>{request.country}</span>
-                  </div>
-                </div>
-              )}
-              {request.condition && (
-                <div className="space-y-2">
-                  <span className="text-[13px] font-medium text-gray-500" style={{ fontFamily: 'var(--font-inter-display)' }}>Condition</span>
-                  <div className="flex items-center gap-2 text-[17px] font-bold text-black capitalize">
-                    <Gauge className="h-4 w-4 text-gray-400" />
-                    <span>{request.condition === 'any' ? 'Any Condition' : request.condition}</span>
-                  </div>
-                </div>
-              )}
-              <div className="space-y-2">
-                <span className="text-[13px] font-medium text-gray-500" style={{ fontFamily: 'var(--font-inter-display)' }}>Budget</span>
-                <div className="flex items-center gap-2 text-[17px] font-bold text-black">
-                  <span className="text-sm text-gray-400 font-black">$</span>
-                  <span>{request.budget_min ? `${request.budget_min}${request.budget_max ? ` - ${request.budget_max}` : ''}` : "Negotiable"}</span>
-                </div>
-              </div>
-
-              {/* Author Info */}
-              <div className="space-y-2 ml-auto lg:text-right hidden sm:block">
-                <span className="text-[13px] font-medium text-gray-500" style={{ fontFamily: 'var(--font-inter-display)' }}>Posted By</span>
-                <div className="flex items-center gap-3 justify-end">
-                  <span className="text-lg font-bold text-black">{request.profiles?.username || "Anonymous"}</span>
-                  <div className="w-10 h-10 rounded-full border-2 border-gray-100 overflow-hidden bg-gray-50 flex items-center justify-center text-xs font-bold text-gray-400 relative">
-                    {request.profiles?.avatar_url ? (
-                      <Image src={request.profiles.avatar_url} alt="avatar" fill className="object-cover" />
-                    ) : (request.profiles?.username || 'U').charAt(0).toUpperCase()}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* HORIZONTAL REQUIREMENTS SECTION - REFINED WITH ICONS & SEPARATOR */}
-            {(preferences.length > 0 || dealbreakers.length > 0) && (
-              <div className="py-10">
-                <div className="flex flex-col md:flex-row gap-16 md:gap-0">
-                  {/* Preferences Column */}
-                  {preferences.length > 0 && (
-                    <div className={cn(
-                      "flex-1 space-y-6",
-                      dealbreakers.length > 0 && "md:pr-16 md:border-r border-gray-100"
-                    )}>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[13px] font-medium text-gray-500" style={{ fontFamily: 'var(--font-inter-display)' }}>Preferences</span>
-                      </div>
-                      <div className="flex flex-col gap-5">
-                        {preferences.map((pref: any, i: number) => (
-                          <div key={i} className="flex items-start gap-4 text-[17px] font-semibold text-[#1A1A1A]">
-                            <Check className="h-5 w-5 text-emerald-500 shrink-0 mt-0.5" strokeWidth={3} />
-                            <span>{pref.label || pref}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Dealbreakers Column */}
-                  {dealbreakers.length > 0 && (
-                    <div className={cn(
-                      "flex-1 space-y-6",
-                      preferences.length > 0 && "md:pl-16"
-                    )}>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[13px] font-medium text-gray-500" style={{ fontFamily: 'var(--font-inter-display)' }}>Dealbreakers</span>
-                      </div>
-                      <div className="flex flex-col gap-5">
-                        {dealbreakers.map((deal: any, i: number) => (
-                          <div key={i} className="flex items-start gap-4 text-[17px] font-semibold text-black/40">
-                            <X className="h-5 w-5 text-black/20 shrink-0 mt-0.5" strokeWidth={3} />
-                            <span>{deal.label || deal}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
+          {/* RIGHT COLUMN: PROPOSALS (Flexible width) */}
+          <div className="flex-1 w-full space-y-12">
+            {/* ACTION SECTION: SUBMISSION FORM (CLEAN INPUT) */}
+            {showSubmissionForm && !isOwner && (
+              <div className="w-full">
+                <SubmissionForm
+                  requestId={request.id}
+                  requestBudgetMax={request.budget_max}
+                  requestDescription={request.description}
+                  hideButton={proposalCount === 0}
+                />
               </div>
             )}
 
-            {/* Images Gallery */}
-            {images.length > 0 && (
-              <div className="space-y-4 pt-4">
-                <span className="text-[13px] font-bold text-gray-400" style={{ fontFamily: 'var(--font-expanded)' }}>Reference Images</span>
-                <div className="flex flex-wrap gap-4">
-                  {images.map((img: any, i: number) => (
-                    <div key={i} className="relative w-32 h-32 rounded-3xl overflow-hidden border border-gray-100 group shadow-sm hover:shadow-md transition-all">
-                      <Image src={img.image_url} alt="ref" fill className="object-cover grayscale hover:grayscale-0 transition-all duration-500" />
-                    </div>
-                  ))}
-                </div>
+            {/* BOTTOM SECTION: PROPOSALS FEED */}
+            <section className="space-y-6 w-full pt-2">
+              <div className="w-full">
+                <SubmissionList
+                  requestId={request.id}
+                  requestTitle={request.title}
+                  initialSubmissions={initialSubmissions}
+                  winnerId={request.winner_submission_id}
+                  canSelectWinner={isOwner}
+                  requestStatus={request.status}
+                  requestOwnerId={request.user_id}
+                  hideTitle={false}
+                  largeText={true}
+                />
               </div>
-            )}
-          </section>
+            </section>
+          </div>
 
-          {/* ACTION SECTION: SUBMISSION FORM (CLEAN INPUT) */}
-          {showSubmissionForm && !isOwner && (
-            <div className={cn("max-w-4xl w-full", !isModal ? "ml-0" : "mx-auto")}>
-              <SubmissionForm
-                requestId={request.id}
-                requestBudgetMax={request.budget_max}
-                requestDescription={request.description}
-                hideButton={proposalCount === 0}
-              />
-            </div>
-          )}
-
-          {/* BOTTOM SECTION: PROPOSALS FEED */}
-          <section className="space-y-6 w-full pt-10 border-t border-gray-100">
-            <div className="w-full">
-              <SubmissionList
-                requestId={request.id}
-                requestTitle={request.title}
-                initialSubmissions={initialSubmissions}
-                winnerId={request.winner_submission_id}
-                canSelectWinner={isOwner}
-                requestStatus={request.status}
-                requestOwnerId={request.user_id}
-                hideTitle={true}
-                largeText={true}
-              />
-            </div>
-          </section>
         </div>
       </div>
 
@@ -292,12 +190,12 @@ export function RequestDetailView({
 
       {/* Similar Requests */}
       {similarRequests && similarRequests.length > 0 && (
-        <div className="mt-24 py-24">
-          <div className="max-w-[1360px] ml-0 w-full space-y-8 px-4 md:px-8">
+        <div className="mt-12 py-16">
+          <div className="max-w-[1360px] mx-auto w-full space-y-8 px-4 md:px-12">
             <h2 className="text-3xl font-black text-black leading-none" style={{ fontFamily: 'var(--font-expanded)' }}>You might also like</h2>
             <div className="columns-1 sm:columns-2 lg:columns-3 gap-8">
               {similarRequests.map((similarRequest) => (
-                <div key={similarRequest.id} className="break-inside-avoid mb-8 bg-white border border-gray-100 rounded-[2.5rem] p-2 transition-all hover:scale-[1.02] hover:shadow-2xl hover:shadow-black/5">
+                <div key={similarRequest.id} className="break-inside-avoid mb-6">
                   <RequestCard
                     request={{
                       ...similarRequest,

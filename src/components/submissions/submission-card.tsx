@@ -174,16 +174,29 @@ export function SubmissionCard({
         <div className="flex items-center justify-between gap-3 mb-3">
           <div className="flex items-center gap-2">
             {username ? (
-              <>
+              <div className="flex items-center gap-1.5 min-w-0">
+                <div className="w-[18px] h-[18px] rounded-full overflow-hidden shrink-0 border border-neutral-100 flex items-center justify-center bg-neutral-50 text-[8px] font-bold text-neutral-400 relative">
+                  {(submission as any).profiles?.avatar_url ? (
+                    <Image
+                      src={(submission as any).profiles?.avatar_url}
+                      alt={username}
+                      fill
+                      className="object-cover"
+                      sizes="18px"
+                    />
+                  ) : (
+                    username.charAt(0).toUpperCase()
+                  )}
+                </div>
                 <Link
                   href={`/profile/${username}`}
-                  className="text-xs text-neutral-500 hover:text-neutral-700 hover:underline"
+                  className="text-xs font-bold text-[#1A1A1A] hover:text-neutral-700 hover:underline truncate"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  @{username}
+                  {username}
                 </Link>
                 <span className="text-xs text-neutral-400">•</span>
-              </>
+              </div>
             ) : null}
             <span className="text-xs text-neutral-500">{submittedAt}</span>
             {user?.id === submission.user_id && (
@@ -233,7 +246,7 @@ export function SubmissionCard({
               <div className="flex items-center gap-2 flex-wrap">
                 <h3 className={cn(
                   "line-clamp-1 font-bold text-neutral-900",
-                  largeText ? "text-xl" : "text-base"
+                  largeText ? "text-[16px] sm:text-[17px]" : "text-base"
                 )}>
                   {storeName}
                 </h3>
@@ -244,14 +257,14 @@ export function SubmissionCard({
                   </>
                 ) : domain ? (
                   <>
-                    <span className={cn("text-neutral-400", largeText ? "text-xl" : "text-xs")}>•</span>
+                    <span className={cn("text-neutral-400", largeText ? "text-[16px] sm:text-[17px]" : "text-xs")}>•</span>
                     <a
                       href={submission.url || "#"}
                       target="_blank"
                       rel="noopener noreferrer"
                       className={cn(
                         "text-neutral-500 hover:text-neutral-700",
-                        largeText ? "text-xl font-medium" : "text-xs"
+                        largeText ? "text-[14px] sm:text-[15px] font-medium" : "text-xs"
                       )}
                       onClick={(e) => e.stopPropagation()}
                     >
@@ -264,7 +277,7 @@ export function SubmissionCard({
             {description && (
               <p className={cn(
                 "line-clamp-none text-gray-500 font-medium leading-relaxed",
-                largeText ? "text-lg" : "text-sm line-clamp-2"
+                largeText ? "text-[14px] sm:text-[15px]" : "text-sm line-clamp-2"
               )}>
                 {description}
               </p>
@@ -276,7 +289,7 @@ export function SubmissionCard({
             <div className="flex-shrink-0 text-right">
               <span className={cn(
                 "font-semibold text-neutral-900",
-                largeText ? "text-xl" : "text-lg"
+                largeText ? "text-[16px] sm:text-[17px]" : "text-lg"
               )}>
                 ${submission.price.toFixed(2)}
               </span>
@@ -336,7 +349,7 @@ export function SubmissionCard({
             </Button>
             {hideVotes ? (
               <Link
-                href={requestTitle ? createRequestUrl(requestId, requestTitle) : `/requests/${requestId}`}
+                href={createRequestUrl(requestId)}
                 className="text-sm text-[#7755FF] hover:underline"
                 onClick={(e) => e.stopPropagation()}
                 scroll={false}

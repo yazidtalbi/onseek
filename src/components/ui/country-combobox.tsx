@@ -49,7 +49,7 @@ const POPULAR_COUNTRIES = [
 export function CountryCombobox({
   value,
   onChange,
-  placeholder = "Select or type country",
+  placeholder = "Select country",
   className,
 }: {
   value?: string | null;

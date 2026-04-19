@@ -15,6 +15,7 @@ import {
 import Image from "next/image";
 import { Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 function computeScore(
   item: Submission & {
@@ -45,6 +46,7 @@ export function SubmissionList({
   requestOwnerId,
   hideTitle,
   largeText,
+  layout,
 }: {
   requestId: string;
   requestTitle?: string;
@@ -55,6 +57,7 @@ export function SubmissionList({
   requestOwnerId?: string;
   hideTitle?: boolean;
   largeText?: boolean;
+  layout?: "vertical" | "horizontal";
 }) {
   const [localWinner, setLocalWinner] = React.useState<string | null>(
     winnerId ?? null
@@ -72,7 +75,7 @@ export function SubmissionList({
       } = await supabase.auth.getUser();
       const { data: submissions } = await supabase
         .from("submissions")
-        .select("*, votes(vote, user_id), profiles(username)")
+        .select("*, votes(vote, user_id), profiles(username, avatar_url)")
         .eq("request_id", requestId)
         .order("created_at", { ascending: false });
       return (
@@ -157,9 +160,6 @@ export function SubmissionList({
 
   return (
     <div className="space-y-6">
-      {!hideTitle && (
-        <h2 className="text-2xl font-semibold text-foreground tracking-tight" style={{ letterSpacing: '-0.8px' }}>Proposals</h2>
-      )}
       <div className="flex items-center justify-between mb-8">
         <div className="text-[17px] font-medium text-gray-500" style={{ fontFamily: 'var(--font-inter-display)' }}>
           {data.length} {data.length === 1 ? 'Proposal' : 'Proposals'}
@@ -167,37 +167,40 @@ export function SubmissionList({
         <div className="flex items-center gap-3">
           <span className="text-[13px] font-medium text-gray-500" style={{ fontFamily: 'var(--font-inter-display)' }}>Sort by</span>
           <Select value={sortBy} onValueChange={(value: "best" | "newest" | "price") => setSortBy(value)}>
-            <SelectTrigger className="w-[110px] h-10 rounded-xl border border-[#e5e7eb] bg-white text-sm font-bold shadow-sm">
+            <SelectTrigger className="w-[110px] h-10 rounded-full border border-[#e5e7eb] bg-white text-sm font-bold shadow-none">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="rounded-xl border-[#e5e7eb]">
-              <SelectItem value="best" className="text-sm font-medium">Best match</SelectItem>
+              <SelectItem value="best" className="text-sm font-medium">Best</SelectItem>
               <SelectItem value="newest" className="text-sm font-medium">Newest</SelectItem>
               <SelectItem value="price" className="text-sm font-medium">Lowest price</SelectItem>
             </SelectContent>
           </Select>
         </div>
       </div>
-      <div>
+      <div className={cn(
+        layout === "horizontal" ? "flex flex-row flex-wrap gap-4" : "flex flex-col"
+      )}>
         {sorted.map((submission, index) => (
-          <SubmissionCard
-            key={submission.id}
-            submission={submission}
-            requestId={requestId}
-            requestTitle={requestTitle}
-            isWinner={localWinner === submission.id}
-            canSelectWinner={canSelectWinner && localStatus === "open"}
-            onWinnerSelected={(id) => {
-              setLocalWinner(id);
-              setLocalStatus("solved");
-            }}
-            disableWinnerAction={localStatus !== "open"}
-            isFirst={index === 0}
-            isLast={index === sorted.length - 1}
-            isOnlyOne={sorted.length === 1}
-            requestOwnerId={requestOwnerId}
-            largeText={largeText}
-          />
+          <div key={submission.id} className={cn(layout === "horizontal" ? "w-[calc(50%-1rem)] min-w-[300px] flex-grow" : "w-full")}>
+            <SubmissionCard
+              submission={submission}
+              requestId={requestId}
+              requestTitle={requestTitle}
+              isWinner={localWinner === submission.id}
+              canSelectWinner={canSelectWinner && localStatus === "open"}
+              onWinnerSelected={(id) => {
+                setLocalWinner(id);
+                setLocalStatus("solved");
+              }}
+              disableWinnerAction={localStatus !== "open"}
+              isFirst={layout === "horizontal" ? true : index === 0}
+              isLast={layout === "horizontal" ? true : index === sorted.length - 1}
+              isOnlyOne={layout === "horizontal" ? true : sorted.length === 1}
+              requestOwnerId={requestOwnerId}
+              largeText={largeText}
+            />
+          </div>
         ))}
       </div>
     </div>

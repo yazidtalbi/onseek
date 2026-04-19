@@ -125,36 +125,12 @@ export function PersonalizedFeed({
     }
   }, []);
 
-  // Update URL when mode changes (but don't cause infinite loops)
   useEffect(() => {
     // Only update if preferences have loaded
     if (hasPreferences === undefined) return;
 
-    // Skip if we just updated the URL (prevent infinite loop)
-    if (hasUpdatedUrlRef.current) {
-      hasUpdatedUrlRef.current = false;
-      return;
-    }
-
-    const currentMode = searchParams.get("mode");
-
     if (mode === "for_you" && !hasPreferences) {
-      if (currentMode !== "latest") {
-        if (currentMode === "for_you") {
-          const params = new URLSearchParams(searchParams.toString());
-          params.delete("mode");
-          hasUpdatedUrlRef.current = true;
-          const queryStr = params.toString();
-          router.replace(queryStr ? `?${queryStr}` : window.location.pathname, { scroll: false });
-        }
-        setMode("latest");
-      }
-    } else if (currentMode !== mode && mode !== "for_you") {
-      // Only update if the URL mode doesn't match our state mode
-      const params = new URLSearchParams(searchParams.toString());
-      params.set("mode", mode);
-      hasUpdatedUrlRef.current = true;
-      router.replace(`?${params.toString()}`, { scroll: false });
+      setMode("latest");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, hasPreferences]);
@@ -284,7 +260,7 @@ export function PersonalizedFeed({
         </>
       )}
 
-      <div className={cn("mx-auto w-full px-4 md:px-6", !user && "max-w-[1280px]")}>
+      <div className={cn("mx-auto w-full px-4 md:px-6", !user ? "max-w-[1280px] pt-8 sm:pt-12" : "pt-2 sm:pt-4")}>
         {/* Editorial Title - Hidden as requested */}
         {/* <div className="text-left pt-16 pb-12">
           <h2 
@@ -294,20 +270,18 @@ export function PersonalizedFeed({
             Discover what people <br className="hidden md:block" /> are looking for
           </h2>
         </div> */}
-
-
-
         {/* Categories Strip */}
         <div className="py-2 min-h-[70px] flex flex-col justify-center mb-6 bg-white transition-all duration-300">
           <div className="mx-auto w-full text-center flex flex-col items-center relative z-10 w-full px-0">
             <div className="w-full flex flex-col items-stretch">
               <CategoryPills
                 mode={mode}
+                onModeChange={setMode}
                 hasPreferences={hasPreferences}
                 viewMode={viewMode}
                 onViewModeChange={setViewMode}
-                hideViewToggle={true}
-                hideFilters={true}
+                hideViewToggle={false}
+                hideFilters={false}
               />
             </div>
           </div>
@@ -358,10 +332,19 @@ export function PersonalizedFeed({
             <div className="flex flex-row items-center justify-between mb-8 pb-4">
               <div className="flex flex-col gap-1">
                 <h3 className="text-2xl md:text-3xl font-semibold text-[#1A1A1A] tracking-tighter" style={{ fontFamily: 'var(--font-expanded)' }}>
-                  Requests we love
+                  {(() => {
+                    if (user) {
+                      if (category) {
+                        const formattedCategory = category.split("-").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+                        return `${formattedCategory} Requests`;
+                      }
+                      return "Discover";
+                    }
+                    return "Requests we love";
+                  })()}
                 </h3>
                 <p className="text-sm md:text-base text-gray-400 font-medium">
-                  Standout requests making waves around the platform
+                  {user ? "Personalized selection just for you" : "Standout requests making waves around the platform"}
                 </p>
               </div>
               <Link
@@ -373,14 +356,22 @@ export function PersonalizedFeed({
               </Link>
             </div>
 
-            {/* Show subtle loading indicator while fetching */}
+          <div className="relative w-full">
+            {/* Loading Overlay for filters */}
             {isFetching && !isLoading && (
-              <div className="absolute top-0 left-0 right-0 z-20 flex justify-center py-2 pointer-events-none">
-                <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+              <div className="absolute inset-0 z-[40] flex items-center justify-center transition-all duration-300 pointer-events-none">
+                <div className="bg-white p-6 rounded-3xl shadow-xl border border-gray-100 flex flex-col items-center gap-3">
+                  <Loader2 className="h-8 w-8 animate-spin text-black" />
+                  <span className="text-xs font-bold text-black uppercase tracking-widest">Updating</span>
+                </div>
               </div>
             )}
 
-            <div className={cn("pb-4 w-full", viewMode === "grid" ? "columns-[360px] gap-6" : "flex flex-col gap-4 max-w-2xl mx-auto")}>
+            <div className={cn(
+              "pb-4 w-full relative transition-all duration-300", 
+              isFetching && !isLoading ? "opacity-40 blur-[1px]" : "opacity-100",
+              viewMode === "grid" ? "columns-[360px] gap-6" : "flex flex-col gap-4 max-w-2xl mx-auto"
+            )}>
               {user && isHomePage && (
                 <div className="break-inside-avoid mb-6">
                   <div className="w-full rounded-[24px] bg-white border border-[#e6e7eb] shadow-none min-h-[140px] flex flex-col p-5">
@@ -542,6 +533,7 @@ export function PersonalizedFeed({
               </div>
             )}
 
+            </div>
           </div>
         ) : null}
       </div>
