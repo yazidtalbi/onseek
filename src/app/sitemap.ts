@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { CATEGORIES } from '@/lib/gemini';
 import { ALL_COMPETITOR_SLUGS } from '@/lib/compare-data';
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://onseek.co';
+const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://onseek.co').replace(/\/$/, '');
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const supabase = createClient(
