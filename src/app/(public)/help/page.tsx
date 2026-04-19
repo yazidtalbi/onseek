@@ -5,7 +5,7 @@ export default function HelpPage() {
         <h1 className="text-4xl font-semibold mb-6">Help & Support</h1>
         <div className="space-y-4 text-muted-foreground">
           <p>Need help? We're here for you.</p>
-          <p>Contact us at support@onseek.com for assistance.</p>
+          <p>Contact us at support@onseek.co for assistance.</p>
         </div>
       </div>
     </div>

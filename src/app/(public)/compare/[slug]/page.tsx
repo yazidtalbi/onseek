@@ -39,13 +39,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     title,
     description: competitor.metaDescription,
     alternates: {
-      canonical: `https://onseek.com/compare/onseek-vs-${slug}`,
+      canonical: `https://onseek.co/compare/onseek-vs-${slug}`,
     },
     openGraph: {
       title,
       description: competitor.metaDescription,
       type: "website",
-      url: `https://onseek.com/compare/onseek-vs-${slug}`,
+      url: `https://onseek.co/compare/onseek-vs-${slug}`,
     },
     twitter: {
       card: "summary_large_image",
@@ -91,13 +91,13 @@ function JsonLdSchema({ competitor }: { competitor: ReturnType<typeof getCompeti
       {
         "@type": "BreadcrumbList",
         itemListElement: [
-          { "@type": "ListItem", position: 1, name: "Home", item: "https://onseek.com" },
-          { "@type": "ListItem", position: 2, name: "Compare", item: "https://onseek.com/compare" },
+          { "@type": "ListItem", position: 1, name: "Home", item: "https://onseek.co" },
+          { "@type": "ListItem", position: 2, name: "Compare", item: "https://onseek.co/compare" },
           {
             "@type": "ListItem",
             position: 3,
             name: `Onseek vs ${competitor.name}`,
-            item: `https://onseek.com/compare/onseek-vs-${competitor.slug}`,
+            item: `https://onseek.co/compare/onseek-vs-${competitor.slug}`,
           },
         ],
       },

@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   description:
     "See how Onseek's intent-driven model compares to Google Shopping, Facebook Marketplace, eBay, Amazon, and Craigslist. Stop searching — start receiving.",
   alternates: {
-    canonical: "https://onseek.com/compare",
+    canonical: "https://onseek.co/compare",
   },
 };
 
