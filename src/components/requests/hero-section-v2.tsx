@@ -13,11 +13,12 @@ import { motion, AnimatePresence } from "framer-motion";
 
 interface HeroSectionV2Props {
   user: User | null;
+  profile: any;
   tradeMode: "buy" | "sell";
   setTradeMode: (mode: "buy" | "sell") => void;
 }
 
-export function HeroSectionV2({ user, tradeMode, setTradeMode }: HeroSectionV2Props) {
+export function HeroSectionV2({ user, profile, tradeMode, setTradeMode }: HeroSectionV2Props) {
   const router = useRouter();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isAIFlowOpen, setIsAIFlowOpen] = useState(false);
@@ -182,6 +183,7 @@ export function HeroSectionV2({ user, tradeMode, setTradeMode }: HeroSectionV2Pr
           initialText={searchValue}
           onClose={() => setIsAIFlowOpen(false)}
           user={user}
+          profile={profile}
         />
       )}
 

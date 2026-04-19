@@ -151,7 +151,7 @@ export function AIRequestFlow({ initialText, onClose, user, profile }: AIRequest
     // 1. In 'auth' or 'preview' step (came from registration or was ready to post)
     // 2. We have user AND profile (onboarding finished)
     // 3. We have restored extractedData
-    if ((step === "auth" || step === "summary") && user && profile && extractedData && step !== "submitting") {
+    if ((step === "auth" || step === "summary") && user && profile && extractedData) {
       console.log("Auto-submitting draft due to auth success...");
       handleFinish();
     }
@@ -233,7 +233,6 @@ export function AIRequestFlow({ initialText, onClose, user, profile }: AIRequest
             toast({
               title: "Extraction hit a snag",
               description: "AI had a minor hiccup. Let's finish this manually!",
-              variant: "destructive"
             });
           }
           setExtractedData({

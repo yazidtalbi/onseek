@@ -274,6 +274,7 @@ export function PersonalizedFeed({
         <>
           <HeroSectionV2
             user={user}
+            profile={profile}
             tradeMode={tradeMode}
             setTradeMode={setTradeMode}
           />
