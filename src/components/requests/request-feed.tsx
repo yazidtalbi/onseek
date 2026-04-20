@@ -72,7 +72,7 @@ export function RequestFeed({
     queryKey: ["requests", filters, currentPage],
     queryFn: async () => {
       const supabase = createBrowserSupabaseClient();
-      let query = supabase.from("requests").select("*, profiles(username, avatar_url)");
+      let query = supabase.from("requests").select("*, profiles(username, avatar_url, first_name, last_name)");
 
       // If requestIds filter is provided, only fetch those specific requests
       if (filters.requestIds && filters.requestIds.length > 0) {

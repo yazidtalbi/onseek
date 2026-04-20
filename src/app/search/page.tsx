@@ -72,7 +72,7 @@ export default async function SearchPage({
   const prefs = Array.isArray(prefParam) ? prefParam : prefParam ? [prefParam] : [];
   const dealbreakers = Array.isArray(dealbreakerParam) ? dealbreakerParam : dealbreakerParam ? [dealbreakerParam] : [];
 
-  let query = supabase.from("requests").select("*, profiles(username, avatar_url)");
+  let query = supabase.from("requests").select("*, profiles(username, avatar_url, first_name, last_name)");
   
   // Build base filters first
   if (status) {

@@ -20,7 +20,7 @@ export async function fetchInitialFeedData(
   
   let query = supabase
     .from("requests")
-    .select("*, profiles(username, avatar_url)");
+    .select("*, profiles(username, avatar_url, first_name, last_name)");
 
   if (user) {
     query = query.or(`status.eq.open,and(status.eq.pending,user_id.eq.${user.id})`);

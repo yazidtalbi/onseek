@@ -75,7 +75,7 @@ export function SubmissionList({
       } = await supabase.auth.getUser();
       const { data: submissions } = await supabase
         .from("submissions")
-        .select("*, votes(vote, user_id), profiles(username, avatar_url)")
+        .select("*, votes(vote, user_id), profiles(username, avatar_url, first_name, last_name)")
         .eq("request_id", requestId)
         .order("created_at", { ascending: false });
       return (

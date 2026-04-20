@@ -24,7 +24,7 @@ export default async function MyRequestsPage({
   }
 
   const status = searchParams.status ?? "all";
-  let query = supabase.from("requests").select("*, profiles(username, avatar_url)").eq("user_id", user.id);
+  let query = supabase.from("requests").select("*, profiles(username, avatar_url, first_name, last_name)").eq("user_id", user.id);
   if (status !== "all") {
     query = query.eq("status", status);
   }

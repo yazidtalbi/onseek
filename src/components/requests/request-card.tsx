@@ -125,7 +125,7 @@ function getDomainFromUrl(url: string): string {
 }
 
 interface RequestCardProps {
-  request: RequestItem & { profiles?: { username?: string; avatar_url?: string | null } };
+  request: RequestItem & { profiles?: { username?: string; avatar_url?: string | null; first_name?: string | null; last_name?: string | null } };
   variant?: "feed" | "detail";
   isFavorite?: boolean;
   images?: string[];
