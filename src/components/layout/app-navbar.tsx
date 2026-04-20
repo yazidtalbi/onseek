@@ -506,12 +506,15 @@ export function AppNavbar({
                         )}
                       </Button>
                     </NotificationsDrawer>
-                    <Link href={profile?.username ? `/profile/${profile.username}` : "/settings"} className="ml-1">
-                      <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-700 font-bold text-xs overflow-hidden border border-gray-200">
+                    <Link href={profile?.username ? `/profile/${profile.username}` : "/settings"} className="ml-1 flex items-center gap-2 pr-1">
+                      <span className="text-xs font-bold text-gray-700 truncate max-w-[80px]">
+                        {profile?.first_name && profile?.last_name ? `${profile.first_name} ${profile.last_name}` : profile?.username}
+                      </span>
+                      <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-700 font-bold text-xs overflow-hidden border border-gray-200 shrink-0">
                         {profile?.avatar_url && !avatarError ? (
                           <img src={profile.avatar_url} alt={profile.username || "User"} className="w-full h-full object-cover" onError={() => setAvatarError(true)} />
                         ) : (
-                          profile?.username?.charAt(0).toUpperCase() || "U"
+                          (profile?.first_name?.charAt(0) || profile?.username?.charAt(0) || "U").toUpperCase()
                         )}
                       </div>
                     </Link>
@@ -674,8 +677,11 @@ export function AppNavbar({
                     </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <button className="flex items-center gap-2 pl-2 pr-1 h-10 hover:bg-gray-50 rounded-full transition-colors outline-none shrink-0">
-                          <div className="flex items-center justify-center h-8 w-8 rounded-full bg-gray-100 text-gray-700 font-bold text-xs shrink-0 overflow-hidden relative">
+                        <button className="flex items-center gap-3 pl-3 pr-2 h-10 hover:bg-gray-50 rounded-full transition-colors outline-none shrink-0 group/nav">
+                          <span className="text-sm font-bold text-[#1A1A1A] truncate max-w-[120px]">
+                            {profile?.first_name && profile?.last_name ? `${profile.first_name} ${profile.last_name}` : profile?.username}
+                          </span>
+                          <div className="flex items-center justify-center h-8 w-8 rounded-full bg-gray-100 text-gray-700 font-bold text-xs shrink-0 overflow-hidden relative border border-gray-200">
                             {profile?.avatar_url && !avatarError ? (
                               <img
                                 src={profile.avatar_url}
@@ -684,10 +690,10 @@ export function AppNavbar({
                                 onError={() => setAvatarError(true)}
                               />
                             ) : (
-                              profile?.username?.charAt(0).toUpperCase() || "U"
+                              (profile?.first_name?.charAt(0) || profile?.username?.charAt(0) || "U").toUpperCase()
                             )}
                           </div>
-                          <ChevronDown className="h-4 w-4 text-gray-400 shrink-0" />
+                          <ChevronDown className="h-4 w-4 text-gray-400 shrink-0 group-hover/nav:text-gray-600 transition-colors" />
                         </button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-56 p-2 bg-white shadow-lg border border-border mt-2">
@@ -701,12 +707,12 @@ export function AppNavbar({
                                 onError={() => setAvatarError(true)}
                               />
                             ) : (
-                              profile?.username?.charAt(0).toUpperCase() || "U"
+                              (profile?.first_name?.charAt(0) || profile?.username?.charAt(0) || "U").toUpperCase()
                             )}
                           </div>
                           <div className="flex flex-col min-w-0">
                             <span className="text-sm font-bold text-neutral-900 truncate">
-                              {profile?.username || "Account"}
+                              {profile?.first_name && profile?.last_name ? `${profile.first_name} ${profile.last_name}` : (profile?.username || "Account")}
                             </span>
                             <span className="text-xs text-neutral-500 truncate">
                               View Profile

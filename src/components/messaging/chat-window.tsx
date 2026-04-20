@@ -3,6 +3,7 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 import { formatTimeAgo } from "@/lib/utils/time";
+import { formatFullName } from "@/lib/utils/name";
 import type { Conversation, Message } from "@/lib/types";
 import { MessageInput } from "./message-input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -51,12 +52,12 @@ export function ChatWindow({ conversation, messages, currentUserId }: ChatWindow
           <Avatar className="h-8 w-8">
             <AvatarImage src={otherUser?.avatar_url || ""} />
             <AvatarFallback className="bg-neutral-100 text-neutral-600">
-              {otherUser?.username?.substring(0, 2).toUpperCase() || "?"}
+              {(otherUser?.first_name?.charAt(0) || otherUser?.username?.charAt(0) || "?").toUpperCase()}
             </AvatarFallback>
           </Avatar>
           <div className="min-w-0">
             <h3 className="font-semibold text-neutral-900 truncate">
-              {otherUser?.display_name || otherUser?.username || "Unknown"}
+              {formatFullName(otherUser?.first_name, otherUser?.last_name, otherUser?.username)}
             </h3>
             <p className="text-[10px] text-neutral-500 uppercase tracking-wider font-medium">
               Chatting about: <span className="text-[#7755FF]">{conversation.request?.title}</span>

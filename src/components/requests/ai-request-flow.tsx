@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { motion, AnimatePresence, Reorder, useDragControls } from "framer-motion";
-import { X, ChevronLeft, Sparkles, Loader2, ArrowRight, Check, Plus, DollarSign, Calendar, ShieldCheck, Crown, LockKeyhole, Pencil, ChevronRight, MapPin, GripVertical } from "lucide-react";
+import { X, ChevronLeft, Sparkles, Loader2, ArrowRight, Check, Plus, DollarSign, Calendar, Target, Store, MessageCircle, ShieldCheck, Crown, LockKeyhole, Pencil, ChevronRight, MapPin, GripVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { RequestCard } from "@/components/requests/request-card";
@@ -11,6 +11,15 @@ import { createRequestAction } from "@/actions/request.actions";
 import { useQueryClient } from "@tanstack/react-query";
 import { getRequestTheme } from "@/lib/utils/request-themes";
 import { useRouter } from "next/navigation";
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { SignInForm } from "@/components/auth/sign-in-form";
 import { SignUpForm } from "@/components/auth/sign-up-form";
 import { CATEGORIES } from "@/lib/gemini";
@@ -93,17 +102,29 @@ export function AIRequestFlow({ initialText, onClose, user, profile }: AIRequest
 
   const savedDraft = getSavedDraft();
 
+  // Detect if this is a fresh start with new text or a restore
+  const isNewText = React.useMemo(() => {
+    return initialText && initialText !== savedDraft?.initialText;
+  }, [initialText, savedDraft?.initialText]);
+  const [showSkipConfirm, setShowSkipConfirm] = React.useState(false);
   const [step, setStep] = React.useState<FlowStep>(() => {
+    if (isNewText) return "extracting";
     if (savedDraft) {
-      if (savedDraft.step === "auth" && user) return "auth"; // Effect will handle auto-submit
+      if (savedDraft.step === "auth" && user) return "auth";
       return savedDraft.step || "extracting";
     }
     return "extracting";
   });
   const [authMode, setAuthMode] = React.useState<"login" | "signup">("signup");
-  const [extractedData, setExtractedData] = React.useState<any>(savedDraft?.extractedData || null);
-  const [urgency, setUrgency] = React.useState<string | null>(savedDraft?.urgency || null);
-  const [budget, setBudget] = React.useState<number | null>(savedDraft?.budget || null);
+  const [extractedData, setExtractedData] = React.useState<any>(() => {
+    return isNewText ? null : (savedDraft?.extractedData || null);
+  });
+  const [urgency, setUrgency] = React.useState<string | null>(() => {
+    return isNewText ? null : (savedDraft?.urgency || null);
+  });
+  const [budget, setBudget] = React.useState<number | null>(() => {
+    return isNewText ? null : (savedDraft?.budget || null);
+  });
   const [error, setError] = React.useState<string | null>(null);
   const [editingField, setEditingField] = React.useState<'title' | 'condition' | 'budget' | 'preferences' | 'dealbreakers' | 'images' | 'category' | null>(null);
   const queryClient = useQueryClient();
@@ -157,8 +178,13 @@ export function AIRequestFlow({ initialText, onClose, user, profile }: AIRequest
     }
   }, [step, user, profile, extractedData]);
   React.useEffect(() => {
-    // ONLY extract if we don't have existing extracted data
-    if (step === "extracting" && !extractedData && !savedDraft) {
+    // ONLY extract if we don't have existing extracted data OR if initialText has changed from the draft
+    const shouldExtract = step === "extracting" && (
+      !extractedData || 
+      (initialText && initialText !== savedDraft?.initialText)
+    );
+
+    if (shouldExtract) {
       const timer = setTimeout(async () => {
         try {
           const response = await fetch("/api/extract", {
@@ -249,7 +275,7 @@ export function AIRequestFlow({ initialText, onClose, user, profile }: AIRequest
       }, 1500); // Artificial delay for "magic" feel
       return () => clearTimeout(timer);
     }
-  }, [step, extractedData, initialText]);
+  }, [step, extractedData, initialText, savedDraft?.initialText]);
 
   const handleFinish = async () => {
     console.log("handleFinish triggered. Step:", step, "User:", user?.id, "Profile Country:", profile?.country);
@@ -362,12 +388,40 @@ export function AIRequestFlow({ initialText, onClose, user, profile }: AIRequest
           </div>
         </div>
 
-        <button
-          onClick={() => setStep("summary")}
-          className="px-6 py-2 rounded-lg border border-gray-200 text-green-600 font-semibold hover:bg-gray-50 transition-colors"
-        >
-          Skip
-        </button>
+        <Dialog open={showSkipConfirm} onOpenChange={setShowSkipConfirm}>
+          <DialogTrigger asChild>
+            <button
+              className="px-6 py-2 rounded-full border border-[#7755FF] text-[#7755FF] font-semibold hover:bg-[#7755FF]/5 transition-all active:scale-95"
+            >
+              Skip
+            </button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-md rounded-[2.5rem]">
+            <DialogHeader>
+              <DialogTitle style={{ fontFamily: 'var(--font-expanded)' }}>Skip AI Extraction?</DialogTitle>
+              <DialogDescription className="pt-2">
+                By skipping, we won't be able to automatically analyze and structure your request. You'll need to fill in the missing details manually.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="gap-2 sm:gap-0">
+              <button
+                onClick={() => setShowSkipConfirm(false)}
+                className="px-4 py-2 rounded-full border border-gray-200 text-gray-600 font-medium hover:bg-gray-50 transition-colors"
+              >
+                Go Back
+              </button>
+              <button
+                onClick={() => {
+                  setShowSkipConfirm(false);
+                  setStep("summary");
+                }}
+                className="px-4 py-2 rounded-full bg-[#7755FF] text-white font-semibold hover:bg-[#6644ee] transition-colors"
+              >
+                Yes, Skip
+              </button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Main Content Area */}
@@ -730,70 +784,81 @@ export function AIRequestFlow({ initialText, onClose, user, profile }: AIRequest
               key="auth"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="w-full flex flex-col items-center"
+              className="w-full flex-1 flex flex-col items-center justify-center p-6"
             >
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-stretch w-full max-w-5xl">
-                {/* Left side: Auth Form */}
-                <div className="space-y-8 bg-white p-12 rounded-[2.5rem] shadow-[0_32px_80px_rgba(0,0,0,0.06)] border border-gray-100">
-                  <div className="text-left mb-4">
-                    <h2 className="text-4xl font-extrabold text-black mb-3 tracking-tight" style={{ fontFamily: 'var(--font-expanded)' }}>Almost there!</h2>
-                    <p className="text-lg text-gray-500 font-medium">
-                      <span className="text-green-600 font-bold">Your request is ready to launch.</span> Sign in to publish it and start receiving offers.
-                    </p>
-                  </div>
-
-                  {authMode === 'signup' ? (
-                    <div className="space-y-8">
-                      <SignUpForm onSuccess={() => handleFinish()} />
-                      <p className="text-lg text-center text-gray-400 font-medium">
-                        Already using Onseek?{" "}
-                        <button onClick={() => setAuthMode('login')} className="text-[#6925DC] font-bold hover:underline transition-all">
-                          Log in
-                        </button>
-                      </p>
+              <div className="max-w-[880px] w-full bg-white rounded-[1.5rem] overflow-hidden">
+                <div className="p-6 w-full">
+                  <div className="flex flex-col md:flex-row gap-10 lg:gap-14 items-stretch w-full">
+                    {/* Left column: Forms */}
+                    <div className="w-full md:w-[380px] shrink-0 flex flex-col justify-center text-left">
+                      <div className="mb-8">
+                        <h2 className="text-2xl font-bold text-gray-900 mb-2" style={{ fontFamily: 'var(--font-expanded)' }}>Almost there!</h2>
+                        <p className="text-sm text-gray-500 leading-relaxed max-w-[320px]">
+                          <span className="text-green-600 font-bold">Your request is ready to launch.</span> Sign in to publish it and start receiving offers.
+                        </p>
+                      </div>
+                      
+                      <div className="w-full">
+                        {authMode === 'signup' ? (
+                          <div className="space-y-6">
+                            <SignUpForm onSuccess={() => handleFinish()} />
+                            <p className="text-sm text-center text-gray-500">
+                              Already using Onseek?{" "}
+                              <button onClick={() => setAuthMode('login')} className="text-[#7755FF] font-semibold hover:underline">
+                                Log in
+                              </button>
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="space-y-6">
+                            <SignInForm onSuccess={() => handleFinish()} />
+                            <p className="text-sm text-center text-gray-500">
+                              Don&apos;t have an account?{" "}
+                              <button onClick={() => setAuthMode('signup')} className="text-[#7755FF] font-semibold hover:underline">
+                                Sign up
+                              </button>
+                            </p>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  ) : (
-                    <div className="space-y-8">
-                      <SignInForm onSuccess={() => handleFinish()} />
-                      <p className="text-lg text-center text-gray-400 font-medium">
-                        Don&apos;t have an account?{" "}
-                        <button onClick={() => setAuthMode('signup')} className="text-[#6925DC] font-bold hover:underline transition-all">
-                          Sign up
-                        </button>
-                      </p>
-                    </div>
-                  )}
-                </div>
 
-                {/* Right side: Social Proof / Perks */}
-                <div className="flex flex-col justify-center bg-gray-50/50 p-12 rounded-[2.5rem] border border-gray-100">
-                  <h3 className="text-2xl font-extrabold mb-10 tracking-tight" style={{ fontFamily: 'var(--font-expanded)' }}>Join the community</h3>
+                    {/* Right column: Perks Section */}
+                    <div className="hidden md:flex flex-1 min-w-0">
+                      <div className="p-10 rounded-[1.5rem] bg-gray-50 h-full flex flex-col justify-center">
+                        <div className="mb-8 flex items-center gap-3">
+                          <h3 className="text-lg lg:text-xl font-semibold text-[#222234]" style={{ fontFamily: 'var(--font-expanded)' }}>Join the community</h3>
+                        </div>
 
-                  <div className="space-y-8">
-                    {[
-                      { icon: <ShieldCheck className="h-6 w-6 text-green-500" />, title: "Verified Sellers", desc: "Buy with confidence from vetted professionals globally." },
-                      { icon: <Sparkles className="h-6 w-6 text-[#6925DC]" />, title: "Private Matches", desc: "Get exclusive data-driven offers for your specific request." },
-                      { icon: <LockKeyhole className="h-6 w-6 text-orange-500" />, title: "Secure Deals", desc: "Your data and payments are always protected end-to-end." },
-                      { icon: <Crown className="h-6 w-6 text-yellow-500" />, title: "Premium Access", desc: "First-look at rare items before they ever hit the public feed." }
-                    ].map((perk, idx) => (
-                      <div key={idx} className="flex gap-6 items-start">
-                        <div className="shrink-0 p-3 bg-white rounded-2xl shadow-sm border border-gray-100">{perk.icon}</div>
-                        <div>
-                          <p className="font-extrabold text-black text-lg mb-1" style={{ fontFamily: 'var(--font-expanded)' }}>{perk.title}</p>
-                          <p className="text-gray-500 font-medium leading-relaxed">{perk.desc}</p>
+                        <div className="space-y-6">
+                          {[
+                            { icon: <Target className="h-5 w-5 text-[#7755FF]" />, title: "Smart Requests", desc: "Broadcast your needs. Post detailed requests and let the marketplace come to you." },
+                            { icon: <Sparkles className="h-5 w-5 text-yellow-500" />, title: "Live Proposals", desc: "Get notified instantly. Receive tailored offers from professionals as soon as they’re submitted." },
+                            { icon: <Store className="h-5 w-5 text-green-500" />, title: "Personal Inventory", desc: "Your global storefront. List items or services in a dedicated space accessible to the entire community." },
+                            { icon: <MessageCircle className="h-5 w-5 text-[#222234]" />, title: "Direct Messaging", desc: "Close the deal. Engage in private, secure conversations to negotiate and finalize details." }
+                          ].map((perk, idx) => (
+                            <div key={idx} className="flex gap-4">
+                              <div className="shrink-0 mt-0.5">{perk.icon}</div>
+                              <div>
+                                <p className="font-semibold text-[#222234] text-sm mb-0.5" style={{ fontFamily: 'var(--font-expanded)' }}>{perk.title}</p>
+                                <p className="text-xs text-gray-500 leading-relaxed">{perk.desc}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+
+                        <div className="mt-12 flex items-center gap-4">
+                          <div className="flex -space-x-3 items-center">
+                            {[1, 2, 3, 4].map((i) => (
+                              <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-gray-200 overflow-hidden shadow-sm transition-transform hover:scale-110 hover:z-10 bg-cover bg-center"
+                                style={{ backgroundImage: `url(https://i.pravatar.cc/100?u=user${i + 20})` }} />
+                            ))}
+                            <div className="w-8 h-8 rounded-full border-2 border-white bg-[#7755FF] flex items-center justify-center text-[10px] font-bold text-white shadow-sm">+</div>
+                          </div>
+                          <p className="text-xs text-gray-400 font-medium tracking-tight uppercase leading-none">Join a whole community</p>
                         </div>
                       </div>
-                    ))}
-                  </div>
-
-                  <div className="mt-auto pt-12 border-t border-gray-100 flex items-center gap-6">
-                    <div className="flex -space-x-4">
-                      {[1, 2, 3, 4, 5].map((i) => (
-                        <div key={i} className="w-12 h-12 rounded-full border-4 border-white shadow-xl transition-transform hover:scale-110 hover:z-10 bg-cover"
-                          style={{ backgroundImage: `url(https://i.pravatar.cc/150?u=user${i + 40})` }} />
-                      ))}
                     </div>
-                    <p className="text-sm font-bold text-gray-400 uppercase tracking-widest leading-none">Joined by 50,000+ members</p>
                   </div>
                 </div>
               </div>

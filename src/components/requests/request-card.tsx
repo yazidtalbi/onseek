@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { memo, useState, useRef, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { formatFullName } from "@/lib/utils/name";
 import { formatTimeAgo } from "@/lib/utils/time";
 import { formatSubmissionCount } from "@/lib/utils/submissions";
 import { formatBudget } from "@/lib/utils/format";
@@ -274,14 +275,14 @@ function RequestCardComponent({
       <div className="flex items-center gap-2">
         <div className="w-[24px] h-[24px] rounded-full overflow-hidden shrink-0 border border-gray-100 flex items-center justify-center bg-gray-50 text-[10px] font-bold text-gray-400 relative">
           {request.profiles?.avatar_url ? (
-            <Image src={request.profiles.avatar_url} alt={request.profiles?.username || 'user'} fill className="object-cover" sizes="24px" />
+            <Image src={request.profiles.avatar_url} alt={request.profiles?.first_name ? `${request.profiles.first_name} ${request.profiles.last_name || ''}` : (request.profiles?.username || 'user')} fill className="object-cover" sizes="24px" />
           ) : (
-            (request.profiles?.username || 'U').charAt(0).toUpperCase()
+            (request.profiles?.first_name?.charAt(0) || request.profiles?.username?.charAt(0) || 'U').toUpperCase()
           )}
         </div>
         <div className="flex items-center gap-1.5">
           <span className={cn("font-bold text-[#1A1A1A]", isLarge ? "text-[15px]" : "text-[13px]")}>
-            {request.profiles?.username || 'Username'}
+            {formatFullName(request.profiles?.first_name, request.profiles?.last_name, request.profiles?.username)}
           </span>
           <span className={cn("text-gray-400", isLarge ? "text-[14px]" : "text-[12px]")}>
             · {timeAgo}
@@ -311,7 +312,10 @@ function RequestCardComponent({
   const isFeedView = variant === "feed";
 
   const cardContent = isFeedView ? (
-    <div className="flex flex-col h-full bg-white border border-gray-100/50 shadow-none relative transition-colors hover:border-gray-200">
+    <div className={cn(
+      "flex flex-col h-full bg-white border border-gray-100/50 shadow-none relative transition-colors hover:border-gray-200",
+      noBorder && "bg-transparent border-none px-0"
+    )}>
       <div className="px-4 pt-4 pb-2">
         <div className="flex items-center justify-between w-full mb-5">
           {request.category && (
@@ -809,20 +813,20 @@ function RequestCardComponent({
                 <section className={cn(smallImages && !request.title && "hidden", "px-3 pt-5 pb-2")}>
                   {/* Top Classification Row (Above Title) */}
                   <div className="flex items-center justify-between w-full">
-                    {request.category && (                      <Badge
-                        variant="outline"
-                        className={cn(
-                          "rounded-full font-bold border shadow-none shrink-0 inline-flex items-center justify-center bg-transparent gap-2",
-                          isLarge ? "px-5 py-2 text-[15px] sm:text-[16px]" : "px-4 py-1.5 text-[13px] sm:text-[14px]",
-                          "border-gray-200/40",
-                          getTheme(request.category).text
-                        )}
-                      >
-                        <span className={cn("rounded-full bg-current", isLarge ? "w-2 h-2" : "w-1.5 h-1.5")} />
-                        <span className="text-[#1A1A1A]">{request.category.charAt(0).toUpperCase() + request.category.slice(1)}</span>
-                      </Badge>
+                    {request.category && (<Badge
+                      variant="outline"
+                      className={cn(
+                        "rounded-full font-bold border shadow-none shrink-0 inline-flex items-center justify-center bg-transparent gap-2",
+                        isLarge ? "px-5 py-2 text-[15px] sm:text-[16px]" : "px-4 py-1.5 text-[13px] sm:text-[14px]",
+                        "border-gray-200/40",
+                        getTheme(request.category).text
+                      )}
+                    >
+                      <span className={cn("rounded-full bg-current", isLarge ? "w-2 h-2" : "w-1.5 h-1.5")} />
+                      <span className="text-[#1A1A1A]">{request.category.charAt(0).toUpperCase() + request.category.slice(1)}</span>
+                    </Badge>
                     )}
- 
+
                     <Badge
                       variant="outline"
                       className={cn(

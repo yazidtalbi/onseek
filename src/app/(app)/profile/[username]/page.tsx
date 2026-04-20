@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import type { RequestItem, Submission } from "@/lib/types";
 import Image from "next/image";
 import { createRequestUrl } from "@/lib/utils/slug";
+import { formatFullName } from "@/lib/utils/name";
 
 export const dynamic = "force-dynamic";
 
@@ -30,7 +31,7 @@ export default async function ProfilePage({
   // Fetch all requests created by user
   const { data: requests } = await supabase
     .from("requests")
-    .select("*, profiles(username, avatar_url)")
+    .select("*, profiles(username, avatar_url, first_name, last_name)")
     .eq("user_id", profile.id)
     .order("created_at", { ascending: false });
 
@@ -280,17 +281,17 @@ export default async function ProfilePage({
                 {/* Avatar */}
                 <div className="flex-shrink-0">
                   {profile.avatar_url ? (
-                    <div className="relative w-24 h-24 rounded-full overflow-hidden border-2 border-[#e5e7eb]">
+                    <div className="relative w-24 h-24 rounded-full overflow-hidden border-0 shadow-sm transition-transform hover:scale-[1.02]">
                       <img
                         src={profile.avatar_url}
-                        alt={profile.display_name || profile.username}
+                        alt={formatFullName(profile.first_name, profile.last_name, profile.username)}
                         className="w-full h-full object-cover"
                       />
                     </div>
                   ) : (
-                    <div className="w-24 h-24 rounded-full bg-gray-100 border-2 border-[#e5e7eb] flex items-center justify-center">
+                    <div className="w-24 h-24 rounded-full bg-gray-100 border-0 flex items-center justify-center">
                       <span className="text-2xl font-semibold text-gray-600">
-                        {(profile.display_name || profile.username)[0].toUpperCase()}
+                        {(profile.first_name?.charAt(0) || profile.username?.charAt(0) || "U").toUpperCase()}
                       </span>
                     </div>
                   )}
@@ -298,11 +299,9 @@ export default async function ProfilePage({
                 {/* Profile Info */}
                 <div className="min-w-0">
                   <h1 className="text-3xl font-bold text-[#1A1A1A] tracking-tight">
-                    {profile.username}
+                    {formatFullName(profile.first_name, profile.last_name, profile.username)}
                   </h1>
-                  {profile.display_name && profile.display_name !== profile.username && (
-                    <p className="text-lg font-medium text-gray-900 mt-1">{profile.display_name}</p>
-                  )}
+                  <p className="text-lg font-medium text-gray-500 mt-0.5">@{profile.username}</p>
                   {profile.bio && (
                     <p className="text-sm text-gray-500 mt-3 max-w-sm">{profile.bio}</p>
                   )}

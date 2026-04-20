@@ -17,12 +17,12 @@ export default function AppLoading() {
       <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-6 pb-4 w-full">
         {/* Variety of rounded blocks with different aspect ratios */}
         {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((i) => (
-          <div 
-            key={i} 
-            className="break-inside-avoid mb-6 bg-gray-100/60 animate-pulse rounded-[32px]" 
-            style={{ 
-              height: i % 4 === 0 ? '420px' : i % 3 === 0 ? '300px' : i % 2 === 0 ? '360px' : '260px' 
-            }} 
+          <div
+            key={i}
+            className="break-inside-avoid mb-6 bg-gray-100/60 animate-pulse rounded-[32px]"
+            style={{
+              height: i % 4 === 0 ? '420px' : i % 3 === 0 ? '300px' : i % 2 === 0 ? '360px' : '260px'
+            }}
           />
         ))}
       </div>

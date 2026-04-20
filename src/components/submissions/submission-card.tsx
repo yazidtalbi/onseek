@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { Link as LinkIcon, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatTimeAgo } from "@/lib/utils/time";
+import { formatFullName } from "@/lib/utils/name";
 import { ImagePreviewDialog } from "@/components/ui/image-preview-dialog";
 import { ContactInfoDialog } from "@/components/submissions/contact-info-dialog";
 import Link from "next/link";
@@ -66,6 +67,7 @@ export function SubmissionCard({
   requestOwnerId?: string;
   hideTitle?: boolean;
   largeText?: boolean;
+  noBorder?: boolean;
 }) {
   const host = getHost(submission.url);
   const [thumbnailUrl, setThumbnailUrl] = React.useState<string | null>(null);
@@ -110,9 +112,9 @@ export function SubmissionCard({
     ? submission.notes.replace(/^\[Personal Item\]\s*/i, "")
     : "";
   const domain = submission.url === "personal-item" ? "Personal item" : host;
-  const isPersonalItem = submission.url === "personal-item";
-  // Get username from profiles relation
-  const username = (submission as any).profiles?.username;
+  const profile = (submission as any).profiles;
+  const username = profile?.username;
+  const fullName = formatFullName(profile?.first_name, profile?.last_name, username);
 
   // Fetch submitter profile when contact dialog opens (for everyone)
   React.useEffect(() => {
@@ -160,13 +162,16 @@ export function SubmissionCard({
     <Card
       className={cn(
         "transition-all hover:bg-[#f9fafb] group cursor-pointer border",
-        isOnlyOne
-          ? "rounded-2xl"
-          : isFirst
-            ? "rounded-t-2xl rounded-b-none"
-            : isLast
-              ? "rounded-b-2xl rounded-t-none border-t-0"
-              : "rounded-none border-t-0"
+        noBorder && "border-none bg-transparent shadow-none hover:bg-gray-50/50",
+        !noBorder && (
+          isOnlyOne
+            ? "rounded-2xl"
+            : isFirst
+              ? "rounded-t-2xl rounded-b-none"
+              : isLast
+                ? "rounded-b-2xl rounded-t-none border-t-0"
+                : "rounded-none border-t-0"
+        )
       )}
     >
       <CardContent className="p-4 sm:p-5">
@@ -179,13 +184,13 @@ export function SubmissionCard({
                   {(submission as any).profiles?.avatar_url ? (
                     <Image
                       src={(submission as any).profiles?.avatar_url}
-                      alt={username}
+                      alt={fullName || "User"}
                       fill
                       className="object-cover"
                       sizes="18px"
                     />
                   ) : (
-                    username.charAt(0).toUpperCase()
+                    (fullName || "U").charAt(0).toUpperCase()
                   )}
                 </div>
                 <Link
@@ -193,7 +198,7 @@ export function SubmissionCard({
                   className="text-xs font-bold text-[#1A1A1A] hover:text-neutral-700 hover:underline truncate"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  {username}
+                  {fullName}
                 </Link>
                 <span className="text-xs text-neutral-400">•</span>
               </div>
@@ -394,7 +399,7 @@ export function SubmissionCard({
           requestId={requestId}
           requestTitle={requestTitle || storeName}
           proposerId={submission.user_id}
-          proposerName={username || "Proposer"}
+          proposerName={fullName || "Proposer"}
         />
       )}
     </Card>

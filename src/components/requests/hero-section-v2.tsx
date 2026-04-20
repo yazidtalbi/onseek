@@ -47,11 +47,33 @@ export function HeroSectionV2({ user, profile, tradeMode, setTradeMode }: HeroSe
   return (
     <>
       <section id="onseek-hero" className="w-full h-auto px-4 md:px-6 mt-5 overflow-visible">
-        <div className="mx-auto w-full max-w-[1280px] min-h-[600px] lg:h-[75vh] relative flex flex-col lg:flex-row items-stretch gap-0 group">
+        <div className="mx-auto w-full max-w-[1280px] min-h-[600px] lg:h-[642px] relative group">
+          {/* Unified Container */}
+          <div className="w-full h-full bg-[#6925DC] relative flex flex-col justify-center items-start py-12 lg:py-20 px-10 lg:px-16 rounded-[24px] overflow-hidden">
+            {/* Hero Image - Rounded with spacing */}
+            <div className="hidden lg:block absolute right-6 top-6 bottom-6 w-[42%] pointer-events-none z-0 rounded-[20px] overflow-hidden">
+              <Image
+                src="/hero/finalhero.png"
+                alt="Hero illustration"
+                fill
+                className="object-cover"
+                priority
+              />
+            </div>
 
+            {/* Cloud Overlay - Floating on top of the image edge */}
+            <div 
+              className="hidden lg:block absolute z-20 pointer-events-none w-48 h-48"
+              style={{ top: '28px', right: '420px', transform: 'scale(1.3)' }}
+            >
+              <Image
+                src="/hero/finalnuage.png"
+                alt=""
+                fill
+                className="object-contain"
+              />
+            </div>
 
-          {/* Left Side: Less Rounded Purple Content */}
-          <div className="flex-1 lg:flex-[1.6] bg-[#6925DC] relative flex flex-col justify-center items-start py-12 lg:py-20 px-10 lg:px-16 rounded-[24px] overflow-hidden">
             {/* DIMMEN SVG (Bottom Left Ornament) */}
             <div className="absolute bottom-0 left-0 w-[400px] h-[400px] pointer-events-none opacity-30 z-0">
               <Image
@@ -62,7 +84,7 @@ export function HeroSectionV2({ user, profile, tradeMode, setTradeMode }: HeroSe
               />
             </div>
 
-            <div className="relative z-10 w-full">
+            <div className="relative z-10 w-full lg:max-w-[58%]">
               <AnimatePresence initial={false}>
                 {!searchValue && (
                   <motion.div
@@ -118,13 +140,23 @@ export function HeroSectionV2({ user, profile, tradeMode, setTradeMode }: HeroSe
 
               {/* Search/Input Bar */}
               {tradeMode === "buy" ? (
-                <div className="w-full max-w-2xl relative">
-                  <div className="relative flex flex-col w-full min-h-[120px] h-auto bg-white rounded-[24px] px-8 pt-7 pb-14 transition-all duration-300 border border-transparent focus-within:border-white/20">
+                <div className="w-full max-w-xl relative">
+                  <div className="relative flex flex-col w-full min-h-[100px] h-auto bg-white rounded-[24px] px-8 pt-7 pb-14 transition-all duration-300 border border-transparent focus-within:border-white/20">
                     <textarea
                       ref={textareaRef}
                       placeholder="Describe what you are looking for..."
                       value={searchValue}
                       onChange={(e) => setSearchValue(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !e.shiftKey) {
+                          e.preventDefault();
+                          if (searchValue.trim()) {
+                            setIsAIFlowOpen(true);
+                          } else {
+                            window.dispatchEvent(new CustomEvent('open-create-request-modal'));
+                          }
+                        }
+                      }}
                       rows={2}
                       className="bg-transparent border-none outline-none w-full text-[#1A1A1A] placeholder:text-gray-400 placeholder:text-[18px] text-[18px] font-medium resize-none overflow-hidden leading-relaxed"
                     />
@@ -163,17 +195,6 @@ export function HeroSectionV2({ user, profile, tradeMode, setTradeMode }: HeroSe
                 </Button>
               )}
             </div>
-          </div>
-
-          {/* Right Side: Less Rounded Image */}
-          <div className="hidden lg:block flex-1 relative h-full rounded-[24px] overflow-hidden bg-gray-100 z-10">
-            <Image
-              src="/hero/hero-illustration.jpg"
-              alt="Hero illustration"
-              fill
-              className="object-cover"
-              priority
-            />
           </div>
         </div>
       </section>

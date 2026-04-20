@@ -12,6 +12,7 @@ import { Mail, User, ExternalLink, Phone, Send, ZoomIn, MessageCircle } from "lu
 import Image from "next/image";
 import type { Profile } from "@/lib/types";
 import { Button } from "@/components/ui/button";
+import { formatFullName } from "@/lib/utils/name";
 import { ImagePreviewDialog } from "@/components/ui/image-preview-dialog";
 
 interface ContactInfoDialogProps {
@@ -97,13 +98,13 @@ export function ContactInfoDialog({
                   <User className="h-4 w-4 text-gray-600" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs text-neutral-500">Username</p>
+                  <p className="text-xs text-neutral-500">Seller</p>
                   <Link
                     href={`/profile/${submitterProfile.username}`}
                     className="text-sm font-medium text-[#7755FF] hover:underline inline-flex items-center gap-1"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    @{submitterProfile.username}
+                    {formatFullName(submitterProfile.first_name, submitterProfile.last_name, submitterProfile.username)}
                     <ExternalLink className="h-3 w-3" />
                   </Link>
                 </div>

@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { ReportDialog } from "@/components/reports/report-dialog";
 import { formatBudget } from "@/lib/utils/format";
 import Image from "next/image";
+import { formatFullName } from "@/lib/utils/name";
 
 function cleanDescription(description: string) {
   return description.replace(/<!--REQUEST_PREFS:.*?-->/, "").trim();
@@ -171,11 +172,11 @@ export function RequestDetailView({
               <div className="space-y-2 ml-auto lg:text-right hidden sm:block">
                 <span className="text-[13px] font-medium text-gray-500" style={{ fontFamily: 'var(--font-inter-display)' }}>Posted By</span>
                 <div className="flex items-center gap-3 justify-end">
-                  <span className="text-lg font-bold text-black">{request.profiles?.username || "Anonymous"}</span>
+                  <span className="text-lg font-bold text-black">{formatFullName(request.profiles?.first_name, request.profiles?.last_name, request.profiles?.username || "Anonymous")}</span>
                   <div className="w-10 h-10 rounded-full border-2 border-gray-100 overflow-hidden bg-gray-50 flex items-center justify-center text-xs font-bold text-gray-400 relative">
                     {request.profiles?.avatar_url ? (
                       <Image src={request.profiles.avatar_url} alt="avatar" fill className="object-cover" />
-                    ) : (request.profiles?.username || 'U').charAt(0).toUpperCase()}
+                    ) : (request.profiles?.first_name?.charAt(0) || request.profiles?.username?.charAt(0) || 'U').toUpperCase()}
                   </div>
                 </div>
               </div>

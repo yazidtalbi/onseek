@@ -22,6 +22,8 @@ export function ProfileForm({ profile }: { profile: Profile }) {
     resolver: zodResolver(profileSchema),
     defaultValues: {
       username: profile.username || "",
+      first_name: profile.first_name || "",
+      last_name: profile.last_name || "",
       bio: profile.bio || "",
     },
   });
@@ -29,6 +31,8 @@ export function ProfileForm({ profile }: { profile: Profile }) {
   const onSubmit = (values: Values) => {
     const formData = new FormData();
     formData.set("username", values.username);
+    formData.set("first_name", values.first_name || "");
+    formData.set("last_name", values.last_name || "");
     formData.set("bio", values.bio || "");
     startTransition(async () => {
       const res = await updateProfileAction(formData);
@@ -44,6 +48,26 @@ export function ProfileForm({ profile }: { profile: Profile }) {
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" noValidate>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="first_name">First Name</Label>
+          <Input id="first_name" {...form.register("first_name")} placeholder="e.g. John" />
+          {form.formState.errors.first_name ? (
+            <p className="text-xs text-red-600">
+              {form.formState.errors.first_name.message}
+            </p>
+          ) : null}
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="last_name">Last Name</Label>
+          <Input id="last_name" {...form.register("last_name")} placeholder="e.g. Doe" />
+          {form.formState.errors.last_name ? (
+            <p className="text-xs text-red-600">
+              {form.formState.errors.last_name.message}
+            </p>
+          ) : null}
+        </div>
+      </div>
       <div className="space-y-2">
         <Label htmlFor="username">Username</Label>
         <Input id="username" {...form.register("username")} disabled className="bg-gray-50 text-gray-500 cursor-not-allowed" />

@@ -54,7 +54,7 @@ export default async function RequestDetailPage({
 
   const { data: request } = await supabase
     .from("requests")
-    .select("*, profiles(username, avatar_url)")
+    .select("*, profiles(username, avatar_url, first_name, last_name)")
     .eq("slug", slug)
     .maybeSingle();
 
@@ -88,7 +88,7 @@ export default async function RequestDetailPage({
 
   const { data: submissions } = await supabase
     .from("submissions")
-    .select("*, votes(vote, user_id), profiles(username, avatar_url)")
+    .select("*, votes(vote, user_id), profiles(username, avatar_url, first_name, last_name)")
     .eq("request_id", id)
     .order("created_at", { ascending: false });
 
@@ -98,7 +98,7 @@ export default async function RequestDetailPage({
   // Fetch similar requests (same category, exclude current request)
   const { data: similarRequests } = await supabase
     .from("requests")
-    .select("*, profiles(username, avatar_url)")
+    .select("*, profiles(username, avatar_url, first_name, last_name)")
     .eq("category", request.category)
     .neq("id", id)
     .order("created_at", { ascending: false })

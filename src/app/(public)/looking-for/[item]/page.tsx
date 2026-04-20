@@ -42,7 +42,7 @@ export default async function LookingForItemPage({ params }: PageProps) {
 
   const { data: recentRequests } = await supabase
     .from("requests")
-    .select("*, profiles(display_name, avatar_url)")
+    .select("*, profiles(username, avatar_url, first_name, last_name)")
     .eq("status", "open")
     .order("created_at", { ascending: false })
     .limit(5);

@@ -19,30 +19,30 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export async function generateMetadata(): Promise<Metadata> {
-  const supabase = await createServerSupabaseClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  
-  const title = user ? "Onseek" : "Onseek — Find what matters, faster";
-  const description = "Stop searching and start discovering. Let the right item find you.";
-
-  return {
-    title,
-    description,
-    icons: [{ rel: "icon", url: "/favicon.png" }],
-    openGraph: {
-      title,
-      description,
-      images: [{ url: "/og-image.jpg", width: 1200, height: 630, alt: "Onseek logo against a modern, interconnected digital landscape." }],
-    },
-    twitter: {
-      card: "summary_large_image",
-      title,
-      description,
-      images: ["/og-image.jpg"],
-    },
-  };
-}
+export const metadata: Metadata = {
+  title: "Onseek — Find what matters, faster",
+  description: "Stop searching and start discovering. Let the right item find you.",
+  icons: {
+    icon: [
+      { url: "/favicon/favicon-96x96.png", sizes: "96x96", type: "image/png" },
+      { url: "/favicon/favicon.svg", type: "image/svg+xml" },
+    ],
+    shortcut: "/favicon/favicon.ico",
+    apple: "/favicon/apple-touch-icon.png",
+  },
+  manifest: "/favicon/site.webmanifest",
+  openGraph: {
+    title: "Onseek",
+    description: "Stop searching and start discovering. Let the right item find you.",
+    images: [{ url: "/og-image.jpg", width: 1200, height: 630, alt: "Onseek logo against a modern, interconnected digital landscape." }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Onseek",
+    description: "Stop searching and start discovering. Let the right item find you.",
+    images: ["/og-image.jpg"],
+  },
+};
 
 import { Analytics } from "@vercel/analytics/react";
 

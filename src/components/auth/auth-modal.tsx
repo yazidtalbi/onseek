@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/dialog";
 import { SignInForm } from "./sign-in-form";
 import { SignUpForm } from "./sign-up-form";
-import { ShieldCheck, Sparkles, LockKeyhole, Crown, X } from "lucide-react";
+import { Target, Sparkles, Store, MessageCircle, X } from "lucide-react";
 
 interface AuthModalProps {
   open: boolean;
@@ -36,11 +36,11 @@ export function AuthModal({
           <X className="h-5 w-5" />
         </button>
 
-        <div className="px-10 pt-10 pb-4 w-full">
+        <div className="p-6 w-full">
           <div className="flex flex-col md:flex-row gap-12 items-stretch w-full">
             {/* Left column: Forms */}
-            <div className="w-full md:w-[400px] shrink-0 space-y-6 pb-4">
-              <div className="text-left mb-6">
+            <div className="w-full md:w-[400px] shrink-0 space-y-6 pb-4 flex flex-col justify-center text-left">
+              <div className="text-left mb-6 w-full">
                 <h2 className="text-2xl font-bold text-gray-900 mb-1 text-left" style={{ fontFamily: 'var(--font-expanded)' }}>
                   {title}
                 </h2>
@@ -50,7 +50,7 @@ export function AuthModal({
               </div>
               
               {authMode === 'signup' ? (
-                <div className="space-y-6">
+                <div className="space-y-6 w-full">
                   <SignUpForm onSuccess={() => onOpenChange(false)} />
                   <p className="text-sm text-center text-gray-500">
                     Already using Onseek?{" "}
@@ -63,7 +63,7 @@ export function AuthModal({
                   </p>
                 </div>
               ) : (
-                <div className="space-y-6">
+                <div className="space-y-6 w-full">
                   <SignInForm onSuccess={() => onOpenChange(false)} />
                   <p className="text-sm text-center text-gray-500">
                     Don't have an account?{" "}
@@ -87,10 +87,10 @@ export function AuthModal({
 
                 <div className="space-y-6">
                   {[
-                    { icon: <ShieldCheck className="h-5 w-5 text-green-500" />, title: "Verified Sellers", desc: "Buy with confidence from vetted professionals." },
-                    { icon: <Sparkles className="h-5 w-5 text-[#7755FF]" />, title: "Private Matches", desc: "Get exclusive offers for your specific request." },
-                    { icon: <LockKeyhole className="h-5 w-5 text-orange-500" />, title: "Secure Deals", desc: "Your data and payments are always protected." },
-                    { icon: <Crown className="h-5 w-5 text-yellow-500" />, title: "Premium Access", desc: "First-look at rare items before they hit the feed." }
+                    { icon: <Target className="h-5 w-5 text-[#7755FF]" />, title: "Smart Requests", desc: "Broadcast your needs. Post detailed requests and let the marketplace come to you." },
+                    { icon: <Sparkles className="h-5 w-5 text-yellow-500" />, title: "Live Proposals", desc: "Get notified instantly. Receive tailored offers from professionals as soon as they’re submitted." },
+                    { icon: <Store className="h-5 w-5 text-green-500" />, title: "Personal Inventory", desc: "Your global storefront. List items or services in a dedicated space accessible to the entire community." },
+                    { icon: <MessageCircle className="h-5 w-5 text-[#222234]" />, title: "Direct Messaging", desc: "Close the deal. Engage in private, secure conversations to negotiate and finalize details." }
                   ].map((perk, idx) => (
                     <div key={idx} className="flex gap-4">
                       <div className="shrink-0 mt-0.5">{perk.icon}</div>
@@ -102,7 +102,7 @@ export function AuthModal({
                   ))}
                 </div>
 
-                <div className="mt-auto pt-8 border-t border-gray-200/50 flex items-center gap-4">
+                <div className="mt-12 flex items-center gap-4">
                   <div className="flex -space-x-3 items-center">
                     {[1, 2, 3, 4].map((i) => (
                       <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-gray-200 overflow-hidden shadow-sm transition-transform hover:scale-110 hover:z-10 bg-cover bg-center"
@@ -110,7 +110,7 @@ export function AuthModal({
                     ))}
                     <div className="w-8 h-8 rounded-full border-2 border-white bg-[#7755FF] flex items-center justify-center text-[10px] font-bold text-white shadow-sm">+</div>
                   </div>
-                  <p className="text-xs text-gray-400 font-medium tracking-tight">Joined by 50,000+ members</p>
+                  <p className="text-xs text-gray-400 font-medium tracking-tight">Join a whole community</p>
                 </div>
               </div>
             </div>

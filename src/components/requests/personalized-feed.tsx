@@ -289,7 +289,7 @@ export function PersonalizedFeed({
 
         {/* Loading state */}
         {(isLoading || hasPreferences === undefined) && allItems.length === 0 ? (
-          <AppLoading />
+          user ? <AppLoading /> : null
         ) : isError ? (
           <div className="mx-auto w-full">
             <div className="rounded-lg border border-dashed border-[#e5e7eb]  p-8 text-center">
@@ -384,14 +384,24 @@ export function PersonalizedFeed({
                             className="w-full h-full object-cover"
                           />
                         ) : (
-                          profile?.username?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase() || "U"
+                          (profile?.first_name?.charAt(0) || profile?.username?.charAt(0) || user.email?.charAt(0).toUpperCase() || "U")
                         )}
                       </div>
                       <textarea
                         ref={textareaRef}
-                        placeholder={`What are you looking for, ${profile?.username || "Guest"}?`}
+                        placeholder="Describe what you are looking for..."
                         value={searchValue}
                         onChange={(e) => setSearchValue(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && !e.shiftKey) {
+                            e.preventDefault();
+                            if (searchValue.trim()) {
+                              setIsAIFlowOpen(true);
+                            } else {
+                              window.dispatchEvent(new CustomEvent('open-create-request-modal'));
+                            }
+                          }
+                        }}
                         rows={2}
                         className="bg-transparent border-none outline-none w-full text-[#1A1A1A] placeholder:text-[#a5abb7] placeholder:text-[18px] text-[18px] font-medium resize-none overflow-hidden leading-relaxed pt-1.5"
                       />
@@ -406,10 +416,9 @@ export function PersonalizedFeed({
                             window.dispatchEvent(new CustomEvent('open-create-request-modal'));
                           }
                         }}
-                        className="rounded-full bg-[#1A1A1A] hover:bg-black text-white px-6 h-11 text-[15px] font-bold flex items-center justify-center gap-2 transition-colors shadow-none"
+                        className="rounded-full bg-[#1A1A1A] hover:bg-black text-white px-6 h-11 text-[15px] font-bold flex items-center justify-center transition-colors shadow-none"
                       >
-                        Request
-                        <Sparkles className="h-4 w-4" />
+                        Post
                       </Button>
                     </div>
                   </div>

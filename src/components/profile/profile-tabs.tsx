@@ -76,16 +76,16 @@ export function ProfileTabs({
       {/* Content */}
       <div>
         {activeTab === "activity" && (
-          <div className="space-y-3">
+          <div className="divide-y divide-gray-100">
             {activities.length > 0 ? (
               activities.map((activity) => (
                 <Link
                   key={activity.id}
                   href={activity.link}
-                  className="flex items-center gap-3 p-3 rounded-lg border border-[#e5e7eb]  hover:bg-gray-50 transition-colors group"
+                  className="flex items-center gap-4 py-4 hover:bg-gray-50/50 transition-colors group"
                 >
                   <div className={cn(
-                    "w-8 h-8 rounded-full shrink-0 flex items-center justify-center",
+                    "w-9 h-9 rounded-full shrink-0 flex items-center justify-center transition-transform group-hover:scale-105",
                     activity.points > 0 ? "bg-green-500/10 text-green-600" : 
                     activity.points < 0 ? "bg-red-500/10 text-red-600" : 
                     "bg-gray-100 text-gray-600"
@@ -99,16 +99,15 @@ export function ProfileTabs({
                     <div className="flex items-center gap-2 flex-wrap">
                       {activity.points !== 0 && (
                         <span className={cn(
-                          "text-sm font-semibold",
+                          "text-sm font-bold",
                           activity.points > 0 ? "text-green-600" : "text-red-600"
                         )}>
                           {activity.points > 0 ? "+" : ""}{activity.points}
                         </span>
                       )}
-                      <p className="text-sm text-foreground group-hover:text-foreground transition-colors">
+                      <p className="text-[15px] font-medium text-gray-900 leading-tight">
                         {(() => {
                           const desc = activity.description;
-                          // Patterns: "Posted [name]", "in [name]", "Accepted answer in [name]", "Received upvote on [name]"
                           const prefixes = ["Posted ", "in ", "Accepted answer in ", "Received upvote on "];
                           
                           for (const prefix of prefixes) {
@@ -119,9 +118,10 @@ export function ProfileTabs({
                               
                               return (
                                 <>
-                                  {before}
-                                  {prefix}
-                                  <span className="text-[#7755FF]">{name}</span>
+                                  <span className="text-gray-500">{before}{prefix}</span>
+                                  <span className="text-[#6925DC] hover:underline transition-all">
+                                    {name}
+                                  </span>
                                 </>
                               );
                             }
@@ -131,7 +131,7 @@ export function ProfileTabs({
                         })()}
                       </p>
                     </div>
-                    <p className="text-xs text-muted-foreground shrink-0">{formatTimeAgo(activity.timestamp)}</p>
+                    <p className="text-xs font-medium text-gray-400 shrink-0">{formatTimeAgo(activity.timestamp)}</p>
                   </div>
                 </Link>
               ))
@@ -145,19 +145,20 @@ export function ProfileTabs({
         )}
 
         {activeTab === "requests" && (
-          <div className="space-y-1">
+          <div className="space-y-4">
             {requests.length > 0 ? (
               requests.map((request, index) => (
-                <RequestCard
-                  key={request.id}
-                  request={request}
-                  variant="feed"
-                  images={requestImages[request.id] || []}
-                  links={requestLinks[request.id] || []}
-                  isFavorite={requestFavorites.has(request.id)}
-                  isFirst={index === 0}
-                  isLast={index === requests.length - 1}
-                />
+                <div key={request.id} className="py-2">
+                  <RequestCard
+                    request={request}
+                    variant="detail"
+                    images={requestImages[request.id] || []}
+                    links={requestLinks[request.id] || []}
+                    isFavorite={requestFavorites.has(request.id)}
+                    smallImages={true}
+                    noBorder={true}
+                  />
+                </div>
               ))
             ) : (
               <div className="rounded-lg border border-dashed border-[#e5e7eb] /50 p-8 text-center text-sm text-muted-foreground">
@@ -169,21 +170,21 @@ export function ProfileTabs({
         )}
 
         {activeTab === "submissions" && (
-          <div className="space-y-0">
+          <div className="divide-y divide-gray-100">
             {submissions.length > 0 ? (
               submissions.map((submission, index) => {
                 const request = submissionRequests[submission.request_id];
                 if (!request) return null;
                 return (
-                  <SubmissionCard
-                    key={submission.id}
-                    submission={submission}
-                    requestId={submission.request_id}
-                    isWinner={false}
-                    isFirst={index === 0}
-                    isLast={index === submissions.length - 1}
-                    hideVotes={true}
-                  />
+                  <div key={submission.id} className="py-2">
+                    <SubmissionCard
+                      submission={submission}
+                      requestId={submission.request_id}
+                      isWinner={false}
+                      noBorder={true}
+                      hideVotes={true}
+                    />
+                  </div>
                 );
               })
             ) : (
@@ -196,21 +197,21 @@ export function ProfileTabs({
         )}
 
         {activeTab === "winners" && (
-          <div className="space-y-0">
+          <div className="divide-y divide-gray-100">
             {winners.length > 0 ? (
               winners.map((submission, index) => {
                 const request = submissionRequests[submission.request_id];
                 if (!request) return null;
                 return (
-                  <SubmissionCard
-                    key={submission.id}
-                    submission={submission}
-                    requestId={submission.request_id}
-                    isWinner={true}
-                    isFirst={index === 0}
-                    isLast={index === winners.length - 1}
-                    hideVotes={true}
-                  />
+                  <div key={submission.id} className="py-2">
+                    <SubmissionCard
+                      submission={submission}
+                      requestId={submission.request_id}
+                      isWinner={true}
+                      noBorder={true}
+                      hideVotes={true}
+                    />
+                  </div>
                 );
               })
             ) : (

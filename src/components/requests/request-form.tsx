@@ -38,7 +38,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Upload, X, GripVertical, Info, Plus, Check, Sparkles, Crown, LockKeyhole, MapPin, ChevronLeft, ShieldCheck, Loader2, Link as LinkIcon } from "lucide-react";
+import { Upload, X, GripVertical, Info, Plus, Check, Target, Sparkles, Store, MessageCircle, Crown, LockKeyhole, MapPin, ChevronLeft, ShieldCheck, Loader2, Link as LinkIcon } from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { MAIN_CATEGORIES, SUBCATEGORIES, type MainCategory } from "@/lib/categories";
@@ -1101,7 +1101,7 @@ export function RequestForm({
           {currentStep === 8 && !user && (
             <div className="pt-0 pb-2 w-full animate-in fade-in slide-in-from-right-4 duration-500">
               <div className="flex flex-row gap-12 items-stretch w-full">
-                <div className="w-[400px] shrink-0 space-y-6">
+                <div className="w-[400px] shrink-0 space-y-6 flex flex-col justify-center text-left">
                   <div className="text-left mb-6">
                     <h2 className="text-2xl font-bold text-gray-900 mb-1 text-left" style={{ fontFamily: 'var(--font-expanded)' }}>Almost there!</h2>
                     <p className="text-sm text-gray-500 text-pretty mt-4">
@@ -1109,7 +1109,7 @@ export function RequestForm({
                     </p>
                   </div>
                   {authMode === 'signup' ? (
-                    <div className="space-y-6">
+                    <div className="space-y-6 w-full">
                       <SignUpForm onSuccess={() => { setIsAutoSubmitting(true); form.handleSubmit(onSubmit)(); }} />
                       <p className="text-sm text-center text-gray-500">
                         Already using Onseek?{" "}
@@ -1139,17 +1139,17 @@ export function RequestForm({
 
                 {/* Right column: Perks Section (Wider) */}
                 <div className="flex-1 min-w-0">
-                  <div className="p-8 rounded-[1.5rem] bg-gray-50 h-full flex flex-col justify-center">
+                  <div className="p-10 rounded-[1.5rem] bg-gray-50 h-full flex flex-col justify-center">
                     <div className="mb-8 flex items-center gap-3">
                       <h3 className="text-xl font-semibold text-[#222234]" style={{ fontFamily: 'var(--font-expanded)' }}>Join the community</h3>
                     </div>
 
                     <div className="space-y-6">
                       {[
-                        { icon: <ShieldCheck className="h-5 w-5 text-green-500" />, title: "Verified Sellers", desc: "Buy with confidence from vetted professionals." },
-                        { icon: <Sparkles className="h-5 w-5 text-[#7755FF]" />, title: "Private Matches", desc: "Get exclusive offers for your specific request." },
-                        { icon: <LockKeyhole className="h-5 w-5 text-orange-500" />, title: "Secure Deals", desc: "Your data and payments are always protected." },
-                        { icon: <Crown className="h-5 w-5 text-yellow-500" />, title: "Premium Access", desc: "First-look at rare items before they hit the feed." }
+                        { icon: <Target className="h-5 w-5 text-[#7755FF]" />, title: "Smart Requests", desc: "Broadcast your needs. Post detailed requests and let the marketplace come to you." },
+                        { icon: <Sparkles className="h-5 w-5 text-yellow-500" />, title: "Live Proposals", desc: "Get notified instantly. Receive tailored offers from professionals as soon as they’re submitted." },
+                        { icon: <Store className="h-5 w-5 text-green-500" />, title: "Personal Inventory", desc: "Your global storefront. List items or services in a dedicated space accessible to the entire community." },
+                        { icon: <MessageCircle className="h-5 w-5 text-[#222234]" />, title: "Direct Messaging", desc: "Close the deal. Engage in private, secure conversations to negotiate and finalize details." }
                       ].map((perk, idx) => (
                         <div key={idx} className="flex gap-4">
                           <div className="shrink-0 mt-0.5">{perk.icon}</div>
@@ -1161,7 +1161,7 @@ export function RequestForm({
                       ))}
                     </div>
 
-                    <div className="mt-auto pt-8 border-t border-gray-200/50 flex items-center gap-4">
+                    <div className="mt-12 flex items-center gap-4">
                       <div className="flex -space-x-3 items-center">
                         {[1, 2, 3, 4].map((i) => (
                           <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-gray-200 overflow-hidden shadow-sm transition-transform hover:scale-110 hover:z-10 bg-cover bg-center"
@@ -1169,7 +1169,7 @@ export function RequestForm({
                         ))}
                         <div className="w-8 h-8 rounded-full border-2 border-white bg-[#7755FF] flex items-center justify-center text-[10px] font-bold text-white shadow-sm">+</div>
                       </div>
-                      <p className="text-xs text-gray-400 font-medium tracking-tight">Joined by 50,000+ members</p>
+                      <p className="text-xs text-gray-400 font-medium tracking-tight">Join a whole community</p>
                     </div>
                   </div>
                 </div>

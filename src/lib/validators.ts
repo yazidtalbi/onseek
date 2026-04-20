@@ -64,6 +64,8 @@ export const submissionSchema = z.object({
 
 export const profileSchema = z.object({
   username: z.string().min(3).max(24),
+  first_name: z.string().max(50).optional().nullable(),
+  last_name: z.string().max(50).optional().nullable(),
   bio: z.string().max(240).optional().nullable(),
   country: z.string().max(60).optional().nullable(),
   avatar_url: z.string().url().optional().nullable(),

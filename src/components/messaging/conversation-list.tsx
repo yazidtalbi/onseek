@@ -3,6 +3,7 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 import { formatTimeAgo } from "@/lib/utils/time";
+import { formatFullName } from "@/lib/utils/name";
 import type { Conversation, Profile } from "@/lib/types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
@@ -48,13 +49,13 @@ export function ConversationList({
                 <Avatar className="h-10 w-10 shrink-0">
                   <AvatarImage src={otherUser?.avatar_url || ""} />
                   <AvatarFallback className="bg-neutral-100 text-neutral-600">
-                    {otherUser?.username?.substring(0, 2).toUpperCase() || "?"}
+                    {(otherUser?.first_name?.charAt(0) || otherUser?.username?.charAt(0) || "?").toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-0.5">
                     <span className="font-medium text-neutral-900 truncate">
-                      {otherUser?.display_name || otherUser?.username || "Unknown"}
+                      {formatFullName(otherUser?.first_name, otherUser?.last_name, otherUser?.username)}
                     </span>
                     {conv.updated_at && (
                       <span className="text-[10px] text-neutral-400 shrink-0">

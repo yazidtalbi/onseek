@@ -6,6 +6,7 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Plus, CheckCircle2, XCircle, MessageSquare, Award } from "lucide-react";
 import type { Profile } from "@/lib/types";
+import { formatFullName } from "@/lib/utils/name";
 
 export type ActivityItem = {
   id: string;
@@ -78,7 +79,7 @@ export function ProfileActivity({
       {/* Left Side - Profile Info */}
       <div className="space-y-4">
         <div className="rounded-2xl border border-border bg-card p-6 space-y-4">
-          <h2 className="text-2xl font-semibold">{profile.display_name || profile.username}'s profile</h2>
+          <h2 className="text-2xl font-semibold">{formatFullName(profile.first_name, profile.last_name, profile.username)}'s profile</h2>
           {profile.bio && <p className="text-sm text-muted-foreground">{profile.bio}</p>}
           <div className="flex items-center gap-4 text-sm">
             <div>

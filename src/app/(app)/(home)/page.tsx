@@ -1,6 +1,10 @@
+import { Suspense } from "react";
+import AppLoading from "../loading";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { PersonalizedFeed } from "@/components/requests/personalized-feed";
 import { fetchInitialFeedData } from "@/lib/feed";
 import type { FeedMode } from "@/lib/types";
+import { SvgTestSection } from "@/components/debug/svg-test-section";
 
 export const dynamic = "force-dynamic";
 
@@ -13,9 +17,6 @@ type SearchParams = {
   sort?: string;
 };
 
-import { Suspense } from "react";
-import AppLoading from "../loading";
-
 export default async function AppFeedPage(props: {
   searchParams: Promise<SearchParams>;
 }) {
@@ -26,8 +27,12 @@ export default async function AppFeedPage(props: {
     ? searchParams.mode
     : "for_you") as FeedMode;
 
+  const supabase = await createServerSupabaseClient();
+  const { data: { session } } = await supabase.auth.getSession();
+  const isLoggedIn = !!session;
+
   return (
-    <Suspense fallback={<AppLoading />}>
+    <Suspense fallback={isLoggedIn ? <AppLoading /> : null}>
       <FeedDataWrapper mode={mode} searchParams={searchParams} />
     </Suspense>
   );
@@ -43,7 +48,12 @@ async function FeedDataWrapper({ mode, searchParams }: { mode: FeedMode, searchP
   });
 
   return (
-    <PersonalizedFeed initialMode={mode} initialData={initialData} />
+    <div className="flex flex-col gap-8">
+      <PersonalizedFeed initialMode={mode} initialData={initialData} />
+      <div className="max-w-[1280px] mx-auto w-full px-4 md:px-6 mb-12">
+        <SvgTestSection />
+      </div>
+    </div>
   );
 }
 
