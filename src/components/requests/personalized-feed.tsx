@@ -18,7 +18,7 @@ import { useAuth } from "@/components/layout/auth-provider";
 import { usePathname } from "next/navigation";
 import { FaqSection } from "@/components/requests/faq-section";
 import { Button } from "@/components/ui/button";
-import { Loader2, Search, ChevronRight, Sparkles, ListFilter, Rows3, LayoutGrid } from "lucide-react";
+import { Loader2, Search, ChevronRight, Sparkles, ListFilter, Rows3, LayoutGrid, ArrowRight } from "lucide-react";
 import {
   Select,
   SelectContent,
