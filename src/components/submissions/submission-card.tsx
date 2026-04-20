@@ -52,6 +52,7 @@ export function SubmissionCard({
   requestOwnerId,
   hideTitle,
   largeText,
+  noBorder = false,
 }: {
   submission: Submission;
   requestId: string;
@@ -105,6 +106,7 @@ export function SubmissionCard({
   }, [submission.url, submission.image_url]);
 
   // Determine image URL to display
+  const isPersonalItem = submission.url === "personal-item";
   const imageUrl = submission.image_url || thumbnailUrl;
   const hasImage = imageUrl && !imageError;
   const storeName = submission.article_name || host || "Submission";
