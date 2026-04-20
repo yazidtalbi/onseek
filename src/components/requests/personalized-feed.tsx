@@ -18,7 +18,16 @@ import { useAuth } from "@/components/layout/auth-provider";
 import { usePathname } from "next/navigation";
 import { FaqSection } from "@/components/requests/faq-section";
 import { Button } from "@/components/ui/button";
-import { Loader2, Search, ChevronRight, Sparkles } from "lucide-react";
+import { Loader2, Search, ChevronRight, Sparkles, ListFilter, Rows3, LayoutGrid } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { CountryCombobox } from "@/components/ui/country-combobox";
 import { AIRequestFlow } from "./ai-request-flow";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -73,6 +82,54 @@ export function PersonalizedFeed({
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isAIFlowOpen, setIsAIFlowOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  
+  const priceMaxParam = searchParams.get("priceMax") || "";
+  const countryParam = searchParams.get("country") || "";
+  const [localPriceMax, setLocalPriceMax] = useState(priceMaxParam);
+
+  useEffect(() => {
+    setLocalPriceMax(priceMaxParam);
+  }, [priceMaxParam]);
+
+  const hasActiveFilters = searchParams.get("priceMin") || searchParams.get("priceMax") || searchParams.get("country");
+
+  const updateParam = (key: string, value: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (value === "Discover" || value === "" || value === "0") {
+      params.delete(key);
+    } else {
+      params.set(key, value);
+    }
+    if (key === "category") params.delete("page");
+    const hasQuery = searchParams.get("q");
+    const path = hasQuery ? "/search" : pathname;
+    router.push(`${path}?${params.toString()}`);
+  };
+
+  const handleModeChange = (newMode: string) => {
+    if (user) {
+      setMode(newMode as FeedMode);
+      return;
+    }
+
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("page");
+    params.delete("mode");
+
+    const modePath = REVERSE_MODE_MAP[newMode as FeedMode] || "latest";
+    const pathParts = pathname.split('/');
+    const lastPart = pathParts.pop();
+    const isCategoryPath = pathname.includes('/popular/') || pathname.includes('/latest/');
+    const isSpecialRoot = lastPart === 'for-you' || lastPart === 'popular' || lastPart === 'latest';
+
+    if (isCategoryPath && lastPart && !isSpecialRoot) {
+      router.push(`/${modePath}/${lastPart}?${params.toString()}`);
+    } else {
+      router.push(`/${modePath}?${params.toString()}`);
+    }
+  };
+
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const hasUpdatedUrlRef = useRef(false);
 
@@ -139,7 +196,7 @@ export function PersonalizedFeed({
   const category = initialCategory || searchParams.get("category") || null;
   const priceMin = searchParams.get("priceMin") || null;
   const priceMax = searchParams.get("priceMax") || null;
-  const country = searchParams.get("country") || null;
+  const country = searchParams.get("country") || "";
   const sort = searchParams.get("sort") || null;
 
   const {
@@ -212,15 +269,6 @@ export function PersonalizedFeed({
     return (!user && isHomePage) ? items.slice(0, 6) : items;
   }, [data, mounted, user, isHomePage]);
 
-  const handleModeChange = (newMode: FeedMode) => {
-    setMode(newMode);
-
-    // Build path based on new mode and current category
-    const modePath = REVERSE_MODE_MAP[newMode] || "for-you";
-    const categoryPath = category && category !== "All" ? `/${getCategorySlug(category)}` : "";
-
-    router.push(`/${modePath}${categoryPath}`);
-  };
 
   // Infinite scroll: load more when user scrolls near bottom
   useEffect(() => {
@@ -254,13 +302,16 @@ export function PersonalizedFeed({
             tradeMode={tradeMode}
             setTradeMode={setTradeMode}
           />
-          <div className="pb-4">
-            <AnnouncementBar />
-          </div>
+          <AnnouncementBar />
         </>
       )}
 
-      <div className={cn("mx-auto w-full px-4 md:px-6", !user ? "max-w-[1280px] pt-8 sm:pt-12" : "pt-2 sm:pt-4")}>
+        <div className={cn(
+          "mx-auto w-full px-3 md:px-6", 
+          !user 
+            ? "max-w-[1280px] pt-0 sm:pt-12" 
+            : (pathname === "/" ? "pt-2 sm:pt-4" : "pt-0 sm:pt-4")
+        )}>
         {/* Editorial Title - Hidden as requested */}
         {/* <div className="text-left pt-16 pb-12">
           <h2 
@@ -271,17 +322,38 @@ export function PersonalizedFeed({
           </h2>
         </div> */}
         {/* Categories Strip */}
-        <div className="py-2 min-h-[70px] flex flex-col justify-center mb-6 bg-white transition-all duration-300">
+        <div className={cn(
+          "py-2 min-h-[70px] flex flex-col justify-center mb-2 md:mb-6 bg-white transition-all duration-300",
+          user 
+            ? (pathname === "/" ? "pt-8 md:pt-2" : "pt-0 md:pt-2") 
+            : "pt-2"
+        )}>
           <div className="mx-auto w-full text-center flex flex-col items-center relative z-10 w-full px-0">
             <div className="w-full flex flex-col items-stretch">
               <CategoryPills
                 mode={mode}
-                onModeChange={setMode}
-                hasPreferences={hasPreferences}
-                viewMode={viewMode}
-                onViewModeChange={setViewMode}
-                hideViewToggle={false}
-                hideFilters={false}
+                leftElement={user ? (
+                  <FiltersModal 
+                    open={filtersOpen} 
+                    onOpenChange={setFiltersOpen}
+                    viewMode={viewMode}
+                    onViewModeChange={setViewMode}
+                    sortMode={mode === "for_you" ? "latest" : mode}
+                    onSortModeChange={handleModeChange}
+                  >
+                    <button
+                      className={cn(
+                        "w-10 h-10 p-0 flex items-center justify-center rounded-full text-sm font-medium transition-colors border md:hidden shrink-0",
+                        hasActiveFilters || filtersOpen
+                          ? "bg-gray-100 text-gray-900 border-gray-300"
+                          : "bg-white border-gray-200 text-gray-600 hover:text-gray-900"
+                      )}
+                      title="Filters"
+                    >
+                      <ListFilter className="h-4 w-4" />
+                    </button>
+                  </FiltersModal>
+                ) : undefined}
               />
             </div>
           </div>
@@ -327,33 +399,151 @@ export function PersonalizedFeed({
             </div>
           </div>
         ) : allItems.length > 0 ? (
-          <div className="relative group w-full flex flex-col text-left">
+          <>
+            <div className="relative group w-full flex flex-col text-left">
             {/* Section Header */}
-            <div className="flex flex-row items-center justify-between mb-8 pb-4">
-              <div className="flex flex-col gap-1">
-                <h3 className="text-2xl md:text-3xl font-semibold text-[#1A1A1A] tracking-tighter" style={{ fontFamily: 'var(--font-expanded)' }}>
-                  {(() => {
-                    if (user) {
-                      if (category) {
-                        const formattedCategory = category.split("-").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
-                        return `${formattedCategory} Requests`;
+            <div className={cn(
+              "flex flex-col gap-4 mb-8",
+              pathname === "/" && "hidden md:flex"
+            )}>
+              <div className="flex flex-row items-center justify-between">
+                <div className="flex flex-col gap-1">
+                  <h3 className="text-2xl md:text-3xl font-semibold text-[#1A1A1A] tracking-tighter" style={{ fontFamily: 'var(--font-expanded)' }}>
+                    {(() => {
+                      if (user) {
+                        if (category) {
+                          const formattedCategory = category.split("-").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+                          return `${formattedCategory} Requests`;
+                        }
+                        return "Discover";
                       }
-                      return "Discover";
-                    }
-                    return "Requests we love";
-                  })()}
-                </h3>
-                <p className="text-sm md:text-base text-gray-400 font-medium">
-                  {user ? "Personalized selection just for you" : "Standout requests making waves around the platform"}
-                </p>
+                      return "Requests we love";
+                    })()}
+                  </h3>
+                  <p className="text-sm md:text-base text-gray-400 font-medium">
+                    {user ? "Personalized selection just for you" : "Standout requests making waves around the platform"}
+                  </p>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  {!user && isHomePage && (
+                    <Link
+                      href="/popular"
+                      className="text-sm font-bold text-[#1A1A1A] hover:underline flex items-center gap-1 shrink-0 mr-4"
+                    >
+                      View more
+                      <ChevronRight className="h-4 w-4" />
+                    </Link>
+                  )}
+                  {user && (
+                    <div className="flex items-center gap-2">
+                      {/* Filter Button - Hidden on mobile, moved to CategoryPills */}
+                      <button
+                        onClick={() => setFiltersOpen(!filtersOpen)}
+                        className={cn(
+                          "hidden md:flex w-9 h-9 p-0 items-center justify-center rounded-full text-sm font-medium transition-colors border",
+                          hasActiveFilters || filtersOpen
+                            ? "bg-gray-100 text-gray-900 border-gray-300"
+                            : "bg-white border-transparent text-gray-600 hover:text-gray-900"
+                        )}
+                        title="Filters"
+                      >
+                        <ListFilter className="h-4 w-4" />
+                      </button>
+                      
+                      {/* Inline Filters Modal for Desktop only (hidden on mobile) */}
+                      <div className="hidden md:block">
+                        <FiltersModal 
+                          open={filtersOpen} 
+                          onOpenChange={setFiltersOpen}
+                          viewMode={viewMode}
+                          onViewModeChange={setViewMode}
+                          sortMode={mode === "for_you" ? "latest" : mode}
+                          onSortModeChange={handleModeChange}
+                        >
+                          <span className="hidden" />
+                        </FiltersModal>
+                      </div>
+
+                      {/* Sort (Latest) - Hidden on mobile */}
+                      <div className="hidden md:block">
+                        <Select value={mode === "for_you" ? "latest" : mode} onValueChange={handleModeChange}>
+                          <SelectTrigger className="px-3 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors flex items-center gap-2 border-transparent bg-white text-gray-600 hover:text-gray-900 h-9 shadow-none focus:ring-0 w-auto">
+                            <span className="truncate">
+                              {mode === "trending" ? "Trending" : "Latest"}
+                            </span>
+                          </SelectTrigger>
+                          <SelectContent className="bg-white min-w-[150px]">
+                            <SelectItem value="latest">Latest</SelectItem>
+                            <SelectItem value="trending">Trending</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* View Toggle - Hidden on mobile */}
+                      <div className="hidden md:flex items-center gap-1 rounded-full bg-gray-100 p-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setViewMode("list")}
+                          className={cn("h-7 w-7 p-0 rounded-full", viewMode === "list" ? "bg-white text-gray-900" : "bg-transparent text-gray-500 hover:text-gray-900")}
+                          title="List view"
+                        >
+                          <Rows3 className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setViewMode("grid")}
+                          className={cn("h-7 w-7 p-0 rounded-full", viewMode === "grid" ? "bg-white text-gray-900" : "bg-transparent text-gray-500 hover:text-gray-900")}
+                          title="Grid view"
+                        >
+                          <LayoutGrid className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
               </div>
-              <Link
-                href="/popular"
-                className="text-sm font-bold text-[#1A1A1A] hover:underline flex items-center gap-1 shrink-0"
-              >
-                View more
-                <ChevronRight className="h-4 w-4" />
-              </Link>
+            </div>
+          </div>
+
+              {/* Expanded Inline Filters */}
+              {filtersOpen && (
+                <div className="w-full flex items-center justify-end gap-6 p-4 bg-[#f8f9fa] border border-[#e5e7eb] rounded-[16px] transition-all">
+                  <div className="flex-1 max-w-[240px]">
+                    <Label className="text-[13px] font-semibold text-gray-700 mb-1.5 block text-left">Max Budget ($)</Label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="number"
+                        placeholder="No limit"
+                        value={localPriceMax}
+                        onChange={(e) => setLocalPriceMax(e.target.value)}
+                        onBlur={() => updateParam("priceMax", localPriceMax)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            updateParam("priceMax", localPriceMax);
+                          }
+                        }}
+                        className="h-10 rounded-xl bg-white border-gray-200"
+                      />
+                      <Button 
+                        onClick={() => updateParam("priceMax", localPriceMax)}
+                        variant="outline"
+                        className="h-10 rounded-xl px-4 font-bold text-xs bg-white hover:bg-gray-50 border-gray-200 shrink-0"
+                      >
+                        Apply
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="flex-1 max-w-[240px]">
+                    <Label className="text-[13px] font-semibold text-gray-700 mb-1.5 block text-left">Country</Label>
+                    <CountryCombobox
+                      value={country}
+                      onChange={(val) => updateParam("country", val)}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
           <div className="relative w-full">
@@ -374,9 +564,9 @@ export function PersonalizedFeed({
             )}>
               {user && isHomePage && (
                 <div className="break-inside-avoid mb-6">
-                  <div className="w-full rounded-[24px] bg-white border border-[#e6e7eb] shadow-none min-h-[140px] flex flex-col p-5">
+                  <div className="w-full rounded-[24px] bg-white border border-[#e6e7eb] shadow-none min-h-[100px] md:min-h-[140px] flex flex-col p-3 md:p-5">
                     <div className="flex gap-4">
-                      <div className="flex items-center justify-center h-10 w-10 mt-1 rounded-full bg-gray-100 text-foreground font-medium text-base shrink-0 overflow-hidden relative">
+                      <div className="flex items-center justify-center h-8 w-8 md:h-10 md:w-10 mt-1 rounded-full bg-gray-100 text-foreground font-medium text-base shrink-0 overflow-hidden relative">
                         {profile?.avatar_url ? (
                           <img
                             src={profile.avatar_url}
@@ -403,12 +593,11 @@ export function PersonalizedFeed({
                           }
                         }}
                         rows={2}
-                        className="bg-transparent border-none outline-none w-full text-[#1A1A1A] placeholder:text-[#a5abb7] placeholder:text-[18px] text-[18px] font-medium resize-none overflow-hidden leading-relaxed pt-1.5"
+                        className="bg-transparent border-none outline-none w-full text-[#1A1A1A] placeholder:text-[#a5abb7] placeholder:text-[13px] md:placeholder:text-[18px] text-[13px] md:text-[18px] font-medium resize-none overflow-hidden leading-relaxed pt-1.5"
                       />
                     </div>
                     <div className="flex justify-end mt-4">
-                      <Button
-                        type="button"
+                      <Button 
                         onClick={() => {
                           if (searchValue.trim()) {
                             setIsAIFlowOpen(true);
@@ -416,9 +605,10 @@ export function PersonalizedFeed({
                             window.dispatchEvent(new CustomEvent('open-create-request-modal'));
                           }
                         }}
-                        className="rounded-full bg-[#1A1A1A] hover:bg-black text-white px-6 h-11 text-[15px] font-bold flex items-center justify-center transition-colors shadow-none"
+                        className="h-8 md:h-10 px-4 md:px-6 gap-2 bg-[#1A1A1A] hover:bg-black text-white rounded-full text-[12px] md:text-[14px] font-bold shadow-none shrink-0"
                       >
-                        Post
+                        <span>Post</span>
+                        <ArrowRight className="h-3.5 w-3.5 md:h-4 md:w-4 text-white" strokeWidth={3} />
                       </Button>
                     </div>
                   </div>
@@ -543,7 +733,7 @@ export function PersonalizedFeed({
             )}
 
             </div>
-          </div>
+          </>
         ) : null}
       </div>
 
@@ -564,7 +754,7 @@ export function PersonalizedFeed({
                   <div className="w-32 h-32 mb-8 overflow-hidden">
                     <img src="/illustrations/onseek_magnet_purple.png" alt="Sellers come to you" className="w-full h-full object-contain" />
                   </div>
-                  <h3 className="text-2xl font-semibold mb-4 tracking-tight" style={{ fontFamily: 'var(--font-expanded)' }}>Sellers come to you</h3>
+                  <h3 className="text-3xl font-semibold mb-4 tracking-tight" style={{ fontFamily: 'var(--font-expanded)' }}>Sellers come to you</h3>
                   <p className="text-gray-500 font-medium leading-relaxed text-sm md:text-base">
                     Define your budget and skip the search. We’ve eliminated the friction of traditional marketplaces by making sellers apply to you.
                   </p>
@@ -574,7 +764,7 @@ export function PersonalizedFeed({
                   <div className="w-32 h-32 mb-8 overflow-hidden">
                     <img src="/illustrations/onseek_flower_purple.png" alt="Skip the scroll" className="w-full h-full object-contain" />
                   </div>
-                  <h3 className="text-2xl font-semibold mb-4 tracking-tight" style={{ fontFamily: 'var(--font-expanded)' }}>Skip the scroll</h3>
+                  <h3 className="text-3xl font-semibold mb-4 tracking-tight" style={{ fontFamily: 'var(--font-expanded)' }}>Skip the scroll</h3>
                   <p className="text-gray-500 font-medium leading-relaxed text-sm md:text-base">
                     Your time is valuable. Our request-first model eliminates the friction of traditional marketplaces. Post once, let sellers find you.
                   </p>
@@ -584,8 +774,8 @@ export function PersonalizedFeed({
                   <div className="w-32 h-32 mb-8 overflow-hidden">
                     <img src="/illustrations/onseek_city_purple.png" alt="Vetted sellers only" className="w-full h-full object-contain" />
                   </div>
-                  <h3 className="text-2xl font-semibold mb-4 tracking-tight" style={{ fontFamily: 'var(--font-expanded)' }}>Marketplace Integrity</h3>
-                  <p className="text-gray-500 font-medium leading-relaxed text-sm md:text-base">
+                  <h3 className="text-3xl font-semibold mb-4 tracking-tight" style={{ fontFamily: 'var(--font-expanded)' }}>Marketplace Integrity</h3>
+                  <p className="text-gray-500 font-medium leading-relaxed text-base md:text-lg">
                     Through active community inputs and smart moderation, we maintain a marketplace of quality proposals where the best sellers rise to the top.
                   </p>
                 </div>

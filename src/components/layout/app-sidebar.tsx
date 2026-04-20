@@ -37,6 +37,8 @@ import Image from "next/image";
 import { signOutAction } from "@/actions/auth.actions";
 import { NotificationsDrawer } from "@/components/notifications/notifications-drawer";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
+import { FeedbackModal } from "@/components/reports/feedback-modal";
+import { LifeBuoy } from "lucide-react";
 
 function useUnreadMessages() {
   const { user } = useAuth();
@@ -131,6 +133,7 @@ function MobileSidebarContent({ onClose }: { onClose?: () => void }) {
   const { user, profile } = useAuth();
   const { setMobileOpen } = useSidebar();
   const [isPending, startTransition] = useTransition();
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 
   const handleClose = () => {
     setMobileOpen(false);
@@ -161,7 +164,7 @@ function MobileSidebarContent({ onClose }: { onClose?: () => void }) {
         "flex items-center gap-3 px-3 py-2 rounded-md transition-colors relative",
         active
           ? "bg-transparent text-[#1e2330]"
-          : "text-gray-400/70 hover:text-foreground hover:bg-gray-50"
+          : "text-[#1e2330]/70 hover:text-foreground hover:bg-gray-50"
       )}
     >
       <div className="relative">
@@ -178,7 +181,7 @@ function MobileSidebarContent({ onClose }: { onClose?: () => void }) {
     <div className="flex flex-col h-full overflow-y-auto">
       <div className="px-4 mb-6">
         <Link href="/" onClick={handleClose} className="flex items-center gap-2 group">
-          <Image src="/logo-final.svg" alt="onseek" width={28} height={28} className="h-7 w-auto" priority />
+          <Image src="/logonseek.svg" alt="onseek" width={28} height={28} className="h-7 w-auto" priority />
           <span className="text-xl text-[#000000]" style={{ fontFamily: "var(--font-expanded)", fontWeight: 600 }}>
             onseek
           </span>
@@ -196,31 +199,50 @@ function MobileSidebarContent({ onClose }: { onClose?: () => void }) {
         {user ? (
           <>
             <Link
-              href="/leaderboard"
-              onClick={handleClose}
-              className={cn(
-                "flex items-center gap-3 px-3 py-2 rounded-md transition-colors relative",
-                pathname === "/leaderboard"
-                  ? "bg-transparent text-[#1e2330]"
-                  : "text-gray-400/70 hover:text-foreground hover:bg-gray-50"
-              )}
-            >
-              <Trophy className="h-5 w-5" />
-              <span>Leaderboard</span>
-            </Link>
-            <Link
               href="/settings"
               onClick={handleClose}
               className={cn(
                 "flex items-center gap-3 px-3 py-2 rounded-md transition-colors relative",
                 pathname === "/settings"
                   ? "bg-transparent text-[#1e2330]"
-                  : "text-gray-400/70 hover:text-foreground hover:bg-gray-50"
+                  : "text-[#1e2330]/70 hover:text-foreground hover:bg-gray-50"
               )}
             >
               <Settings className="h-5 w-5" />
               <span>Settings</span>
             </Link>
+            <Link
+              href="/leaderboard"
+              onClick={handleClose}
+              className={cn(
+                "flex items-center gap-3 px-3 py-2 rounded-md transition-colors relative",
+                pathname === "/leaderboard"
+                  ? "bg-transparent text-[#1e2330]"
+                  : "text-[#1e2330]/70 hover:text-foreground hover:bg-gray-50"
+              )}
+            >
+              <Trophy className="h-5 w-5" />
+              <span>Leaderboard</span>
+            </Link>
+            <button
+              onClick={() => setIsFeedbackOpen(true)}
+              className={cn(
+                "flex items-center gap-3 px-3 py-2 rounded-md transition-colors relative w-full text-left",
+                "text-[#1e2330]/70 hover:text-foreground hover:bg-gray-50"
+              )}
+            >
+              <LifeBuoy className="h-5 w-5" />
+              <span>Feedback</span>
+            </button>
+            <button
+              onClick={handleSignOut}
+              className={cn(
+                "flex items-center gap-3 px-3 py-2 rounded-md transition-colors relative w-full text-left text-rose-600 hover:bg-rose-50"
+              )}
+            >
+              <LogOut className="h-5 w-5" />
+              <span>Log Out</span>
+            </button>
           </>
         ) : (
           <div className="space-y-2">
@@ -233,6 +255,7 @@ function MobileSidebarContent({ onClose }: { onClose?: () => void }) {
           </div>
         )}
       </div>
+      <FeedbackModal open={isFeedbackOpen} onOpenChange={setIsFeedbackOpen} />
     </div>
   );
 }
@@ -243,6 +266,7 @@ function DesktopSidebarContent() {
   const { user, profile } = useAuth();
   const { expanded: isExpanded } = useSidebar();
   const [isPending, startTransition] = useTransition();
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const hasUnreadMessages = useUnreadMessages();
 
   const handleSignOut = () => {
@@ -314,32 +338,6 @@ function DesktopSidebarContent() {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Link
-                    href="/leaderboard"
-                    className={cn(
-                      "flex items-center transition-all relative group/item rounded-2xl h-12 w-12",
-                      isExpanded ? "w-full pl-6 pr-4 gap-4 h-12" : "justify-center mx-auto",
-                      pathname === "/leaderboard"
-                        ? "bg-gray-100 text-[#1e2330]"
-                        : "text-gray-400/80 hover:text-foreground hover:bg-gray-50"
-                    )}
-                  >
-                    <Trophy className="h-6 w-6 shrink-0" />
-                    {isExpanded && (
-                      <span className="text-sm font-semibold whitespace-nowrap overflow-hidden text-ellipsis">
-                        Leaderboard
-                      </span>
-                    )}
-                  </Link>
-                </TooltipTrigger>
-                {!isExpanded && (
-                  <TooltipContent side="right" sideOffset={8} className="bg-[#212733] text-white border-[#212733]">
-                    Leaderboard
-                  </TooltipContent>
-                )}
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Link
                     href="/settings"
                     className={cn(
                       "flex items-center transition-all relative group/item rounded-2xl h-12 w-12",
@@ -363,9 +361,60 @@ function DesktopSidebarContent() {
                   </TooltipContent>
                 )}
               </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Link
+                    href="/leaderboard"
+                    className={cn(
+                      "flex items-center transition-all relative group/item rounded-2xl h-12 w-12",
+                      isExpanded ? "w-full pl-6 pr-4 gap-4 h-12" : "justify-center mx-auto",
+                      pathname === "/leaderboard"
+                        ? "bg-gray-100 text-[#1e2330]"
+                        : "text-gray-400/80 hover:text-foreground hover:bg-gray-50"
+                    )}
+                  >
+                    <Trophy className="h-6 w-6 shrink-0" />
+                    {isExpanded && (
+                      <span className="text-sm font-semibold whitespace-nowrap overflow-hidden text-ellipsis">
+                        Leaderboard
+                      </span>
+                    )}
+                  </Link>
+                </TooltipTrigger>
+                {!isExpanded && (
+                  <TooltipContent side="right" sideOffset={8} className="bg-[#212733] text-white border-[#212733]">
+                    Leaderboard
+                   </TooltipContent>
+                )}
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={() => setIsFeedbackOpen(true)}
+                    className={cn(
+                      "flex items-center transition-all relative group/item rounded-2xl h-12 w-12",
+                      isExpanded ? "w-full pl-6 pr-4 gap-4 h-12" : "justify-center mx-auto",
+                      "text-gray-400/80 hover:text-foreground hover:bg-gray-50"
+                    )}
+                  >
+                    <LifeBuoy className="h-6 w-6 shrink-0" />
+                    {isExpanded && (
+                      <span className="text-sm font-semibold whitespace-nowrap overflow-hidden text-ellipsis">
+                        Feedback
+                      </span>
+                    )}
+                  </button>
+                </TooltipTrigger>
+                {!isExpanded && (
+                  <TooltipContent side="right" sideOffset={8} className="bg-[#212733] text-white border-[#212733]">
+                    Feedback
+                  </TooltipContent>
+                )}
+              </Tooltip>
             </>
           )}
         </div>
+        <FeedbackModal open={isFeedbackOpen} onOpenChange={setIsFeedbackOpen} />
       </div>
     </TooltipProvider>
   );
@@ -382,14 +431,6 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
         <SheetContent side="left" className="w-64 p-0">
           <div className="flex h-full flex-col space-y-6 py-4">
-            <div className="px-4 flex items-center justify-between">
-              <h2 className="text-lg font-semibold">Menu</h2>
-              <SheetClose asChild>
-                <Button variant="ghost" size="icon">
-                  <X className="h-5 w-5" />
-                </Button>
-              </SheetClose>
-            </div>
             <MobileSidebarContent />
           </div>
         </SheetContent>

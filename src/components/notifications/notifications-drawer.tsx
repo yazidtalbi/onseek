@@ -101,20 +101,29 @@ export function NotificationsDrawer({ children }: NotificationsDrawerProps) {
       <SheetContent 
         side="right" 
         noBlur={true}
-        className="w-full sm:w-[400px] sm:max-w-[400px] p-0 flex flex-col bg-white overflow-hidden shadow-2xl border-l border-neutral-200 rounded-none sm:rounded-none"
+        className="w-full sm:w-[500px] sm:max-w-xl h-full p-0 flex flex-col bg-white overflow-hidden shadow-2xl border-l border-neutral-200 rounded-none sm:rounded-none transition-none"
       >
         
         {/* Header matching the image */}
-        <div className="flex flex-col border-b border-neutral-100 shrink-0 bg-white z-10">
+        <div className="flex flex-col border-b border-neutral-100 shrink-0 bg-white z-10 pt-2 sm:pt-0">
+          {/* Back link for mobile */}
+          <div className="sm:hidden px-4 pt-4 pb-0">
+            <button 
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-1 text-sm font-semibold text-neutral-500 hover:text-neutral-900 transition-colors"
+            >
+              <span className="text-lg">←</span> Back
+            </button>
+          </div>
           <div className="flex items-center justify-between px-6 pt-6 pb-2">
-            <h2 className="text-xl font-semibold tracking-tight text-neutral-900">Notifications</h2>
+            <h2 className="text-xl font-black tracking-tight text-neutral-900" style={{ fontFamily: 'var(--font-expanded)' }}>Notifications</h2>
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-neutral-600">Unread</span>
+                <span className="text-xs font-bold text-neutral-500 uppercase tracking-widest">Unread</span>
                 <Switch 
                   checked={showUnreadOnly} 
                   onCheckedChange={setShowUnreadOnly} 
-                  className="data-[state=checked]:bg-[#7755FF]"
+                  className="data-[state=checked]:bg-[#7755FF] scale-90"
                 />
               </div>
               <DropdownMenu>

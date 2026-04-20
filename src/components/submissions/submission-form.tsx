@@ -343,16 +343,14 @@ export function SubmissionForm({ requestId, requestBudgetMax, requestDescription
           <span className="text-gray-400 text-[15px] font-medium flex-1 px-1 py-1.5">What are you offering..</span>
         </div>
       )}
-      {hideButton && (
-        <Button
-          type="button"
-          id="submission-form-trigger"
-          className="hidden"
-          onClick={() => handleOpenChange(true)}
-        >
-          Submit proposal
-        </Button>
-      )}
+      <Button
+        type="button"
+        id="submission-form-trigger"
+        className="hidden"
+        onClick={() => handleOpenChange(true)}
+      >
+        Submit proposal
+      </Button>
 
       <Dialog open={isExpanded} onOpenChange={handleOpenChange}>
         <DialogContent className="max-w-lg">

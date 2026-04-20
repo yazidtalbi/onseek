@@ -251,14 +251,15 @@ function RequestCardComponent({
 
   // Limit display for feed variant
   const maxImages = 4;
-  const maxPreferences = (isFeed || smallImages) && !(isPreview || showAllRequirements) ? 3 : preferences.length;
-  const maxDealbreakers = (isFeed || smallImages) && !(isPreview || showAllRequirements) ? 3 : dealbreakers.length;
+  const maxPreferences = smallImages ? 3 : preferences.length;
+  const maxDealbreakers = smallImages ? 3 : dealbreakers.length;
 
   const visibleImages = images.slice(0, maxImages);
   const visiblePreferences = preferences.slice(0, maxPreferences);
   const visibleDealbreakers = dealbreakers.slice(0, maxDealbreakers);
-  const remainingPreferences = preferences.length - maxPreferences;
-  const remainingDealbreakers = dealbreakers.length - maxDealbreakers;
+  const remainingPreferences = preferences.length - visiblePreferences.length;
+  const remainingDealbreakers = dealbreakers.length - visibleDealbreakers.length;
+  const totalRemainingCount = remainingPreferences + remainingDealbreakers;
   const isInline = (preferences.length + dealbreakers.length) <= 2;
   const hasRequirements = visiblePreferences.length > 0 || visibleDealbreakers.length > 0;
   const hasContent = hasRequirements || !!request.description || (variant === "feed" && !!request.matchReason);
@@ -328,7 +329,7 @@ function RequestCardComponent({
               )}
             >
               <span className={cn("rounded-full bg-current", isLarge ? "w-2 h-2" : "w-1.5 h-1.5")} />
-              <span className="text-[#1A1A1A]">{request.category.charAt(0).toUpperCase() + request.category.slice(1)}</span>
+              <span>{request.category.charAt(0).toUpperCase() + request.category.slice(1)}</span>
             </Badge>
           )}
 
@@ -372,7 +373,7 @@ function RequestCardComponent({
             ) : (
               <h3
                 className={cn(
-                  "font-semibold leading-[1.15] tracking-tight relative transition-colors items-center text-[#1A1A1A]",
+                  "font-semibold leading-normal tracking-tight relative transition-colors items-center text-[#1A1A1A]",
                   isLarge ? "text-[18px] sm:text-[20px]" : "text-[15px] sm:text-[17px]"
                 )}
                 style={{ fontFamily: "'Zalando Sans SemiExpanded', sans-serif", fontWeight: 600, maxWidth: '80%' }}
@@ -394,8 +395,8 @@ function RequestCardComponent({
               ...visiblePreferences.map((p: { label: string }, idx: number) => ({ ...p, type: 'pref', id: `pref-${idx}` })),
               ...visibleDealbreakers.map((d: { label: string }, idx: number) => ({ ...d, type: 'deal', id: `deal-${idx}` }))
             ];
-            const displayedItems = (isPreview || showAllRequirements) ? allItems : allItems.slice(0, 5);
-            const remainingCount = (isPreview || showAllRequirements) ? 0 : allItems.length - 5;
+            const displayedItems = allItems;
+            const remainingCount = 0;
 
             if (isPreview) {
               return (
@@ -433,7 +434,7 @@ function RequestCardComponent({
                     key={`${item.type}-${idx}`}
                     className={cn(
                       "flex items-center gap-4 py-2.5 px-4 group/item",
-                      (idx !== displayedItems.length - 1 || remainingCount > 0) && "border-b border-dashed border-gray-200"
+                      (idx !== displayedItems.length - 1 || totalRemainingCount > 0) && "border-b border-dashed border-gray-200"
                     )}
                   >
                     {item.type === 'pref' ? (
@@ -450,9 +451,9 @@ function RequestCardComponent({
                     </span>
                   </div>
                 ))}
-                {remainingCount > 0 && (
+                {totalRemainingCount > 0 && (
                   <div className={cn("py-2.5 px-4 font-medium text-[#7755FF] opacity-80", isLarge ? "text-[18px] sm:text-[20px]" : "text-[16px] sm:text-[18px]")}>
-                    + {remainingCount} more {remainingCount === 1 ? 'requirement' : 'requirements'}
+                    And {totalRemainingCount} more {totalRemainingCount === 1 ? 'requirement' : 'requirements'}
                   </div>
                 )}
               </>
@@ -542,7 +543,7 @@ function RequestCardComponent({
           <div className={cn(smallImages ? "mb-4" : "mb-8")}>
             <h1
               className={cn(
-                "font-semibold leading-[1.05] text-[#1A1A1A]",
+                "font-semibold leading-normal text-[#1A1A1A]",
                 smallImages ? (isLarge ? "text-[26px] sm:text-[28px]" : "text-[22px] sm:text-[24px]") : (isLarge ? "text-[30px] sm:text-[36px]" : "text-[26px] sm:text-[30px]")
               )}
               style={{ fontFamily: "'Zalando Sans SemiExpanded', sans-serif", fontWeight: 600, letterSpacing: '-0.02em', maxWidth: '80%' }}
@@ -596,8 +597,8 @@ function RequestCardComponent({
                     ...visiblePreferences.map((p: any) => ({ ...p, type: 'pref', id: p.id })),
                     ...visibleDealbreakers.map((d: any) => ({ ...d, type: 'deal', id: d.id }))
                   ];
-                  const displayedItems = (isPreview || showAllRequirements) ? allItems : allItems.slice(0, 5);
-                  const remainingCount = (isPreview || showAllRequirements) ? 0 : allItems.length - 5;
+                  const displayedItems = allItems;
+                  const remainingCount = 0;
 
                   if (isPreview) {
                     return (
@@ -638,7 +639,7 @@ function RequestCardComponent({
                           key={`${item.type}-detail-${idx}`}
                           className={cn(
                             "flex items-center gap-4 py-4 group/item",
-                            (idx !== displayedItems.length - 1 || remainingCount > 0) && cn("border-b border-dashed", getTheme(request.category).text, "border-opacity-20")
+                            (idx !== displayedItems.length - 1 || totalRemainingCount > 0) && cn("border-b border-dashed", getTheme(request.category).text, "border-opacity-20")
                           )}
                         >
                           {item.type === 'pref' ? (
@@ -654,9 +655,9 @@ function RequestCardComponent({
                           </span>
                         </div>
                       ))}
-                      {remainingCount > 0 && (
+                      {totalRemainingCount > 0 && (
                         <div className="py-4 text-[16px] sm:text-[18px] font-medium text-gray-400">
-                          + {remainingCount} more {remainingCount === 1 ? 'requirement' : 'requirements'}
+                          And {totalRemainingCount} more {totalRemainingCount === 1 ? 'requirement' : 'requirements'}
                         </div>
                       )}
                     </>
@@ -776,6 +777,11 @@ function RequestCardComponent({
     </CardContent>
   );
 
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    setIsMobile(window.innerWidth < 768);
+  }, []);
+
   const cardLink = !isPreview ? createRequestUrl(request.slug || request.id) : null;
 
   const mainCard = (
@@ -788,7 +794,6 @@ function RequestCardComponent({
         noRounding && "rounded-none",
         noBorder && "!border-none !shadow-none font-medium",
         hasContent ? "h-full" : "h-fit",
-        smallImages && "max-h-[380px] overflow-hidden",
         smallImages && !noBorder && !disableHover && "group-hover/card:scale-[1.01]"
       )}
     >
@@ -801,58 +806,111 @@ function RequestCardComponent({
       {/* Absolute status badge removed as it is now inline with title */}
       {!isPreview && cardLink ? (
         <>
-          <Link
-            href={cardLink}
-            prefetch={true}
-            scroll={false}
-            className="block focus:outline-none transition-transform duration-300 ease-out hover:scale-[1.02]"
-          >
-            {variant === "detail" && smallImages ? (
-              <div className={cn("p-1 sm:p-1.5 rounded-[20px] flex flex-col gap-1", getTheme(request.category).bg)}>
-                {/* Header Section with Title */}
-                <section className={cn(smallImages && !request.title && "hidden", "px-3 pt-5 pb-2")}>
-                  {/* Top Classification Row (Above Title) */}
-                  <div className="flex items-center justify-between w-full">
-                    {request.category && (<Badge
-                      variant="outline"
-                      className={cn(
-                        "rounded-full font-bold border shadow-none shrink-0 inline-flex items-center justify-center bg-transparent gap-2",
-                        isLarge ? "px-5 py-2 text-[15px] sm:text-[16px]" : "px-4 py-1.5 text-[13px] sm:text-[14px]",
-                        "border-gray-200/40",
-                        getTheme(request.category).text
+          {isMobile ? (
+            <a
+              href={cardLink}
+              className="block focus:outline-none"
+            >
+              {variant === "detail" && smallImages ? (
+                <div className={cn("p-1 sm:p-1.5 rounded-[20px] flex flex-col gap-1", getTheme(request.category).bg)}>
+                  {/* Header Section with Title */}
+                  <section className={cn(smallImages && !request.title && "hidden", "px-3 pt-5 pb-2")}>
+                    {/* Top Classification Row (Above Title) */}
+                    <div className="flex items-center justify-between w-full">
+                      {request.category && (<Badge
+                        variant="outline"
+                        className={cn(
+                          "rounded-full font-bold border shadow-none shrink-0 inline-flex items-center justify-center bg-transparent gap-2",
+                          isLarge ? "px-5 py-2 text-[15px] sm:text-[16px]" : "px-4 py-1.5 text-[13px] sm:text-[14px]",
+                          "border-gray-200/40",
+                          getTheme(request.category).text
+                        )}
+                      >
+                        <span className={cn("rounded-full bg-current", isLarge ? "w-2 h-2" : "w-1.5 h-1.5")} />
+                        <span className="text-[#1A1A1A]">{request.category.charAt(0).toUpperCase() + request.category.slice(1)}</span>
+                      </Badge>
                       )}
-                    >
-                      <span className={cn("rounded-full bg-current", isLarge ? "w-2 h-2" : "w-1.5 h-1.5")} />
-                      <span className="text-[#1A1A1A]">{request.category.charAt(0).toUpperCase() + request.category.slice(1)}</span>
-                    </Badge>
-                    )}
-
-                    <Badge
-                      variant="outline"
-                      className={cn(
-                        "rounded-full font-bold border shadow-none shrink-0 inline-flex items-center gap-2 bg-transparent",
-                        isLarge ? "px-5 py-2 text-[15px] sm:text-[16px]" : "px-4 py-1.5 text-[13px] sm:text-[14px]",
-                        request.status === "solved" || request.winner_submission_id ? "border-[#6925DC] text-[#6925DC]" :
-                          request.status === "pending" ? "border-[#FF8C5A] text-[#FF8C5A]" :
-                            request.status === "open" ? cn("border-current", getTheme(request.category).text) :
-                              request.status === "rejected" ? "border-red-400 text-red-500" :
-                                "border-gray-500/40 text-gray-500"
+  
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          "rounded-full font-bold border shadow-none shrink-0 inline-flex items-center gap-2 bg-transparent",
+                          isLarge ? "px-5 py-2 text-[15px] sm:text-[16px]" : "px-4 py-1.5 text-[13px] sm:text-[14px]",
+                          request.status === "solved" || request.winner_submission_id ? "border-[#6925DC] text-[#6925DC]" :
+                            request.status === "pending" ? "border-[#FF8C5A] text-[#FF8C5A]" :
+                              request.status === "open" ? cn("border-current", getTheme(request.category).text) :
+                                request.status === "rejected" ? "border-red-400 text-red-500" :
+                                  "border-gray-500/40 text-gray-500"
+                        )}
+                      >
+                        <span className="text-[#1A1A1A]">
+                          {request.winner_submission_id ? "Solved" : request.status?.charAt(0).toUpperCase() + request.status?.slice(1)}
+                        </span>
+                      </Badge>
+                    </div>
+                  </section>
+                  {mainCard}
+                </div>
+              ) : (
+                <div className="relative">
+                  {mainCard}
+                </div>
+              )}
+            </a>
+          ) : (
+            <Link
+              href={cardLink}
+              prefetch={true}
+              scroll={false}
+              className="block focus:outline-none transition-transform duration-300 ease-out hover:scale-[1.02]"
+            >
+              {variant === "detail" && smallImages ? (
+                <div className={cn("p-1 sm:p-1.5 rounded-[20px] flex flex-col gap-1", getTheme(request.category).bg)}>
+                  {/* Header Section with Title */}
+                  <section className={cn(smallImages && !request.title && "hidden", "px-3 pt-5 pb-2")}>
+                    {/* Top Classification Row (Above Title) */}
+                    <div className="flex items-center justify-between w-full">
+                      {request.category && (<Badge
+                        variant="outline"
+                        className={cn(
+                          "rounded-full font-bold border shadow-none shrink-0 inline-flex items-center justify-center bg-transparent gap-2",
+                          isLarge ? "px-5 py-2 text-[15px] sm:text-[16px]" : "px-4 py-1.5 text-[13px] sm:text-[14px]",
+                          "border-gray-200/40",
+                          getTheme(request.category).text
+                        )}
+                      >
+                        <span className={cn("rounded-full bg-current", isLarge ? "w-2 h-2" : "w-1.5 h-1.5")} />
+                        <span className="text-[#1A1A1A]">{request.category.charAt(0).toUpperCase() + request.category.slice(1)}</span>
+                      </Badge>
                       )}
-                    >
-                      <span className="text-[#1A1A1A]">
-                        {request.winner_submission_id ? "Solved" : request.status?.charAt(0).toUpperCase() + request.status?.slice(1)}
-                      </span>
-                    </Badge>
-                  </div>
-                </section>
-                {mainCard}
-              </div>
-            ) : (
-              <div className="relative">
-                {mainCard}
-              </div>
-            )}
-          </Link>
+  
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          "rounded-full font-bold border shadow-none shrink-0 inline-flex items-center gap-2 bg-transparent",
+                          isLarge ? "px-5 py-2 text-[15px] sm:text-[16px]" : "px-4 py-1.5 text-[13px] sm:text-[14px]",
+                          request.status === "solved" || request.winner_submission_id ? "border-[#6925DC] text-[#6925DC]" :
+                            request.status === "pending" ? "border-[#FF8C5A] text-[#FF8C5A]" :
+                              request.status === "open" ? cn("border-current", getTheme(request.category).text) :
+                                request.status === "rejected" ? "border-red-400 text-red-500" :
+                                  "border-gray-500/40 text-gray-500"
+                        )}
+                      >
+                        <span className="text-[#1A1A1A]">
+                          {request.winner_submission_id ? "Solved" : request.status?.charAt(0).toUpperCase() + request.status?.slice(1)}
+                        </span>
+                      </Badge>
+                    </div>
+                  </section>
+                  {mainCard}
+                </div>
+              ) : (
+                <div className="relative">
+                  {mainCard}
+                </div>
+              )}
+            </Link>
+          )}
           <div className="px-3 pt-3 pb-3 mt-auto">
             {footerSection}
           </div>

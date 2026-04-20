@@ -4,7 +4,6 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { PersonalizedFeed } from "@/components/requests/personalized-feed";
 import { fetchInitialFeedData } from "@/lib/feed";
 import type { FeedMode } from "@/lib/types";
-import { SvgTestSection } from "@/components/debug/svg-test-section";
 
 export const dynamic = "force-dynamic";
 
@@ -48,12 +47,7 @@ async function FeedDataWrapper({ mode, searchParams }: { mode: FeedMode, searchP
   });
 
   return (
-    <div className="flex flex-col gap-8">
-      <PersonalizedFeed initialMode={mode} initialData={initialData} />
-      <div className="max-w-[1280px] mx-auto w-full px-4 md:px-6 mb-12">
-        <SvgTestSection />
-      </div>
-    </div>
+    <PersonalizedFeed initialMode={mode} initialData={initialData} />
   );
 }
 

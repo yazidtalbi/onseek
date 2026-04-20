@@ -38,14 +38,14 @@ const SheetContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed z-50 w-full gap-4 border border-[#e5e7eb]  p-6",
+        "fixed z-50 w-full gap-4 border border-[#e5e7eb] bg-white p-6",
         fullScreen && "inset-0 h-full w-full max-w-none rounded-none border-0",
         !fullScreen && side === "right" &&
-          "right-0 top-0 h-full max-w-sm rounded-l-3xl",
+          "right-0 top-0 h-full max-w-sm",
         !fullScreen && side === "left" &&
-          "left-0 top-0 h-full max-w-sm rounded-r-3xl",
-        !fullScreen && side === "top" && "left-0 top-0 w-full rounded-b-3xl",
-        !fullScreen && side === "bottom" && "bottom-0 left-0 w-full rounded-t-3xl",
+          "left-0 top-0 h-full max-w-sm",
+        !fullScreen && side === "top" && "left-0 top-0 w-full",
+        !fullScreen && side === "bottom" && "bottom-0 left-0 w-full",
         className
       )}
       {...props}

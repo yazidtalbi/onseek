@@ -34,11 +34,12 @@ import {
   Home,
   Trophy,
   MessageCircleMore,
-  SquarePlus,
   Binoculars,
   Check,
-  Globe as GlobeIcon
+  Globe as GlobeIcon,
+  LifeBuoy
 } from "lucide-react";
+import { FeedbackModal } from "@/components/reports/feedback-modal";
 import { useAuth } from "@/components/layout/auth-provider";
 import { useTheme } from "@/components/layout/theme-provider";
 import { useSidebar } from "@/components/layout/app-sidebar";
@@ -274,6 +275,7 @@ export function AppNavbar({
   const [exploreOpen, setExploreOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isAIModalOpen, setIsAIModalOpen] = useState(false);
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const isHomePage = pathname === "/";
   const { 
     mobileOpen, setMobileOpen,
@@ -466,7 +468,8 @@ export function AppNavbar({
 
   return (
     <header className={cn(
-      "fixed top-0 left-0 right-0 z-50 w-full transition-all duration-300 bg-white h-20",
+      "fixed top-0 left-0 right-0 z-50 w-full transition-all duration-300 h-auto",
+      isScrolled ? "bg-white" : "bg-transparent",
       !isVisible && "-translate-y-full"
     )}>
       {/* Mobile Navbar Container */}
@@ -475,7 +478,10 @@ export function AppNavbar({
         isScrolled ? "bg-white" : "bg-transparent"
       )}>
         {/* Top bar */}
-        <div className="flex items-center justify-between py-3 px-4 w-full">
+        <div className={cn(
+          "flex items-center justify-between px-3 w-full transition-all duration-300",
+          user ? "h-16" : "h-14 md:h-16"
+        )}>
           {user ? (
             <>
               {/* Left: Hamburger, Logo */}
@@ -484,16 +490,24 @@ export function AppNavbar({
                   <Menu className="h-5 w-5" />
                 </Button>
                 <Link href="/" prefetch={true} className="shrink-0 flex items-center gap-2">
-                  <Image src="/logo-final.svg" alt="onseek" width={24} height={24} className="h-6 w-auto" priority />
+                  <Image src="/logonseek.svg" alt="onseek" width={24} height={24} className="h-6 w-auto" priority />
                   <span className="text-lg text-black" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>onseek</span>
                 </Link>
               </div>
 
               {/* Right: Messages, Alert, Avatar */}
               <div className="flex items-center gap-2">
-                <Link href="/messages" className="flex items-center justify-center h-9 w-9 rounded-full hover:bg-gray-100 transition-colors">
-                  <MessageCircle className="h-5 w-5 text-gray-700" />
-                </Link>
+                {user && pathname !== "/" && (
+                  <Link href="/search" className="flex items-center justify-center h-9 w-9 rounded-full hover:bg-gray-100 transition-colors">
+                    <Search className="h-5 w-5 text-gray-700" />
+                  </Link>
+                )}
+                <button 
+                  onClick={() => setIsAIModalOpen(true)}
+                  className="flex items-center justify-center h-9 w-9 rounded-full bg-transparent text-black border border-gray-200 hover:bg-gray-50 transition-colors shrink-0"
+                >
+                  <Plus className="h-4 w-4" />
+                </button>
                 {mounted ? (
                   <>
                     <NotificationsDrawer>
@@ -506,10 +520,7 @@ export function AppNavbar({
                         )}
                       </Button>
                     </NotificationsDrawer>
-                    <Link href={profile?.username ? `/profile/${profile.username}` : "/settings"} className="ml-1 flex items-center gap-2 pr-1">
-                      <span className="text-xs font-bold text-gray-700 truncate max-w-[80px]">
-                        {profile?.first_name && profile?.last_name ? `${profile.first_name} ${profile.last_name}` : profile?.username}
-                      </span>
+                    <Link href={profile?.username ? `/profile/${profile.username}` : "/settings"} className="flex items-center">
                       <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-700 font-bold text-xs overflow-hidden border border-gray-200 shrink-0">
                         {profile?.avatar_url && !avatarError ? (
                           <img src={profile.avatar_url} alt={profile.username || "User"} className="w-full h-full object-cover" onError={() => setAvatarError(true)} />
@@ -529,33 +540,36 @@ export function AppNavbar({
               {/* Guest Layout */}
               {/* Left: Logo */}
               <Link href="/" prefetch={true} className="shrink-0 flex items-center gap-2">
-                <Image src="/logo-final.svg" alt="Onseek" width={24} height={24} className="h-6 w-auto" priority />
-                <span className="text-lg text-[#6925DC]" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>onseek</span>
+                <Image src="/logonseek.svg" alt="Onseek" width={24} height={24} className="h-6 w-auto" priority />
+                <span className="text-lg text-black" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>onseek</span>
               </Link>
 
-              {/* Right: Plus, Hamburger */}
-              <div className="flex items-center gap-2">
-                {!minimal && (
-                  <div className="flex items-center gap-2">
-                    <Button onClick={() => setIsAIModalOpen(true)} size="icon" className="h-9 w-9 rounded-full bg-slate-50 text-[#6925DC] hover:bg-slate-100 border border-[#6925DC]/10">
-                      <Sparkles className="h-4 w-4" />
+                {/* Right: Plus, Sign Up */}
+                <div className="flex items-center gap-2">
+                  {!minimal && (
+                    <div className="flex items-center gap-2">
+                      <Button 
+                        onClick={() => setIsAIModalOpen(true)} 
+                        size="icon" 
+                        className="h-9 w-9 rounded-full bg-transparent text-black border border-gray-200 hover:bg-gray-50 shadow-none"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
+                  <Link href="/signup">
+                    <Button variant="default" className="h-8 rounded-full px-4 bg-[#222234] text-white hover:bg-[#222234]/90 shrink-0 whitespace-nowrap text-[12px] font-bold">
+                      {ctaText}
                     </Button>
-                    <Button onClick={() => setIsCreateModalOpen(true)} size="icon" className="h-9 w-9 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200">
-                      <SquarePlus className="h-4 w-4" />
-                    </Button>
-                  </div>
-                )}
-                <Button variant="ghost" size="icon" className="h-9 w-9 ml-1 -mr-2" onClick={() => setMobileOpen(true)}>
-                  <Menu className="h-5 w-5" />
-                </Button>
-              </div>
+                  </Link>
+                </div>
             </>
           )}
         </div>
 
-        {/* Sticky Search bar beneath top bar */}
-        {user && (
-          <div className="px-4 pb-3 pt-1 w-full relative z-10 bg-white">
+        {/* Sticky Search bar beneath top bar - Only on Home Page for Mobile */}
+        {user && pathname === "/" && (
+          <div className="px-2 pb-2 pt-0 w-full relative z-10 bg-white">
             <form action="/search" method="get" className="relative w-full flex items-center">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input name="q" placeholder="Search..." defaultValue={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9 pr-4 bg-gray-100 border-transparent rounded-full h-10 w-full text-sm focus-visible:ring-1 focus-visible:ring-gray-300 transition-shadow" />
@@ -588,7 +602,7 @@ export function AppNavbar({
           {user && <div className="w-[72px] shrink-0" />} {/* Spacer */}
           <Link href="/" className={cn("flex items-center gap-2 group", user ? "ml-6" : "ml-8")}>
             <div className="w-9 h-9 flex items-center justify-center">
-              <Image src="/logo-final.svg" alt="onseek" width={28} height={28} className="h-7 w-auto" priority />
+              <Image src="/logonseek.svg" alt="onseek" width={28} height={28} className="h-7 w-auto" priority />
             </div>
             <span className="text-xl text-black" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>
               onseek
@@ -655,7 +669,7 @@ export function AppNavbar({
                   onClick={() => setIsAIModalOpen(true)} 
                   className="hidden sm:flex h-11 rounded-full bg-transparent text-black font-bold whitespace-nowrap px-6 items-center gap-2 border border-black hover:bg-gray-50 shadow-none transition-all"
                 >
-                  <SquarePlus className="h-5 w-5 text-black" />
+                  <Plus className="h-5 w-5 text-black" />
                   Request
                 </Button>
                 {mounted && (
@@ -732,6 +746,13 @@ export function AppNavbar({
                           </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem
+                          onClick={() => setIsFeedbackOpen(true)}
+                          className="flex items-center gap-2 p-2.5 rounded-lg cursor-pointer hover:bg-neutral-50"
+                        >
+                          <LifeBuoy className="h-4 w-4" />
+                          <span>Report a Bug</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
                           onClick={() => startTransition(async () => { await signOutAction(); })}
                           className="flex items-center gap-2 p-2.5 rounded-lg cursor-pointer hover:bg-rose-50 text-rose-600 focus:text-rose-600 focus:bg-rose-50 transition-colors"
                         >
@@ -803,6 +824,10 @@ export function AppNavbar({
       <AIRequestModal
         open={isAIModalOpen}
         onOpenChange={setIsAIModalOpen}
+      />
+      <FeedbackModal 
+        open={isFeedbackOpen} 
+        onOpenChange={setIsFeedbackOpen} 
       />
     </header>
   );

@@ -37,7 +37,6 @@ export function SettingsContent({ user, profile }: SettingsContentProps) {
     { id: "profile", label: "Edit Profile", icon: User },
     { id: "interests", label: "Interests", icon: Sparkles },
     { id: "notifications", label: "Notifications", icon: Bell },
-    { id: "appearance", label: "Appearance", icon: Palette },
     { id: "account", label: "Account & Security", icon: Lock },
     { id: "delete", label: "Delete Account", icon: Trash2, variant: "danger" as const },
   ];
@@ -97,7 +96,6 @@ export function SettingsContent({ user, profile }: SettingsContentProps) {
                     {/* <Icon className={cn("h-4 w-4", isActive ? "text-gray-900" : "text-gray-400 group-hover:text-gray-600")} /> */}
                     {item.label}
                   </span>
-                  {isActive && <div className="w-1.5 h-1.5 rounded-full bg-gray-900" />}
                 </button>
               );
             })}
@@ -160,17 +158,6 @@ export function SettingsContent({ user, profile }: SettingsContentProps) {
             </div>
           </div>
 
-          <div className={activeTab === "appearance" ? "block" : "hidden"}>
-            <div className="space-y-6">
-              <div className="space-y-1 pb-4">
-                <h2 className="text-lg font-bold text-gray-900">Appearance</h2>
-                <p className="text-sm text-gray-500">Customize how the application looks to you.</p>
-              </div>
-              <div className="p-4 border border-[#e5e7eb] rounded-xl bg-gray-50/50">
-                <ThemeToggle />
-              </div>
-            </div>
-          </div>
 
           <div className={activeTab === "account" ? "block" : "hidden"}>
             <div className="space-y-8">

@@ -46,11 +46,11 @@ export function HeroSectionV2({ user, profile, tradeMode, setTradeMode }: HeroSe
 
   return (
     <>
-      <section id="onseek-hero" className="w-full h-auto px-4 md:px-6 mt-5 overflow-visible">
+      <section id="onseek-hero" className="w-full h-auto px-2 md:px-6 mt-0 lg:mt-4 overflow-visible">
         <div className="mx-auto w-full max-w-[1280px] min-h-[600px] lg:h-[642px] relative group">
           {/* Unified Container */}
-          <div className="w-full h-full bg-[#6925DC] relative flex flex-col justify-center items-start py-12 lg:py-20 px-10 lg:px-16 rounded-[24px] overflow-hidden">
-            {/* Hero Image - Rounded with spacing */}
+          <div className="w-full h-full bg-[#6925DC] relative flex flex-col justify-center items-start py-8 lg:py-20 px-6 lg:px-16 rounded-[24px] overflow-hidden">
+            {/* Hero Image - Desktop Background */}
             <div className="hidden lg:block absolute right-6 top-6 bottom-6 w-[42%] pointer-events-none z-0 rounded-[20px] overflow-hidden">
               <Image
                 src="/hero/finalhero.png"
@@ -75,7 +75,7 @@ export function HeroSectionV2({ user, profile, tradeMode, setTradeMode }: HeroSe
             </div>
 
             {/* DIMMEN SVG (Bottom Left Ornament) */}
-            <div className="absolute bottom-0 left-0 w-[400px] h-[400px] pointer-events-none opacity-30 z-0">
+            <div className="hidden lg:block absolute bottom-0 left-0 w-[400px] h-[400px] pointer-events-none opacity-30 z-0">
               <Image
                 src="/hero/hero-v2-bg-left-new.png"
                 alt=""
@@ -86,17 +86,26 @@ export function HeroSectionV2({ user, profile, tradeMode, setTradeMode }: HeroSe
 
             <div className="relative z-10 w-full lg:max-w-[58%]">
               <AnimatePresence initial={false}>
-                {!searchValue && (
                   <motion.div
                     initial={{ opacity: 0, y: -20, height: 0 }}
                     animate={{ opacity: 1, y: 0, height: "auto" }}
-                    exit={{ opacity: 0, y: -20, height: 0 }}
                     transition={{ duration: 0.4, ease: "easeInOut" }}
                     className="w-full"
                   >
+                    {/* Mobile Image - Shown above title as a simple image */}
+                    <div className="block lg:hidden w-full h-[220px] relative mb-8 rounded-[20px] overflow-hidden">
+                      <Image
+                        src="/hero/finalhero.png"
+                        alt="Hero illustration"
+                        fill
+                        className="object-cover"
+                        priority
+                      />
+                    </div>
+
                     {/* Main Title */}
                     <h1
-                      className="text-white text-[32px] sm:text-[48px] lg:text-[54px] leading-[1.1] tracking-tight mb-10 font-black max-w-3xl"
+                      className="text-white text-[32px] sm:text-[48px] lg:text-[54px] leading-[1.1] tracking-tight mb-6 lg:mb-10 font-black max-w-3xl"
                       style={{ fontFamily: 'var(--font-title)', fontWeight: 600 }}
                     >
                       Stop searching,<br />
@@ -104,16 +113,15 @@ export function HeroSectionV2({ user, profile, tradeMode, setTradeMode }: HeroSe
                     </h1>
 
                     {/* Description */}
-                    <div className="flex items-start gap-4 mb-12 max-w-xl">
-                      <div className="shrink-0 mt-1">
-                        <Image src="/hero/hour.png" alt="Hourglass" width={24} height={24} className="object-contain opacity-90" />
+                    <div className="flex flex-col items-start gap-3 mb-10 max-w-xl">
+                      <div className="hidden lg:block shrink-0">
+                        <Image src="/hero/hour.png" alt="Hourglass" width={20} height={20} className="object-contain opacity-90" />
                       </div>
-                      <p className="text-white/85 text-[21px] font-medium leading-[1.4] tracking-tight">
+                      <p className="text-white/85 text-[17px] sm:text-[19px] font-medium leading-[1.4] tracking-tight">
                         Flip the script on shopping. Define your vision, set your terms, and let the community find the perfect item for you.
                       </p>
                     </div>
                   </motion.div>
-                )}
               </AnimatePresence>
 
               {/* Buy/Sell Toggle */}
@@ -141,7 +149,7 @@ export function HeroSectionV2({ user, profile, tradeMode, setTradeMode }: HeroSe
               {/* Search/Input Bar */}
               {tradeMode === "buy" ? (
                 <div className="w-full max-w-xl relative">
-                  <div className="relative flex flex-col w-full min-h-[100px] h-auto bg-white rounded-[24px] px-8 pt-7 pb-14 transition-all duration-300 border border-transparent focus-within:border-white/20">
+                  <div className="relative flex flex-col w-full min-h-[100px] h-auto bg-white rounded-[24px] px-4 md:px-8 pt-4 md:pt-7 pb-12 md:pb-14 transition-all duration-300 border border-transparent focus-within:border-white/20">
                     <textarea
                       ref={textareaRef}
                       placeholder="Describe what you are looking for..."
@@ -164,7 +172,6 @@ export function HeroSectionV2({ user, profile, tradeMode, setTradeMode }: HeroSe
                     <Button
                       type="button"
                       variant="accent"
-                      size="sm"
                       onClick={() => {
                         if (searchValue.trim()) {
                           setIsAIFlowOpen(true);
@@ -172,10 +179,10 @@ export function HeroSectionV2({ user, profile, tradeMode, setTradeMode }: HeroSe
                           window.dispatchEvent(new CustomEvent('open-create-request-modal'));
                         }
                       }}
-                      className="absolute bottom-5 right-5 h-11 px-6 gap-2 bg-[#1A1A1A] hover:bg-black text-white rounded-full font-bold shadow-none"
+                      className="absolute bottom-5 right-5 h-8 md:h-10 px-4 md:px-6 gap-2 bg-[#1A1A1A] hover:bg-black text-white rounded-full text-[12px] md:text-[14px] font-bold shadow-none shrink-0"
                     >
                       <span>Post</span>
-                      <ArrowRight className="h-4 w-4 text-[#FF8C5A]" strokeWidth={3} />
+                      <ArrowRight className="h-3.5 w-3.5 md:h-4 md:w-4 text-white" strokeWidth={3} />
                     </Button>
                   </div>
                 </div>

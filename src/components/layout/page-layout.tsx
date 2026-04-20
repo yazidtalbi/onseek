@@ -12,7 +12,11 @@ export function PageLayout({ children }: { children: React.ReactNode }) {
     return (
       <div className={cn(
         "flex-1 w-full mx-auto",
-        pathname === "/" || pathname === "/landing" ? "px-0 pt-0 pb-0" : "px-4 md:px-6 pt-8 md:pt-14 pb-8"
+        pathname === "/" || pathname === "/landing" || pathname.includes("/latest") || pathname.includes("/popular") || pathname.includes("/for-you")
+          ? "px-0 pt-0 pb-0" 
+          : pathname.startsWith("/requests/") 
+            ? "px-3 md:px-6 pt-2 md:pt-14 pb-8"
+            : "px-3 md:px-6 pt-8 md:pt-14 pb-8"
       )}>
         {children}
       </div>

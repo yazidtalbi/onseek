@@ -9,11 +9,6 @@ export function ScrollToTop() {
   const [isVisible, setIsVisible] = useState(false);
   const pathname = usePathname();
 
-  // Hide on match page
-  if (pathname === "/requests/match") {
-    return null;
-  }
-
   useEffect(() => {
     const toggleVisibility = () => {
       if (window.scrollY > 300) {
@@ -26,6 +21,11 @@ export function ScrollToTop() {
     window.addEventListener("scroll", toggleVisibility);
     return () => window.removeEventListener("scroll", toggleVisibility);
   }, []);
+
+  // Hide on certain pages - moved below hooks to avoid React errors
+  if (pathname === "/requests/match" || pathname.startsWith("/requests/")) {
+    return null;
+  }
 
   const scrollToTop = () => {
     window.scrollTo({

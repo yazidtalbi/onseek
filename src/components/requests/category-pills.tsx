@@ -5,21 +5,10 @@ import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { ChevronRight, ChevronLeft, ListFilter, Bookmark } from "lucide-react";
 import { MAIN_CATEGORIES } from "@/lib/categories";
 import { cn } from "@/lib/utils";
-import { FiltersModal } from "@/components/requests/filters-modal";
 import { getCategorySlug, getCategoryName, REVERSE_MODE_MAP } from "@/lib/utils/category-routing";
 import type { FeedMode } from "@/lib/types";
 import { useAuth } from "@/components/layout/auth-provider";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { CountryCombobox } from "@/components/ui/country-combobox";
-import { Rows3, LayoutGrid, ChevronDown } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ChevronDown } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,12 +18,7 @@ import {
 
 export function CategoryPills({
   mode = "for_you",
-  onModeChange,
-  hasPreferences = false,
-  viewMode,
-  onViewModeChange,
-  hideViewToggle = false,
-  hideFilters = false
+  leftElement
 }: {
   mode?: FeedMode;
   onModeChange?: (mode: FeedMode) => void;
@@ -43,6 +27,7 @@ export function CategoryPills({
   onViewModeChange?: (mode: "list" | "grid") => void;
   hideViewToggle?: boolean;
   hideFilters?: boolean;
+  leftElement?: React.ReactNode;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -64,33 +49,6 @@ export function CategoryPills({
   let selectedCategory = isHomePage ? "Discover" : (pathCategory || searchParams.get("category") || "Discover");
   if (isForYouPage) selectedCategory = "For You";
   if (isSavedPage) selectedCategory = "My saves";
-
-  const handleModeChange = (newMode: string) => {
-    if (user && onModeChange) {
-      onModeChange(newMode as FeedMode);
-      return;
-    }
-
-    const params = new URLSearchParams(searchParams.toString());
-    params.delete("page");
-    params.delete("mode"); // Ensure we don't have ?mode=... in the target URL either
-
-    const modePath = REVERSE_MODE_MAP[newMode as FeedMode] || "latest";
-
-    // Maintain current category slug if present
-    const pathParts = pathname.split('/');
-    const lastPart = pathParts.pop();
-    const isCategoryPath = pathname.includes('/popular/') || pathname.includes('/latest/');
-
-    // Ignore words that are path roots like 'for-you', 'popular', 'latest'
-    const isSpecialRoot = lastPart === 'for-you' || lastPart === 'popular' || lastPart === 'latest';
-
-    if (isCategoryPath && lastPart && !isSpecialRoot) {
-      router.push(`/${modePath}/${lastPart}?${params.toString()}`);
-    } else {
-      router.push(`/${modePath}?${params.toString()}`);
-    }
-  };
 
   // Check scroll position for categories
   React.useEffect(() => {
@@ -164,224 +122,108 @@ export function CategoryPills({
     }
   };
 
-  const priceMax = searchParams.get("priceMax") || "";
-  const country = searchParams.get("country") || "";
   const allCategories = ["Discover", ...(user ? ["For You", "My saves"] : []), ...MAIN_CATEGORIES];
   const categories = user ? allCategories : allCategories.slice(0, 7);
   const moreCategories = user ? [] : allCategories.slice(7);
-  const [filtersOpen, setFiltersOpen] = React.useState(false);
-  const [localPriceMax, setLocalPriceMax] = React.useState(priceMax);
-  
-  React.useEffect(() => {
-    setLocalPriceMax(priceMax);
-  }, [priceMax]);
-
-  const hasActiveFilters = searchParams.get("priceMin") || searchParams.get("priceMax") || searchParams.get("country");
-
-  const updateParam = (key: string, value: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    if (value === "Discover" || value === "" || value === "0") {
-      params.delete(key);
-    } else {
-      params.set(key, value);
-    }
-    if (key === "category") params.delete("page");
-    const hasQuery = searchParams.get("q");
-    const path = hasQuery ? "/search" : pathname;
-    router.push(`${path}?${params.toString()}`);
-  };
 
   return (
-    <div className="w-full flex flex-col gap-3">
-      <div className="flex items-center justify-between w-full">
-        {/* Categories Scroller - far left */}
-        <div className="flex-1 min-w-0 pr-4 flex items-center relative group">
-          {/* Left gradient overlay */}
-          {canScrollCategoriesLeft && (
-            <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-white via-white/80 to-transparent pointer-events-none z-10" />
-          )}
+    <div className="w-full flex-1 pr-4 flex items-center relative group">
+      {/* Left Element (e.g. Filters button on mobile) */}
+      {leftElement && (
+        <div className="flex-shrink-0 pr-2">
+          {leftElement}
+        </div>
+      )}
 
-          {/* Left chevron button */}
-          {canScrollCategoriesLeft && (
+      {/* Left gradient overlay */}
+      {canScrollCategoriesLeft && (
+        <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-white via-white/80 to-transparent pointer-events-none z-10" />
+      )}
+
+      {/* Left chevron button */}
+      {canScrollCategoriesLeft && (
+        <button
+          onClick={scrollLeft}
+          className="absolute left-0 flex items-center justify-center w-7 h-7 rounded-full bg-white/90 hover:bg-gray-100 transition-all z-20"
+        >
+          <ChevronLeft className="h-3 w-3 text-gray-600" />
+        </button>
+      )}
+
+      <div
+        ref={scrollContainerRef}
+        className="flex items-center gap-0 md:gap-2 overflow-x-auto scrollbar-hide scroll-smooth w-full justify-start py-1"
+      >
+        {categories.map((category) => {
+          const isActive = selectedCategory === category;
+          const displayText = (category === "For You" || category === "My saves" || category === "Discover") 
+            ? category 
+            : category.split(' ')[0];
+            
+          return (
             <button
-              onClick={scrollLeft}
-              className="absolute left-0 flex items-center justify-center w-7 h-7 rounded-full bg-white/90 hover:bg-gray-100 transition-all z-20"
+              key={category}
+              onClick={() => handleCategorySelect(category)}
+              className={cn(
+                "px-3 md:px-4 py-2 text-[15px] whitespace-nowrap transition-all duration-200 flex items-center gap-2 flex-shrink-0",
+                isActive
+                  ? "bg-gray-100 text-black rounded-full font-bold"
+                  : "bg-transparent text-gray-400 hover:text-gray-600 font-medium"
+              )}
             >
-              <ChevronLeft className="h-3 w-3 text-gray-600" />
+              {category === "My saves" && <Bookmark className="h-4 w-4" />}
+              {displayText}
             </button>
-          )}
+          );
+        })}
 
-          <div
-            ref={scrollContainerRef}
-            className="flex items-center gap-2 overflow-x-auto scrollbar-hide scroll-smooth w-full justify-start"
-          >
-            {categories.map((category) => {
-              const isActive = selectedCategory === category;
-              const displayText = (category === "For You" || category === "My saves" || category === "Discover") 
-                ? category 
-                : category.split(' ')[0];
-                
-              return (
-                <button
+        {moreCategories.length > 0 && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                className={cn(
+                  "px-4 py-2 text-[15px] whitespace-nowrap transition-all duration-200 flex items-center gap-1.5",
+                  moreCategories.includes(selectedCategory)
+                    ? "bg-gray-100 text-black rounded-full font-bold"
+                    : "bg-transparent text-gray-400 hover:text-gray-600 font-medium"
+                )}
+              >
+                +more
+                <ChevronDown className="h-3.5 w-3.5" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="max-h-[300px] overflow-y-auto bg-white border-gray-200">
+              {moreCategories.map((category) => (
+                <DropdownMenuItem
                   key={category}
                   onClick={() => handleCategorySelect(category)}
                   className={cn(
-                    "px-4 py-2 text-[15px] whitespace-nowrap transition-all duration-200 flex items-center gap-2",
-                    isActive
-                      ? "bg-gray-100 text-black rounded-full font-bold"
-                      : "bg-transparent text-gray-400 hover:text-gray-600 font-medium"
+                    "text-[14px]",
+                    selectedCategory === category ? "font-bold text-black" : "text-gray-600"
                   )}
                 >
-                  {category === "My saves" && <Bookmark className="h-4 w-4" />}
-                  {displayText}
-                </button>
-              );
-            })}
-
-            {moreCategories.length > 0 && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button
-                    className={cn(
-                      "px-4 py-2 text-[15px] whitespace-nowrap transition-all duration-200 flex items-center gap-1.5",
-                      moreCategories.includes(selectedCategory)
-                        ? "bg-gray-100 text-black rounded-full font-bold"
-                        : "bg-transparent text-gray-400 hover:text-gray-600 font-medium"
-                    )}
-                  >
-                    +more
-                    <ChevronDown className="h-3.5 w-3.5" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="max-h-[300px] overflow-y-auto bg-white border-gray-200">
-                  {moreCategories.map((category) => (
-                    <DropdownMenuItem
-                      key={category}
-                      onClick={() => handleCategorySelect(category)}
-                      className={cn(
-                        "text-[14px]",
-                        selectedCategory === category ? "font-bold text-black" : "text-gray-600"
-                      )}
-                    >
-                      {category}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
-          </div>
-
-          {/* Right gradient overlay */}
-          {canScrollCategoriesRight && (
-            <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-white via-white/80 to-transparent pointer-events-none z-10" />
-          )}
-
-          {/* Right chevron button */}
-          {canScrollCategoriesRight && (
-            <button
-              onClick={scrollRight}
-              className="absolute right-0 flex items-center justify-center w-7 h-7 rounded-full bg-white/90 hover:bg-gray-100 transition-all z-20"
-            >
-              <ChevronRight className="h-3 w-3 text-gray-600" />
-            </button>
-          )}
-        </div>
-
-        {/* Far Right Nav - View, Sort, Filter */}
-        {!hideFilters && (
-          <div className="shrink-0 flex items-center gap-2">
-            {/* Filter Button */}
-            <button
-              onClick={() => setFiltersOpen(!filtersOpen)}
-              className={cn(
-                "w-9 h-9 p-0 flex items-center justify-center rounded-full text-sm font-medium transition-colors border",
-                hasActiveFilters || filtersOpen
-                  ? "bg-gray-100 text-gray-900 border-gray-300"
-                  : "bg-white border-transparent text-gray-600 hover:text-gray-900"
-              )}
-              title="Filters"
-            >
-              <ListFilter className="h-4 w-4" />
-            </button>
-
-            {/* Sort (Latest) */}
-            <Select value={mode === "for_you" ? "latest" : mode} onValueChange={handleModeChange}>
-              <SelectTrigger className="px-3 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors flex items-center gap-2 border-transparent bg-white text-gray-600 hover:text-gray-900 h-9 shadow-none focus:ring-0 w-auto">
-                <span className="truncate">
-                  {mode === "trending" ? "Trending" : "Latest"}
-                </span>
-              </SelectTrigger>
-              <SelectContent className="bg-white min-w-[150px]">
-                <SelectItem value="latest">Latest</SelectItem>
-                <SelectItem value="trending">Trending</SelectItem>
-              </SelectContent>
-            </Select>
-
-            {/* View Toggle */}
-            {!hideViewToggle && viewMode !== undefined && onViewModeChange && (
-              <div className="flex items-center gap-1 rounded-full bg-gray-100 p-1">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onViewModeChange("list")}
-                  className={cn("h-7 w-7 p-0 rounded-full", viewMode === "list" ? "bg-white text-gray-900" : "bg-transparent text-gray-500 hover:text-gray-900")}
-                  title="List view"
-                >
-                  <Rows3 className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onViewModeChange("grid")}
-                  className={cn("h-7 w-7 p-0 rounded-full", viewMode === "grid" ? "bg-white text-gray-900" : "bg-transparent text-gray-500 hover:text-gray-900")}
-                  title="Grid view"
-                >
-                  <LayoutGrid className="h-4 w-4" />
-                </Button>
-              </div>
-            )}
-          </div>
+                  {category}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         )}
       </div>
 
-      {/* Expanded Inline Filters */}
-      {filtersOpen && (
-        <div className="w-full flex items-center justify-end gap-6 p-4 bg-[#f8f9fa] border border-[#e5e7eb] rounded-[16px] transition-all">
-          <div className="flex-1 max-w-[240px]">
-            <Label className="text-[13px] font-semibold text-gray-700 mb-1.5 block text-left">Max Budget ($)</Label>
-            <div className="flex items-center gap-2">
-              <Input
-                type="number"
-                placeholder="No limit"
-                value={localPriceMax}
-                onChange={(e) => setLocalPriceMax(e.target.value)}
-                onBlur={() => updateParam("priceMax", localPriceMax)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    updateParam("priceMax", localPriceMax);
-                  }
-                }}
-                className="h-10 rounded-xl bg-white border-gray-200"
-              />
-              <Button 
-                onClick={() => updateParam("priceMax", localPriceMax)}
-                variant="outline"
-                className="h-10 rounded-xl px-4 font-bold text-xs bg-white hover:bg-gray-50 border-gray-200 shrink-0"
-              >
-                Apply
-              </Button>
-            </div>
-          </div>
-          <div className="flex-1 max-w-[240px]">
-            <Label className="text-[13px] font-semibold text-gray-700 mb-1.5 block text-left">Country</Label>
-            <CountryCombobox
-              value={country}
-              onChange={(val) => updateParam("country", val)}
-            />
-          </div>
-        </div>
+      {/* Right gradient overlay */}
+      {canScrollCategoriesRight && (
+        <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-white via-white/80 to-transparent pointer-events-none z-10" />
+      )}
+
+      {/* Right chevron button */}
+      {canScrollCategoriesRight && (
+        <button
+          onClick={scrollRight}
+          className="absolute right-0 flex items-center justify-center w-7 h-7 rounded-full bg-white/90 hover:bg-gray-100 transition-all z-20"
+        >
+          <ChevronRight className="h-3 w-3 text-gray-600" />
+        </button>
       )}
     </div>
   );
 }
-

@@ -32,12 +32,24 @@ interface FiltersModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   children: React.ReactNode;
+  viewMode?: "list" | "grid";
+  onViewModeChange?: (mode: "list" | "grid") => void;
+  sortMode?: string;
+  onSortModeChange?: (mode: string) => void;
 }
 
-export function FiltersModal({ open, onOpenChange, children }: FiltersModalProps) {
+export function FiltersModal({ 
+  open, 
+  onOpenChange, 
+  children,
+  viewMode,
+  onViewModeChange,
+  sortMode,
+  onSortModeChange
+}: FiltersModalProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const sort = searchParams.get("sort") || "newest";
+  const sort = sortMode || searchParams.get("sort") || "newest";
   const priceMax = searchParams.get("priceMax") || "";
   const country = searchParams.get("country") || "";
 
@@ -142,6 +154,41 @@ export function FiltersModal({ open, onOpenChange, children }: FiltersModalProps
         </DialogHeader>
 
         <div className="space-y-6 py-4">
+          {/* Sort & View - Mobile Only (Hidden on Desktop because desktop stays out) */}
+          <div className="space-y-4 md:hidden">
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Sort by</Label>
+              <Select value={sort} onValueChange={(val) => onSortModeChange?.(val)}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-white">
+                  <SelectItem value="latest">Latest</SelectItem>
+                  <SelectItem value="trending">Trending</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">View Mode</Label>
+              <div className="flex items-center gap-2 rounded-xl bg-gray-100 p-1 w-fit">
+                <button
+                  onClick={() => onViewModeChange?.("grid")}
+                  className={React.useMemo(() => `px-4 py-1.5 rounded-lg text-sm font-bold transition-all ${viewMode === "grid" ? "bg-white text-black shadow-sm" : "text-gray-500"}`, [viewMode])}
+                >
+                  Grid
+                </button>
+                <button
+                  onClick={() => onViewModeChange?.("list")}
+                  className={React.useMemo(() => `px-4 py-1.5 rounded-lg text-sm font-bold transition-all ${viewMode === "list" ? "bg-white text-black shadow-sm" : "text-gray-500"}`, [viewMode])}
+                >
+                  List
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="h-px bg-gray-100 md:hidden" />
           {/* Max Price */}
           <div className="space-y-3">
             <Label className="text-sm font-medium">Max price</Label>

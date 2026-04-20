@@ -84,14 +84,32 @@ export function RequestDetailView({
   const cleanDesc = cleanDescription(request.description);
   const budgetText = formatBudget(request.budget_min, request.budget_max);
 
+  const similarRequestsRef = React.useRef<HTMLDivElement>(null);
+  const [hideBottomBar, setHideBottomBar] = React.useState(false);
+
+  React.useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setHideBottomBar(entry.isIntersecting);
+      },
+      { threshold: 0.1 }
+    );
+
+    if (similarRequestsRef.current) {
+      observer.observe(similarRequestsRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <div className="w-full pb-20">
       {/* Centered Content: Request & Proposals */}
-      <div className={cn("max-w-[1360px] w-full px-4 md:px-12 mx-auto")}>
+      <div className={cn("max-w-[1360px] w-full px-3 md:px-12 mx-auto")}>
 
         {/* Header Navigation & Actions moved inside centered container */}
         {!isModal && (
-          <div className="flex items-center justify-between gap-4 mb-6 pt-2">
+          <div className="flex items-center justify-between gap-4 mb-2 md:mb-6 pt-0 md:pt-2">
             <div className="flex items-center gap-4">
               <BackButton />
               <nav className="flex items-center gap-2 text-sm text-gray-500">
@@ -108,7 +126,7 @@ export function RequestDetailView({
               </nav>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="hidden md:flex items-center gap-3">
               <ShareButton requestId={request.id} />
               <div className="p-0.5 border border-gray-100 rounded-full bg-white transition-colors hover:bg-gray-50">
                 <FavoriteButton requestId={request.id} isFavorite={isFavorite} />
@@ -173,25 +191,37 @@ export function RequestDetailView({
       </div>
 
       {/* Mobile Sticky Bottom Bar */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/80 backdrop-blur-xl border-t border-gray-100 z-50 flex sm:hidden items-center gap-3 shadow-lg" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
+      <div 
+        className={cn(
+          "fixed bottom-0 left-0 right-0 p-4 bg-white/80 backdrop-blur-xl border-t border-gray-100 z-50 flex sm:hidden items-center gap-3 shadow-lg transition-transform duration-300",
+          hideBottomBar ? "translate-y-full" : "translate-y-0"
+        )} 
+        style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}
+      >
         {showSubmissionForm && !isOwner ? (
           <div className="flex-1">
-            <Button className="w-full h-14 rounded-2xl bg-[#6925DC] text-white font-black text-lg shadow-xl shadow-[#6925DC]/20">
+            <Button 
+              className="w-full h-14 rounded-full bg-[#6925DC] text-white font-black text-lg shadow-none"
+              onClick={() => {
+                const trigger = document.getElementById('submission-form-trigger');
+                if (trigger) trigger.click();
+              }}
+            >
               Submit Proposal
             </Button>
           </div>
         ) : (
           <div className="flex-1 text-center font-bold text-gray-500">View Marketplace</div>
         )}
-        <div className="w-14 h-14 rounded-2xl flex items-center justify-center border border-gray-200 bg-white shadow-sm">
+        <div className="w-14 h-14 rounded-full flex items-center justify-center border border-gray-200 bg-white shadow-sm">
           <FavoriteButton requestId={request.id} isFavorite={isFavorite} />
         </div>
       </div>
 
       {/* Similar Requests */}
       {similarRequests && similarRequests.length > 0 && (
-        <div className="mt-12 py-16">
-          <div className="max-w-[1360px] mx-auto w-full space-y-8 px-4 md:px-12">
+        <div ref={similarRequestsRef} className="mt-0 py-4 md:mt-12 md:py-16">
+          <div className="max-w-[1360px] mx-auto w-full space-y-8 px-3 md:px-12">
             <h2 className="text-3xl font-black text-black leading-none" style={{ fontFamily: 'var(--font-expanded)' }}>You might also like</h2>
             <div className="columns-1 sm:columns-2 lg:columns-3 gap-8">
               {similarRequests.map((similarRequest) => (

@@ -13,29 +13,20 @@ type ThemeContextType = {
 const ThemeContext = React.createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = React.useState<Theme>("light");
-  const [mounted, setMounted] = React.useState(false);
+  // Hardcode to light mode for now as requested
+  const theme = "light" as Theme;
 
-  // Load theme from localStorage on mount, default to light mode
   React.useEffect(() => {
-    setMounted(true);
-    const savedTheme = localStorage.getItem("theme") as Theme | null;
-    const initialTheme = savedTheme || "light"; // Always default to light mode
-    setThemeState(initialTheme);
-    document.documentElement.classList.toggle("dark", initialTheme === "dark");
+    document.documentElement.classList.remove("dark");
   }, []);
 
   const setTheme = React.useCallback((newTheme: Theme) => {
-    setThemeState(newTheme);
-    if (typeof window !== "undefined") {
-      localStorage.setItem("theme", newTheme);
-      document.documentElement.classList.toggle("dark", newTheme === "dark");
-    }
+    // No-op to disable theme switching
   }, []);
 
   const toggleTheme = React.useCallback(() => {
-    setTheme(theme === "light" ? "dark" : "light");
-  }, [theme, setTheme]);
+    // No-op to disable theme switching
+  }, []);
 
   // Always provide context, even before mount (with default values)
   const contextValue = React.useMemo(

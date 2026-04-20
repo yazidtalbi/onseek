@@ -194,8 +194,8 @@ export function AIRequestModal({ open, onOpenChange }: AIRequestModalProps) {
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent 
-        overlayClassName="backdrop-blur-none"
-        className="fixed z-50 p-0 overflow-hidden outline-none border-none bg-white flex flex-col shadow-2xl inset-0 w-full h-[100dvh] sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-[1000px] sm:h-auto sm:max-h-[90vh] sm:rounded-[2rem] focus:ring-0 focus-visible:ring-0"
+        overlayClassName="hidden sm:block backdrop-blur-none"
+        className="fixed z-50 p-0 overflow-hidden outline-none border-none bg-white flex flex-col shadow-2xl inset-0 w-full h-[100dvh] top-0 left-0 translate-x-0 translate-y-0 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-[1000px] sm:h-auto sm:max-h-[90vh] sm:rounded-[2rem] focus:ring-0 focus-visible:ring-0"
       >
         <button
           onClick={handleClose}
