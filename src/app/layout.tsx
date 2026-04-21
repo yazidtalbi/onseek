@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Script from "next/script";
-import { Inter, Geist_Mono } from "next/font/google";
+import { Inter, Geist_Mono, Instrument_Serif } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/layout/providers";
 import { Toaster } from "@/components/ui/toaster";
@@ -19,27 +19,34 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const instrumentSerif = Instrument_Serif({
+  variable: "--font-serif",
+  subsets: ["latin"],
+  weight: "400",
+  style: ["normal", "italic"]
+});
+
 export const metadata: Metadata = {
-  title: "Onseek — Find what matters, faster",
-  description: "Stop searching and start discovering. Let the right item find you.",
+  title: "Onseek — The #1 Reverse Marketplace",
+  description: "Where what you want finds you. End the endless search by posting your request and letting the perfect item find you.",
   icons: {
     icon: [
-      { url: "/favicon/favicon-96x96.png", sizes: "96x96", type: "image/png" },
-      { url: "/favicon/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
     ],
-    shortcut: "/favicon/favicon.ico",
-    apple: "/favicon/apple-touch-icon.png",
+    shortcut: "/favicon.ico",
+    apple: "/apple-touch-icon.png",
   },
-  manifest: "/favicon/site.webmanifest",
+  manifest: "/site.webmanifest",
   openGraph: {
     title: "Onseek",
-    description: "Stop searching and start discovering. Let the right item find you.",
+    description: "Where what you want finds you. End the endless search by posting your request and letting the perfect item find you.",
     images: [{ url: "/og-image.jpg", width: 1200, height: 630, alt: "Onseek logo against a modern, interconnected digital landscape." }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Onseek",
-    description: "Stop searching and start discovering. Let the right item find you.",
+    description: "Where what you want finds you. End the endless search by posting your request and letting the perfect item find you.",
     images: ["/og-image.jpg"],
   },
 };
@@ -76,7 +83,7 @@ export default async function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${interDisplay.variable} ${geistMono.variable} min-h-screen bg-background text-foreground antialiased`}
+        className={`${interDisplay.variable} ${geistMono.variable} ${instrumentSerif.variable} min-h-screen bg-background text-foreground antialiased`}
         suppressHydrationWarning
       >
         <AuthProvider user={serializedUser} profile={profile}>

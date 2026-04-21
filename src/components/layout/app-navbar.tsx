@@ -466,12 +466,12 @@ export function AppNavbar({
     }
   }, [lastScrollY]);
 
-  return (
-    <header className={cn(
-      "fixed top-0 left-0 right-0 z-50 w-full transition-all duration-300 h-auto",
-      isScrolled ? "bg-white" : "bg-transparent",
-      !isVisible && "-translate-y-full"
-    )}>
+
+    return (
+      <header className={cn(
+        "fixed top-0 left-0 right-0 z-50 w-full transition-all duration-300 h-auto",
+        isScrolled ? "bg-white" : "bg-transparent",
+      )}>
       {/* Mobile Navbar Container */}
       <div className={cn(
         "md:hidden flex flex-col w-full relative z-20 transition-all duration-300",
@@ -768,6 +768,12 @@ export function AppNavbar({
               <>
                 {!minimal && (
                   <div className="flex items-center gap-6 mr-4">
+                    <button
+                      onClick={() => window.dispatchEvent(new CustomEvent("open-landing-modal"))}
+                      className="flex items-center px-4 py-2 text-sm font-bold text-[#222222] hover:bg-gray-100 rounded-full transition-colors whitespace-nowrap"
+                    >
+                      How it works
+                    </button>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <button

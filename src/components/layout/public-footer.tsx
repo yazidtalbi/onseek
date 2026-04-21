@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Github, Twitter, Instagram, Linkedin, Youtube, Facebook } from "lucide-react";
+import { Instagram } from "lucide-react";
 import { MAIN_CATEGORIES } from "@/lib/categories";
 import { getCategorySlug } from "@/lib/utils/category-routing";
 import { COMPETITORS } from "@/lib/compare-data";
@@ -26,6 +26,19 @@ export function PublicFooter() {
             <p className="text-gray-400 max-w-sm text-sm leading-relaxed font-medium">
               Onseek is a request-first marketplace for people who have better things to do than scroll. We bridge the gap between intent and expert sources, so you can post a request, close the tab, and let the deals find you.
             </p>
+            <div className="pt-2">
+              <a 
+                href="https://www.instagram.com/onseek.co/" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="inline-flex items-center gap-3 text-gray-400 hover:text-white transition-all group/insta"
+              >
+                <div className="p-2 rounded-full bg-white/5 group-hover/insta:bg-white/10 transition-colors">
+                  <Instagram className="w-4 h-4" />
+                </div>
+                <span className="text-xs font-bold uppercase tracking-widest opacity-50 group-hover/insta:opacity-100 transition-opacity">Follow Us</span>
+              </a>
+            </div>
           </div>
 
           <div className="space-y-6">
@@ -96,14 +109,6 @@ export function PublicFooter() {
             <Link href="/terms" className="text-[13px] font-medium text-gray-500 hover:text-white transition-colors">Terms of Service</Link>
             <Link href="/cookies" className="text-[13px] font-medium text-gray-500 hover:text-white transition-colors">Cookie Settings</Link>
           </div>
-        </div>
-
-        <div className="flex items-center gap-6">
-          <a href="#" className="text-gray-400 hover:text-white transition-all transform hover:scale-110"><Twitter className="w-4 h-4" /></a>
-          <a href="#" className="text-gray-400 hover:text-white transition-all transform hover:scale-110"><Instagram className="w-4 h-4" /></a>
-          <a href="#" className="text-gray-400 hover:text-white transition-all transform hover:scale-110"><Github className="w-4 h-4" /></a>
-          <a href="#" className="text-gray-400 hover:text-white transition-all transform hover:scale-110"><Linkedin className="w-4 h-4" /></a>
-          <a href="#" className="text-gray-400 hover:text-white transition-all transform hover:scale-110"><Facebook className="w-4 h-4" /></a>
         </div>
       </div>
     </footer>

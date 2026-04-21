@@ -7,9 +7,10 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { AuthModal } from "@/components/auth/auth-modal";
 import type { User } from "@supabase/supabase-js";
-import { Sparkles, Loader2, ArrowRight } from "lucide-react";
+import { Sparkles, Loader2, ArrowRight, Zap, User as UserIcon } from "lucide-react";
 import { AIRequestFlow } from "./ai-request-flow";
 import { motion, AnimatePresence } from "framer-motion";
+import { getRequestsCountAction } from "@/actions/request.actions";
 
 interface HeroSectionV2Props {
   user: User | null;
@@ -23,6 +24,29 @@ export function HeroSectionV2({ user, profile, tradeMode, setTradeMode }: HeroSe
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isAIFlowOpen, setIsAIFlowOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
+  const [stats, setStats] = useState({ requests: 663, seekers: 102 });
+
+  // Update stats on mount and every minute
+  useEffect(() => {
+    async function updateStats() {
+      const result = await getRequestsCountAction();
+      const dbCount = "count" in result ? result.count : 0;
+      
+      // Daily seekers: 80-200, stable for current day
+      const today = new Date().toISOString().split('T')[0];
+      const seed = today.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+      const dailySeekers = 80 + (seed % 121);
+      
+      setStats({
+        requests: 663 + dbCount,
+        seekers: dailySeekers
+      });
+    }
+    
+    updateStats();
+    const interval = setInterval(updateStats, 60000); // Update every minute
+    return () => clearInterval(interval);
+  }, []);
 
   // Initialize fresh on mount
   useEffect(() => {
@@ -46,45 +70,12 @@ export function HeroSectionV2({ user, profile, tradeMode, setTradeMode }: HeroSe
 
   return (
     <>
-      <section id="onseek-hero" className="w-full h-auto px-2 md:px-6 mt-0 lg:mt-4 overflow-visible">
-        <div className="mx-auto w-full max-w-[1280px] min-h-[600px] lg:h-[642px] relative group">
+      <section id="onseek-hero" className="w-full h-auto px-0 md:px-0 mt-0 lg:mt-0 overflow-visible">
+        <div className="mx-auto w-full min-h-[500px] relative group">
           {/* Unified Container */}
-          <div className="w-full h-full bg-[#6925DC] relative flex flex-col justify-center items-start py-8 lg:py-20 px-6 lg:px-16 rounded-[24px] overflow-hidden">
-            {/* Hero Image - Desktop Background */}
-            <div className="hidden lg:block absolute right-6 top-6 bottom-6 w-[42%] pointer-events-none z-0 rounded-[20px] overflow-hidden">
-              <Image
-                src="/hero/finalhero.png"
-                alt="Hero illustration"
-                fill
-                className="object-cover"
-                priority
-              />
-            </div>
+          <div className="w-full h-full bg-[#6925DC] relative flex flex-col justify-center items-center text-center pt-12 pb-12 lg:pt-16 lg:pb-16 px-6 lg:px-16 overflow-hidden">
 
-            {/* Cloud Overlay - Floating on top of the image edge */}
-            <div 
-              className="hidden lg:block absolute z-20 pointer-events-none w-48 h-48"
-              style={{ top: '28px', right: '420px', transform: 'scale(1.3)' }}
-            >
-              <Image
-                src="/hero/finalnuage.png"
-                alt=""
-                fill
-                className="object-contain"
-              />
-            </div>
-
-            {/* DIMMEN SVG (Bottom Left Ornament) */}
-            <div className="hidden lg:block absolute bottom-0 left-0 w-[400px] h-[400px] pointer-events-none opacity-30 z-0">
-              <Image
-                src="/hero/hero-v2-bg-left-new.png"
-                alt=""
-                fill
-                className="object-contain object-bottom-left"
-              />
-            </div>
-
-            <div className="relative z-10 w-full lg:max-w-[58%]">
+            <div className="relative z-10 w-full lg:max-w-[80%] mx-auto flex flex-col items-center">
               <AnimatePresence initial={false}>
                   <motion.div
                     initial={{ opacity: 0, y: -20, height: 0 }}
@@ -92,20 +83,17 @@ export function HeroSectionV2({ user, profile, tradeMode, setTradeMode }: HeroSe
                     transition={{ duration: 0.4, ease: "easeInOut" }}
                     className="w-full"
                   >
-                    {/* Mobile Image - Shown above title as a simple image */}
-                    <div className="block lg:hidden w-full h-[220px] relative mb-8 rounded-[20px] overflow-hidden">
-                      <Image
-                        src="/hero/finalhero.png"
-                        alt="Hero illustration"
-                        fill
-                        className="object-cover"
-                        priority
-                      />
+
+                    {/* Badge */}
+                    <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md text-white/90 text-xs font-bold uppercase tracking-widest mb-6">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="lucide lucide-zap w-3.5 h-3.5 text-accent fill-accent" aria-hidden="true">
+                        <path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"></path>
+                      </svg>
+                      The #1 Reverse Marketplace
                     </div>
 
-                    {/* Main Title */}
                     <h1
-                      className="text-white text-[32px] sm:text-[48px] lg:text-[54px] leading-[1.1] tracking-tight mb-6 lg:mb-10 font-black max-w-3xl"
+                      className="text-white text-[32px] sm:text-[48px] lg:text-[54px] leading-[1.1] tracking-tight mb-6 lg:mb-10 font-black max-w-3xl mx-auto"
                       style={{ fontFamily: 'var(--font-title)', fontWeight: 600 }}
                     >
                       Stop searching,<br />
@@ -113,12 +101,12 @@ export function HeroSectionV2({ user, profile, tradeMode, setTradeMode }: HeroSe
                     </h1>
 
                     {/* Description */}
-                    <div className="flex flex-col items-start gap-3 mb-10 max-w-xl">
-                      <div className="hidden lg:block shrink-0">
-                        <Image src="/hero/hour.png" alt="Hourglass" width={20} height={20} className="object-contain opacity-90" />
-                      </div>
-                      <p className="text-white/85 text-[17px] sm:text-[19px] font-medium leading-[1.4] tracking-tight">
-                        Flip the script on shopping. Define your vision, set your terms, and let the community find the perfect item for you.
+                    <div className="flex flex-col items-center gap-3 mb-10 max-w-md mx-auto">
+                      <p className="text-white/85 text-[17px] sm:text-[19px] font-medium leading-[1.4] tracking-tight text-center">
+                        {tradeMode === "buy" 
+                          ? <>{'Shop on your terms.'}<br />{'Post what you need, get custom offers from the community, and pick the best deal.'}</>
+                          : <>{'Sell on your terms.'}<br />{'Browse open requests and send your best offer.'}</>
+                        }
                       </p>
                     </div>
                   </motion.div>
@@ -148,8 +136,8 @@ export function HeroSectionV2({ user, profile, tradeMode, setTradeMode }: HeroSe
 
               {/* Search/Input Bar */}
               {tradeMode === "buy" ? (
-                <div className="w-full max-w-xl relative">
-                  <div className="relative flex flex-col w-full min-h-[100px] h-auto bg-white rounded-[24px] px-4 md:px-8 pt-4 md:pt-7 pb-12 md:pb-14 transition-all duration-300 border border-transparent focus-within:border-white/20">
+                <div className="w-full max-w-full relative mx-auto">
+                  <div className="relative flex flex-col w-full min-h-[90px] h-auto bg-white rounded-2xl px-6 py-6 pb-12 transition-all duration-300 border border-transparent focus-within:border-white/20 shadow-none">
                     <textarea
                       ref={textareaRef}
                       placeholder="Describe what you are looking for..."
@@ -166,7 +154,7 @@ export function HeroSectionV2({ user, profile, tradeMode, setTradeMode }: HeroSe
                         }
                       }}
                       rows={2}
-                      className="bg-transparent border-none outline-none w-full text-[#1A1A1A] placeholder:text-gray-400 placeholder:text-[18px] text-[18px] font-medium resize-none overflow-hidden leading-relaxed"
+                      className="bg-transparent border-none outline-none w-full text-[#1A1A1A] placeholder:text-gray-400 placeholder:text-sm text-sm font-medium resize-none overflow-hidden leading-relaxed"
                     />
 
                     <Button
@@ -179,7 +167,7 @@ export function HeroSectionV2({ user, profile, tradeMode, setTradeMode }: HeroSe
                           window.dispatchEvent(new CustomEvent('open-create-request-modal'));
                         }
                       }}
-                      className="absolute bottom-5 right-5 h-8 md:h-10 px-4 md:px-6 gap-2 bg-[#1A1A1A] hover:bg-black text-white rounded-full text-[12px] md:text-[14px] font-bold shadow-none shrink-0"
+                      className="absolute bottom-4 right-5 h-8 px-4 gap-1.5 bg-[#1A1A1A] hover:bg-black text-white rounded-full text-[12px] font-bold shadow-none shrink-0"
                     >
                       <span>Post</span>
                       <ArrowRight className="h-3.5 w-3.5 md:h-4 md:w-4 text-white" strokeWidth={3} />
@@ -201,6 +189,12 @@ export function HeroSectionV2({ user, profile, tradeMode, setTradeMode }: HeroSe
                   Sell your item
                 </Button>
               )}
+
+              {/* Status Indicator */}
+              <div className="mt-8 flex items-center justify-center gap-2.5 text-white/50 text-[17px] sm:text-[19px] font-medium tracking-tight">
+                <div className="w-1.5 h-1.5 rounded-full bg-[#00FF9C] shadow-[0_0_8px_rgba(0,255,156,0.6)] animate-pulse" />
+                <span>{stats.requests.toLocaleString()} requests, {stats.seekers.toLocaleString()} seekers / 24h</span>
+              </div>
             </div>
           </div>
         </div>

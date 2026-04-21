@@ -424,6 +424,7 @@ function DesktopSidebarContent() {
 export function AppSidebar({ children }: { children: React.ReactNode }) {
   const { mobileOpen, setMobileOpen, expanded } = useSidebar();
   const { user } = useAuth();
+  const pathname = usePathname();
 
   return (
     <>
@@ -451,7 +452,8 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
       {/* Main Content offset */}
       <div 
         className={cn(
-          "flex-1 w-full min-w-0 transition-all duration-300 ease-in-out pt-20", 
+          "flex-1 w-full min-w-0 transition-all duration-300 ease-in-out", 
+          (!user && pathname === "/") ? "pt-0" : "pt-20",
           user && (expanded ? "md:ml-[240px]" : "md:ml-[72px]")
         )}
       >

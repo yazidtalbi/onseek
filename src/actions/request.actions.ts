@@ -575,3 +575,12 @@ export async function updateRequestAction(requestId: string, formData: FormData)
   return { success: true };
 }
 
+export async function getRequestsCountAction() {
+  const supabase = await createServerSupabaseClient();
+  const { count, error } = await supabase
+    .from("requests")
+    .select("*", { count: "exact", head: true });
+  
+  if (error) return { error: error.message };
+  return { count: count || 0 };
+}

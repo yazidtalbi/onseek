@@ -122,9 +122,10 @@ export function CategoryPills({
     }
   };
 
-  const allCategories = ["Discover", ...(user ? ["For You", "My saves"] : []), ...MAIN_CATEGORIES];
-  const categories = user ? allCategories : allCategories.slice(0, 7);
-  const moreCategories = user ? [] : allCategories.slice(7);
+  const categories = user 
+    ? ["Discover", "For You", "My saves", ...MAIN_CATEGORIES]
+    : ["Discover", ...MAIN_CATEGORIES];
+  const moreCategories: string[] = [];
 
   return (
     <div className="w-full flex-1 pr-4 flex items-center relative group">

@@ -5,10 +5,10 @@ import { ArrowRight } from "lucide-react";
 
 export function AnnouncementBar() {
   return (
-    <div className="w-full px-3 md:px-6 mt-4 mb-4">
+    <div className="w-full">
       <Link 
         href="/signup"
-        className="group relative flex items-center justify-between mx-auto w-full max-w-[1280px] min-h-[56px] py-4 px-8 rounded-[20px] overflow-hidden transition-all"
+        className="group relative flex items-center justify-between w-full min-h-[56px] py-4 px-8 overflow-hidden transition-all"
       >
         {/* Modern Gradient Background */}
         <div className="absolute inset-0 bg-gradient-to-r from-[#f5fbea] via-[#eef9e4] to-[#e4f9e0]" />

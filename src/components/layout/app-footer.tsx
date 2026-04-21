@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Facebook, Linkedin, Twitter, Youtube, Instagram, Github } from "lucide-react";
+import { Instagram } from "lucide-react";
 import { MAIN_CATEGORIES } from "@/lib/categories";
 import { getCategorySlug } from "@/lib/utils/category-routing";
 
@@ -70,10 +70,14 @@ export function AppFooter() {
             <div className="space-y-6">
               <h4 className="text-sm font-bold uppercase tracking-widest text-white/50" style={{ fontFamily: 'var(--font-expanded)' }}>Follow Us</h4>
               <div className="flex items-center gap-4">
-                <a href="#" className="text-gray-400 hover:text-white transition-colors"><Twitter className="h-5 w-5" /></a>
-                <a href="#" className="text-gray-400 hover:text-white transition-colors"><Instagram className="h-5 w-5" /></a>
-                <a href="#" className="text-gray-400 hover:text-white transition-colors"><Github className="h-5 w-5" /></a>
-                <a href="#" className="text-gray-400 hover:text-white transition-colors"><Linkedin className="h-5 w-5" /></a>
+                <a 
+                  href="https://www.instagram.com/onseek.co/" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="text-gray-400 hover:text-white transition-colors"
+                >
+                  <Instagram className="h-5 w-5" />
+                </a>
               </div>
             </div>
             <div className="space-y-6">
