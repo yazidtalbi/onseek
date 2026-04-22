@@ -73,6 +73,7 @@ export default async function InterceptedRequestPage({
     imagesRes,
     submissionsRes,
     favoriteRes,
+    tagsRes,
   ] = await Promise.all([
     supabase.from("request_links").select("*").eq("request_id", id),
     supabase
@@ -93,6 +94,7 @@ export default async function InterceptedRequestPage({
           .eq("request_id", id)
           .single()
       : Promise.resolve({ data: null }),
+    supabase.from("request_tags").select("tags(*)").eq("request_id", id),
   ]);
 
 
@@ -109,7 +111,7 @@ export default async function InterceptedRequestPage({
   return (
     <RequestModal requestId={id} requestSlug={request.slug}>
       <RequestDetailView
-        request={request}
+        request={{ ...request, tags: tagsRes.data?.map((rt: any) => rt.tags).filter(Boolean) || [] }}
         images={imagesRes.data || []}
         links={linksRes.data || []}
         initialSubmissions={initialSubmissions}

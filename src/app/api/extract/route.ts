@@ -20,13 +20,16 @@ export async function POST(request: Request) {
   } catch (error: any) {
     const isQuotaError = error?.message?.toLowerCase().includes("quota") || 
                         error?.message?.includes("429");
+    const isServiceUnavailable = error?.message?.includes("503") || 
+                                error?.status === 503 || 
+                                error?.message?.includes("Service Unavailable");
     
     const errorMessage = error instanceof Error ? error.message : "Internal Server Error";
     console.error("Extraction Error:", errorMessage);
 
     return NextResponse.json(
       { error: errorMessage },
-      { status: isQuotaError ? 429 : 500 }
+      { status: isQuotaError ? 429 : isServiceUnavailable ? 503 : 500 }
     );
   }
 }

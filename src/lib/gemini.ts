@@ -12,6 +12,25 @@ function getGenAI() {
   return genAI;
 }
 
+async function withRetry<T>(fn: () => Promise<T>, maxRetries = 2, delay = 2000): Promise<T> {
+  let lastError: any;
+  for (let i = 0; i < maxRetries + 1; i++) {
+    try {
+      return await fn();
+    } catch (error: any) {
+      lastError = error;
+      const isRetryable = error?.message?.includes("503") || error?.status === 503 || error?.message?.includes("Service Unavailable");
+      if (isRetryable && i < maxRetries) {
+        console.log(`Gemini API busy (503), retrying in ${delay}ms... (Attempt ${i + 1}/${maxRetries})`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        continue;
+      }
+      throw error;
+    }
+  }
+  throw lastError;
+}
+
 export const CATEGORIES = [
   "Tech & Electronics",
   "Grocery & Food",
@@ -58,7 +77,8 @@ You are an expert data extractor for Onseek, a premium marketplace. Your task is
 5. **Preferences (INCLUDES)**: Extract EVERY specific requirement, capability, feature, or specification the user mentions (e.g., "120 square meter", "Minimalist modern", "Open-plan kitchen"). Each one must be a concise string in the \`preferences\` array.
 6. **Dealbreakers (EXCLUDES)**: Identify negative constraints or exclusions (e.g., "avoid rounded furniture"). 
 7. **Description**: A professional, structured summary of the request.
-8. **Instructions**: If the user's text includes instructions for the provider (like "Please provide a portfolio"), IGNORE them in the extraction fields but you may summarize the need for them in the description.
+8. **Tags**: Extract 3-5 highly relevant keywords for SEO and categorization. Normalize to lowercase, use hyphens for spaces (e.g. "air-jordan-1").
+9. **Instructions**: If the user's text includes instructions for the provider (like "Please provide a portfolio"), IGNORE them in the extraction fields but you may summarize the need for them in the description.
 
 # Categories
 [${CATEGORIES.join(", ")}]
@@ -75,11 +95,12 @@ Return ONLY a valid JSON object. Do not include markdown formatting or any other
   "condition": "New" | "Used" | "Either",
   "preferences": string[],
   "dealbreakers": string[],
-  "description": string
+  "description": string,
+  "tags": string[]
 }
 `;
 
-  const result = await model.generateContent(prompt);
+  const result = await withRetry(() => model.generateContent(prompt));
   const response = await result.response;
     const text = response.text();
     console.log("Raw response from Gemini received:", text.substring(0, 100) + "...");
@@ -101,7 +122,8 @@ Return ONLY a valid JSON object. Do not include markdown formatting or any other
         condition: parsed.condition || parsed.Condition || "Either",
         preferences: parsed.preferences || parsed.Preferences || parsed.includes || [],
         dealbreakers: parsed.dealbreakers || parsed.Dealbreakers || parsed.excludes || [],
-        description: parsed.description || parsed.Description || ""
+        description: parsed.description || parsed.Description || "",
+        tags: parsed.tags || parsed.Tags || []
       };
 
       // Ensure title is not empty and is sufficiently descriptive
@@ -130,3 +152,45 @@ Return ONLY a valid JSON object. Do not include markdown formatting or any other
     throw error;
   }
 }
+
+export async function generateTags(title: string, description: string) {
+  try {
+    const ai = getGenAI();
+    const model = ai.getGenerativeModel({ model: "gemini-flash-latest" });
+
+    const prompt = `
+# Role
+You are an expert SEO and taxonomy specialist. Your task is to extract 3-5 high-quality, relevant keywords (tags) from a request title and description for a premium marketplace.
+
+# Logic Rules
+1. **Normalization**: Convert all tags to lowercase. Remove special characters. Use hyphens for spaces (e.g., "Air Jordan 1985" -> "air-jordan-1985").
+2. **Standardization**: Use common industry terms where possible (e.g., use "web-design" instead of "making-a-site").
+3. **Diversity**: Provide a mix of product-specific and category-specific tags.
+4. **Format**: Return ONLY a comma-separated list of tags.
+
+# Input
+Title: "${title}"
+Description: "${description}"
+
+# Output Requirement
+Return ONLY the comma-separated tags. No hashtags, no markdown, no explanation.
+Example: nike, sneakers, vintage, limited-edition
+`;
+
+    const result = await withRetry(() => model.generateContent(prompt));
+    const response = await result.response;
+    const text = response.text().trim();
+    
+    // Split by comma and clean up
+    const tags = text.split(",")
+      .map(tag => tag.trim().toLowerCase().replace(/[^a-z0-9-]/g, ''))
+      .filter(tag => tag.length > 0)
+      .slice(0, 5);
+      
+    return tags;
+  } catch (error) {
+    console.error("Failed to generate tags:", error);
+    return []; // Return empty array on failure to avoid breaking the flow
+  }
+}
+

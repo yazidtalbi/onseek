@@ -7,6 +7,7 @@ export type FeedFilters = {
   priceMax?: string | null;
   country?: string | null;
   sort?: string | null;
+  tagSlug?: string | null;
 };
 
 export async function fetchInitialFeedData(
@@ -26,6 +27,19 @@ export async function fetchInitialFeedData(
     query = query.or(`status.eq.open,and(status.eq.pending,user_id.eq.${user.id})`);
   } else {
     query = query.eq("status", "open");
+  }
+  
+  if (filters.tagSlug) {
+    const { data: taggedRequests } = await supabase
+      .from("request_tags")
+      .select("request_id, tags!inner(slug)")
+      .eq("tags.slug", filters.tagSlug);
+    
+    const taggedIds = taggedRequests?.map(tr => tr.request_id) || [];
+    if (taggedIds.length === 0) {
+      return { items: [], nextCursor: null };
+    }
+    query = query.in("id", taggedIds);
   }
   
   if (filters.category && filters.category !== "All") {
@@ -69,8 +83,8 @@ export async function fetchInitialFeedData(
   const requestIds = requests.map((r: any) => r.id);
   const nextCursor = requests.length === limit ? requests[requests.length - 1].created_at : null;
   
-  // Fetch images, links, and submission counts in parallel
-  const [imagesResult, linksResult, submissionCountsResult] = await Promise.all([
+  // Fetch images, links, submissions (for counts), and tags in parallel
+  const [imagesResult, linksResult, submissionCountsResult, tagsResult] = await Promise.all([
     supabase
       .from("request_images")
       .select("request_id, image_url, image_order")
@@ -83,6 +97,10 @@ export async function fetchInitialFeedData(
     supabase
       .from("submissions")
       .select("request_id")
+      .in("request_id", requestIds),
+    supabase
+      .from("request_tags")
+      .select("request_id, tags(*)")
       .in("request_id", requestIds),
   ]);
   
@@ -102,6 +120,15 @@ export async function fetchInitialFeedData(
     linkMap.set(link.request_id, existing);
   });
   
+  const tagMap = new Map<string, any[]>();
+  tagsResult.data?.forEach((rt: any) => {
+    if (rt.tags) {
+      const existing = tagMap.get(rt.request_id) || [];
+      existing.push(rt.tags);
+      tagMap.set(rt.request_id, existing);
+    }
+  });
+  
   const submissionCountMap = new Map<string, number>();
   submissionCountsResult.data?.forEach((sub) => {
     const current = submissionCountMap.get(sub.request_id) || 0;
@@ -112,6 +139,7 @@ export async function fetchInitialFeedData(
     ...req,
     images: imageMap.get(req.id) || [],
     links: linkMap.get(req.id) || [],
+    tags: tagMap.get(req.id) || [],
     submissionCount: submissionCountMap.get(req.id) || 0,
   }));
   

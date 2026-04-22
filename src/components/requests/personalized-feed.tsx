@@ -59,12 +59,16 @@ interface PersonalizedFeedProps {
   initialMode?: FeedMode;
   initialCategory?: string | null;
   initialData?: { items: RequestItem[]; nextCursor: string | null };
+  tagSlug?: string | null;
+  hideFilters?: boolean;
 }
 
 export function PersonalizedFeed({
   initialMode = "for_you",
   initialCategory = null,
-  initialData
+  initialData,
+  tagSlug = null,
+  hideFilters = false
 }: PersonalizedFeedProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -227,7 +231,7 @@ export function PersonalizedFeed({
     error,
     refetch,
   } = useInfiniteQuery({
-    queryKey: ["personalized-feed", user?.id, mode, category, priceMin, priceMax, country, sort],
+    queryKey: ["personalized-feed", user?.id, mode, category, priceMin, priceMax, country, sort, tagSlug],
     queryFn: async ({ pageParam }) => {
       const limit = isHomePage ? 16 : 20;
 
@@ -241,6 +245,7 @@ export function PersonalizedFeed({
           priceMax,
           country,
           sort,
+          tagSlug,
         }
       );
 
@@ -552,7 +557,7 @@ export function PersonalizedFeed({
           : (pathname === "/" ? "pt-2 sm:pt-4" : "pt-0 sm:pt-4")
       )}>
         {/* Category Pill Navigation */}
-        {(user || category) && (
+        {(user || category) && !hideFilters && (
           <div className="py-2 min-h-[70px] flex flex-col justify-center mb-2 md:mb-6 bg-white">
             <div className="w-full flex flex-col items-stretch relative z-10">
               <CategoryPills
@@ -577,7 +582,7 @@ export function PersonalizedFeed({
         )}
 
         {/* Discovery Header Block */}
-        {(user || category) && (
+        {(user || category) && !hideFilters && (
           <div className="flex flex-col gap-4 mb-8">
             <div className="flex flex-row items-center justify-between">
               <div className="flex flex-col gap-1">

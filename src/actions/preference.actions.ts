@@ -179,6 +179,7 @@ type FeedFilters = {
   priceMax?: string | null;
   country?: string | null;
   sort?: string | null;
+  tagSlug?: string | null;
 };
 
 export async function getPersonalizedFeedAction(
@@ -231,6 +232,20 @@ export async function getPersonalizedFeedAction(
     query = query.or(`status.eq.open,and(status.eq.pending,user_id.eq.${user.id})`);
   } else {
     query = query.eq("status", "open");
+  }
+
+  // Tag filter
+  if (filters.tagSlug) {
+    const { data: taggedRequests } = await supabase
+      .from("request_tags")
+      .select("request_id, tags!inner(slug)")
+      .eq("tags.slug", filters.tagSlug);
+    
+    const taggedIds = taggedRequests?.map(tr => tr.request_id) || [];
+    if (taggedIds.length === 0) {
+      return { items: [], nextCursor: null, hasMore: false };
+    }
+    query = query.in("id", taggedIds);
   }
 
   // Apply filters

@@ -121,18 +121,21 @@ export function SubmissionList({
         </p>
         
         {/* CTA Button */}
-        <Button 
-          className="hidden md:inline-flex bg-[#212733] text-white hover:bg-[#212733]/90 rounded-full px-8 py-5 text-base"
-          onClick={() => {
-            // Find and click the submission form button by ID
-            const submitButton = document.getElementById('submission-form-trigger') as HTMLButtonElement;
-            if (submitButton) {
-              submitButton.click();
-            }
-          }}
-        >
-          Submit proposal
-        </Button>
+        {(requestStatus === "open" || !requestStatus) && (
+          <Button 
+            className="hidden md:inline-flex bg-[#212733] text-white hover:bg-[#212733]/90 rounded-full px-8 py-5 text-base"
+            onClick={() => {
+              if (typeof (window as any).openSubmissionModal === 'function') {
+                (window as any).openSubmissionModal();
+              } else {
+                const trigger = document.getElementById('submission-form-trigger');
+                if (trigger) trigger.click();
+              }
+            }}
+          >
+            Submit proposal
+          </Button>
+        )}
       </div>
     );
   }

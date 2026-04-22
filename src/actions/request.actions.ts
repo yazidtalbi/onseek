@@ -2,11 +2,12 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { createServerSupabaseClient, createAdminSupabaseClient } from "@/lib/supabase/server";
 import { requestSchema } from "@/lib/validators";
 import { createRequestUrl, generateSlug } from "@/lib/utils/slug";
 import { inferIconName } from "@/lib/utils/icons";
 import { sendRequestPublishedEmail } from "@/lib/emails";
+import { generateTags } from "@/lib/gemini";
 
 function parseLinks(raw?: string | null) {
   if (!raw) return [];
@@ -229,9 +230,72 @@ export async function createRequestAction(formData: FormData) {
     );
   }
 
+  // --- AUTOMATED TAG GENERATION ---
+  try {
+    let dynamicTags: string[] = [];
+    const providedTagsJson = formData.get("tags");
+    
+    if (providedTagsJson && typeof providedTagsJson === "string") {
+      try {
+        dynamicTags = JSON.parse(providedTagsJson);
+      } catch (e) {
+        console.error("Failed to parse provided tags:", e);
+      }
+    }
+    
+    // If no tags were provided (e.g. manual creation flow), generate them
+    if (dynamicTags.length === 0) {
+      dynamicTags = await generateTags(parsed.data.title, parsed.data.description);
+    }
+
+    const urgencyTags: string[] = [];
+    
+    // Add urgency tags based on metadata
+    if (parsed.data.budgetMax && parsed.data.budgetMax >= 1000) {
+      urgencyTags.push("high-budget");
+    }
+    if (parsed.data.urgency && ["urgent", "high"].includes(parsed.data.urgency.toLowerCase())) {
+      urgencyTags.push("urgent");
+    }
+
+    const allTagSlugs = Array.from(new Set([...dynamicTags, ...urgencyTags]));
+
+    if (allTagSlugs.length > 0) {
+      const adminSupabase = await createAdminSupabaseClient();
+      for (const slug of allTagSlugs) {
+        // 1. Get or create the tag
+        const tagName = slug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+        const isUrgency = urgencyTags.includes(slug);
+        
+        const { data: tagData } = await adminSupabase
+          .from("tags")
+          .upsert({ 
+            name: tagName, 
+            slug: slug, 
+            type: isUrgency ? 'urgency' : 'dynamic' 
+          }, { onConflict: 'slug' })
+          .select()
+          .single();
+
+        if (tagData) {
+          // 2. Link tag to request
+          await adminSupabase.from("request_tags").upsert({
+            request_id: request.id,
+            tag_id: tagData.id
+          });
+        }
+      }
+    }
+  } catch (tagError) {
+    console.error("Error during automated tagging:", tagError);
+    // Don't fail the whole request creation if tagging fails
+  }
+  // ---------------------------------
+
   revalidatePath("/");
   revalidatePath("/requests");
   revalidatePath("/submissions");
+  revalidatePath("/requests/[slug]", "page");
   revalidatePath("/");
   
   const url = createRequestUrl(request.slug);

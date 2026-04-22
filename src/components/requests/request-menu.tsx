@@ -26,6 +26,7 @@ import { hideCategoryAction } from "@/actions/preference.actions";
 import { useAuth } from "@/components/layout/auth-provider";
 import { useTransition } from "react";
 import { useToast } from "@/components/ui/use-toast";
+import { cn } from "@/lib/utils";
 import { Check, XCircle } from "lucide-react";
 import type { Category, RequestStatus, RequestItem } from "@/lib/types";
 
@@ -36,6 +37,8 @@ export function RequestMenu({
   isAdmin,
   categories,
   initialData,
+  isFavorite,
+  onToggleFavorite,
 }: {
   requestId: string;
   requestUserId: string;
@@ -43,6 +46,8 @@ export function RequestMenu({
   isAdmin?: boolean;
   categories?: Category[];
   initialData?: RequestItem & { images?: string[]; links?: string[] };
+  isFavorite?: boolean;
+  onToggleFavorite?: () => void;
 }) {
   const router = useRouter();
   const { user } = useAuth();
@@ -221,6 +226,16 @@ export function RequestMenu({
           >
             <Share2 className="h-4 w-4 mr-2" />
             Share
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleFavorite?.();
+            }}
+            className="cursor-pointer"
+          >
+            <ArchiveIcon className={cn("h-4 w-4 mr-2", isFavorite ? "fill-current text-[#6925DC]" : "")} />
+            {isFavorite ? "Saved to favorites" : "Save to favorites"}
           </DropdownMenuItem>
           {categories && categories.length > 0 && (
             <>

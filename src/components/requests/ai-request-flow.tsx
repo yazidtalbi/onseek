@@ -255,6 +255,11 @@ export function AIRequestFlow({ initialText, onClose, user, profile }: AIRequest
               title: "AI is at capacity",
               description: "We'll continue with a manual setup for now.",
             });
+          } else if (err.message?.includes("503") || err.status === 503) {
+            toast({
+              title: "AI is briefly unavailable",
+              description: "The service is under high demand. Let's finish this manually for now!",
+            });
           } else {
             toast({
               title: "Extraction hit a snag",
@@ -314,8 +319,13 @@ export function AIRequestFlow({ initialText, onClose, user, profile }: AIRequest
 
     formData.set("preferences", JSON.stringify(prefs));
     formData.set("dealbreakers", JSON.stringify(deals));
+    
+    if (extractedData.tags && Array.isArray(extractedData.tags)) {
+      formData.set("tags", JSON.stringify(extractedData.tags));
+    }
 
     console.log("Calling createRequestAction with data:", Object.fromEntries(formData.entries()));
+
     try {
       const res = await createRequestAction(formData);
       console.log("createRequestAction Response:", res);
@@ -622,10 +632,29 @@ export function AIRequestFlow({ initialText, onClose, user, profile }: AIRequest
                       </Reorder.Group>
                     </div>
                   </div>
+
+                  {/* Tags Section */}
+                  <div className="space-y-4">
+                    <label className="text-lg font-semibold text-gray-400 pl-1" style={{ fontFamily: 'var(--font-expanded)' }}>Automated Tags</label>
+                    <div className="flex flex-wrap gap-2">
+                      {(extractedData?.tags || []).map((tag: string, idx: number) => (
+                        <div
+                          key={idx}
+                          className="bg-[#1A1A1A] text-white border border-[#1A1A1A] text-[12px] uppercase tracking-widest px-3 py-1 rounded-none font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all cursor-default"
+                        >
+                          #{tag.replace(/\s+/g, '-').toLowerCase()}
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-[12px] text-gray-400 font-medium pl-1">
+                      AI-generated tags for better seller matching and SEO.
+                    </p>
+                  </div>
                 </div>
 
                 <div className="h-px w-full bg-gray-100 my-10" />
               </div>
+
 
               <div className="flex justify-center w-full max-w-md pb-12">
                 <Button

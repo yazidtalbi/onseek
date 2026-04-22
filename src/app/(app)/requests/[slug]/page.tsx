@@ -86,6 +86,13 @@ export default async function RequestDetailPage({
     .eq("request_id", id)
     .order("image_order", { ascending: true });
 
+  const { data: requestTags } = await supabase
+    .from("request_tags")
+    .select("tags(*)")
+    .eq("request_id", id);
+  
+  const tags = requestTags?.map(rt => rt.tags).filter(Boolean) || [];
+
   const { data: submissions } = await supabase
     .from("submissions")
     .select("*, votes(vote, user_id), profiles(username, avatar_url, first_name, last_name)")
@@ -158,6 +165,27 @@ export default async function RequestDetailPage({
     }
   }
 
+  // Fetch tags for similar requests
+  let similarRequestTags: Record<string, any[]> = {};
+  if (similarRequests && similarRequests.length > 0) {
+    const similarRequestIds = similarRequests.map((r) => r.id);
+    const { data: sTags } = await supabase
+      .from("request_tags")
+      .select("request_id, tags(*)")
+      .in("request_id", similarRequestIds);
+
+    if (sTags) {
+      sTags.forEach((st: any) => {
+        if (st.tags) {
+          if (!similarRequestTags[st.request_id]) {
+            similarRequestTags[st.request_id] = [];
+          }
+          similarRequestTags[st.request_id].push(st.tags);
+        }
+      });
+    }
+  }
+
   const isOwner = user?.id === request.user_id;
   // Allow guests to see submission form (they'll be redirected to login on click)
   const showSubmissionForm = request.status === "open";
@@ -178,7 +206,7 @@ export default async function RequestDetailPage({
 
   return (
     <RequestDetailView
-      request={request}
+      request={{ ...request, tags }}
       images={images || []}
       links={links || []}
       initialSubmissions={initialSubmissions}
@@ -188,10 +216,10 @@ export default async function RequestDetailPage({
       showSubmissionForm={showSubmissionForm}
       isFavorite={isFavorite}
       proposalCount={proposalCount}
-      similarRequests={similarRequests || []}
       similarRequestImages={similarRequestImages}
       similarRequestSubmissionCounts={similarRequestSubmissionCounts}
       similarRequestFavorites={Array.from(similarRequestFavorites)}
+      similarRequests={similarRequests?.map(r => ({ ...r, tags: similarRequestTags[r.id] || [] })) || []}
     />
   );
 }

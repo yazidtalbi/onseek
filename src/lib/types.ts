@@ -43,6 +43,15 @@ export type RequestItem = {
   personalizationScore?: number;
   matchReason?: string;
   icon?: string | null;
+  tags?: Tag[];
+};
+
+export type Tag = {
+  id: string;
+  name: string;
+  slug: string;
+  type: 'system' | 'dynamic' | 'urgency';
+  created_at: string;
 };
 
 export type Submission = {

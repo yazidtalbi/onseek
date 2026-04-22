@@ -152,6 +152,7 @@ interface RequestCardProps {
   showAllRequirements?: boolean;
   hideAuthOverlay?: boolean;
   isLarge?: boolean;
+  hideTags?: boolean;
 }
 
 function RequestCardComponent({
@@ -182,6 +183,7 @@ function RequestCardComponent({
   showAllRequirements = false,
   hideAuthOverlay = false,
   isLarge = false,
+  hideTags = false,
 }: RequestCardProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -251,8 +253,8 @@ function RequestCardComponent({
 
   // Limit display for feed variant
   const maxImages = 4;
-  const maxPreferences = smallImages ? 3 : preferences.length;
-  const maxDealbreakers = smallImages ? 3 : dealbreakers.length;
+  const maxPreferences = (smallImages && variant !== "detail") ? 3 : preferences.length;
+  const maxDealbreakers = (smallImages && variant !== "detail") ? 3 : dealbreakers.length;
 
   const visibleImages = images.slice(0, maxImages);
   const visiblePreferences = preferences.slice(0, maxPreferences);
@@ -265,6 +267,41 @@ function RequestCardComponent({
   const hasContent = hasRequirements || !!request.description || (variant === "feed" && !!request.matchReason);
 
   const theme = getTheme(request.category);
+
+  const headerBadges = (
+    <div className="flex items-center justify-between w-full">
+      {request.category && (
+        <Badge
+          variant="outline"
+          className={cn(
+            "rounded-full font-bold border shadow-none shrink-0 inline-flex items-center justify-center bg-transparent gap-2",
+            isLarge ? "px-5 py-2 text-[15px] sm:text-[16px]" : "px-4 py-1.5 text-[13px] sm:text-[14px]",
+            getTheme(request.category).text, "border-opacity-20"
+          )}
+        >
+          <span className={cn("rounded-full bg-current", isLarge ? "w-2 h-2" : "w-1.5 h-1.5")} />
+          <span>{request.category.charAt(0).toUpperCase() + request.category.slice(1)}</span>
+        </Badge>
+      )}
+
+      <Badge
+        variant="outline"
+        className={cn(
+          "rounded-full font-bold border shadow-none shrink-0 inline-flex items-center gap-2 bg-transparent",
+          isLarge ? "px-5 py-2 text-[15px] sm:text-[16px]" : "px-4 py-1.5 text-[13px] sm:text-[14px]",
+          request.status === "solved" || request.winner_submission_id ? "border-[#6925DC] text-[#6925DC]" :
+            request.status === "pending" ? "border-[#FF8C5A] text-[#FF8C5A]" :
+              request.status === "open" ? cn("border-current", getTheme(request.category).text) :
+                request.status === "rejected" ? "border-red-400 text-red-500" :
+                  "border-gray-500 text-gray-500"
+        )}
+      >
+        <span className="text-[#1A1A1A]">
+          {request.winner_submission_id ? "Solved" : request.status?.charAt(0).toUpperCase() + request.status?.slice(1)}
+        </span>
+      </Badge>
+    </div>
+  );
 
   const footerSection = (variant === "feed" || smallImages) && !isPreview && (
     <div
@@ -318,71 +355,48 @@ function RequestCardComponent({
       noBorder && "bg-transparent border-none px-0"
     )}>
       <div className="px-4 pt-4 pb-2">
-        <div className="flex items-center justify-between w-full mb-5">
-          {request.category && (
-            <Badge
-              variant="outline"
-              className={cn(
-                "rounded-full font-bold border shadow-none shrink-0 inline-flex items-center justify-center bg-transparent gap-2",
-                isLarge ? "px-5 py-2 text-[15px] sm:text-[16px]" : "px-4 py-1.5 text-[13px] sm:text-[14px]",
-                getTheme(request.category).text, "border-opacity-20"
-              )}
-            >
-              <span className={cn("rounded-full bg-current", isLarge ? "w-2 h-2" : "w-1.5 h-1.5")} />
-              <span>{request.category.charAt(0).toUpperCase() + request.category.slice(1)}</span>
-            </Badge>
-          )}
+        {headerBadges}
+        <div className="mb-5" />
 
-          <Badge
-            variant="outline"
-            className={cn(
-              "rounded-full font-bold border shadow-none shrink-0 inline-flex items-center gap-2 bg-transparent",
-              isLarge ? "px-5 py-2 text-[15px] sm:text-[16px]" : "px-4 py-1.5 text-[13px] sm:text-[14px]",
-              request.status === "solved" || request.winner_submission_id ? "border-[#6925DC] text-[#6925DC]" :
-                request.status === "pending" ? "border-[#FF8C5A] text-[#FF8C5A]" :
-                  request.status === "open" ? cn("border-current", getTheme(request.category).text) :
-                    request.status === "rejected" ? "border-red-400 text-red-500" :
-                      "border-gray-500 text-gray-500"
-            )}
-          >
-            <span className="text-[#1A1A1A]">
-              {request.winner_submission_id ? "Solved" : request.status?.charAt(0).toUpperCase() + request.status?.slice(1)}
-            </span>
-          </Badge>
-        </div>
+        <div className="flex flex-col gap-2">
+          {/* Automated Tags */}
 
-        <div className="flex flex-row items-center gap-3">
-          <div className="relative flex-1 flex items-center gap-2 flex-wrap">
-            {isPreview ? (
-              <textarea
-                className={cn(
-                  "w-full font-semibold leading-tight tracking-tight bg-transparent border-none outline-none resize-none overflow-hidden p-0",
-                  isLarge ? "text-[18px] sm:text-[20px]" : "text-[15px] sm:text-[17px]",
-                  getTheme(request.category).text
+          <div className="flex flex-row items-center gap-3">
+            <div className="relative flex-1 flex flex-col gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
+                {isPreview ? (
+                  <textarea
+                    className={cn(
+                      "w-full font-semibold leading-tight tracking-tight bg-transparent border-none outline-none resize-none overflow-hidden p-0",
+                      isLarge ? "text-[18px] sm:text-[20px]" : "text-[15px] sm:text-[17px]",
+                      getTheme(request.category).text
+                    )}
+                    style={{ fontFamily: "'Zalando Sans SemiExpanded', sans-serif", fontWeight: 600, maxWidth: '80%' }}
+                    value={request.title}
+                    onChange={(e) => onUpdateTitle?.(e.target.value)}
+                    rows={1}
+                    onInput={(e) => {
+                      const target = e.target as HTMLTextAreaElement;
+                      target.style.height = "auto";
+                      target.style.height = `${target.scrollHeight}px`;
+                    }}
+                  />
+                ) : (
+                  <h3
+                    className={cn(
+                      "font-semibold leading-normal tracking-tight relative transition-colors items-center text-[#1A1A1A]",
+                      isLarge ? "text-[18px] sm:text-[20px]" : "text-[15px] sm:text-[17px]"
+                    )}
+                    style={{ fontFamily: "'Zalando Sans SemiExpanded', sans-serif", fontWeight: 600, maxWidth: '80%' }}
+                  >
+                    {request.title}
+                  </h3>
                 )}
-                style={{ fontFamily: "'Zalando Sans SemiExpanded', sans-serif", fontWeight: 600, maxWidth: '80%' }}
-                value={request.title}
-                onChange={(e) => onUpdateTitle?.(e.target.value)}
-                rows={1}
-                onInput={(e) => {
-                  const target = e.target as HTMLTextAreaElement;
-                  target.style.height = "auto";
-                  target.style.height = `${target.scrollHeight}px`;
-                }}
-              />
-            ) : (
-              <h3
-                className={cn(
-                  "font-semibold leading-normal tracking-tight relative transition-colors items-center text-[#1A1A1A]",
-                  isLarge ? "text-[18px] sm:text-[20px]" : "text-[15px] sm:text-[17px]"
-                )}
-                style={{ fontFamily: "'Zalando Sans SemiExpanded', sans-serif", fontWeight: 600, maxWidth: '80%' }}
-              >
-                {request.title}
-              </h3>
-            )}
+              </div>
+            </div>
           </div>
         </div>
+
       </div>
 
 
@@ -462,6 +476,27 @@ function RequestCardComponent({
 
         </div>
 
+        {/* Automated Tags moved below requirements */}
+        {request.tags && request.tags.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mt-4 mb-1">
+            {request.tags.slice(0, 3).map((tag) => (
+              <Link
+                key={tag.id}
+                href={`/tags/${tag.slug}`}
+                onClick={(e) => e.stopPropagation()}
+                className="bg-black/[0.04] text-gray-500 text-[11px] px-2.5 py-0.5 rounded-full font-medium hover:bg-black/[0.08] hover:text-black transition-all"
+              >
+                #{tag.name.toLowerCase()}
+              </Link>
+            ))}
+            {request.tags.length > 3 && (
+              <span className="text-[10px] text-gray-400 font-bold self-center">
+                +{request.tags.length - 3}
+              </span>
+            )}
+          </div>
+        )}
+
         {/* Auth Gating Overlay for Guest Users */}
         {!currentUserId && !isPreview && !hideAuthOverlay && (
           <div className="absolute inset-x-0 bottom-0 h-[60%] bg-gradient-to-t from-white via-white/80 to-transparent flex items-end justify-center pb-8 z-[20] rounded-b-[22px] pointer-events-auto">
@@ -540,10 +575,10 @@ function RequestCardComponent({
         {/* Empty space adjusted as category badge was removed */}
         {/* Title for detail page */}
         {variant === "detail" && (
-          <div className={cn(smallImages ? "mb-4" : "mb-8")}>
+          <div className={cn(smallImages ? "mb-4 pt-6" : "mb-8")}>
             <h1
               className={cn(
-                "font-semibold leading-normal text-[#1A1A1A]",
+                "font-semibold leading-[1.3] text-[#1A1A1A]",
                 smallImages ? (isLarge ? "text-[26px] sm:text-[28px]" : "text-[22px] sm:text-[24px]") : (isLarge ? "text-[30px] sm:text-[36px]" : "text-[26px] sm:text-[30px]")
               )}
               style={{ fontFamily: "'Zalando Sans SemiExpanded', sans-serif", fontWeight: 600, letterSpacing: '-0.02em', maxWidth: '80%' }}
@@ -552,6 +587,7 @@ function RequestCardComponent({
             </h1>
           </div>
         )}
+
 
 
         {/* Preferences and Dealbreakers - feed view is handled in the main if branch */}
@@ -633,36 +669,74 @@ function RequestCardComponent({
                   }
 
                   return (
-                    <>
-                      {displayedItems.map((item: any, idx) => (
-                        <div
-                          key={`${item.type}-detail-${idx}`}
-                          className={cn(
-                            "flex items-center gap-4 py-4 group/item",
-                            (idx !== displayedItems.length - 1 || totalRemainingCount > 0) && cn("border-b border-dashed", getTheme(request.category).text, "border-opacity-20")
-                          )}
-                        >
-                          {item.type === 'pref' ? (
-                            <Check className="h-4 w-4 text-emerald-500 shrink-0" strokeWidth={3} />
-                          ) : (
-                            <X className={cn("h-4 w-4 shrink-0", theme.text, "opacity-30")} strokeWidth={3} />
-                          )}
-                          <span className={cn(
-                            "text-[15px] sm:text-[17px] font-medium leading-snug tracking-tight",
-                            item.type === 'pref' ? "text-[#1A1A1A]" : cn(theme.text, "opacity-30")
-                          )}>
-                            {item.label.charAt(0).toUpperCase() + item.label.slice(1)}
-                          </span>
-                        </div>
-                      ))}
-                      {totalRemainingCount > 0 && (
-                        <div className="py-4 text-[16px] sm:text-[18px] font-medium text-gray-400">
-                          And {totalRemainingCount} more {totalRemainingCount === 1 ? 'requirement' : 'requirements'}
+                    <div className="flex flex-col gap-6">
+                      {visiblePreferences.length > 0 && (
+                        <div className="flex flex-col gap-3">
+                          <h4 className="text-[14px] font-bold text-black/30">Preferences</h4>
+                          <div className="flex flex-col">
+                            {visiblePreferences.map((item: any, idx) => (
+                              <div
+                                key={`pref-detail-${idx}`}
+                                className={cn(
+                                  "flex items-center gap-4 py-4 group/item",
+                                  idx !== visiblePreferences.length - 1 && cn("border-b border-dashed", getTheme(request.category).text, "border-opacity-10")
+                                )}
+                              >
+                                <Check className="h-4 w-4 text-emerald-500 shrink-0" strokeWidth={3} />
+                                <span className={cn(
+                                  "text-[15px] sm:text-[17px] font-medium leading-snug tracking-tight text-[#1A1A1A]"
+                                )}>
+                                  {item.label.charAt(0).toUpperCase() + item.label.slice(1)}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       )}
-                    </>
+
+                      {visibleDealbreakers.length > 0 && (
+                        <div className="flex flex-col gap-3">
+                          <h4 className="text-[14px] font-bold text-black/30">Dealbreakers</h4>
+                          <div className="flex flex-col">
+                            {visibleDealbreakers.map((item: any, idx) => (
+                              <div
+                                key={`deal-detail-${idx}`}
+                                className={cn(
+                                  "flex items-center gap-4 py-4 group/item",
+                                  idx !== visibleDealbreakers.length - 1 && cn("border-b border-dashed", getTheme(request.category).text, "border-opacity-10")
+                                )}
+                              >
+                                <X className={cn("h-4 w-4 shrink-0", theme.text, "opacity-30")} strokeWidth={3} />
+                                <span className={cn(
+                                  "text-[15px] sm:text-[17px] font-medium leading-snug tracking-tight",
+                                  theme.text, "opacity-30"
+                                )}>
+                                  {item.label.charAt(0).toUpperCase() + item.label.slice(1)}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   );
                 })()}
+              </div>
+            )}
+            
+            {/* Automated Tags moved below requirements */}
+            {request.tags && request.tags.length > 0 && !hideTags && (
+              <div className="flex flex-wrap gap-2 mt-6">
+                {request.tags.map((tag) => (
+                  <Link
+                    key={tag.id}
+                    href={`/tags/${tag.slug}`}
+                    onClick={(e) => e.stopPropagation()}
+                    className="bg-black/[0.05] text-gray-600 text-[13px] px-3.5 py-1 rounded-full font-medium hover:bg-black/[0.1] hover:text-black transition-all"
+                  >
+                    #{tag.name.toLowerCase()}
+                  </Link>
+                ))}
               </div>
             )}
 
@@ -813,42 +887,6 @@ function RequestCardComponent({
             >
               {variant === "detail" && smallImages ? (
                 <div className={cn("p-1 sm:p-1.5 rounded-[20px] flex flex-col gap-1", getTheme(request.category).bg)}>
-                  {/* Header Section with Title */}
-                  <section className={cn(smallImages && !request.title && "hidden", "px-3 pt-5 pb-2")}>
-                    {/* Top Classification Row (Above Title) */}
-                    <div className="flex items-center justify-between w-full">
-                      {request.category && (<Badge
-                        variant="outline"
-                        className={cn(
-                          "rounded-full font-bold border shadow-none shrink-0 inline-flex items-center justify-center bg-transparent gap-2",
-                          isLarge ? "px-5 py-2 text-[15px] sm:text-[16px]" : "px-4 py-1.5 text-[13px] sm:text-[14px]",
-                          "border-gray-200/40",
-                          getTheme(request.category).text
-                        )}
-                      >
-                        <span className={cn("rounded-full bg-current", isLarge ? "w-2 h-2" : "w-1.5 h-1.5")} />
-                        <span className="text-[#1A1A1A]">{request.category.charAt(0).toUpperCase() + request.category.slice(1)}</span>
-                      </Badge>
-                      )}
-  
-                      <Badge
-                        variant="outline"
-                        className={cn(
-                          "rounded-full font-bold border shadow-none shrink-0 inline-flex items-center gap-2 bg-transparent",
-                          isLarge ? "px-5 py-2 text-[15px] sm:text-[16px]" : "px-4 py-1.5 text-[13px] sm:text-[14px]",
-                          request.status === "solved" || request.winner_submission_id ? "border-[#6925DC] text-[#6925DC]" :
-                            request.status === "pending" ? "border-[#FF8C5A] text-[#FF8C5A]" :
-                              request.status === "open" ? cn("border-current", getTheme(request.category).text) :
-                                request.status === "rejected" ? "border-red-400 text-red-500" :
-                                  "border-gray-500/40 text-gray-500"
-                        )}
-                      >
-                        <span className="text-[#1A1A1A]">
-                          {request.winner_submission_id ? "Solved" : request.status?.charAt(0).toUpperCase() + request.status?.slice(1)}
-                        </span>
-                      </Badge>
-                    </div>
-                  </section>
                   {mainCard}
                 </div>
               ) : (
@@ -862,46 +900,13 @@ function RequestCardComponent({
               href={cardLink}
               prefetch={true}
               scroll={false}
-              className="block focus:outline-none transition-transform duration-300 ease-out hover:scale-[1.02]"
+              className={cn(
+                "block focus:outline-none transition-transform duration-300 ease-out",
+                !disableHover && "hover:scale-[1.02]"
+              )}
             >
               {variant === "detail" && smallImages ? (
                 <div className={cn("p-1 sm:p-1.5 rounded-[20px] flex flex-col gap-1", getTheme(request.category).bg)}>
-                  {/* Header Section with Title */}
-                  <section className={cn(smallImages && !request.title && "hidden", "px-3 pt-5 pb-2")}>
-                    {/* Top Classification Row (Above Title) */}
-                    <div className="flex items-center justify-between w-full">
-                      {request.category && (<Badge
-                        variant="outline"
-                        className={cn(
-                          "rounded-full font-bold border shadow-none shrink-0 inline-flex items-center justify-center bg-transparent gap-2",
-                          isLarge ? "px-5 py-2 text-[15px] sm:text-[16px]" : "px-4 py-1.5 text-[13px] sm:text-[14px]",
-                          "border-gray-200/40",
-                          getTheme(request.category).text
-                        )}
-                      >
-                        <span className={cn("rounded-full bg-current", isLarge ? "w-2 h-2" : "w-1.5 h-1.5")} />
-                        <span className="text-[#1A1A1A]">{request.category.charAt(0).toUpperCase() + request.category.slice(1)}</span>
-                      </Badge>
-                      )}
-  
-                      <Badge
-                        variant="outline"
-                        className={cn(
-                          "rounded-full font-bold border shadow-none shrink-0 inline-flex items-center gap-2 bg-transparent",
-                          isLarge ? "px-5 py-2 text-[15px] sm:text-[16px]" : "px-4 py-1.5 text-[13px] sm:text-[14px]",
-                          request.status === "solved" || request.winner_submission_id ? "border-[#6925DC] text-[#6925DC]" :
-                            request.status === "pending" ? "border-[#FF8C5A] text-[#FF8C5A]" :
-                              request.status === "open" ? cn("border-current", getTheme(request.category).text) :
-                                request.status === "rejected" ? "border-red-400 text-red-500" :
-                                  "border-gray-500/40 text-gray-500"
-                        )}
-                      >
-                        <span className="text-[#1A1A1A]">
-                          {request.winner_submission_id ? "Solved" : request.status?.charAt(0).toUpperCase() + request.status?.slice(1)}
-                        </span>
-                      </Badge>
-                    </div>
-                  </section>
                   {mainCard}
                 </div>
               ) : (
@@ -911,16 +916,20 @@ function RequestCardComponent({
               )}
             </Link>
           )}
-          <div className="px-3 pt-3 pb-3 mt-auto">
-            {footerSection}
-          </div>
+          {variant !== "detail" && (
+            <div className="px-3 pt-3 pb-3 mt-auto">
+              {footerSection}
+            </div>
+          )}
         </>
       ) : (
         <div className="relative">
           {mainCard}
-          <div className="px-3 pt-3 pb-3 mt-auto">
-            {footerSection}
-          </div>
+          {variant !== "detail" && (
+            <div className="px-3 pt-3 pb-3 mt-auto">
+              {footerSection}
+            </div>
+          )}
         </div>
       )}
 
