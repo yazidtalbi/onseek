@@ -30,7 +30,7 @@ export function HeroSectionV2({ user, profile, tradeMode, setTradeMode }: HeroSe
   useEffect(() => {
     async function updateStats() {
       const result = await getRequestsCountAction();
-      const dbCount = "count" in result ? result.count : 0;
+      const dbCount = ("count" in result && typeof result.count === "number") ? result.count : 0;
       
       // Daily seekers: 80-200, stable for current day
       const today = new Date().toISOString().split('T')[0];

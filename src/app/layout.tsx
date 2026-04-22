@@ -31,13 +31,13 @@ export const metadata: Metadata = {
   description: "Where what you want finds you. End the endless search by posting your request and letting the perfect item find you.",
   icons: {
     icon: [
-      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
-      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/favfav/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+      { url: "/favfav/favicon-32x32.png", sizes: "32x32", type: "image/png" },
     ],
-    shortcut: "/favicon.ico",
-    apple: "/apple-touch-icon.png",
+    shortcut: "/favfav/favicon.ico",
+    apple: "/favfav/apple-touch-icon.png",
   },
-  manifest: "/site.webmanifest",
+  manifest: "/favfav/site.webmanifest",
   openGraph: {
     title: "Onseek",
     description: "Where what you want finds you. End the endless search by posting your request and letting the perfect item find you.",

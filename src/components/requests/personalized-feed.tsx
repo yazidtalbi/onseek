@@ -357,7 +357,7 @@ export function PersonalizedFeed({
                 </div>
                 <div className="flex items-center gap-4">
                   <Button
-                    variant="secondary"
+                    variant="ghost"
                     size="sm"
                     className="rounded-full bg-white/10 backdrop-blur-sm text-white hover:bg-white/20 font-bold px-5 border-white/10 shadow-none h-11 flex items-center gap-2"
                     style={{ fontFamily: 'var(--font-expanded)' }}
@@ -610,7 +610,7 @@ export function PersonalizedFeed({
         {isLoading && allItems.length === 0 ? (
           <AppLoading />
         ) : isError ? (
-          <div className="py-12 text-center text-gray-500">Failed to load feed. <Button onClick={() => refetch()} variant="link">Retry</Button></div>
+          <div className="py-12 text-center text-gray-500">Failed to load feed. <Button onClick={() => refetch()} variant="ghost">Retry</Button></div>
         ) : (
           <div className="relative w-full">
             <div className={cn(
