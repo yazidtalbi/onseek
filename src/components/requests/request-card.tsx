@@ -31,7 +31,7 @@ import {
 import {
   Laptop, Gamepad2, ShoppingBag, HeartPulse, Baby,
   Shovel, Car, Apple, Watch, Smartphone, Tv, Gem, Headphones,
-  Camera, Footprints, LockKeyhole, Wallet, Pencil, GripVertical,
+  Camera, Footprints, Wallet, Pencil,
   Cpu, Battery, Monitor, Leaf, Utensils, Truck, Scissors, Heart, Smile,
   ShieldCheck, Sofa, Lightbulb, Hammer, Zap, Users, Gauge, Fuel,
   Key, Activity, Stethoscope, Pill, Plane, Globe, Tent, Box, Eye,
@@ -516,7 +516,7 @@ function RequestCardComponent({
 
             return (
               <>
-                {visiblePreferences.map((item, idx) => {
+                {visiblePreferences.map((item: any, idx: number) => {
                   const isLast = idx === visiblePreferences.length - 1 && visibleDealbreakers.length === 0 && totalRemainingCount === 0;
                   return (
                     <div key={`pref-${idx}`} className={cn(
@@ -531,7 +531,7 @@ function RequestCardComponent({
                     </div>
                   );
                 })}
-                {visibleDealbreakers.map((item, idx) => {
+                {visibleDealbreakers.map((item: any, idx: number) => {
                   const isLast = idx === visibleDealbreakers.length - 1 && totalRemainingCount === 0;
                   return (
                     <div key={`db-${idx}`} className={cn(
@@ -563,7 +563,7 @@ function RequestCardComponent({
         {/* Automated Tags moved below requirements */}
         {request.tags && request.tags.length > 0 && !isMasonry && (
           <div className="flex flex-wrap gap-1.5 mt-4 mb-1">
-            {request.tags.slice(0, 3).map((tag) => (
+            {request.tags.slice(0, 3).map((tag: any) => (
               <Link
                 key={tag.id}
                 href={`/tags/${tag.slug}`}
@@ -652,7 +652,7 @@ function RequestCardComponent({
         {/* Thumbnails Row (if needed, though hero shows it) */}
         {visibleImages.length > 1 && (
           <div className="mt-2 mb-6 flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-            {visibleImages.slice(1).map((imgUrl, index) => (
+            {visibleImages.slice(1).map((imgUrl: string, index: number) => (
               <div
                 key={index}
                 className="relative w-12 h-12 flex-shrink-0 bg-gray-50 overflow-hidden border border-gray-100 rounded-lg"
@@ -764,7 +764,7 @@ function RequestCardComponent({
                   if (isPreview) {
                     return (
                       <Reorder.Group axis="y" values={allItems} onReorder={(newItems) => onReorderRequirements?.(newItems)} className="flex flex-col">
-                        {allItems.map((item, idx) => (
+                        {allItems.map((item: any, idx: number) => (
                           <Reorder.Item
                             key={item.id}
                             value={item}
@@ -794,7 +794,7 @@ function RequestCardComponent({
                   }
 
                   return (
-                    <div className={cn("flex flex-col", isMasonry ? "gap-0" : "gap-6")}>                      {visiblePreferences.map((item: any, idx) => {
+                    <div className={cn("flex flex-col", isMasonry ? "gap-0" : "gap-6")}>                      {visiblePreferences.map((item: any, idx: number) => {
                         const isLast = idx === visiblePreferences.length - 1 && visibleDealbreakers.length === 0 && totalRemainingCount === 0;
                         return (
                           <div key={`pref-${idx}`} className={cn(
@@ -809,7 +809,7 @@ function RequestCardComponent({
                           </div>
                         );
                       })}
-                      {visibleDealbreakers.map((item: any, idx) => {
+                      {visibleDealbreakers.map((item: any, idx: number) => {
                         const isLast = idx === visibleDealbreakers.length - 1 && totalRemainingCount === 0;
                         return (
                           <div key={`db-${idx}`} className={cn(
@@ -843,7 +843,7 @@ function RequestCardComponent({
             {/* Automated Tags moved below requirements */}
             {request.tags && request.tags.length > 0 && !hideTags && !isMasonry && (
               <div className="flex flex-wrap gap-2 mt-6">
-                {request.tags.map((tag) => (
+                {request.tags.map((tag: any) => (
                   <Link
                     key={tag.id}
                     href={`/tags/${tag.slug}`}
@@ -905,7 +905,7 @@ function RequestCardComponent({
               <div>
                 <h4 className="text-sm font-semibold text-[#1A1A1A] mb-2">Reference images</h4>
                 <div className="flex flex-wrap gap-2 mb-4">
-                  {images.map((imgUrl, index) => (
+                  {images.map((imgUrl: string, index: number) => (
                     <button
                       key={index}
                       type="button"
@@ -935,7 +935,7 @@ function RequestCardComponent({
               <div className="mt-6">
                 <h4 className="text-sm font-semibold text-[#1A1A1A] mb-2">Reference links</h4>
                 <div className="space-y-1.5">
-                  {links.map((link, index) => {
+                  {links.map((link: string, index: number) => {
                     const fullUrl = link.startsWith('http') ? link : `https://${link}`;
                     const domain = getDomainFromUrl(link);
                     return (

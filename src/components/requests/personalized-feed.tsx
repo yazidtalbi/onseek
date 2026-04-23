@@ -712,7 +712,7 @@ export function PersonalizedFeed({
 
             {(isFetchingNextPage) && (
               <div className="w-full flex justify-center py-12">
-                <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+                <IconLoader2 className="h-6 w-6 animate-spin text-gray-400" />
               </div>
             )}
           </div>
