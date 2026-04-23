@@ -343,9 +343,9 @@ export function SubmissionForm({ requestId, requestBudgetMax, requestDescription
         >
           <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 bg-gray-100 flex items-center justify-center text-[10px] font-bold text-gray-400">
             {profile?.avatar_url ? (
-              <img src={profile.avatar_url} alt={profile.first_name || "You"} className="w-full h-full object-cover" />
+              <img src={profile.avatar_url} alt={profile.username || "You"} className="w-full h-full object-cover" />
             ) : (
-              (profile?.first_name?.charAt(0) || profile?.username?.charAt(0) || user?.email?.charAt(0).toUpperCase() || 'U')
+              (profile?.username?.charAt(0) || user?.email?.charAt(0).toUpperCase() || 'U')
             )}
           </div>
           <span className="text-gray-400 text-[15px] font-medium flex-1 px-1 py-1.5">What are you offering..</span>

@@ -3,12 +3,6 @@
  * Falls back to username if name fields are missing.
  */
 export function formatFullName(firstName: string | null | undefined, lastName: string | null | undefined, username?: string | null): string {
-  if (firstName && lastName) {
-    return `${firstName} ${lastName.charAt(0)}.`;
-  }
-  if (firstName) {
-    return firstName;
-  }
   return username || "User";
 }
 
@@ -17,11 +11,5 @@ export function formatFullName(firstName: string | null | undefined, lastName: s
  * Falls back to username if name fields are missing.
  */
 export function formatNamesLong(firstName: string | null | undefined, lastName: string | null | undefined, username?: string | null): string {
-  if (firstName && lastName) {
-    return `${firstName} ${lastName}`;
-  }
-  if (firstName) {
-    return firstName;
-  }
   return username || "User";
 }

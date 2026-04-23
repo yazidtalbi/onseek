@@ -11,7 +11,8 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Pencil, Camera, ImagePlus, X, Loader2, ArrowRight, Check, Plus } from "lucide-react";
+import { Pencil, Camera, ImagePlus, X, Loader2, ArrowRight, Check, Plus, Sparkles } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { createRequestAction } from "@/actions/request.actions";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/ui/use-toast";
@@ -242,21 +243,70 @@ export function AIRequestModal({ open, onOpenChange }: AIRequestModalProps) {
 
             <div className={cn("px-8 pb-10 flex-1", (isExtracting || showAuth) && "pt-20")}>
               {isExtracting ? (
-                <div className="h-[430px] flex flex-col items-center justify-center text-center space-y-10 animate-in fade-in zoom-in-95 duration-500">
-                  <h2 className="text-3xl font-bold text-[#1A1A1A] tracking-tight" style={{ fontFamily: 'var(--font-expanded)' }}>
-                    Magically building your request...
-                  </h2>
-                  <div className="relative">
-                    <div className="absolute inset-0 bg-gray-100/50 blur-3xl rounded-full scale-150" />
-                    <img
-                      src="/illustrations/antigravity_robot.png"
-                      alt="Magic"
-                      className="w-48 h-48 relative z-10 animate-float"
-                    />
+                <div className="h-[430px] flex flex-col items-center justify-center text-center relative overflow-hidden">
+                  {/* Keyword Magnet Animation */}
+                  <div className="absolute inset-0 pointer-events-none z-0">
+                    <AnimatePresence>
+                      {inputText.split(/\s+/).filter(w => w.length > 3).slice(0, 10).map((word, i) => (
+                        <motion.div
+                          key={i}
+                          initial={{ 
+                            x: Math.random() * 600 - 300, 
+                            y: Math.random() * 400 - 200, 
+                            opacity: 0,
+                            scale: 0.5
+                          }}
+                          animate={{ 
+                            x: [null, Math.random() * 100 - 50, 0],
+                            y: [null, Math.random() * 100 - 50, 0],
+                            opacity: [0, 1, 0],
+                            scale: [0.5, 1.2, 0.5]
+                          }}
+                          transition={{ 
+                            duration: 2.5,
+                            repeat: Infinity,
+                            delay: i * 0.2,
+                            ease: "easeInOut"
+                          }}
+                          className="absolute font-bold text-indigo-500 bg-white/80 backdrop-blur-sm px-3 py-1 rounded-full shadow-lg border border-indigo-100 text-xs whitespace-nowrap"
+                          style={{ 
+                            left: '50%',
+                            top: '50%',
+                            transform: 'translate(-50%, -50%)'
+                          }}
+                        >
+                          {word.replace(/[^a-zA-Z0-9]/g, '')}
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
                   </div>
-                  <p className="text-gray-400 font-medium text-lg">
-                    Our AI can take up to 60 seconds...
-                  </p>
+
+                  <div className="relative z-10 flex flex-col items-center space-y-8">
+                    <div className="relative">
+                      <motion.div 
+                        className="absolute inset-0 bg-indigo-200 blur-3xl opacity-30 rounded-full scale-150"
+                        animate={{ scale: [1.2, 1.8, 1.2], opacity: [0.2, 0.4, 0.2] }}
+                        transition={{ duration: 3, repeat: Infinity }}
+                      />
+                      <div className="w-24 h-24 rounded-3xl bg-white shadow-xl flex items-center justify-center relative border border-indigo-50">
+                        <Sparkles className="w-10 h-10 text-indigo-500 animate-pulse" />
+                      </div>
+                    </div>
+                    <div className="space-y-4">
+                      <h2 className="text-3xl font-bold text-[#1A1A1A] tracking-tight" style={{ fontFamily: 'var(--font-expanded)' }}>
+                        Magically building your request
+                      </h2>
+                      <div className="flex flex-col items-center gap-2">
+                        <div className="flex items-center gap-2 px-3 py-1.5 bg-indigo-50 rounded-full border border-indigo-100">
+                          <Loader2 className="w-3.5 h-3.5 text-indigo-600 animate-spin" />
+                          <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest">Processing intent</span>
+                        </div>
+                        <p className="text-gray-400 font-medium text-sm">
+                          Structuring your data into preferences and specs...
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               ) : showAuth ? (
                 <div className="flex flex-col items-center max-w-4xl mx-auto w-full py-8 space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
@@ -463,23 +513,27 @@ export function AIRequestModal({ open, onOpenChange }: AIRequestModalProps) {
                       <div className="mt-auto">
                         <div className="h-1 bg-[#f7f8f9]" />
                         <div className="flex items-stretch">
-                          <div className="flex flex-col items-center flex-1 py-4 justify-center min-w-0 px-2 group/condition relative">
-                            <span className="text-[13px] text-gray-400 font-normal leading-none mb-1.5 text-center">Condition</span>
-                            <div className="relative group/sel">
-                              <select
-                                value={extractedData.condition}
-                                onChange={(e) => setExtractedData({ ...extractedData, condition: e.target.value })}
-                                className="bg-transparent text-[15.5px] font-[600] text-[#7755FF] outline-none cursor-pointer appearance-none px-6 py-1 text-center"
-                              >
-                                <option value="Either">New & Used</option>
-                                <option value="New">New</option>
-                                <option value="Used">Used</option>
-                              </select>
-                              <Pencil className="absolute top-1/2 -right-1 -translate-y-1/2 h-3 w-3 text-gray-400 opacity-0 group-hover/sel:opacity-100 transition-opacity pointer-events-none" />
-                            </div>
-                          </div>
+                          {!["Services", "Finance & Insurance", "Grocery & Food", "Travel", "Mobile & Internet Plans"].includes(extractedData.category) && (
+                            <>
+                              <div className="flex flex-col items-center flex-1 py-4 justify-center min-w-0 px-2 group/condition relative text-[#7755FF]">
+                                <span className="text-[13px] text-gray-400 font-normal leading-none mb-1.5 text-center">Condition</span>
+                                <div className="relative group/sel">
+                                  <select
+                                    value={extractedData.condition}
+                                    onChange={(e) => setExtractedData({ ...extractedData, condition: e.target.value })}
+                                    className="bg-transparent text-[15.5px] font-[600] outline-none cursor-pointer appearance-none px-6 py-1 text-center"
+                                  >
+                                    <option value="Either">New & Used</option>
+                                    <option value="New">New</option>
+                                    <option value="Used">Used</option>
+                                  </select>
+                                  <Pencil className="absolute top-1/2 -right-1 -translate-y-1/2 h-3 w-3 text-gray-400 opacity-0 group-hover/sel:opacity-100 transition-opacity pointer-events-none" />
+                                </div>
+                              </div>
 
-                          <div className="w-1 bg-[#f7f8f9] shrink-0" />
+                              <div className="w-1 bg-[#f7f8f9] shrink-0" />
+                            </>
+                          )}
 
                           <div className="flex flex-col items-center flex-1 py-4 justify-center min-w-0 px-2 group/budget relative">
                             <span className="text-[13px] text-gray-400 font-normal leading-none mb-1.5 text-center">Budget</span>

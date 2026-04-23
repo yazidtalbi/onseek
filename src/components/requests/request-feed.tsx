@@ -253,6 +253,7 @@ export function RequestFeed({
               smallImages={useHomeStyle ? true : false}
               noBorder={useHomeStyle ? true : false}
               disableHover={disableHover}
+              isMasonry={viewMode === "grid"}
             />
           </div>
         ))}

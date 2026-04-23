@@ -26,7 +26,20 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Loader2, Search, ChevronRight, Sparkles, ListFilter, Rows3, LayoutGrid, ArrowRight, X, Instagram, ChevronDown, User } from "lucide-react";
+import {
+  IconLoader2,
+  IconSearch,
+  IconChevronRight,
+  IconSparkles,
+  IconFilter2,
+  IconLayoutList,
+  IconLayoutGrid,
+  IconArrowRight,
+  IconX,
+  IconBrandInstagram,
+  IconChevronDown,
+  IconUser
+} from "@tabler/icons-react";
 import {
   Select,
   SelectContent,
@@ -98,6 +111,34 @@ export function PersonalizedFeed({
   const [searchValue, setSearchValue] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [modalScrolled, setModalScrolled] = useState(false);
+  const [showCategoryStrip, setShowCategoryStrip] = useState(true);
+  const lastScrollY = useRef(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      
+      // Always show at the very top
+      if (currentScrollY < 100) {
+        setShowCategoryStrip(true);
+        lastScrollY.current = currentScrollY;
+        return;
+      }
+
+      // Detect scroll direction
+      if (currentScrollY > lastScrollY.current) {
+        // Scrolling down
+        setShowCategoryStrip(false);
+      } else {
+        // Scrolling up
+        setShowCategoryStrip(true);
+      }
+      lastScrollY.current = currentScrollY;
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
   const modalScrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -327,7 +368,7 @@ export function PersonalizedFeed({
               onClick={() => setIsHeroDismissed(true)}
               className="absolute top-6 right-6 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg border border-gray-100 group transition-all hover:scale-110 z-[140]"
             >
-              <X className="w-5 h-5 text-[#6925DC] transition-transform group-hover:rotate-90" />
+              <IconX className="w-5 h-5 text-[#6925DC] transition-transform group-hover:rotate-90" />
             </button>
 
             {/* Modal Body with overflow hidden */}
@@ -340,7 +381,7 @@ export function PersonalizedFeed({
                       <DropdownMenuTrigger asChild>
                         <div className="flex items-center gap-1.5 cursor-pointer group outline-none">
                           <span className="text-[15px] font-bold text-white hover:text-white/80 transition-all" style={{ fontFamily: 'var(--font-expanded)' }}>Explore</span>
-                          <ChevronDown className="w-4 h-4 text-white transition-transform group-hover:translate-y-0.5" />
+                          <IconChevronDown className="w-4 h-4 text-white transition-transform group-hover:translate-y-0.5" />
                         </div>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="start" className="w-56 bg-white rounded-2xl p-2 shadow-xl border-gray-100 z-[160]">
@@ -540,7 +581,7 @@ export function PersonalizedFeed({
                   </div>
                   <div className="flex gap-4 items-center">
                     <a href="https://instagram.com/onseek.co" target="_blank" className="text-white hover:text-white/80 transition-colors">
-                      <Instagram className="w-5 h-5" />
+                      <IconBrandInstagram className="w-5 h-5" />
                     </a>
                   </div>
                 </div>
@@ -554,35 +595,42 @@ export function PersonalizedFeed({
         "w-full px-3 md:px-8",
         !user && isHomePage
           ? "pt-20 sm:pt-24"
-          : (pathname === "/" ? "pt-2 sm:pt-4" : "pt-0 sm:pt-4")
+          : (pathname === "/" ? "pt-0" : "pt-0 sm:pt-4")
       )}>
         {/* Category Pill Navigation */}
-        {(user || category) && !hideFilters && (
-          <div className="py-2 min-h-[70px] flex flex-col justify-center mb-2 md:mb-6 bg-white">
-            <div className="w-full flex flex-col items-stretch relative z-10">
-              <CategoryPills
-                mode={mode}
-                leftElement={(
-                  <FiltersModal
-                    open={filtersOpen}
-                    onOpenChange={setFiltersOpen}
-                    viewMode={viewMode}
-                    onViewModeChange={setViewMode}
-                    sortMode={mode === "for_you" ? "latest" : mode}
-                    onSortModeChange={handleModeChange}
-                  >
-                    <button className="w-10 h-10 flex items-center justify-center rounded-full border md:hidden shrink-0 bg-white border-gray-200">
-                      <ListFilter className="h-4 w-4" />
-                    </button>
-                  </FiltersModal>
-                )}
-              />
+        {(user || category || isHomePage) && !hideFilters && (
+          <div className={cn(
+            "sticky z-[40] bg-white transition-all duration-300 transform w-full",
+            // Desktop top-20 (h-20 navbar), Mobile top-16 (h-16 navbar)
+            "top-14 md:top-20", 
+            showCategoryStrip ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0 pointer-events-none"
+          )}>
+            <div className="w-full px-0 py-2 min-h-[70px] flex flex-col justify-center bg-white">
+              <div className="w-full flex flex-col items-stretch relative z-10">
+                <CategoryPills
+                  mode={mode}
+                  leftElement={(
+                    <FiltersModal
+                      open={filtersOpen}
+                      onOpenChange={setFiltersOpen}
+                      viewMode={viewMode}
+                      onViewModeChange={setViewMode}
+                      sortMode={mode === "for_you" ? "latest" : mode}
+                      onSortModeChange={handleModeChange}
+                    >
+                      <button className="w-9 h-9 flex items-center justify-center rounded-full border shrink-0 bg-white border-gray-200">
+                        <IconFilter2 className="h-4 w-4" />
+                      </button>
+                    </FiltersModal>
+                  )}
+                />
+              </div>
             </div>
           </div>
         )}
 
-        {/* Discovery Header Block */}
-        {(user || category) && !hideFilters && (
+        {/* Discovery Header Block - Hidden on Home Page */}
+        {(user || category) && !hideFilters && !isHomePage && (
           <div className="flex flex-col gap-4 mb-8">
             <div className="flex flex-row items-center justify-between">
               <div className="flex flex-col gap-1">
@@ -592,20 +640,6 @@ export function PersonalizedFeed({
                 <p className="text-sm md:text-base text-gray-400 font-medium">
                   {user ? "Personalized selection just for you" : "Standout requests making waves around the platform"}
                 </p>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <button onClick={() => setFiltersOpen(!filtersOpen)} className="hidden md:flex w-9 h-9 items-center justify-center rounded-full border bg-white border-gray-200">
-                  <ListFilter className="h-4 w-4" />
-                </button>
-                <div className="hidden md:block">
-                  <Select value={mode === "for_you" ? "latest" : mode} onValueChange={handleModeChange}>
-                    <SelectTrigger className="px-3 py-2 rounded-full text-sm font-medium border-transparent bg-white h-9 focus:ring-0 w-auto shadow-none">
-                      <span>{mode === "trending" ? "Trending" : "Latest"}</span>
-                    </SelectTrigger>
-                    <SelectContent className="bg-white"><SelectItem value="latest">Latest</SelectItem><SelectItem value="trending">Trending</SelectItem></SelectContent>
-                  </Select>
-                </div>
               </div>
             </div>
           </div>
@@ -633,9 +667,9 @@ export function PersonalizedFeed({
                           <img src={profile.avatar_url} className="w-full h-full object-cover" />
                         ) : (
                           user ? (
-                            <Sparkles className="w-5 h-5 text-gray-300" />
+                            <IconSparkles className="w-5 h-5 text-gray-300" />
                           ) : (
-                            <User className="w-5 h-5 text-gray-300" />
+                            <IconUser className="w-5 h-5 text-gray-300" />
                           )
                         )}
                       </div>
@@ -651,7 +685,7 @@ export function PersonalizedFeed({
                     <div className="flex justify-end mt-4">
                       <Button onClick={() => setIsAIFlowOpen(true)} className="h-10 px-6 gap-2 bg-[#1A1A1A] hover:bg-black text-white rounded-full font-bold shadow-none">
                         <span>Post</span>
-                        <ArrowRight className="h-4 w-4" />
+                        <IconArrowRight className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
@@ -669,6 +703,7 @@ export function PersonalizedFeed({
                       links={requestWithExtras.links || []}
                       smallImages={true}
                       noBorder={true}
+                      isMasonry={true}
                     />
                   </div>
                 );

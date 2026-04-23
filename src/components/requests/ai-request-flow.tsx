@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { motion, AnimatePresence, Reorder, useDragControls } from "framer-motion";
-import { X, ChevronLeft, Sparkles, Loader2, ArrowRight, Check, Plus, DollarSign, Calendar, Target, Store, MessageCircle, ShieldCheck, Crown, LockKeyhole, Pencil, ChevronRight, MapPin, GripVertical } from "lucide-react";
+import { X, ChevronLeft, Sparkles, Loader2, ArrowRight, Check, Plus, DollarSign, Calendar, Target, Store, MessageCircle, ShieldCheck, Crown, LockKeyhole, Pencil, ChevronRight, MapPin, GripVertical, Settings2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { RequestCard } from "@/components/requests/request-card";
@@ -32,7 +32,7 @@ interface AIRequestFlowProps {
   profile: any;
 }
 
-type FlowStep = "extracting" | "budget" | "condition" | "urgency" | "summary" | "auth" | "submitting";
+type FlowStep = "input" | "extracting" | "budget" | "condition" | "urgency" | "summary" | "auth" | "submitting";
 
 interface DraggableRequirementItemProps {
   item: any;
@@ -49,13 +49,13 @@ function DraggableRequirementItem({ item, onBlur, onDelete, isPreference }: Drag
       value={item}
       dragControls={controls}
       dragListener={false}
-      className="flex items-center gap-4 py-4 group/item relative bg-white"
+      className="flex items-center gap-3 py-4 group/item relative bg-white"
     >
       <div
         onPointerDown={(e) => controls.start(e)}
         className="h-8 w-8 -ml-2 flex items-center justify-center cursor-grab active:cursor-grabbing hover:bg-gray-50 rounded-lg transition-colors group/handle shrink-0"
       >
-        <GripVertical className="h-5 w-5 text-gray-300 opacity-0 group-hover/handle:opacity-100 transition-opacity" />
+        <GripVertical className="h-5 w-5 text-gray-300 transition-opacity" />
       </div>
 
       {isPreference ? (
@@ -78,7 +78,7 @@ function DraggableRequirementItem({ item, onBlur, onDelete, isPreference }: Drag
 
       <button
         onClick={onDelete}
-        className="opacity-0 group-hover/item:opacity-100 hover:text-red-500 transition-all text-gray-300"
+        className="hover:text-red-500 transition-all text-gray-300 px-1"
       >
         <X className="h-5 w-5" />
       </button>
@@ -107,15 +107,32 @@ export function AIRequestFlow({ initialText, onClose, user, profile }: AIRequest
     return initialText && initialText !== savedDraft?.initialText;
   }, [initialText, savedDraft?.initialText]);
   const [showSkipConfirm, setShowSkipConfirm] = React.useState(false);
+  const [inputText, setInputText] = React.useState(initialText || (savedDraft?.initialText || ""));
   const [step, setStep] = React.useState<FlowStep>(() => {
     if (isNewText) return "extracting";
     if (savedDraft) {
       if (savedDraft.step === "auth" && user) return "auth";
       return savedDraft.step || "extracting";
     }
-    return "extracting";
+    return initialText ? "extracting" : "input";
   });
   const [authMode, setAuthMode] = React.useState<"login" | "signup">("signup");
+  const [isEditModalOpen, setIsEditModalOpen] = React.useState(false);
+  const [showTimeoutMessage, setShowTimeoutMessage] = React.useState(false);
+
+  // Handle extraction timeout
+  React.useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (step === "extracting") {
+      setShowTimeoutMessage(false);
+      timer = setTimeout(() => {
+        setShowTimeoutMessage(true);
+      }, 20000); // 20 seconds
+    } else {
+      setShowTimeoutMessage(false);
+    }
+    return () => clearTimeout(timer);
+  }, [step]);
   const [extractedData, setExtractedData] = React.useState<any>(() => {
     return isNewText ? null : (savedDraft?.extractedData || null);
   });
@@ -127,6 +144,8 @@ export function AIRequestFlow({ initialText, onClose, user, profile }: AIRequest
   });
   const [error, setError] = React.useState<string | null>(null);
   const [editingField, setEditingField] = React.useState<'title' | 'condition' | 'budget' | 'preferences' | 'dealbreakers' | 'images' | 'category' | null>(null);
+  const [newTag, setNewTag] = React.useState("");
+  const [isAddingTag, setIsAddingTag] = React.useState(false);
   const queryClient = useQueryClient();
   const router = useRouter();
   const { toast } = useToast();
@@ -169,10 +188,10 @@ export function AIRequestFlow({ initialText, onClose, user, profile }: AIRequest
   // Auto-submit after auth
   React.useEffect(() => {
     // We only auto-submit if:
-    // 1. In 'auth' or 'preview' step (came from registration or was ready to post)
+    // 1. In 'auth' step (came from registration or was ready to post)
     // 2. We have user AND profile (onboarding finished)
     // 3. We have restored extractedData
-    if ((step === "auth" || step === "summary") && user && profile && extractedData) {
+    if (step === "auth" && user && profile && extractedData) {
       console.log("Auto-submitting draft due to auth success...");
       handleFinish();
     }
@@ -180,18 +199,26 @@ export function AIRequestFlow({ initialText, onClose, user, profile }: AIRequest
   React.useEffect(() => {
     // ONLY extract if we don't have existing extracted data OR if initialText has changed from the draft
     const shouldExtract = step === "extracting" && (
-      !extractedData || 
-      (initialText && initialText !== savedDraft?.initialText)
+      !extractedData ||
+      (inputText && inputText !== savedDraft?.initialText)
     );
+
+    if (step === "extracting" && !shouldExtract && extractedData) {
+      setStep("summary");
+      return;
+    }
 
     if (shouldExtract) {
       const timer = setTimeout(async () => {
         try {
+          console.log("Starting AI Extraction for text:", inputText);
           const response = await fetch("/api/extract", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ text: initialText }),
+            body: JSON.stringify({ text: inputText }),
           });
+
+          console.log("Extraction API response status:", response.status);
 
           if (!response.ok) {
             if (response.status === 429) throw new Error("QUOTA_EXCEEDED");
@@ -267,8 +294,8 @@ export function AIRequestFlow({ initialText, onClose, user, profile }: AIRequest
             });
           }
           setExtractedData({
-            title: initialText.slice(0, 60),
-            description: initialText,
+            title: inputText.slice(0, 60),
+            description: inputText,
             category: "Other/General",
             condition: "Either",
             budget: "Negotiable",
@@ -280,7 +307,7 @@ export function AIRequestFlow({ initialText, onClose, user, profile }: AIRequest
       }, 1500); // Artificial delay for "magic" feel
       return () => clearTimeout(timer);
     }
-  }, [step, extractedData, initialText, savedDraft?.initialText]);
+  }, [step, extractedData, inputText, savedDraft?.initialText]);
 
   const handleFinish = async () => {
     console.log("handleFinish triggered. Step:", step, "User:", user?.id, "Profile Country:", profile?.country);
@@ -301,8 +328,8 @@ export function AIRequestFlow({ initialText, onClose, user, profile }: AIRequest
     console.log("Proceeding with submission as user:", user.id);
     setStep("submitting");
     const formData = new FormData();
-    formData.set("title", extractedData.title || initialText.slice(0, 50));
-    formData.set("description", extractedData.description || initialText);
+    formData.set("title", extractedData.title || inputText.slice(0, 50));
+    formData.set("description", extractedData.description || inputText);
     formData.set("category", extractedData.category || "Other/General");
 
     // Normalization: Ensure budgetMax is either a valid number string or empty
@@ -319,7 +346,7 @@ export function AIRequestFlow({ initialText, onClose, user, profile }: AIRequest
 
     formData.set("preferences", JSON.stringify(prefs));
     formData.set("dealbreakers", JSON.stringify(deals));
-    
+
     if (extractedData.tags && Array.isArray(extractedData.tags)) {
       formData.set("tags", JSON.stringify(extractedData.tags));
     }
@@ -352,13 +379,24 @@ export function AIRequestFlow({ initialText, onClose, user, profile }: AIRequest
     }
   };
 
-  const currentProgress = step === "extracting" ? 10 : step === "budget" ? 25 : step === "condition" ? 40 : step === "urgency" ? 60 : step === "summary" ? 85 : 100;
+  const currentProgress = step === "input" ? 5 : step === "extracting" ? 15 : step === "budget" ? 30 : step === "condition" ? 45 : step === "urgency" ? 65 : step === "summary" ? 90 : 100;
+
+  const NO_CONDITION_CATEGORIES = [
+    "Services",
+    "Finance & Insurance",
+    "Grocery & Food",
+    "Travel",
+    "Mobile & Internet Plans"
+  ];
+
+  const shouldHideCondition = React.useMemo(() => {
+    return NO_CONDITION_CATEGORIES.includes(extractedData?.category || "");
+  }, [extractedData?.category]);
 
   return (
-    <div className="fixed inset-0 z-[100] bg-white flex flex-col font-sans overflow-y-auto overflow-x-hidden animate-in fade-in duration-500">
+    <div className="fixed inset-0 z-[9999] bg-white flex flex-col font-sans overflow-y-auto overflow-x-hidden animate-in fade-in duration-500">
       {/* Background soft glow */}
       <div className="absolute inset-0 pointer-events-none opacity-40">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-green-100 rounded-full blur-[120px]" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-50 rounded-full blur-[120px]" />
       </div>
 
@@ -366,7 +404,7 @@ export function AIRequestFlow({ initialText, onClose, user, profile }: AIRequest
       <div className="relative w-full py-6 px-8 flex items-center justify-between z-20">
         <button
           onClick={() => {
-            if (step === "extracting") {
+            if (step === "input" || step === "extracting") {
               sessionStorage.removeItem(STORAGE_KEY);
               onClose();
             } else if (step === "budget") {
@@ -374,7 +412,11 @@ export function AIRequestFlow({ initialText, onClose, user, profile }: AIRequest
             } else if (step === "condition") {
               setStep("budget");
             } else if (step === "urgency") {
-              setStep("condition");
+              if (shouldHideCondition) {
+                setStep("budget");
+              } else {
+                setStep("condition");
+              }
             } else if (step === "summary") {
               setStep("urgency");
             } else {
@@ -401,33 +443,37 @@ export function AIRequestFlow({ initialText, onClose, user, profile }: AIRequest
         <Dialog open={showSkipConfirm} onOpenChange={setShowSkipConfirm}>
           <DialogTrigger asChild>
             <button
-              className="px-6 py-2 rounded-full border border-[#7755FF] text-[#7755FF] font-semibold hover:bg-[#7755FF]/5 transition-all active:scale-95"
+              className="px-6 py-2 rounded-full border border-gray-200 text-gray-400 font-semibold hover:bg-gray-50 transition-all active:scale-95"
             >
-              Skip
+              Cancel
             </button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-md rounded-[2.5rem]">
+          <DialogContent
+            className="sm:max-w-md rounded-[2.5rem] z-[10001]"
+            overlayClassName="z-[10000]"
+          >
             <DialogHeader>
-              <DialogTitle style={{ fontFamily: 'var(--font-expanded)' }}>Skip AI Extraction?</DialogTitle>
+              <DialogTitle style={{ fontFamily: 'var(--font-expanded)' }}>Dismiss Request?</DialogTitle>
               <DialogDescription className="pt-2">
-                By skipping, we won't be able to automatically analyze and structure your request. You'll need to fill in the missing details manually.
+                Are you sure you want to exit? Your progress will be lost and your request won&apos;t be published.
               </DialogDescription>
             </DialogHeader>
-            <DialogFooter className="gap-2 sm:gap-0">
+            <DialogFooter className="gap-2 sm:gap-0 pt-6">
               <button
                 onClick={() => setShowSkipConfirm(false)}
                 className="px-4 py-2 rounded-full border border-gray-200 text-gray-600 font-medium hover:bg-gray-50 transition-colors"
               >
-                Go Back
+                Continue Editing
               </button>
               <button
                 onClick={() => {
                   setShowSkipConfirm(false);
-                  setStep("summary");
+                  sessionStorage.removeItem(STORAGE_KEY);
+                  onClose();
                 }}
-                className="px-4 py-2 rounded-full bg-[#7755FF] text-white font-semibold hover:bg-[#6644ee] transition-colors"
+                className="px-4 py-2 rounded-full bg-red-500 text-white font-semibold hover:bg-red-600 transition-colors"
               >
-                Yes, Skip
+                Yes, Dismiss
               </button>
             </DialogFooter>
           </DialogContent>
@@ -437,24 +483,97 @@ export function AIRequestFlow({ initialText, onClose, user, profile }: AIRequest
       {/* Main Content Area */}
       <main className="relative flex-1 flex flex-col items-center px-6 z-10 py-12">
         <AnimatePresence mode="wait">
-          {step === "extracting" && (
+          {step === "input" && (
             <motion.div
-              key="extracting"
+              key="input"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="flex flex-col items-center text-center max-w-2xl"
+              className="w-full max-w-3xl space-y-12"
             >
-              <div className="relative mb-12">
-                <div className="absolute inset-0 bg-green-200 blur-[40px] opacity-50 animate-pulse" />
-                <Sparkles className="h-24 w-24 text-green-500 relative animate-bounce" />
+              <div className="space-y-6 text-center">
+                <div className="flex justify-center mb-8">
+                  <div className="w-24 h-24 rounded-3xl bg-[#6925DC]/5 flex items-center justify-center relative">
+                    <Sparkles className="w-12 h-12 text-[#6925DC]" />
+                    <motion.div
+                      className="absolute inset-0 bg-[#6925DC]/10 rounded-3xl"
+                      animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
+                      transition={{ duration: 3, repeat: Infinity }}
+                    />
+                  </div>
+                </div>
+                <h1 className="text-4xl md:text-5xl font-black text-[#1A1A1A] tracking-tight leading-[1.1]" style={{ fontFamily: 'var(--font-expanded)' }}>
+                  What are you <br /> looking for?
+                </h1>
+                <p className="text-lg md:text-xl text-gray-400 font-medium max-w-lg mx-auto">
+                  Describe your perfect item and watch as our AI structures everything for you.
+                </p>
               </div>
-              <h2 className="text-4xl font-extrabold mb-4 tracking-tight" style={{ fontFamily: 'var(--font-expanded)' }}>
-                AI is crafting your request...
-              </h2>
-              <p className="text-xl text-gray-400 font-medium">
-                Parsing your intent and matching best categories.
-              </p>
+
+              <div className="space-y-6">
+                <div className="relative group">
+                  <textarea
+                    autoFocus
+                    placeholder="Example: I'm looking for a vintage Rolex Submariner from the 70s, ideally with a ghost bezel. Must be in original condition. My budget is around $15,000."
+                    className="w-full min-h-[220px] bg-white border-2 border-gray-100 focus:border-black rounded-[2.5rem] p-10 text-xl md:text-2xl font-semibold resize-none placeholder:text-gray-200 shadow-none transition-all duration-300 outline-none leading-relaxed"
+                    value={inputText}
+                    onChange={(e) => setInputText(e.target.value)}
+                  />
+                  <div className="absolute bottom-6 right-8 text-xs font-bold tracking-widest uppercase text-gray-300">
+                    {inputText.trim().length} characters
+                  </div>
+                </div>
+
+                <div className="flex flex-col items-center gap-6">
+                  <Button
+                    onClick={() => {
+                      if (inputText.trim().length >= 10) setStep("extracting");
+                    }}
+                    disabled={inputText.trim().length < 10}
+                    className="w-full h-20 md:h-24 rounded-full bg-black text-white hover:bg-black/90 text-xl md:text-3xl font-black shadow-[0_20px_50px_rgba(0,0,0,0.15)] transition-all hover:scale-[1.01] flex items-center justify-center gap-4 group active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
+                  >
+                    <span>Generate Request</span>
+                    <ArrowRight className="h-6 w-6 md:h-8 md:w-8 transition-transform group-hover:translate-x-2" />
+                  </Button>
+
+                  {inputText.trim().length > 0 && inputText.trim().length < 10 && (
+                    <motion.p
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="text-red-500 font-bold text-sm uppercase tracking-widest"
+                    >
+                      Please describe a bit more (10+ chars)
+                    </motion.p>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {step === "extracting" && (
+            <motion.div
+              key="extracting"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="flex-1 flex flex-col items-center justify-center w-full max-w-4xl mx-auto"
+            >
+              <div className="w-full h-[600px] overflow-hidden relative p-8 sm:p-16">
+                <DictionaryHighlight text={inputText} />
+              </div>
+
+              <AnimatePresence>
+                {showTimeoutMessage && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    className="mt-4 text-gray-400 font-medium text-sm md:text-base animate-pulse"
+                  >
+                    It&apos;s taking too long, please wait..
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </motion.div>
           )}
 
@@ -464,11 +583,11 @@ export function AIRequestFlow({ initialText, onClose, user, profile }: AIRequest
               animate={{ opacity: 1, y: 0 }}
               className="flex-1 flex flex-col items-center justify-center p-6"
             >
-               {!user && (
+              {!user && (
                 <div className="w-full max-w-5xl">
-                   {/* This is handled by the auth grid below now */}
+                  {/* This is handled by the auth grid below now */}
                 </div>
-               )}
+              )}
             </motion.div>
           )}
 
@@ -478,194 +597,343 @@ export function AIRequestFlow({ initialText, onClose, user, profile }: AIRequest
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 1.05 }}
-              className="flex flex-col items-center text-center w-full max-w-2xl px-4"
+              className="flex flex-col items-center w-full max-w-2xl px-2 sm:px-4"
             >
-              <div className="bg-white p-12 rounded-[2.5rem] shadow-[0_42px_100px_rgba(0,0,0,0.08)] border border-gray-100 w-full mb-10 text-left relative overflow-hidden">
+              <div className="text-center mb-10 flex flex-col items-center">
+                <div className="w-16 h-16 rounded-3xl bg-[#6925DC]/10 flex items-center justify-center mb-6 text-[#6925DC]">
+                  <Sparkles className="w-8 h-8" strokeWidth={2.5} />
+                </div>
+                <h3
+                  className="text-3xl sm:text-4xl font-bold text-black tracking-tight mb-3"
+                  style={{ fontFamily: '"Zalando Sans SemiExpanded", sans-serif', fontWeight: 600, letterSpacing: "-0.02em" }}
+                >
+                  Review your request
+                </h3>
+                <p className="text-gray-400 font-medium text-[15px] sm:text-lg">
+                  Take a final look so we can match you with the right seller.
+                </p>
+              </div>
 
-                <h3 className="text-2xl font-black text-black tracking-tight mb-10 text-center" style={{ fontFamily: 'var(--font-expanded)' }}>Ready to launch?</h3>
-
-                <div className="space-y-10">
-                  {/* Category Field */}
-                  <div className="space-y-3">
-                    <label className="text-lg font-semibold text-gray-400 pl-1" style={{ fontFamily: 'var(--font-expanded)' }}>Category</label>
-                    <div className="relative group">
-                      <select
-                        value={extractedData?.category || 'Other/General'}
-                        onChange={(e) => setExtractedData({ ...extractedData, category: e.target.value })}
-                        className="w-full h-16 pl-6 pr-12 bg-gray-50 border-2 border-gray-100 rounded-2xl text-[15px] sm:text-[17px] font-medium leading-snug tracking-tight text-[#1A1A1A] appearance-none focus:border-[#6925DC] outline-none transition-all cursor-pointer"
-                      >
-                        {CATEGORIES.map(cat => (
-                          <option key={cat} value={cat}>{cat}</option>
-                        ))}
-                      </select>
-                      <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 group-hover:text-[#6925DC] transition-colors">
-                        <ChevronRight className="w-6 h-6 rotate-90" />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Title Field */}
-                  <div className="space-y-3">
-                    <label className="text-lg font-semibold text-gray-400 pl-1" style={{ fontFamily: 'var(--font-expanded)' }}>What are you looking for?</label>
-                    <div className="relative group">
-                      <input
-                        type="text"
-                        value={extractedData?.title || ''}
-                        onChange={(e) => setExtractedData({ ...extractedData, title: e.target.value })}
-                        className="w-full h-16 pl-6 pr-14 bg-gray-50 border-2 border-gray-100 rounded-2xl text-[15px] sm:text-[17px] font-medium leading-snug tracking-tight text-[#1A1A1A] focus:border-[#6925DC] outline-none transition-all"
-                        style={{ fontFamily: 'var(--font-expanded)' }}
-                      />
-                      <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 group-hover:text-[#6925DC] transition-colors">
-                        <Pencil className="w-5 h-5" />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Budget & Condition Row */}
-                  <div className="grid grid-cols-2 gap-6">
-                    <div className="space-y-3 font-[var(--font-sans)]">
-                      <label className="text-lg font-semibold text-gray-400 pl-1" style={{ fontFamily: 'var(--font-expanded)' }}>Budget</label>
-                      <div
-                        className="w-full h-16 flex items-center px-6 bg-gray-50 border-2 border-gray-100 rounded-2xl cursor-pointer hover:border-black/10 transition-all"
-                        onClick={() => setStep("budget")}
-                      >
-                        <span className="text-[15px] sm:text-[17px] font-medium leading-snug tracking-tight text-[#1A1A1A]">
-                          {budget ? `$${budget}` : extractedData?.budget || "Negotiable"}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="space-y-3">
-                      <label className="text-lg font-semibold text-gray-400 pl-1" style={{ fontFamily: 'var(--font-expanded)' }}>Condition</label>
-                      <div
-                        className="w-full h-16 flex items-center px-6 bg-gray-50 border-2 border-gray-100 rounded-2xl cursor-pointer hover:border-black/10 transition-all"
-                        onClick={() => setStep("condition")}
-                      >
-                        <span className="text-[15px] sm:text-[17px] font-medium leading-snug tracking-tight text-[#1A1A1A]">
-                          {extractedData?.condition || "Either"}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="h-px w-full bg-gray-100 my-4" />
-
-                  {/* Requirements Section */}
-                  <div className="space-y-10">
-                    {/* Preferences */}
-                    <div className="space-y-5">
-                      <div className="flex items-center justify-between px-1">
-                        <label className="text-lg font-semibold text-gray-400" style={{ fontFamily: 'var(--font-expanded)' }}>Preferences</label>
-                        <button
-                          onClick={() => setExtractedData({
-                            ...extractedData,
-                            preferences: [...(extractedData.preferences || []), { label: "New Preference", id: `pref-${Math.random().toString(36).slice(2, 8)}`, type: 'pref' }]
-                          })}
-                          className="w-8 h-8 rounded-full bg-green-50 text-green-600 flex items-center justify-center hover:bg-green-100 transition-colors"
-                        >
-                          <Plus className="w-5 h-5" strokeWidth={3} />
-                        </button>
-                      </div>
-
-                      <Reorder.Group
-                        axis="y"
-                        values={extractedData?.preferences || []}
-                        onReorder={(newOrder) => setExtractedData({ ...extractedData, preferences: newOrder })}
-                        className="flex flex-col border-t border-gray-100 -mx-4 px-4 divide-y divide-gray-100"
-                      >
-                        {(extractedData?.preferences || []).map((pref: any) => (
-                          <DraggableRequirementItem
-                            key={pref.id}
-                            item={pref}
-                            isPreference
-                            onBlur={(newLabel) => {
-                              const newPrefs = extractedData.preferences.map((p: any) =>
-                                p.id === pref.id ? { ...p, label: newLabel } : p
-                              );
-                              setExtractedData({ ...extractedData, preferences: newPrefs });
-                            }}
-                            onDelete={() => {
-                              const newPrefs = extractedData.preferences.filter((p: any) => p.id !== pref.id);
-                              setExtractedData({ ...extractedData, preferences: newPrefs });
-                            }}
-                          />
-                        ))}
-                      </Reorder.Group>
-                    </div>
-
-                    {/* Dealbreakers */}
-                    <div className="space-y-5">
-                      <div className="flex items-center justify-between px-1">
-                        <label className="text-lg font-semibold text-gray-400" style={{ fontFamily: 'var(--font-expanded)' }}>Dealbreakers</label>
-                        <button
-                          onClick={() => setExtractedData({
-                            ...extractedData,
-                            dealbreakers: [...(extractedData.dealbreakers || []), { label: "New Dealbreaker", id: `deal-${Math.random().toString(36).slice(2, 8)}`, type: 'deal' }]
-                          })}
-                          className="w-8 h-8 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center hover:bg-amber-100 transition-colors"
-                        >
-                          <Plus className="w-5 h-5" strokeWidth={3} />
-                        </button>
-                      </div>
-
-                      <Reorder.Group
-                        axis="y"
-                        values={extractedData?.dealbreakers || []}
-                        onReorder={(newOrder) => setExtractedData({ ...extractedData, dealbreakers: newOrder })}
-                        className="flex flex-col border-t border-gray-100 -mx-4 px-4 divide-y divide-gray-100"
-                      >
-                        {(extractedData?.dealbreakers || []).map((deal: any) => (
-                          <DraggableRequirementItem
-                            key={deal.id}
-                            item={deal}
-                            onBlur={(newLabel) => {
-                              const newDeals = extractedData.dealbreakers.map((d: any) =>
-                                d.id === deal.id ? { ...d, label: newLabel } : d
-                              );
-                              setExtractedData({ ...extractedData, dealbreakers: newDeals });
-                            }}
-                            onDelete={() => {
-                              const newDeals = extractedData.dealbreakers.filter((d: any) => d.id !== deal.id);
-                              setExtractedData({ ...extractedData, dealbreakers: newDeals });
-                            }}
-                          />
-                        ))}
-                      </Reorder.Group>
-                    </div>
-                  </div>
-
-                  {/* Tags Section */}
-                  <div className="space-y-4">
-                    <label className="text-lg font-semibold text-gray-400 pl-1" style={{ fontFamily: 'var(--font-expanded)' }}>Automated Tags</label>
-                    <div className="flex flex-wrap gap-2">
-                      {(extractedData?.tags || []).map((tag: string, idx: number) => (
-                        <div
-                          key={idx}
-                          className="bg-[#1A1A1A] text-white border border-[#1A1A1A] text-[12px] uppercase tracking-widest px-3 py-1 rounded-none font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all cursor-default"
-                        >
-                          #{tag.replace(/\s+/g, '-').toLowerCase()}
+              {/* Custom Request Preview Card */}
+              <div className="w-full mb-8 transform hover:scale-[1.01] transition-transform duration-300">
+                <div className={cn(
+                  "p-1 sm:p-1.5 rounded-[32px] flex flex-col gap-1",
+                  getRequestTheme(extractedData?.category).bg
+                )}>
+                  <div className="flex flex-col h-full bg-white/40 backdrop-blur-sm rounded-[28px] overflow-hidden">
+                    <div className="flex flex-col h-full px-2 pb-0 sm:px-2 sm:pb-0 pt-1 sm:pt-1.5">
+                      <section className="flex flex-col px-6 py-8 flex-1">
+                        <div className="mb-8">
+                          <h1
+                            className="font-semibold text-[#1A1A1A] text-[22px] sm:text-[26px] leading-tight tracking-tight"
+                            style={{ fontFamily: '"Zalando Sans SemiExpanded", sans-serif', fontWeight: 600, letterSpacing: "-0.02em", maxWidth: "90%" }}
+                          >
+                            {extractedData?.title || "Untitled Request"}
+                          </h1>
                         </div>
-                      ))}
+
+                        <div className="space-y-6">
+                          <div className="flex flex-col">
+                            <div className="flex flex-col gap-8">
+                              {/* Preferences */}
+                              {(extractedData?.preferences || []).length > 0 && (
+                                <div className="flex flex-col gap-3">
+                                  <h4 className="text-[13px] font-bold text-black/30 uppercase tracking-widest">Preferences</h4>
+                                  <div className="flex flex-col">
+                                    {extractedData.preferences.map((pref: any, idx: number) => (
+                                      <div
+                                        key={pref.id || idx}
+                                        className={cn(
+                                          "flex items-center gap-4 py-4 group/item border-b border-dashed border-black/5",
+                                          idx === extractedData.preferences.length - 1 && "border-none"
+                                        )}
+                                      >
+                                        <Check className="h-4 w-4 text-emerald-500 shrink-0" strokeWidth={3} />
+                                        <span className="text-[15px] sm:text-[17px] font-medium leading-snug tracking-tight text-[#1A1A1A]">
+                                          {pref.label}
+                                        </span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Dealbreakers */}
+                              {(extractedData?.dealbreakers || []).length > 0 && (
+                                <div className="flex flex-col gap-3">
+                                  <h4 className="text-[13px] font-bold text-black/30 uppercase tracking-widest">Dealbreakers</h4>
+                                  <div className="flex flex-col">
+                                    {extractedData.dealbreakers.map((deal: any, idx: number) => (
+                                      <div
+                                        key={deal.id || idx}
+                                        className={cn(
+                                          "flex items-center gap-4 py-4 group/item border-b border-dashed border-black/5",
+                                          idx === extractedData.dealbreakers.length - 1 && "border-none"
+                                        )}
+                                      >
+                                        <X className="h-4 w-4 text-red-500 shrink-0" strokeWidth={3} />
+                                        <span className="text-[15px] sm:text-[17px] font-medium leading-snug tracking-tight text-[#1A1A1A]">
+                                          {deal.label}
+                                        </span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Footer Stats */}
+                          <div className="mt-8">
+                            <div className="h-px -mx-8 bg-black/5"></div>
+                            <div className="flex items-stretch -mx-8">
+                              <div className="flex flex-col items-start flex-1 py-6 px-8 min-w-0">
+                                <span className="text-[18px] sm:text-[20px] font-bold text-[#1A1A1A] leading-tight truncate w-full">
+                                  {extractedData?.condition || "Either"}
+                                </span>
+                                <span className="text-[12px] font-bold uppercase tracking-wider mt-1 text-black/20">Condition</span>
+                              </div>
+                              <div className="w-px shrink-0 bg-black/5"></div>
+                              <div className="flex flex-col items-start flex-1 py-6 px-8 min-w-0">
+                                <span className="text-[18px] sm:text-[20px] font-bold text-[#1A1A1A] leading-tight truncate w-full">
+                                  {budget ? `$${budget}` : (extractedData?.budget || "Negotiable")}
+                                </span>
+                                <span className="text-[12px] font-bold uppercase tracking-wider mt-1 text-black/20">Budget</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </section>
                     </div>
-                    <p className="text-[12px] text-gray-400 font-medium pl-1">
-                      AI-generated tags for better seller matching and SEO.
-                    </p>
                   </div>
                 </div>
-
-                <div className="h-px w-full bg-gray-100 my-10" />
               </div>
 
+              {/* Edit Button */}
+              <button
+                onClick={() => setIsEditModalOpen(true)}
+                className="flex items-center gap-2 px-6 py-3 rounded-full text-gray-500 hover:text-black hover:bg-gray-50 transition-all font-medium text-[15px] mb-12"
+              >
+                <Pencil className="w-4 h-4" />
+                <span>Edit the request</span>
+              </button>
 
-              <div className="flex justify-center w-full max-w-md pb-12">
-                <Button
+              {/* Launch Button Section */}
+              <div className="w-full flex justify-center px-4">
+                <button
                   onClick={handleFinish}
-                  size="lg"
-                  className="w-full h-20 rounded-2xl bg-black text-white hover:bg-black/90 text-2xl font-black shadow-[0_20px_50px_rgba(0,0,0,0.2)] transition-all hover:scale-[1.02] flex items-center justify-center gap-4 group"
+                  className="btn-sparkle w-full md:w-[22em] h-16 md:h-[6em]"
                 >
-                  <span>Launch Request</span>
-                  <ArrowRight className="h-6 w-6 transition-transform group-hover:translate-x-1" />
-                </Button>
+                  <svg height="24" width="24" fill="#AAAAAA" viewBox="0 0 24 24" data-name="Layer 1" id="Layer_1" className="sparkle-icon">
+                    <path d="M10,21.236,6.755,14.745.264,11.5,6.755,8.255,10,1.764l3.245,6.491L19.736,11.5l-6.491,3.245ZM18,21l1.5,3L21,21l3-1.5L21,18l-1.5-3L18,18l-3,1.5ZM19.333,4.667,20.5,7l1.167-2.333L24,3.5,21.667,2.333,20.5,0,19.333,2.333,17,3.5Z"></path>
+                  </svg>
+                  <span className="btn-sparkle-text">Launch Request</span>
+                </button>
               </div>
+
+              {/* Edit Modal */}
+              <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+                <DialogContent
+                  className="max-w-3xl max-h-[90vh] overflow-y-auto rounded-[2.5rem] p-8 sm:p-12 z-[10001]"
+                  overlayClassName="z-[10000]"
+                >
+                  <DialogHeader>
+                    <DialogTitle className="text-2xl font-semibold tracking-tight">Edit Request</DialogTitle>
+                    <DialogDescription>Fine-tune your request before launching it to the community.</DialogDescription>
+                  </DialogHeader>
+
+                  <div className="space-y-10 py-8">
+                    {/* Category Field */}
+                    <div className="space-y-3">
+                      <label className="text-lg font-medium text-gray-400 pl-1">Category</label>
+                      <div className="relative group">
+                        <select
+                          value={extractedData?.category || 'Other/General'}
+                          onChange={(e) => setExtractedData({ ...extractedData, category: e.target.value })}
+                          className="w-full h-16 pl-6 pr-12 bg-gray-50 border-2 border-gray-100 rounded-2xl text-[15px] sm:text-[17px] font-medium leading-snug tracking-tight text-[#1A1A1A] appearance-none focus:border-[#6925DC] outline-none transition-all cursor-pointer"
+                        >
+                          {CATEGORIES.map(cat => (
+                            <option key={cat} value={cat}>{cat}</option>
+                          ))}
+                        </select>
+                        <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 group-hover:text-[#6925DC] transition-colors">
+                          <ChevronRight className="w-6 h-6 rotate-90" />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Title Field */}
+                    <div className="space-y-3">
+                      <label className="text-lg font-medium text-gray-400 pl-1">What are you looking for?</label>
+                      <div className="relative group">
+                        <input
+                          type="text"
+                          value={extractedData?.title || ''}
+                          onChange={(e) => setExtractedData({ ...extractedData, title: e.target.value })}
+                          className="w-full h-16 pl-6 pr-14 bg-gray-50 border-2 border-gray-100 rounded-2xl text-[15px] sm:text-[17px] font-medium leading-snug tracking-tight text-[#1A1A1A] focus:border-[#6925DC] outline-none transition-all"
+                        />
+                        <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 group-hover:text-[#6925DC] transition-colors">
+                          <Pencil className="w-5 h-5" />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Budget & Condition Row */}
+                    <div className={cn("grid gap-6", (extractedData?.category === "Services" || extractedData?.category === "Travel") ? "grid-cols-1" : "grid-cols-2")}>
+                      <div className="space-y-3 font-[var(--font-sans)]">
+                        <label className="text-lg font-medium text-gray-400 pl-1">Budget</label>
+                        <div
+                          className="w-full h-16 flex items-center justify-between px-6 bg-gray-50 border-2 border-gray-100 rounded-2xl cursor-pointer hover:border-black/10 transition-all group"
+                          onClick={() => {
+                            setStep("budget");
+                            setIsEditModalOpen(false);
+                          }}
+                        >
+                          <span className="text-[15px] sm:text-[17px] font-medium leading-snug tracking-tight text-[#1A1A1A]">
+                            {budget ? `$${budget}` : extractedData?.budget || "Negotiable"}
+                          </span>
+                          <Pencil className="w-4 h-4 text-gray-400 group-hover:text-[#6925DC] transition-colors" />
+                        </div>
+                      </div>
+                      {!(extractedData?.category === "Services" || extractedData?.category === "Travel") && (
+                        <div className="space-y-3">
+                          <label className="text-lg font-medium text-gray-400 pl-1">Condition</label>
+                          <div
+                            className="w-full h-16 flex items-center px-6 bg-gray-50 border-2 border-gray-100 rounded-2xl cursor-pointer hover:border-black/10 transition-all"
+                            onClick={() => {
+                              setStep("condition");
+                              setIsEditModalOpen(false);
+                            }}
+                          >
+                            <span className="text-[15px] sm:text-[17px] font-medium leading-snug tracking-tight text-[#1A1A1A]">
+                              {extractedData?.condition || "Either"}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Requirements Section */}
+                    <div className="space-y-10">
+                      {/* Preferences */}
+                      <div className="space-y-5">
+                        <div className="flex items-center justify-between px-1">
+                          <label className="text-lg font-medium text-gray-400">Preferences</label>
+                          <button
+                            onClick={() => setExtractedData({
+                              ...extractedData,
+                              preferences: [...(extractedData.preferences || []), { label: "New Preference", id: `pref-${Math.random().toString(36).slice(2, 8)}`, type: 'pref' }]
+                            })}
+                            className="w-8 h-8 rounded-full bg-green-50 text-green-600 flex items-center justify-center hover:bg-green-100 transition-colors"
+                          >
+                            <Plus className="w-5 h-5" strokeWidth={3} />
+                          </button>
+                        </div>
+
+                        <Reorder.Group
+                          axis="y"
+                          values={extractedData?.preferences || []}
+                          onReorder={(newOrder) => setExtractedData({ ...extractedData, preferences: newOrder })}
+                          className="flex flex-col divide-y divide-gray-100"
+                        >
+                          {(extractedData?.preferences || []).map((pref: any) => (
+                            <DraggableRequirementItem
+                              key={pref.id}
+                              item={pref}
+                              isPreference
+                              onBlur={(newLabel) => {
+                                const newPrefs = extractedData.preferences.map((p: any) =>
+                                  p.id === pref.id ? { ...p, label: newLabel } : p
+                                );
+                                setExtractedData({ ...extractedData, preferences: newPrefs });
+                              }}
+                              onDelete={() => {
+                                const newPrefs = extractedData.preferences.filter((p: any) => p.id !== pref.id);
+                                setExtractedData({ ...extractedData, preferences: newPrefs });
+                              }}
+                            />
+                          ))}
+                        </Reorder.Group>
+                      </div>
+
+                      {/* Dealbreakers */}
+                      <div className="space-y-5">
+                        <div className="flex items-center justify-between px-1">
+                          <label className="text-lg font-medium text-gray-400">Dealbreakers</label>
+                          <button
+                            onClick={() => setExtractedData({
+                              ...extractedData,
+                              dealbreakers: [...(extractedData.dealbreakers || []), { label: "New Dealbreaker", id: `deal-${Math.random().toString(36).slice(2, 8)}`, type: 'deal' }]
+                            })}
+                            className="w-8 h-8 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center hover:bg-amber-100 transition-colors"
+                          >
+                            <Plus className="w-5 h-5" strokeWidth={3} />
+                          </button>
+                        </div>
+
+                        <Reorder.Group
+                          axis="y"
+                          values={extractedData?.dealbreakers || []}
+                          onReorder={(newOrder) => setExtractedData({ ...extractedData, dealbreakers: newOrder })}
+                          className="flex flex-col divide-y divide-gray-100"
+                        >
+                          {(extractedData?.dealbreakers || []).map((deal: any) => (
+                            <DraggableRequirementItem
+                              key={deal.id}
+                              item={deal}
+                              onBlur={(newLabel) => {
+                                const newDeals = extractedData.dealbreakers.map((d: any) =>
+                                  d.id === deal.id ? { ...d, label: newLabel } : d
+                                );
+                                setExtractedData({ ...extractedData, dealbreakers: newDeals });
+                              }}
+                              onDelete={() => {
+                                const newDeals = extractedData.dealbreakers.filter((d: any) => d.id !== deal.id);
+                                setExtractedData({ ...extractedData, dealbreakers: newDeals });
+                              }}
+                            />
+                          ))}
+                        </Reorder.Group>
+                      </div>
+                    </div>
+
+                    {/* Tags Section */}
+                    <div className="space-y-4">
+                      <label className="text-lg font-medium text-gray-400 pl-1">Automated Tags</label>
+                      <div className="flex flex-wrap gap-2">
+                        {(extractedData?.tags || []).map((tag: string, idx: number) => (
+                          <div
+                            key={idx}
+                            className="group bg-gray-100 text-gray-500 border border-gray-200 text-[12px] px-3 py-1.5 rounded-full font-medium transition-all flex items-center gap-1.5 hover:bg-gray-200"
+                          >
+                            <span>#{tag.replace(/\s+/g, '-').toLowerCase()}</span>
+                            <button
+                              onClick={() => {
+                                const newTags = extractedData.tags.filter((_: any, i: number) => i !== idx);
+                                setExtractedData({ ...extractedData, tags: newTags });
+                              }}
+                              className="p-0.5 rounded-full hover:bg-gray-300 transition-colors"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <DialogFooter className="pt-8 border-t border-gray-100">
+                    <Button
+                      onClick={() => setIsEditModalOpen(false)}
+                      className="w-full h-14 rounded-2xl bg-black text-white font-bold"
+                    >
+                      Done Editing
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+
+
             </motion.div>
           )}
 
@@ -699,7 +967,11 @@ export function AIRequestFlow({ initialText, onClose, user, profile }: AIRequest
               <div className="flex flex-col items-center gap-6 w-full max-w-md">
                 <Button
                   onClick={() => {
-                    setStep("condition");
+                    if (shouldHideCondition) {
+                      setStep("urgency");
+                    } else {
+                      setStep("condition");
+                    }
                   }}
                   size="lg"
                   className="h-16 px-12 rounded-2xl bg-black text-white hover:bg-black/90 text-lg font-bold shadow-2xl transition-all w-full"
@@ -711,13 +983,44 @@ export function AIRequestFlow({ initialText, onClose, user, profile }: AIRequest
                   onClick={() => {
                     setExtractedData({ ...extractedData, budget: "Negotiable" });
                     setBudget(null);
-                    setStep("condition");
+                    if (shouldHideCondition) {
+                      setStep("urgency");
+                    } else {
+                      setStep("condition");
+                    }
                   }}
                   className="text-gray-400 hover:text-black font-bold transition-colors"
                 >
                   My budget is negotiable
                 </button>
               </div>
+            </motion.div>
+          )}
+
+          {step === "submitting" && (
+            <motion.div
+              key="submitting"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="flex-1 flex flex-col items-center justify-center p-6 w-full max-w-2xl mx-auto text-center"
+            >
+              <div className="relative mb-12">
+                <motion.div
+                  className="absolute inset-0 bg-indigo-200 blur-[60px] opacity-30"
+                  animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                />
+                <div className="w-24 h-24 rounded-3xl bg-white shadow-2xl flex items-center justify-center relative border border-indigo-50">
+                  <Loader2 className="h-12 w-12 text-indigo-600 animate-spin" />
+                </div>
+              </div>
+              <h2 className="text-4xl font-extrabold mb-4 tracking-tight text-[#1A1A1A]" style={{ fontFamily: 'var(--font-expanded)' }}>
+                Launching Request
+              </h2>
+              <p className="text-gray-400 font-medium text-lg">
+                Redirecting you to your professional request page...
+              </p>
             </motion.div>
           )}
 
@@ -826,7 +1129,7 @@ export function AIRequestFlow({ initialText, onClose, user, profile }: AIRequest
                           <span className="text-green-600 font-bold">Your request is ready to launch.</span> Sign in to publish it and start receiving offers.
                         </p>
                       </div>
-                      
+
                       <div className="w-full">
                         {authMode === 'signup' ? (
                           <div className="space-y-6">
@@ -897,9 +1200,11 @@ export function AIRequestFlow({ initialText, onClose, user, profile }: AIRequest
         </AnimatePresence>
       </main>
 
+      {/* Sticky Action Button on Mobile - Removed to avoid duplication */}
+
       {/* Footer Branding */}
-      <div className="relative py-8 px-12 flex justify-center z-20">
-        <span className="text-sm font-bold tracking-widest text-gray-300 uppercase" style={{ fontFamily: 'var(--font-expanded)' }}>
+      <div className="relative py-2 pb-32 md:pb-12 px-12 flex justify-center">
+        <span className="text-sm font-semibold text-gray-300" style={{ fontFamily: 'var(--font-expanded)' }}>
           Onseek AI Engine v1.0
         </span>
       </div>
@@ -1005,6 +1310,60 @@ export function AIRequestFlow({ initialText, onClose, user, profile }: AIRequest
           </div>
         )}
       </AnimatePresence>
+    </div>
+  );
+}
+
+function DictionaryHighlight({ text }: { text: string }) {
+  const words = text.split(' ');
+  const [activeIndex, setActiveIndex] = React.useState(0);
+
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveIndex(prev => (prev + 1) % words.length);
+    }, 150);
+    return () => clearInterval(interval);
+  }, [words.length]);
+
+  return (
+    <div
+      className="relative h-full w-full font-serif text-3xl md:text-4xl leading-[1.6] text-gray-800"
+      style={{
+        maskImage: 'linear-gradient(to bottom, transparent, black 20%, black 80%, transparent)',
+        WebkitMaskImage: 'linear-gradient(to bottom, transparent, black 20%, black 80%, transparent)'
+      }}
+    >
+      <motion.div
+        className="flex flex-wrap gap-x-3 gap-y-6 pt-[240px] pb-[240px] justify-center text-center"
+        animate={{ y: -activeIndex * 8 }}
+        transition={{ type: "spring", stiffness: 40, damping: 25 }}
+      >
+        {words.map((word, i) => (
+          <div key={i} className="relative inline-block">
+            {/* Highlighter Pen Effect */}
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: i === activeIndex ? '100%' : i < activeIndex ? '100%' : '0%' }}
+              transition={{ duration: 0.2 }}
+              className={cn(
+                "absolute bottom-0.5 left-0 h-4 -z-10 rounded-sm",
+                i % 3 === 0 ? "bg-orange-200/60" : "bg-indigo-200/60"
+              )}
+            />
+            <span className={cn(
+              "transition-colors duration-200",
+              i === activeIndex ? "text-black" : i < activeIndex ? "text-gray-400" : "text-gray-300"
+            )}>
+              {word}
+            </span>
+          </div>
+        ))}
+      </motion.div>
+
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2.5 text-[15px] font-bold text-black z-20 whitespace-nowrap bg-white px-6 py-3 rounded-full border border-gray-100 shadow-sm">
+        <Loader2 className="w-4 h-4 animate-spin text-[#6925DC]" />
+        <span>Analyzing request...</span>
+      </div>
     </div>
   );
 }

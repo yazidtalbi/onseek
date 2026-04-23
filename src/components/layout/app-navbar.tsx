@@ -6,39 +6,40 @@ import { useEffect, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
-  Menu,
-  Bell,
-  Search,
-  Plus,
-  Compass,
-  LayoutGrid,
-  Settings,
-  User,
-  LogOut,
-  ChevronDown,
-  MessageCircle,
-  HelpCircle,
-  Shield,
-  CirclePlay,
-  FileText,
-  X,
-  TrendingUp,
-  Sparkles,
-  Moon,
-  Sun,
-  Bookmark,
-  Send,
-  ClipboardList,
-  Package,
-  Package2,
-  Home,
-  Trophy,
-  MessageCircleMore,
-  Binoculars,
-  Check,
-  Globe as GlobeIcon,
-  LifeBuoy
-} from "lucide-react";
+  IconMenu2,
+  IconBell,
+  IconSearch,
+  IconPlus,
+  IconCompass,
+  IconLayoutGrid,
+  IconSettings,
+  IconUser,
+  IconUserFilled,
+  IconLogout,
+  IconChevronDown,
+  IconMessageCircle,
+  IconHelpCircle,
+  IconShield,
+  IconPlayerPlay,
+  IconFileText,
+  IconX,
+  IconTrendingUp,
+  IconSparkles,
+  IconMoon,
+  IconSun,
+  IconBookmark,
+  IconSend,
+  IconClipboardList,
+  IconPackage,
+  IconHome,
+  IconHomeFilled,
+  IconTrophy,
+  IconMessageCircle2,
+  IconBinoculars,
+  IconCheck,
+  IconGlobe,
+  IconLifebuoy
+} from "@tabler/icons-react";
 import { FeedbackModal } from "@/components/reports/feedback-modal";
 import { useAuth } from "@/components/layout/auth-provider";
 import { useTheme } from "@/components/layout/theme-provider";
@@ -46,7 +47,7 @@ import { useSidebar } from "@/components/layout/app-sidebar";
 import { signOutAction } from "@/actions/auth.actions";
 import { LoginDropdown } from "@/components/auth/login-dropdown";
 import { CreateRequestModal } from "@/components/requests/create-request-modal";
-import { AIRequestModal } from "@/components/requests/ai-request-modal";
+import { AIRequestFlow } from "@/components/requests/ai-request-flow";
 import { NotificationsDrawer } from "@/components/notifications/notifications-drawer";
 import { cn } from "@/lib/utils";
 import {
@@ -177,10 +178,10 @@ function MobileCountrySelector({ onSelect }: { onSelect: () => void }) {
             />
           </div>
         ) : (
-          <GlobeIcon className="h-4 w-4 flex-shrink-0 text-gray-400" />
+          <IconGlobe className="h-4 w-4 flex-shrink-0 text-gray-400" />
         )}
         <span className="flex-1 text-left">{country}</span>
-        <Check
+        <IconCheck
           className={cn(
             "h-4 w-4 flex-shrink-0",
             isSelected ? "opacity-100" : "opacity-0"
@@ -211,9 +212,9 @@ function MobileCountrySelector({ onSelect }: { onSelect: () => void }) {
                 !selectedCountry && "bg-gray-100"
               )}
             >
-              <GlobeIcon className="h-4 w-4 flex-shrink-0 text-gray-400" />
+              <IconGlobe className="h-4 w-4 flex-shrink-0 text-gray-400" />
               <span className="flex-1 text-left">All Countries</span>
-              <Check
+              <IconCheck
                 className={cn(
                   "h-4 w-4 flex-shrink-0",
                   !selectedCountry ? "opacity-100" : "opacity-0"
@@ -487,7 +488,7 @@ export function AppNavbar({
               {/* Left: Hamburger, Logo */}
               <div className="flex items-center gap-3">
                 <Button variant="ghost" size="icon" className="h-9 w-9 -ml-2" onClick={() => setMobileOpen(true)}>
-                  <Menu className="h-5 w-5" />
+                  <IconMenu2 className="h-6 w-6" />
                 </Button>
                 <Link href="/" prefetch={true} className="shrink-0 flex items-center gap-2">
                   <Image src="/logonseek.svg" alt="onseek" width={24} height={24} className="h-6 w-auto" priority />
@@ -499,20 +500,20 @@ export function AppNavbar({
               <div className="flex items-center gap-2">
                 {user && pathname !== "/" && (
                   <Link href="/search" className="flex items-center justify-center h-9 w-9 rounded-full hover:bg-gray-100 transition-colors">
-                    <Search className="h-5 w-5 text-gray-700" />
+                    <IconSearch className="h-6 w-6 text-gray-700" />
                   </Link>
                 )}
                 <button 
                   onClick={() => setIsAIModalOpen(true)}
                   className="flex items-center justify-center h-9 w-9 rounded-full bg-transparent text-black border border-gray-200 hover:bg-gray-50 transition-colors shrink-0"
                 >
-                  <Plus className="h-4 w-4" />
+                  <IconPlus className="h-4 w-4" />
                 </button>
                 {mounted ? (
                   <>
                     <NotificationsDrawer>
                       <Button variant="ghost" size="icon" className="relative h-9 w-9" suppressHydrationWarning>
-                        <Bell className="h-5 w-5 text-gray-700" />
+                        <IconBell className="h-6 w-6 text-gray-700" stroke={1.5} />
                         {unreadCount > 0 && (
                           <span className="absolute top-1 right-1 h-3.5 w-3.5 rounded-full bg-[#7755FF] text-white text-[9px] font-semibold flex items-center justify-center shrink-0">
                             {unreadCount > 9 ? "9+" : unreadCount}
@@ -553,7 +554,7 @@ export function AppNavbar({
                         size="icon" 
                         className="h-9 w-9 rounded-full bg-transparent text-black border border-gray-200 hover:bg-gray-50 shadow-none"
                       >
-                        <Plus className="h-4 w-4" />
+                        <IconPlus className="h-4 w-4" />
                       </Button>
                     </div>
                   )}
@@ -571,7 +572,7 @@ export function AppNavbar({
         {user && pathname === "/" && (
           <div className="px-2 pb-2 pt-0 w-full relative z-10 bg-white">
             <form action="/search" method="get" className="relative w-full flex items-center">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <IconSearch className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input name="q" placeholder="Search..." defaultValue={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9 pr-4 bg-gray-100 border-transparent rounded-full h-10 w-full text-sm focus-visible:ring-1 focus-visible:ring-gray-300 transition-shadow" />
               <input type="hidden" name="type" value={searchType} />
             </form>
@@ -595,7 +596,7 @@ export function AppNavbar({
                 className="h-10 w-10 text-gray-900 hover:bg-gray-100 rounded-xl"
                 onClick={() => setSidebarSidebarExpanded(!isSidebarExpanded)}
               >
-                <Menu className="h-5 w-5" />
+                <IconMenu2 className="h-6 w-6" />
               </Button>
             )}
           </div>
@@ -626,7 +627,7 @@ export function AppNavbar({
               className="w-full transition-all duration-300 pointer-events-auto"
             >
               <div className="relative flex items-center w-full bg-gray-50 border border-gray-100 rounded-full h-11 group focus-within:bg-white focus-within:border-[#6925DC]/20 transition-all">
-                <Search className="absolute left-4 h-4 w-4 text-gray-400 group-focus-within:text-[#6925DC] transition-colors" strokeWidth={2.5} />
+                <IconSearch className="absolute left-4 h-4 w-4 text-gray-400 group-focus-within:text-[#6925DC] transition-colors" strokeWidth={2.5} />
                 <Input
                   name="q"
                   value={searchQuery}
@@ -669,14 +670,14 @@ export function AppNavbar({
                   onClick={() => setIsAIModalOpen(true)} 
                   className="hidden sm:flex h-11 rounded-full bg-transparent text-black font-bold whitespace-nowrap px-6 items-center gap-2 border border-black hover:bg-gray-50 shadow-none transition-all"
                 >
-                  <Plus className="h-5 w-5 text-black" />
+                  <IconPlus className="h-5 w-5 text-black" />
                   Request
                 </Button>
                 {mounted && (
                   <>
                     <NotificationsDrawer>
                       <Button variant="ghost" size="icon" className="relative" suppressHydrationWarning>
-                        <Bell className="h-5 w-5" />
+                        <IconBell className="h-6 w-6" stroke={1.5} />
                         {unreadCount > 0 && (
                           <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-[#7755FF] text-white text-[10px] font-semibold flex items-center justify-center shadow-sm">
                             {unreadCount > 9 ? "9+" : unreadCount}
@@ -686,14 +687,14 @@ export function AppNavbar({
                     </NotificationsDrawer>
                     <div className="flex lg:hidden items-center">
                       <Button variant="ghost" size="icon" className="relative" onClick={() => setSearchSheetOpen(true)}>
-                        <Search className="h-5 w-5" />
+                        <IconSearch className="h-5 w-5" />
                       </Button>
                     </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <button className="flex items-center gap-3 pl-3 pr-2 h-10 hover:bg-gray-50 rounded-full transition-colors outline-none shrink-0 group/nav">
                           <span className="text-sm font-bold text-[#1A1A1A] truncate max-w-[120px]">
-                            {profile?.first_name && profile?.last_name ? `${profile.first_name} ${profile.last_name}` : profile?.username}
+                            {profile?.username || "Account"}
                           </span>
                           <div className="flex items-center justify-center h-8 w-8 rounded-full bg-gray-100 text-gray-700 font-bold text-xs shrink-0 overflow-hidden relative border border-gray-200">
                             {profile?.avatar_url && !avatarError ? (
@@ -704,10 +705,10 @@ export function AppNavbar({
                                 onError={() => setAvatarError(true)}
                               />
                             ) : (
-                              (profile?.first_name?.charAt(0) || profile?.username?.charAt(0) || "U").toUpperCase()
+                              (profile?.username?.charAt(0) || "U").toUpperCase()
                             )}
                           </div>
-                          <ChevronDown className="h-4 w-4 text-gray-400 shrink-0 group-hover/nav:text-gray-600 transition-colors" />
+                          <IconChevronDown className="h-4 w-4 text-gray-400 shrink-0 group-hover/nav:text-gray-600 transition-colors" />
                         </button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-56 p-2 bg-white shadow-lg border border-border mt-2">
@@ -721,12 +722,12 @@ export function AppNavbar({
                                 onError={() => setAvatarError(true)}
                               />
                             ) : (
-                              (profile?.first_name?.charAt(0) || profile?.username?.charAt(0) || "U").toUpperCase()
+                              (profile?.username?.charAt(0) || "U").toUpperCase()
                             )}
                           </div>
                           <div className="flex flex-col min-w-0">
                             <span className="text-sm font-bold text-neutral-900 truncate">
-                              {profile?.first_name && profile?.last_name ? `${profile.first_name} ${profile.last_name}` : (profile?.username || "Account")}
+                              {profile?.username || "Account"}
                             </span>
                             <span className="text-xs text-neutral-500 truncate">
                               View Profile
@@ -735,13 +736,13 @@ export function AppNavbar({
                         </div>
                         <DropdownMenuItem asChild>
                           <Link href={profile?.username ? `/profile/${profile.username}` : "/settings"} className="flex items-center gap-2 p-2.5 rounded-lg cursor-pointer hover:bg-neutral-50">
-                            <User className="h-4 w-4" />
+                            <IconUser className="h-4 w-4" />
                             <span>My Profile</span>
                           </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild>
                           <Link href="/settings" className="flex items-center gap-2 p-2.5 rounded-lg cursor-pointer hover:bg-neutral-50">
-                            <Settings className="h-4 w-4" />
+                            <IconSettings className="h-4 w-4" />
                             <span>Settings</span>
                           </Link>
                         </DropdownMenuItem>
@@ -749,14 +750,14 @@ export function AppNavbar({
                           onClick={() => setIsFeedbackOpen(true)}
                           className="flex items-center gap-2 p-2.5 rounded-lg cursor-pointer hover:bg-neutral-50"
                         >
-                          <LifeBuoy className="h-4 w-4" />
+                          <IconLifebuoy className="h-4 w-4" />
                           <span>Report a Bug</span>
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => startTransition(async () => { await signOutAction(); })}
                           className="flex items-center gap-2 p-2.5 rounded-lg cursor-pointer hover:bg-rose-50 text-rose-600 focus:text-rose-600 focus:bg-rose-50 transition-colors"
                         >
-                          <LogOut className="h-4 w-4" />
+                          <IconLogout className="h-4 w-4" />
                           <span>Sign Out</span>
                         </DropdownMenuItem>
                       </DropdownMenuContent>
@@ -781,16 +782,16 @@ export function AppNavbar({
                           className="flex items-center gap-1.5 px-4 py-2 text-sm font-bold text-[#222222] hover:bg-gray-100 rounded-full transition-colors whitespace-nowrap"
                         >
                           Explore
-                          <ChevronDown className="h-4 w-4" />
+                          <IconChevronDown className="h-4 w-4" />
                         </button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-56 bg-white shadow-lg overflow-y-auto max-h-[70vh] z-[100]">
                         <DropdownMenuItem onClick={() => router.push("/popular")} className="font-medium">
-                          <TrendingUp className="h-4 w-4 mr-2" />
+                          <IconTrendingUp className="h-4 w-4 mr-2" />
                           Popular
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => router.push("/latest")} className="font-medium">
-                          <Sparkles className="h-4 w-4 mr-2" />
+                          <IconSparkles className="h-4 w-4 mr-2" />
                           New and Noteworthy
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
@@ -827,10 +828,14 @@ export function AppNavbar({
         onOpenChange={setIsCreateModalOpen}
         userCountry={searchParams.get("country")}
       />
-      <AIRequestModal
-        open={isAIModalOpen}
-        onOpenChange={setIsAIModalOpen}
-      />
+      {isAIModalOpen && (
+        <AIRequestFlow
+          initialText=""
+          onClose={() => setIsAIModalOpen(false)}
+          user={user}
+          profile={profile}
+        />
+      )}
       <FeedbackModal 
         open={isFeedbackOpen} 
         onOpenChange={setIsFeedbackOpen} 

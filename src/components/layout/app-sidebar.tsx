@@ -3,25 +3,28 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Home,
-  X,
-  Settings,
-  User,
-  Send,
-  Package,
-  MessageCircle,
-  ClipboardList,
-  Bookmark,
-  Trophy,
-  LogOut,
-  Bell,
-  Package2,
-  Hand,
-  Handshake,
-  MessageCircleMore,
-  FileText,
-  Binoculars
-} from "lucide-react";
+  IconHome2,
+  IconHome2Filled,
+  IconX,
+  IconSettings,
+  IconSettingsFilled,
+  IconUser,
+  IconSend,
+  IconStack2,
+  IconStackFront,
+  IconMessageCircle,
+  IconMessageCircleFilled,
+  IconClipboardList,
+  IconBookmark,
+  IconTrophy,
+  IconTrophyFilled,
+  IconLogout,
+  IconBell,
+  IconBinoculars,
+  IconFileText,
+  IconLifebuoy,
+  IconMenu2
+} from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/components/layout/auth-provider";
 import { Sheet, SheetContent, SheetClose } from "@/components/ui/sheet";
@@ -38,7 +41,6 @@ import { signOutAction } from "@/actions/auth.actions";
 import { NotificationsDrawer } from "@/components/notifications/notifications-drawer";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { FeedbackModal } from "@/components/reports/feedback-modal";
-import { LifeBuoy } from "lucide-react";
 
 function useUnreadMessages() {
   const { user } = useAuth();
@@ -148,11 +150,11 @@ function MobileSidebarContent({ onClose }: { onClose?: () => void }) {
   };
 
   const mainNavItems = [
-    { href: "/", label: "Home", icon: Home },
-    { href: "/requests", label: "Requests", icon: Binoculars },
-    { href: "/submissions", label: "Proposals", icon: FileText },
-    { href: "/inventory", label: "Inventory", icon: Package2 },
-    { href: "/messages", label: "Messages", icon: MessageCircleMore },];
+    { href: "/", label: "Home", icon: IconHome2, activeIcon: IconHome2Filled },
+    { href: "/requests", label: "Requests", icon: IconBinoculars, activeIcon: IconBinoculars },
+    { href: "/submissions", label: "Proposals", icon: IconFileText, activeIcon: IconFileText },
+    { href: "/inventory", label: "Inventory", icon: IconStack2, activeIcon: IconStackFront },
+    { href: "/messages", label: "Messages", icon: IconMessageCircle, activeIcon: IconMessageCircleFilled },];
 
   const hasUnreadMessages = useUnreadMessages();
 
@@ -164,11 +166,11 @@ function MobileSidebarContent({ onClose }: { onClose?: () => void }) {
         "flex items-center gap-3 px-3 py-2 rounded-md transition-colors relative",
         active
           ? "bg-transparent text-[#1e2330]"
-          : "text-[#1e2330]/70 hover:text-foreground hover:bg-gray-50"
+          : "text-black hover:text-foreground hover:bg-gray-50"
       )}
     >
       <div className="relative">
-        <item.icon className="h-5 w-5" />
+        {active ? <item.activeIcon className="h-6 w-6" stroke={1.5} /> : <item.icon className="h-6 w-6" stroke={1.5} />}
         {item.href === "/messages" && hasUnreadMessages && (
           <span className="absolute -top-1 -right-1 h-2.5 w-2.5 bg-red-500 rounded-full border border-white" />
         )}
@@ -188,14 +190,14 @@ function MobileSidebarContent({ onClose }: { onClose?: () => void }) {
         </Link>
       </div>
 
-      <nav className="space-y-1 px-4 flex-1">
+      <nav className="space-y-3 px-4 flex-1">
         {mainNavItems.map((item) => {
           const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
           return <NavLink key={item.href} item={item} active={isActive} />;
         })}
       </nav>
 
-      <div className="border-t border-border p-4 space-y-1">
+      <div className="border-t border-border p-4 space-y-3">
         {user ? (
           <>
             <Link
@@ -205,10 +207,10 @@ function MobileSidebarContent({ onClose }: { onClose?: () => void }) {
                 "flex items-center gap-3 px-3 py-2 rounded-md transition-colors relative",
                 pathname === "/settings"
                   ? "bg-transparent text-[#1e2330]"
-                  : "text-[#1e2330]/70 hover:text-foreground hover:bg-gray-50"
+                  : "text-black hover:text-foreground hover:bg-gray-50"
               )}
             >
-              <Settings className="h-5 w-5" />
+              {pathname === "/settings" ? <IconSettingsFilled className="h-6 w-6" stroke={1.5} /> : <IconSettings className="h-6 w-6" stroke={1.5} />}
               <span>Settings</span>
             </Link>
             <Link
@@ -218,20 +220,20 @@ function MobileSidebarContent({ onClose }: { onClose?: () => void }) {
                 "flex items-center gap-3 px-3 py-2 rounded-md transition-colors relative",
                 pathname === "/leaderboard"
                   ? "bg-transparent text-[#1e2330]"
-                  : "text-[#1e2330]/70 hover:text-foreground hover:bg-gray-50"
+                  : "text-black hover:text-foreground hover:bg-gray-50"
               )}
             >
-              <Trophy className="h-5 w-5" />
+              {pathname === "/leaderboard" ? <IconTrophyFilled className="h-6 w-6" stroke={1.5} /> : <IconTrophy className="h-6 w-6" stroke={1.5} />}
               <span>Leaderboard</span>
             </Link>
             <button
               onClick={() => setIsFeedbackOpen(true)}
               className={cn(
                 "flex items-center gap-3 px-3 py-2 rounded-md transition-colors relative w-full text-left",
-                "text-[#1e2330]/70 hover:text-foreground hover:bg-gray-50"
+                "text-black hover:text-foreground hover:bg-gray-50"
               )}
             >
-              <LifeBuoy className="h-5 w-5" />
+              <IconLifebuoy className="h-6 w-6" stroke={1.5} />
               <span>Feedback</span>
             </button>
             <button
@@ -240,7 +242,7 @@ function MobileSidebarContent({ onClose }: { onClose?: () => void }) {
                 "flex items-center gap-3 px-3 py-2 rounded-md transition-colors relative w-full text-left text-rose-600 hover:bg-rose-50"
               )}
             >
-              <LogOut className="h-5 w-5" />
+              <IconLogout className="h-6 w-6" stroke={1.5} />
               <span>Log Out</span>
             </button>
           </>
@@ -276,11 +278,11 @@ function DesktopSidebarContent() {
   };
 
   const mainNavItems = [
-    { href: "/", label: "Home", icon: Home },
-    { href: "/requests", label: "Requests", icon: Binoculars },
-    { href: "/submissions", label: "Proposals", icon: FileText },
-    { href: "/inventory", label: "Inventory", icon: Package2 },
-    { href: "/messages", label: "Messages", icon: MessageCircleMore },];
+    { href: "/", label: "Home", icon: IconHome2, activeIcon: IconHome2Filled },
+    { href: "/requests", label: "Requests", icon: IconBinoculars, activeIcon: IconBinoculars },
+    { href: "/submissions", label: "Proposals", icon: IconFileText, activeIcon: IconFileText },
+    { href: "/inventory", label: "Inventory", icon: IconStack2, activeIcon: IconStackFront },
+    { href: "/messages", label: "Messages", icon: IconMessageCircle, activeIcon: IconMessageCircleFilled },];
 
   return (
     <TooltipProvider delayDuration={200}>
@@ -290,7 +292,7 @@ function DesktopSidebarContent() {
       )}>
 
         {/* Main nav */}
-        <nav className="flex flex-col gap-4 flex-1 w-full">
+        <nav className="flex flex-col gap-6 flex-1 w-full">
           {mainNavItems.map((item) => {
             const isActive =
               pathname === item.href ||
@@ -305,11 +307,11 @@ function DesktopSidebarContent() {
                       isExpanded ? "w-full pl-6 pr-4 gap-4 h-12" : "justify-center mx-auto",
                       isActive
                         ? "bg-gray-100 text-[#1e2330]"
-                        : "text-gray-400/80 hover:text-foreground hover:bg-gray-50"
+                        : "text-black hover:text-foreground hover:bg-gray-50"
                     )}
                   >
                     <div className="relative shrink-0">
-                      <item.icon className="h-6 w-6" />
+                      {isActive ? <item.activeIcon className="h-7 w-7" stroke={1.5} /> : <item.icon className="h-7 w-7" stroke={1.5} />}
                       {item.href === "/messages" && hasUnreadMessages && (
                         <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full border-2 border-white" />
                       )}
@@ -332,7 +334,7 @@ function DesktopSidebarContent() {
         </nav>
 
         {/* Bottom actions */}
-        <div className="flex flex-col gap-4 w-full mt-auto">
+        <div className="flex flex-col gap-6 w-full mt-auto">
           {user && (
             <>
               <Tooltip>
@@ -344,10 +346,10 @@ function DesktopSidebarContent() {
                       isExpanded ? "w-full pl-6 pr-4 gap-4 h-12" : "justify-center mx-auto",
                       pathname === "/settings"
                         ? "bg-gray-100 text-[#1e2330]"
-                        : "text-gray-400/80 hover:text-foreground hover:bg-gray-50"
+                        : "text-black hover:text-foreground hover:bg-gray-50"
                     )}
                   >
-                    <Settings className="h-6 w-6 shrink-0" />
+                    {pathname === "/settings" ? <IconSettingsFilled className="h-7 w-7 shrink-0" stroke={1.5} /> : <IconSettings className="h-7 w-7 shrink-0" stroke={1.5} />}
                     {isExpanded && (
                       <span className="text-sm font-semibold whitespace-nowrap overflow-hidden text-ellipsis">
                         Settings
@@ -370,10 +372,10 @@ function DesktopSidebarContent() {
                       isExpanded ? "w-full pl-6 pr-4 gap-4 h-12" : "justify-center mx-auto",
                       pathname === "/leaderboard"
                         ? "bg-gray-100 text-[#1e2330]"
-                        : "text-gray-400/80 hover:text-foreground hover:bg-gray-50"
+                        : "text-black hover:text-foreground hover:bg-gray-50"
                     )}
                   >
-                    <Trophy className="h-6 w-6 shrink-0" />
+                    {pathname === "/leaderboard" ? <IconTrophyFilled className="h-7 w-7 shrink-0" stroke={1.5} /> : <IconTrophy className="h-7 w-7 shrink-0" stroke={1.5} />}
                     {isExpanded && (
                       <span className="text-sm font-semibold whitespace-nowrap overflow-hidden text-ellipsis">
                         Leaderboard
@@ -394,10 +396,10 @@ function DesktopSidebarContent() {
                     className={cn(
                       "flex items-center transition-all relative group/item rounded-2xl h-12 w-12",
                       isExpanded ? "w-full pl-6 pr-4 gap-4 h-12" : "justify-center mx-auto",
-                      "text-gray-400/80 hover:text-foreground hover:bg-gray-50"
+                      "text-black hover:text-foreground hover:bg-gray-50"
                     )}
                   >
-                    <LifeBuoy className="h-6 w-6 shrink-0" />
+                    <IconLifebuoy className="h-7 w-7 shrink-0" stroke={1.5} />
                     {isExpanded && (
                       <span className="text-sm font-semibold whitespace-nowrap overflow-hidden text-ellipsis">
                         Feedback

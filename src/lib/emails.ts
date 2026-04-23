@@ -61,13 +61,14 @@ export async function sendRequestPublishedEmail(to: string, data: { category: st
 /**
  * Convenience function for 'Proposal Received' email
  */
-export async function sendProposalReceivedEmail(to: string, data: { price: string }) {
+export async function sendProposalReceivedEmail(to: string, data: { price: string; url: string }) {
   return sendEmail({
     to,
     subject: 'New proposal for your request',
     templateName: 'proposal_received.html',
     placeholders: {
       price: data.price,
+      url: data.url,
     },
   });
 }

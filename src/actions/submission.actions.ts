@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { submissionSchema } from "@/lib/validators";
 import { sendProposalReceivedEmail } from "@/lib/emails";
+import { createRequestUrl } from "@/lib/utils/slug";
 
 function parseStoreName(url: string, articleName?: string | null) {
   if (articleName?.trim()) return articleName.trim();
@@ -128,15 +129,19 @@ export async function createSubmissionAction(formData: FormData) {
   try {
     const { data: requestOwner } = await supabase
       .from("requests")
-      .select("user_id, profiles(contact_email, username)")
+      .select("id, slug, user_id, profiles(contact_email, email, username)")
       .eq("id", requestId)
       .single();
 
-    const ownerEmail = (requestOwner?.profiles as any)?.contact_email;
+    const ownerEmail = (requestOwner?.profiles as any)?.contact_email || (requestOwner?.profiles as any)?.email;
     
-    if (ownerEmail) {
+    if (ownerEmail && requestOwner) {
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://onseek.co";
+      const requestUrl = `${baseUrl}${createRequestUrl(requestOwner.slug || requestOwner.id)}`;
+      
       await sendProposalReceivedEmail(ownerEmail, {
-        price: parsed.data.price ? `${parsed.data.price}` : "Contact for price",
+        price: parsed.data.price ? `$${parsed.data.price}` : "Contact for price",
+        url: requestUrl,
       });
     }
   } catch (emailError) {

@@ -284,14 +284,14 @@ export default async function ProfilePage({
                     <div className="relative w-24 h-24 rounded-full overflow-hidden border-0 shadow-sm transition-transform hover:scale-[1.02]">
                       <img
                         src={profile.avatar_url}
-                        alt={formatFullName(profile.first_name, profile.last_name, profile.username)}
+                        alt={profile.username || "User"}
                         className="w-full h-full object-cover"
                       />
                     </div>
                   ) : (
                     <div className="w-24 h-24 rounded-full bg-gray-100 border-0 flex items-center justify-center">
                       <span className="text-2xl font-semibold text-gray-600">
-                        {(profile.first_name?.charAt(0) || profile.username?.charAt(0) || "U").toUpperCase()}
+                        {(profile.username?.charAt(0) || "U").toUpperCase()}
                       </span>
                     </div>
                   )}
@@ -299,7 +299,7 @@ export default async function ProfilePage({
                 {/* Profile Info */}
                 <div className="min-w-0">
                   <h1 className="text-3xl font-bold text-[#1A1A1A] tracking-tight">
-                    {formatFullName(profile.first_name, profile.last_name, profile.username)}
+                    {profile.username || "Account"}
                   </h1>
                   <p className="text-lg font-medium text-gray-500 mt-0.5">@{profile.username}</p>
                   {profile.bio && (

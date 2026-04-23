@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Instagram } from "lucide-react";
+import { IconBrandInstagram } from "@tabler/icons-react";
 import { MAIN_CATEGORIES } from "@/lib/categories";
 import { getCategorySlug } from "@/lib/utils/category-routing";
 
@@ -76,7 +76,7 @@ export function AppFooter() {
                   rel="noopener noreferrer" 
                   className="text-gray-400 hover:text-white transition-colors"
                 >
-                  <Instagram className="h-5 w-5" />
+                  <IconBrandInstagram className="h-5 w-5" />
                 </a>
               </div>
             </div>

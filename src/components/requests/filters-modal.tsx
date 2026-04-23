@@ -154,12 +154,12 @@ export function FiltersModal({
         </DialogHeader>
 
         <div className="space-y-6 py-4">
-          {/* Sort & View - Mobile Only (Hidden on Desktop because desktop stays out) */}
-          <div className="space-y-4 md:hidden">
+          {/* Sort & View */}
+          <div className="space-y-4">
             <div className="space-y-2">
               <Label className="text-sm font-medium">Sort by</Label>
               <Select value={sort} onValueChange={(val) => onSortModeChange?.(val)}>
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="w-full rounded-xl">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-white">
@@ -188,7 +188,7 @@ export function FiltersModal({
             </div>
           </div>
 
-          <div className="h-px bg-gray-100 md:hidden" />
+          <div className="h-px bg-gray-100" />
           {/* Max Price */}
           <div className="space-y-3">
             <Label className="text-sm font-medium">Max price</Label>

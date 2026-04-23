@@ -14,13 +14,28 @@ import { RequestMenu } from "@/components/requests/request-menu";
 import type { RequestItem } from "@/lib/types";
 import Image from "next/image";
 import {
-  MapPin, Check, X, Sparkles, Laptop, Gamepad2, ShoppingBag, HeartPulse, Baby,
-  Home, Shovel, Car, Apple, Package, Watch, Smartphone, Tv, Gem, Headphones,
-  Camera, Footprints, LockKeyhole, Wallet, Pencil, GripVertical, Plus,
+  IconMapPin,
+  IconCheck,
+  IconX,
+  IconChevronRight,
+  IconSparkles,
+  IconHome,
+  IconPackage,
+  IconUser,
+  IconPlus,
+  IconTrophy,
+  IconSettings,
+  IconLock,
+  IconGripVertical
+} from "@tabler/icons-react";
+import {
+  Laptop, Gamepad2, ShoppingBag, HeartPulse, Baby,
+  Shovel, Car, Apple, Watch, Smartphone, Tv, Gem, Headphones,
+  Camera, Footprints, LockKeyhole, Wallet, Pencil, GripVertical,
   Cpu, Battery, Monitor, Leaf, Utensils, Truck, Scissors, Heart, Smile,
-  ShieldCheck, Sofa, Lightbulb, Hammer, Trophy, Zap, Users, Gauge, Fuel,
+  ShieldCheck, Sofa, Lightbulb, Hammer, Zap, Users, Gauge, Fuel,
   Key, Activity, Stethoscope, Pill, Plane, Globe, Tent, Box, Eye,
-  Keyboard, Book, Wrench, Brush, Code, ChevronRight
+  Keyboard, Book, Wrench, Brush, Code
 } from "lucide-react";
 import { motion, Reorder } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -29,6 +44,40 @@ import { Badge } from "@/components/ui/badge";
 import { createRequestUrl } from "@/lib/utils/slug";
 import { inferIconName } from "@/lib/utils/icons";
 import { getRequestTheme as getRequestThemeUtility } from "@/lib/utils/request-themes";
+import {
+  IconCirclesFilled,
+  IconDiceFilled,
+  IconClubsFilled,
+  IconHanger2Filled,
+  IconCookieFilled,
+  IconMedicalCrossFilled,
+  IconMacroFilled,
+  IconFlareFilled,
+  IconBabyCarriageFilled,
+  IconGlobeFilled,
+  IconCardsFilled,
+  IconCarFanFilled,
+  IconBinocularsFilled
+} from "@tabler/icons-react";
+
+function getTablerIcon(category: string) {
+  const c = (category || "").toLowerCase();
+
+  if (c.includes("tech") || c.includes("electronics")) return IconCirclesFilled;
+  if (c.includes("grocery") || c.includes("food")) return IconCookieFilled;
+  if (c.includes("fashion") || c.includes("accessory") || c.includes("beauty")) return IconHanger2Filled;
+  if (c.includes("health")) return IconMedicalCrossFilled;
+  if (c.includes("family") || c.includes("kids") || c.includes("baby")) return IconBabyCarriageFilled;
+  if (c.includes("home") || c.includes("living") || c.includes("garden")) return IconClubsFilled;
+  if (c.includes("garden") || c.includes("plants")) return IconMacroFilled;
+  if (c.includes("automotive") || c.includes("car")) return IconCarFanFilled;
+  if (c.includes("culture") || c.includes("art") || c.includes("trends")) return IconCardsFilled;
+  if (c.includes("gaming") || c.includes("console") || c.includes("entertainment")) return IconDiceFilled;
+  if (c.includes("travel") || c.includes("logistics")) return IconGlobeFilled;
+  if (c.includes("services") || c.includes("professional") || c.includes("labor")) return IconFlareFilled;
+
+  return IconBinocularsFilled;
+}
 
 function cleanDescription(description: string) {
   return description.replace(/<!--REQUEST_PREFS:.*?-->/, "").trim();
@@ -63,12 +112,12 @@ function getRequestIcon(request: RequestItem) {
     'shopping-bag': ShoppingBag,
     'car': Car,
     'apple': Apple,
-    'sparkles': Sparkles,
-    'package': Package,
-    'map-pin': MapPin,
+    'sparkles': IconSparkles,
+    'package': IconPackage,
+    'map-pin': IconMapPin,
     'heart-pulse': HeartPulse,
     'baby': Baby,
-    'home': Home,
+    'home': IconHome,
     'box': Box,
     'keyboard': Keyboard,
     'book': Book,
@@ -77,40 +126,40 @@ function getRequestIcon(request: RequestItem) {
     'code': Code
   };
 
-  return iconMap[iconName] || Package;
+  return iconMap[iconName] || IconPackage;
 }
 
 function getTheme(category: string) {
   const c = (category || "").toLowerCase();
 
   if (c.includes("tech") || c.includes("electronics"))
-    return { bg: "bg-blue-50/60", text: "text-blue-900", icon: Laptop };
+    return { bg: "bg-blue-50/60", text: "text-blue-900", border: "border-blue-900", borderLight: "border-blue-300", icon: Laptop };
 
   if (c.includes("grocery") || c.includes("food"))
-    return { bg: "bg-emerald-50/60", text: "text-emerald-900", icon: Apple };
+    return { bg: "bg-emerald-50/60", text: "text-emerald-900", border: "border-emerald-900", borderLight: "border-emerald-300", icon: Apple };
 
   if (c.includes("fashion") || c.includes("accessory") || c.includes("beauty"))
-    return { bg: "bg-purple-50/60", text: "text-purple-900", icon: ShoppingBag };
+    return { bg: "bg-purple-50/60", text: "text-purple-900", border: "border-purple-900", borderLight: "border-purple-300", icon: ShoppingBag };
 
   if (c.includes("family") || c.includes("kids") || c.includes("baby"))
-    return { bg: "bg-pink-50/60", text: "text-pink-900", icon: Baby };
+    return { bg: "bg-pink-50/60", text: "text-pink-900", border: "border-pink-900", borderLight: "border-pink-300", icon: Baby };
 
   if (c.includes("home") || c.includes("living") || c.includes("garden"))
-    return { bg: "bg-orange-50/60", text: "text-orange-900", icon: Home };
+    return { bg: "bg-orange-50/60", text: "text-orange-900", border: "border-orange-900", borderLight: "border-orange-300", icon: IconHome };
 
   if (c.includes("gaming") || c.includes("console") || c.includes("entertainment"))
-    return { bg: "bg-indigo-50/60", text: "text-indigo-900", icon: Gamepad2 };
+    return { bg: "bg-indigo-50/60", text: "text-indigo-900", border: "border-indigo-900", borderLight: "border-indigo-300", icon: Gamepad2 };
 
   if (c.includes("automotive") || c.includes("car"))
-    return { bg: "bg-slate-50/60", text: "text-slate-900", icon: Car };
+    return { bg: "bg-slate-50/60", text: "text-slate-900", border: "border-slate-900", borderLight: "border-slate-300", icon: Car };
 
   if (c.includes("health"))
-    return { bg: "bg-cyan-50/60", text: "text-cyan-900", icon: HeartPulse };
+    return { bg: "bg-cyan-50/60", text: "text-cyan-900", border: "border-cyan-900", borderLight: "border-cyan-300", icon: HeartPulse };
 
   if (c.includes("travel") || c.includes("service"))
-    return { bg: "bg-teal-50/60", text: "text-teal-900", icon: MapPin };
+    return { bg: "bg-teal-50/60", text: "text-teal-900", border: "border-teal-900", borderLight: "border-teal-300", icon: IconMapPin };
 
-  return { bg: "bg-[#f5f6f9]", text: "text-[#1A1A1A]", icon: Package };
+  return { bg: "bg-[#f5f6f9]", text: "text-[#1A1A1A]", border: "border-[#1A1A1A]", borderLight: "border-gray-200", icon: IconPackage };
 }
 
 function getDomainFromUrl(url: string): string {
@@ -153,6 +202,7 @@ interface RequestCardProps {
   hideAuthOverlay?: boolean;
   isLarge?: boolean;
   hideTags?: boolean;
+  isMasonry?: boolean;
 }
 
 function RequestCardComponent({
@@ -184,6 +234,7 @@ function RequestCardComponent({
   hideAuthOverlay = false,
   isLarge = false,
   hideTags = false,
+  isMasonry = false,
 }: RequestCardProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -230,6 +281,15 @@ function RequestCardComponent({
   const isFeed = variant === "feed";
 
   const formattedCondition = (() => {
+    const noConditionCategories = [
+      "Services",
+      "Finance & Insurance",
+      "Grocery & Food",
+      "Travel",
+      "Mobile & Internet Plans"
+    ];
+    if (noConditionCategories.includes(request.category || "")) return null;
+
     const cond = request.condition?.toLowerCase();
     if (cond === "new") return "New";
     if (cond === "used") return "Used";
@@ -253,8 +313,8 @@ function RequestCardComponent({
 
   // Limit display for feed variant
   const maxImages = 4;
-  const maxPreferences = (smallImages && variant !== "detail") ? 3 : preferences.length;
-  const maxDealbreakers = (smallImages && variant !== "detail") ? 3 : dealbreakers.length;
+  const maxPreferences = isMasonry ? 3 : (smallImages && variant !== "detail") ? 3 : preferences.length;
+  const maxDealbreakers = isMasonry ? 2 : (smallImages && variant !== "detail") ? 3 : dealbreakers.length;
 
   const visibleImages = images.slice(0, maxImages);
   const visiblePreferences = preferences.slice(0, maxPreferences);
@@ -265,18 +325,18 @@ function RequestCardComponent({
   const isInline = (preferences.length + dealbreakers.length) <= 2;
   const hasRequirements = visiblePreferences.length > 0 || visibleDealbreakers.length > 0;
   const hasContent = hasRequirements || !!request.description || (variant === "feed" && !!request.matchReason);
-
   const theme = getTheme(request.category);
 
   const headerBadges = (
     <div className="flex items-center justify-between w-full">
-      {request.category && (
+      {request.category && !isMasonry && (
         <Badge
           variant="outline"
           className={cn(
-            "rounded-full font-bold border shadow-none shrink-0 inline-flex items-center justify-center bg-transparent gap-2",
-            isLarge ? "px-5 py-2 text-[15px] sm:text-[16px]" : "px-4 py-1.5 text-[13px] sm:text-[14px]",
-            getTheme(request.category).text, "border-opacity-20"
+            "rounded-full font-bold border border-current shadow-none shrink-0 inline-flex items-center justify-center bg-transparent gap-2",
+            isLarge ? "px-5 py-2 text-[15px] sm:text-[16px] border-opacity-20" : "px-4 py-1.5 text-[13px] sm:text-[14px] border-opacity-20",
+            getTheme(request.category).text,
+            getTheme(request.category).border
           )}
         >
           <span className={cn("rounded-full bg-current", isLarge ? "w-2 h-2" : "w-1.5 h-1.5")} />
@@ -284,22 +344,24 @@ function RequestCardComponent({
         </Badge>
       )}
 
-      <Badge
-        variant="outline"
-        className={cn(
-          "rounded-full font-bold border shadow-none shrink-0 inline-flex items-center gap-2 bg-transparent",
-          isLarge ? "px-5 py-2 text-[15px] sm:text-[16px]" : "px-4 py-1.5 text-[13px] sm:text-[14px]",
-          request.status === "solved" || request.winner_submission_id ? "border-[#6925DC] text-[#6925DC]" :
-            request.status === "pending" ? "border-[#FF8C5A] text-[#FF8C5A]" :
-              request.status === "open" ? cn("border-current", getTheme(request.category).text) :
-                request.status === "rejected" ? "border-red-400 text-red-500" :
-                  "border-gray-500 text-gray-500"
-        )}
-      >
-        <span className="text-[#1A1A1A]">
-          {request.winner_submission_id ? "Solved" : request.status?.charAt(0).toUpperCase() + request.status?.slice(1)}
-        </span>
-      </Badge>
+      {!isMasonry && (
+        <Badge
+          variant="outline"
+          className={cn(
+            "rounded-full font-bold border border-current shadow-none shrink-0 inline-flex items-center gap-2 bg-transparent",
+            isLarge ? "px-5 py-2 text-[15px] sm:text-[16px] border-opacity-20" : "px-4 py-1.5 text-[13px] sm:text-[14px] border-opacity-20",
+            request.status === "solved" || request.winner_submission_id ? "border-[#6925DC] text-[#6925DC]" :
+              request.status === "pending" ? "border-[#FF8C5A] text-[#FF8C5A]" :
+                request.status === "open" ? cn("border-current", getTheme(request.category).text) :
+                  request.status === "rejected" ? "border-red-400 text-red-500" :
+                    "border-gray-500 text-gray-500"
+          )}
+        >
+          <span className="text-[#1A1A1A]">
+            {request.winner_submission_id ? "Solved" : request.status?.charAt(0).toUpperCase() + request.status?.slice(1)}
+          </span>
+        </Badge>
+      )}
     </div>
   );
 
@@ -313,9 +375,9 @@ function RequestCardComponent({
       <div className="flex items-center gap-2">
         <div className="w-[24px] h-[24px] rounded-full overflow-hidden shrink-0 border border-gray-100 flex items-center justify-center bg-gray-50 text-[10px] font-bold text-gray-400 relative">
           {request.profiles?.avatar_url ? (
-            <Image src={request.profiles.avatar_url} alt={request.profiles?.first_name ? `${request.profiles.first_name} ${request.profiles.last_name || ''}` : (request.profiles?.username || 'user')} fill className="object-cover" sizes="24px" />
+            <Image src={request.profiles.avatar_url} alt={request.profiles?.username || 'user'} fill className="object-cover" sizes="24px" />
           ) : (
-            (request.profiles?.first_name?.charAt(0) || request.profiles?.username?.charAt(0) || 'U').toUpperCase()
+            (request.profiles?.username?.charAt(0) || 'U').toUpperCase()
           )}
         </div>
         <div className="flex items-center gap-1.5">
@@ -354,14 +416,14 @@ function RequestCardComponent({
       "flex flex-col h-full bg-white border border-gray-100/50 shadow-none relative transition-colors hover:border-gray-200",
       noBorder && "bg-transparent border-none px-0"
     )}>
-      <div className="px-4 pt-4 pb-2">
+      <div className={cn("px-4 pb-2", isMasonry ? "pt-1" : "pt-4")}>
         {headerBadges}
-        <div className="mb-5" />
+        {!isMasonry && <div className="mb-5" />}
 
         <div className="flex flex-col gap-2">
           {/* Automated Tags */}
 
-          <div className="flex flex-row items-center gap-3">
+          <div className={cn(isMasonry ? "flex flex-row items-start justify-between gap-6" : "flex flex-row items-center gap-3")}>
             <div className="relative flex-1 flex flex-col gap-2">
               <div className="flex items-center gap-2 flex-wrap">
                 {isPreview ? (
@@ -371,7 +433,7 @@ function RequestCardComponent({
                       isLarge ? "text-[18px] sm:text-[20px]" : "text-[15px] sm:text-[17px]",
                       getTheme(request.category).text
                     )}
-                    style={{ fontFamily: "'Zalando Sans SemiExpanded', sans-serif", fontWeight: 600, maxWidth: '80%' }}
+                    style={{ fontFamily: "'Zalando Sans SemiExpanded', sans-serif", fontWeight: 600, maxWidth: '90%' }}
                     value={request.title}
                     onChange={(e) => onUpdateTitle?.(e.target.value)}
                     rows={1}
@@ -384,16 +446,27 @@ function RequestCardComponent({
                 ) : (
                   <h3
                     className={cn(
-                      "font-semibold leading-normal tracking-tight relative transition-colors items-center text-[#1A1A1A]",
-                      isLarge ? "text-[18px] sm:text-[20px]" : "text-[15px] sm:text-[17px]"
+                      "font-semibold tracking-tight relative transition-colors items-center text-[#1A1A1A]",
+                      isMasonry ? "leading-[0.95]" : "leading-normal",
+                      isMasonry
+                        ? (isLarge ? "text-[17px] sm:text-[19px]" : "text-[14px] sm:text-[16px]")
+                        : (isLarge ? "text-[18px] sm:text-[20px]" : "text-[15px] sm:text-[17px]")
                     )}
-                    style={{ fontFamily: "'Zalando Sans SemiExpanded', sans-serif", fontWeight: 600, maxWidth: '80%' }}
+                    style={{ fontFamily: "'Zalando Sans SemiExpanded', sans-serif", fontWeight: 600, maxWidth: '90%' }}
                   >
                     {request.title}
                   </h3>
                 )}
               </div>
             </div>
+            {isMasonry && (
+              <div className={cn("shrink-0 pt-1", getTheme(request.category).text)}>
+                {(() => {
+                  const TablerIcon = getTablerIcon(request.category);
+                  return <TablerIcon className={cn(isLarge ? "h-8 w-8" : "h-7 w-7")} fill="currentColor" />;
+                })()}
+              </div>
+            )}
           </div>
         </div>
 
@@ -424,11 +497,11 @@ function RequestCardComponent({
                         idx !== allItems.length - 1 && "border-b border-dashed border-gray-200"
                       )}
                     >
-                      <GripVertical className="h-4 w-4 text-gray-300 cursor-grab active:cursor-grabbing shrink-0" />
+                      <IconGripVertical className="h-4 w-4 text-gray-300 cursor-grab active:cursor-grabbing shrink-0" />
                       {item.type === 'pref' ? (
-                        <Check className="h-4 w-4 text-[#16a34a] shrink-0" strokeWidth={3} />
+                        <IconCheck className="h-4 w-4 text-[#16a34a] shrink-0" strokeWidth={3} />
                       ) : (
-                        <X className="h-4 w-4 text-gray-400 shrink-0" strokeWidth={3} />
+                        <IconX className="h-4 w-4 text-gray-400 shrink-0" strokeWidth={3} />
                       )}
                       <input
                         className="flex-1 bg-transparent border-none outline-none text-[16px] sm:text-[18px] font-medium leading-snug tracking-tight text-[#1A1A1A] p-0"
@@ -443,31 +516,42 @@ function RequestCardComponent({
 
             return (
               <>
-                {displayedItems.map((item: any, idx) => (
-                  <div
-                    key={`${item.type}-${idx}`}
-                    className={cn(
-                      "flex items-center gap-4 py-2.5 px-4 group/item",
-                      (idx !== displayedItems.length - 1 || totalRemainingCount > 0) && "border-b border-dashed border-gray-200"
-                    )}
-                  >
-                    {item.type === 'pref' ? (
-                      <Check className={cn("text-emerald-500 shrink-0", isLarge ? "h-5 w-5" : "h-4 w-4")} strokeWidth={3} />
-                    ) : (
-                      <X className={cn("shrink-0", isLarge ? "h-5 w-5" : "h-4 w-4", theme.text, "opacity-30")} strokeWidth={3} />
-                    )}
-                    <span className={cn(
-                      "font-medium leading-snug tracking-tight flex items-center gap-2",
-                      isLarge ? "text-[17px] sm:text-[19px]" : "text-[15px] sm:text-[17px]",
-                      item.type === 'pref' ? "text-[#1A1A1A]" : cn(theme.text, "opacity-30")
+                {visiblePreferences.map((item, idx) => {
+                  const isLast = idx === visiblePreferences.length - 1 && visibleDealbreakers.length === 0 && totalRemainingCount === 0;
+                  return (
+                    <div key={`pref-${idx}`} className={cn(
+                      "flex items-center gap-4 py-4 group/item border-opacity-30 border-current",
+                      !isLast && "border-b border-dashed",
+                      theme.text
                     )}>
-                      {item.label.charAt(0).toUpperCase() + item.label.slice(1)}
-                    </span>
-                  </div>
-                ))}
+                      <IconCheck className="h-4 w-4 text-emerald-500 shrink-0" strokeWidth={3} />
+                      <span className="text-[15px] sm:text-[17px] font-medium leading-snug tracking-tight text-[#1A1A1A]">
+                        {item.label.charAt(0).toUpperCase() + item.label.slice(1)}
+                      </span>
+                    </div>
+                  );
+                })}
+                {visibleDealbreakers.map((item, idx) => {
+                  const isLast = idx === visibleDealbreakers.length - 1 && totalRemainingCount === 0;
+                  return (
+                    <div key={`db-${idx}`} className={cn(
+                      "flex items-center gap-4 py-4 group/item border-opacity-30 border-current",
+                      !isLast && "border-b border-dashed",
+                      theme.text
+                    )}>
+                      <IconX className={cn("h-4 w-4 shrink-0 opacity-30", theme.text)} strokeWidth={3} />
+                      <span className={cn(
+                        "text-[15px] sm:text-[17px] font-medium leading-snug tracking-tight opacity-30",
+                        theme.text
+                      )}>
+                        {item.label.charAt(0).toUpperCase() + item.label.slice(1)}
+                      </span>
+                    </div>
+                  );
+                })}
                 {totalRemainingCount > 0 && (
-                  <div className={cn("py-2.5 px-4 font-medium text-[#7755FF] opacity-80", isLarge ? "text-[18px] sm:text-[20px]" : "text-[16px] sm:text-[18px]")}>
-                    And {totalRemainingCount} more {totalRemainingCount === 1 ? 'requirement' : 'requirements'}
+                  <div className={cn("py-4 text-[15px] sm:text-[17px] font-medium opacity-30", theme.text)}>
+                    And {totalRemainingCount} more details
                   </div>
                 )}
               </>
@@ -477,14 +561,14 @@ function RequestCardComponent({
         </div>
 
         {/* Automated Tags moved below requirements */}
-        {request.tags && request.tags.length > 0 && (
+        {request.tags && request.tags.length > 0 && !isMasonry && (
           <div className="flex flex-wrap gap-1.5 mt-4 mb-1">
             {request.tags.slice(0, 3).map((tag) => (
               <Link
                 key={tag.id}
                 href={`/tags/${tag.slug}`}
                 onClick={(e) => e.stopPropagation()}
-                className="bg-black/[0.04] text-gray-500 text-[11px] px-2.5 py-0.5 rounded-full font-medium hover:bg-black/[0.08] hover:text-black transition-all"
+                className="bg-gray-100 text-gray-500 text-[11px] px-2.5 py-1 rounded-full font-medium transition-all"
               >
                 #{tag.name.toLowerCase()}
               </Link>
@@ -516,39 +600,54 @@ function RequestCardComponent({
         <div className={cn("h-px -mx-5 sm:-mx-6 mt-4", theme.text, "bg-current opacity-20")} />
 
         {/* Metadata Section - 35/65 Layout for Request and Proposal */}
-        <div className={cn(
-          "grid grid-cols-[35%_65%] gap-0 pb-6 pt-6",
-          theme.text
-        )}>
-          {/* Left Side (35%): Request Info */}
-          <div className={cn("flex flex-col pr-4 border-r border-current border-opacity-20 divide-y divide-current divide-opacity-20 items-start", getTheme(request.category).text)}>
-            {shortMetadata && (
-              <div className="flex flex-col gap-0 pb-3 items-start">
-                <span className={cn("font-semibold text-[#1A1A1A]", isLarge ? "text-[18px] sm:text-[20px]" : "text-[16px] sm:text-[18px]")}>{shortMetadata}</span>
-                <span className={cn("font-normal text-black/40", isLarge ? "text-[15px]" : "text-[13px]")}>Condition</span>
-              </div>
-            )}
-            {request.country && (
-              <div className={cn("flex flex-col gap-0 items-start", shortMetadata ? "pt-3" : "")}>
-                <span className={cn("font-semibold text-[#1A1A1A]", isLarge ? "text-[17px] sm:text-[18px]" : "text-[15px] sm:text-[16px]")}>{request.country}</span>
-                <span className={cn("font-normal text-black/40", isLarge ? "text-[15px]" : "text-[13px]")}>Location</span>
-              </div>
-            )}
-          </div>
-
-          {/* Right Side (65%): Proposal Info */}
-          <div className="flex flex-col pl-6 items-start">
-            {budgetDisplay && (
-              <div className="flex flex-col gap-0 items-start">
-                <div className={cn("flex items-center gap-1.5 font-semibold text-[#1A1A1A]", isLarge ? "text-[18px] sm:text-[20px]" : "text-[16px] sm:text-[18px]")}>
-                  {parsedPrefs.priceLock === "locked" && <LockKeyhole className={cn(isLarge ? "h-5 w-5" : "h-4 w-4")} />}
-                  {maxBudget}
+        {(() => {
+          const hasMetadata = (shortMetadata && shortMetadata.trim().length > 0) || (request.country && request.country.trim().length > 0);
+          return (
+            <div className={cn(
+              hasMetadata ? "grid grid-cols-[35%_65%] gap-0" : "flex flex-col",
+              "pb-6 pt-6",
+              theme.text
+            )}>
+              {/* Left Side (35%): Request Info */}
+              {hasMetadata && (
+                <div className={cn(
+                  "flex flex-col pr-4 divide-y divide-current divide-opacity-20 items-start",
+                  shortMetadata && cn("border-r border-dashed border-current border-opacity-30", theme.text),
+                  getTheme(request.category).text
+                )}>
+                  {shortMetadata && shortMetadata.trim().length > 0 && (
+                    <div className="flex flex-col gap-0 pb-3 items-start relative">
+                      <span className={cn("font-semibold text-[#1A1A1A]", isLarge ? "text-[18px] sm:text-[20px]" : "text-[16px] sm:text-[18px]")}>{shortMetadata}</span>
+                      <span className={cn("font-normal text-black/40", isLarge ? "text-[15px]" : "text-[13px]")}>Condition</span>
+                    </div>
+                  )}
+                  {shortMetadata && (request.country || budgetDisplay) && (
+                    <div className={cn("absolute right-0 top-1/2 -translate-y-1/2 w-px h-8 border-r border-dashed border-current border-opacity-30", theme.text)} />
+                  )}
+                  {request.country && request.country.trim().length > 0 && (
+                    <div className={cn("flex flex-col gap-0 items-start", shortMetadata ? "pt-3" : "")}>
+                      <span className={cn("font-semibold text-[#1A1A1A]", isLarge ? "text-[17px] sm:text-[18px]" : "text-[15px] sm:text-[16px]")}>{request.country}</span>
+                      <span className={cn("font-normal text-black/40", isLarge ? "text-[15px]" : "text-[13px]")}>Location</span>
+                    </div>
+                  )}
                 </div>
-                <span className={cn("text-[13px] font-normal", theme.text, "opacity-30", isLarge ? "text-[15px]" : "text-[13px]")}>Budget</span>
+              )}
+
+              {/* Right Side (65%): Proposal Info */}
+              <div className={cn("flex flex-col items-start", hasMetadata ? "pl-6" : "")}>
+                {budgetDisplay && (
+                  <div className="flex flex-col gap-0 items-start">
+                    <div className={cn("flex items-center gap-1.5 font-semibold text-[#1A1A1A]", isLarge ? "text-[18px] sm:text-[20px]" : "text-[16px] sm:text-[18px]")}>
+                      {parsedPrefs.priceLock === "locked" && <IconLock className={cn(isLarge ? "h-5 w-5" : "h-4 w-4")} />}
+                      {maxBudget}
+                    </div>
+                    <span className={cn("text-[13px] font-normal", theme.text, "opacity-30", isLarge ? "text-[15px]" : "text-[13px]")}>Budget</span>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        </div>
+            </div>
+          );
+        })()}
 
         {/* Thumbnails Row (if needed, though hero shows it) */}
         {visibleImages.length > 1 && (
@@ -573,18 +672,38 @@ function RequestCardComponent({
       {/* Main Content Section */}
       <section className={cn("flex flex-col px-4", hasContent && "flex-1")}>
         {/* Empty space adjusted as category badge was removed */}
+        {isMasonry && headerBadges && !headerBadges.props?.children?.every((c: any) => !c) && (
+          <div className="pt-6">
+            {headerBadges}
+          </div>
+        )}
         {/* Title for detail page */}
         {variant === "detail" && (
-          <div className={cn(smallImages ? "mb-4 pt-6" : "mb-8")}>
+          <div className={cn(
+            smallImages ? (isMasonry ? "mb-4 pt-6" : "mb-4 pt-6") : "mb-8",
+            isMasonry && "flex flex-row items-start justify-between gap-8"
+          )}>
             <h1
               className={cn(
-                "font-semibold leading-[1.3] text-[#1A1A1A]",
-                smallImages ? (isLarge ? "text-[26px] sm:text-[28px]" : "text-[22px] sm:text-[24px]") : (isLarge ? "text-[30px] sm:text-[36px]" : "text-[26px] sm:text-[30px]")
+                "font-semibold text-[#1A1A1A]",
+                isMasonry ? "leading-[0.95]" : "leading-[1.3]",
+                isMasonry
+                  ? (smallImages ? (isLarge ? "text-[24px] sm:text-[26px]" : "text-[20px] sm:text-[22px]") : (isLarge ? "text-[28px] sm:text-[32px]" : "text-[24px] sm:text-[28px]"))
+                  : (smallImages ? (isLarge ? "text-[26px] sm:text-[28px]" : "text-[22px] sm:text-[24px]") : (isLarge ? "text-[30px] sm:text-[36px]" : "text-[26px] sm:text-[30px]")),
+                isMasonry && "flex-1"
               )}
-              style={{ fontFamily: "'Zalando Sans SemiExpanded', sans-serif", fontWeight: 600, letterSpacing: '-0.02em', maxWidth: '80%' }}
+              style={{ fontFamily: "'Zalando Sans SemiExpanded', sans-serif", fontWeight: 600, letterSpacing: '-0.02em', maxWidth: isMasonry ? '100%' : '80%' }}
             >
               {request.title}
             </h1>
+            {isMasonry && (
+              <div className={cn("shrink-0 pt-2", getTheme(request.category).text)}>
+                {(() => {
+                  const TablerIcon = getTablerIcon(request.category);
+                  return <TablerIcon className={cn(isLarge ? "h-9 w-9" : "h-8 w-8")} fill="currentColor" />;
+                })()}
+              </div>
+            )}
           </div>
         )}
 
@@ -608,16 +727,22 @@ function RequestCardComponent({
                     <span className={cn("text-[13px] font-normal", theme.text, "opacity-30")}>Location</span>
                   </div>
                 )}
+                {request.country && (request.condition || budgetText) && (
+                  <div className={cn("w-px h-8 border-l border-dashed border-current opacity-20", theme.text)} />
+                )}
                 {request.condition && (
                   <div className="flex flex-col gap-0 items-start">
                     <span className="text-[16px] sm:text-[18px] font-semibold text-[#1A1A1A]">{formattedCondition}</span>
                     <span className={cn("text-[13px] font-normal", theme.text, "opacity-30")}>Condition</span>
                   </div>
                 )}
+                {request.condition && budgetText && (
+                  <div className={cn("w-px h-8 border-l border-dashed border-current opacity-20", theme.text)} />
+                )}
                 {budgetText && (
                   <div className="flex flex-col gap-0 items-start relative">
                     <div className="flex items-center gap-1.5 text-[16px] sm:text-[18px] font-semibold text-[#1A1A1A]">
-                      {parsedPrefs.priceLock === "locked" && <LockKeyhole className="h-4 w-4 text-gray-400" />}
+                      {parsedPrefs.priceLock === "locked" && <IconLock className="h-4 w-4 text-gray-400" stroke={1.5} />}
                       <span>{budgetText}</span>
                     </div>
                     <span className={cn("text-[13px] font-normal", theme.text, "opacity-30")}>Budget</span>
@@ -648,11 +773,11 @@ function RequestCardComponent({
                               idx !== allItems.length - 1 && cn("border-b border-dashed", getTheme(request.category).text, "border-opacity-10")
                             )}
                           >
-                            <GripVertical className={cn("h-4 w-4 cursor-grab active:cursor-grabbing shrink-0", getTheme(request.category).text, "opacity-30")} />
+                            <IconGripVertical className={cn("h-4 w-4 cursor-grab active:cursor-grabbing shrink-0", getTheme(request.category).text, "opacity-30")} />
                             {item.type === 'pref' ? (
-                              <Check className="h-4 w-4 text-emerald-500 shrink-0" strokeWidth={3} />
+                              <IconCheck className="h-4 w-4 text-emerald-500 shrink-0" strokeWidth={3} />
                             ) : (
-                              <X className="h-4 w-4 text-black/40 shrink-0" strokeWidth={3} />
+                              <IconX className="h-4 w-4 text-black/40 shrink-0" strokeWidth={3} />
                             )}
                             <input
                               className={cn(
@@ -669,70 +794,61 @@ function RequestCardComponent({
                   }
 
                   return (
-                    <div className="flex flex-col gap-6">
-                      {visiblePreferences.length > 0 && (
-                        <div className="flex flex-col gap-3">
-                          <h4 className="text-[14px] font-bold text-black/30">Preferences</h4>
-                          <div className="flex flex-col">
-                            {visiblePreferences.map((item: any, idx) => (
-                              <div
-                                key={`pref-detail-${idx}`}
-                                className={cn(
-                                  "flex items-center gap-4 py-4 group/item",
-                                  idx !== visiblePreferences.length - 1 && cn("border-b border-dashed", getTheme(request.category).text, "border-opacity-10")
-                                )}
-                              >
-                                <Check className="h-4 w-4 text-emerald-500 shrink-0" strokeWidth={3} />
-                                <span className={cn(
-                                  "text-[15px] sm:text-[17px] font-medium leading-snug tracking-tight text-[#1A1A1A]"
-                                )}>
-                                  {item.label.charAt(0).toUpperCase() + item.label.slice(1)}
-                                </span>
-                              </div>
-                            ))}
+                    <div className={cn("flex flex-col", isMasonry ? "gap-0" : "gap-6")}>                      {visiblePreferences.map((item: any, idx) => {
+                        const isLast = idx === visiblePreferences.length - 1 && visibleDealbreakers.length === 0 && totalRemainingCount === 0;
+                        return (
+                          <div key={`pref-${idx}`} className={cn(
+                            "flex items-center gap-4 py-4 group/item border-opacity-30 border-current",
+                            !isLast && "border-b border-dashed",
+                            theme.text
+                          )}>
+                            <IconCheck className="h-4 w-4 text-emerald-500 shrink-0" strokeWidth={3} />
+                            <span className="text-[15px] sm:text-[17px] font-medium leading-snug tracking-tight text-[#1A1A1A]">
+                              {item.label.charAt(0).toUpperCase() + item.label.slice(1)}
+                            </span>
                           </div>
-                        </div>
-                      )}
-
-                      {visibleDealbreakers.length > 0 && (
-                        <div className="flex flex-col gap-3">
-                          <h4 className="text-[14px] font-bold text-black/30">Dealbreakers</h4>
-                          <div className="flex flex-col">
-                            {visibleDealbreakers.map((item: any, idx) => (
-                              <div
-                                key={`deal-detail-${idx}`}
-                                className={cn(
-                                  "flex items-center gap-4 py-4 group/item",
-                                  idx !== visibleDealbreakers.length - 1 && cn("border-b border-dashed", getTheme(request.category).text, "border-opacity-10")
-                                )}
-                              >
-                                <X className={cn("h-4 w-4 shrink-0", theme.text, "opacity-30")} strokeWidth={3} />
-                                <span className={cn(
-                                  "text-[15px] sm:text-[17px] font-medium leading-snug tracking-tight",
-                                  theme.text, "opacity-30"
-                                )}>
-                                  {item.label.charAt(0).toUpperCase() + item.label.slice(1)}
-                                </span>
-                              </div>
-                            ))}
+                        );
+                      })}
+                      {visibleDealbreakers.map((item: any, idx) => {
+                        const isLast = idx === visibleDealbreakers.length - 1 && totalRemainingCount === 0;
+                        return (
+                          <div key={`db-${idx}`} className={cn(
+                            "flex items-center gap-4 py-4 group/item border-opacity-30 border-current",
+                            !isLast && "border-b border-dashed",
+                            theme.text
+                          )}>
+                            <IconX className={cn("h-4 w-4 shrink-0 opacity-30", theme.text)} strokeWidth={3} />
+                            <span className={cn(
+                              "text-[15px] sm:text-[17px] font-medium leading-snug tracking-tight opacity-30",
+                              theme.text
+                            )}>
+                              {item.label.charAt(0).toUpperCase() + item.label.slice(1)}
+                            </span>
                           </div>
+                        );
+                      })}
+                      {isMasonry && totalRemainingCount > 0 && (
+                        <div className={cn("py-4 text-[15px] sm:text-[17px] font-medium opacity-30", theme.text)}>
+                          And {totalRemainingCount} more details
                         </div>
                       )}
                     </div>
+
                   );
                 })()}
               </div>
             )}
-            
+
             {/* Automated Tags moved below requirements */}
-            {request.tags && request.tags.length > 0 && !hideTags && (
+            {/* Automated Tags moved below requirements */}
+            {request.tags && request.tags.length > 0 && !hideTags && !isMasonry && (
               <div className="flex flex-wrap gap-2 mt-6">
                 {request.tags.map((tag) => (
                   <Link
                     key={tag.id}
                     href={`/tags/${tag.slug}`}
                     onClick={(e) => e.stopPropagation()}
-                    className="bg-black/[0.05] text-gray-600 text-[13px] px-3.5 py-1 rounded-full font-medium hover:bg-black/[0.1] hover:text-black transition-all"
+                    className="bg-gray-100 text-gray-500 text-[13px] px-3.5 py-1.5 rounded-full font-medium transition-all"
                   >
                     #{tag.name.toLowerCase()}
                   </Link>
@@ -763,8 +879,8 @@ function RequestCardComponent({
                       <span className={cn("text-[13px] font-normal leading-none mt-1", theme.text, "opacity-30")}>Condition</span>
                     </div>
                   )}
-                  {(shortMetadata || maxBudget) && (
-                    <div className={cn("w-px shrink-0", getTheme(request.category).text, "bg-current opacity-20")} />
+                   {shortMetadata && maxBudget && (
+                    <div className={cn("w-px shrink-0 border-l border-dashed border-current opacity-30", theme.text)} />
                   )}
                   <div className="flex flex-col items-start flex-1 py-4 min-w-0 px-6">
                     {isPreview ? (
@@ -823,17 +939,18 @@ function RequestCardComponent({
                     const fullUrl = link.startsWith('http') ? link : `https://${link}`;
                     const domain = getDomainFromUrl(link);
                     return (
-                      <a
+                      <span
                         key={index}
-                        href={fullUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          window.open(fullUrl, '_blank', 'noopener,noreferrer');
+                        }}
                         title={fullUrl}
-                        className="block text-sm text-neutral-600 hover:text-neutral-900 underline"
-                        onClick={(e) => e.stopPropagation()}
+                        className="block text-sm text-neutral-600 hover:text-neutral-900 underline cursor-pointer"
                       >
                         {domain}
-                      </a>
+                      </span>
                     );
                   })}
                 </div>
@@ -847,7 +964,7 @@ function RequestCardComponent({
 
 
       {/* Footer Section - rendered inside card only if NOT smallImages (detail page) */}
-      {!smallImages && footerSection}
+      {!smallImages && !isMasonry && footerSection}
     </CardContent>
   );
 
@@ -899,7 +1016,7 @@ function RequestCardComponent({
             <Link
               href={cardLink}
               prefetch={true}
-              scroll={false}
+              scroll={true}
               className={cn(
                 "block focus:outline-none transition-transform duration-300 ease-out",
                 !disableHover && "hover:scale-[1.02]"
@@ -916,7 +1033,7 @@ function RequestCardComponent({
               )}
             </Link>
           )}
-          {variant !== "detail" && (
+          {(variant !== "detail" || isMasonry) && (
             <div className="px-3 pt-3 pb-3 mt-auto">
               {footerSection}
             </div>
@@ -925,7 +1042,7 @@ function RequestCardComponent({
       ) : (
         <div className="relative">
           {mainCard}
-          {variant !== "detail" && (
+          {(variant !== "detail" || isMasonry) && (
             <div className="px-3 pt-3 pb-3 mt-auto">
               {footerSection}
             </div>

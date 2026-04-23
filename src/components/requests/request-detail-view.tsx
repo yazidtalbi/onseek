@@ -149,7 +149,7 @@ export function RequestDetailView({
                   </div>
                   <div className="flex flex-col">
                     <span className="font-bold text-[#1A1A1A] text-[16px]">
-                      {request.profiles?.first_name ? `${request.profiles.first_name} ${request.profiles.last_name || ''}` : request.profiles?.username}
+                      {request.profiles?.username || "Account"}
                     </span>
                     <span className="text-gray-400 text-[13px]">
                       Requested {formatTimeAgo(request.created_at)}
@@ -252,7 +252,7 @@ export function RequestDetailView({
                     <Link
                       key={tag.id}
                       href={`/tags/${tag.slug}`}
-                      className="bg-black/[0.05] text-gray-600 text-[13px] px-3.5 py-1 rounded-full font-medium hover:bg-black/[0.1] hover:text-black transition-all"
+                      className="bg-gray-100 text-gray-500 text-[13px] px-3.5 py-1.5 rounded-full font-medium transition-all"
                     >
                       #{tag.name.toLowerCase()}
                     </Link>
