@@ -84,7 +84,7 @@ export default async function MySubmissionsPage() {
                   <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
                     <span>For request:</span>
                     <Link
-                      href={requestTitle ? createRequestUrl(requestId, requestTitle) : `/requests/${requestId}`}
+                      href={createRequestUrl({ id: requestId })}
                       className="text-[#7755FF] hover:underline font-medium"
                     >
                       {requestTitle}

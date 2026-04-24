@@ -38,6 +38,8 @@ export const submissionSchema = z.object({
     z.string().min(2).max(80).optional().nullable()
   ),
   price: z.number().min(0).optional().nullable(),
+  priceSuffix: z.string().optional().nullable(),
+  category: z.string().optional().nullable(),
   notes: z.string().min(5).max(800).optional().nullable(),
 }).refine((data) => {
   // URL is required and must be valid for link submissions

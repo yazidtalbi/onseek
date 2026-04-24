@@ -295,10 +295,10 @@ export async function createRequestAction(formData: FormData) {
   revalidatePath("/");
   revalidatePath("/requests");
   revalidatePath("/submissions");
-  revalidatePath("/requests/[slug]", "page");
+  revalidatePath("/[category]/[slug]", "page");
   revalidatePath("/");
   
-  const url = createRequestUrl(request.slug);
+  const url = createRequestUrl(request);
 
   // Send "Request Published" email confirmation to the buyer
   if (user.email) {

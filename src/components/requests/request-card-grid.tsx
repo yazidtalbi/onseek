@@ -42,7 +42,7 @@ function RequestCardGridComponent({ request, isFavorite, images = [] }: { reques
   
   return (
     <div className="relative">
-      <Link href={createRequestUrl(request.slug)} prefetch={true} className="block">
+      <Link href={createRequestUrl(request)} prefetch={true} className="block">
         <Card className=" flex flex-col hover:bg-[#f9fafb] transition-colors cursor-pointer relative">
           <CardContent className="p-6 flex flex-col space-y-4">
             {/* Heart and Ellipsis - Top Right */}

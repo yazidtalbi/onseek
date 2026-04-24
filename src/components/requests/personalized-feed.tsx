@@ -89,7 +89,7 @@ export function PersonalizedFeed({
   const { user, profile } = useAuth();
   const [isHeroDismissed, setIsHeroDismissed] = useState(false);
   const [showAllCategories, setShowAllCategories] = useState(false);
-  const isHomePage = pathname === "/" || pathname === "/" || pathname.startsWith("/requests/");
+  const isHomePage = pathname === "/" || pathname.startsWith("/requests/");
   const showHero = (pathname === "/" || pathname === "/") && !user && !isHeroDismissed;
 
   const [mode, setMode] = useState<FeedMode>(() => {
@@ -543,7 +543,7 @@ export function PersonalizedFeed({
                     {MAIN_CATEGORIES.slice(0, 8).map((category) => (
                       <Link
                         key={category}
-                        href={`/latest/${getCategorySlug(category)}`}
+                        href={`/${getCategorySlug(category)}`}
                         className="text-sm text-white/70 hover:text-white transition-colors"
                       >
                         {category}
@@ -558,7 +558,7 @@ export function PersonalizedFeed({
                     {MAIN_CATEGORIES.slice(8).map((category) => (
                       <Link
                         key={category}
-                        href={`/latest/${getCategorySlug(category)}`}
+                        href={`/${getCategorySlug(category)}`}
                         className="text-sm text-white/70 hover:text-white transition-colors"
                       >
                         {category}

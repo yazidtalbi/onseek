@@ -13,42 +13,71 @@ export function generateSlug(title: string): string {
 /**
  * Get short ID from full UUID (first 8 characters)
  */
-function getShortId(id: string): string {
+export function getShortId(id: string): string {
   return id.replace(/-/g, '').substring(0, 8);
 }
 
 /**
  * Create a request URL with slug and optional search params
+ * New format: /[category-slug]/[request-slug]=(id)
  */
-export function createRequestUrl(slug: string, searchParams?: string | URLSearchParams): string {
-  const base = `/requests/${slug}`;
+import { getCategorySlug } from "./category-routing";
+
+export function createRequestUrl(request: { slug?: string; id: string; category?: string }, searchParams?: string | URLSearchParams): string {
+  if (!request.slug) {
+    const base = `/requests/${request.id}`;
+    if (!searchParams) return base;
+    const paramsStr = typeof searchParams === 'string' ? searchParams : searchParams.toString();
+    const prefix = paramsStr.startsWith('?') ? '' : '?';
+    return `${base}${prefix}${paramsStr}`;
+  }
+
+  const categorySlug = request.category ? getCategorySlug(request.category) : 'all';
+  const shortId = getShortId(request.id);
+  const base = `/${categorySlug}/${request.slug}-${shortId}`;
+  
   if (!searchParams) return base;
   
   const paramsStr = typeof searchParams === 'string' ? searchParams : searchParams.toString();
   if (!paramsStr) return base;
   
-  // Ensure it starts with ? and handle cases where it might already have one
   const prefix = paramsStr.startsWith('?') ? '' : '?';
   return `${base}${prefix}${paramsStr}`;
 }
 
 /**
- * Extract request ID from slug URL
+ * Extract request ID from the new slug format: request-slug=(id)
+ */
+export function extractIdFromSlug(slugWithId: string): string | null {
+  // Matches "something-id" or "something=(id)" where id is 8 hex chars
+  const match = slugWithId.match(/(?:-|=\()([a-f0-9]{8})\)?$/);
+  return match ? match[1] : null;
+}
+
+/**
+ * Extract the pure slug part from the new slug format
+ */
+export function extractSlugOnly(slugWithId: string): string {
+  return slugWithId.replace(/(?:-|=\()[a-f0-9]{8}\)?$/, '');
+}
+
+/**
+ * Extract request ID from slug URL (Legacy support)
  * Handles format: shortId-slug-title
- * We need to query by the short ID prefix
  */
 export function extractRequestId(slug: string): string | null {
   // Format: shortId-slug-title (e.g., "faf51fe0-casio-w23-watch")
-  // Extract the short ID (first 8 hex characters before first hyphen)
   const match = slug.match(/^([a-f0-9]{8})-/);
-  if (match) {
-    return match[1];
-  }
-  // If no match, might be just the short ID
+  if (match) return match[1];
+  
+  // If it's the new format, use the new extractor
+  const newMatch = extractIdFromSlug(slug);
+  if (newMatch) return newMatch;
+
   if (slug.length === 8 && slug.match(/^[a-f0-9]+$/)) {
     return slug;
   }
-  // Fallback: return null to indicate we need to search differently
   return null;
 }
+
 

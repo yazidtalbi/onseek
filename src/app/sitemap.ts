@@ -2,6 +2,8 @@ import { MetadataRoute } from 'next';
 import { createClient } from '@supabase/supabase-js';
 import { CATEGORIES } from '@/lib/gemini';
 import { ALL_COMPETITOR_SLUGS } from '@/lib/compare-data';
+import { getCategorySlug } from '@/lib/utils/category-routing';
+import { getShortId } from '@/lib/utils/slug';
 
 // Ensure we use the production domain for the sitemap to satisfy Google Search Console requirements
 const SITE_URL = 'https://onseek.co';
@@ -40,11 +42,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // 2. Category Routes
   const categoryRoutes: MetadataRoute.Sitemap = [];
   CATEGORIES.forEach((category) => {
-    const slug = category.toLowerCase().replace(/ & /g, '-').replace(/ /g, '-').replace(/[^a-z0-9-]/g, '');
+    const slug = getCategorySlug(category);
     
     // Core category page
     categoryRoutes.push({
-      url: `${SITE_URL}/category/${slug}`,
+      url: `${SITE_URL}/${slug}`,
       lastModified: new Date(),
       changeFrequency: 'daily',
       priority: 0.7,
@@ -70,16 +72,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // 3. Dynamic Request Routes
   const { data: requests } = await supabase
     .from('requests')
-    .select('slug, updated_at')
+    .select('id, slug, category, updated_at')
     .eq('status', 'open')
-    .limit(1000); // Fetch top 1000 active requests for the sitemap
+    .limit(1000); 
 
-  const requestRoutes: MetadataRoute.Sitemap = (requests || []).map((req) => ({
-    url: `${SITE_URL}/requests/${req.slug}`,
-    lastModified: new Date(req.updated_at),
-    changeFrequency: 'daily',
-    priority: 0.9,
-  }));
+  const requestRoutes: MetadataRoute.Sitemap = (requests || []).map((req) => {
+    const categorySlug = req.category ? getCategorySlug(req.category) : 'all';
+    const shortId = getShortId(req.id);
+    return {
+      url: `${SITE_URL}/${categorySlug}/${req.slug}-${shortId}`,
+      lastModified: new Date(req.updated_at),
+      changeFrequency: 'daily',
+      priority: 0.9,
+    };
+  });
 
   // 4. Comparison Routes
   const comparisonRoutes: MetadataRoute.Sitemap = ALL_COMPETITOR_SLUGS.map((slug) => ({

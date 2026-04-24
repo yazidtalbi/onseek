@@ -383,10 +383,12 @@ export function AIRequestFlow({ initialText, onClose, user, profile }: AIRequest
 
   const NO_CONDITION_CATEGORIES = [
     "Services",
-    "Finance & Insurance",
-    "Grocery & Food",
+    "Finance",
+    "Grocery",
     "Travel",
-    "Mobile & Internet Plans"
+    "Digital",
+    "Experiences",
+    "Learning"
   ];
 
   const shouldHideCondition = React.useMemo(() => {
@@ -779,7 +781,7 @@ export function AIRequestFlow({ initialText, onClose, user, profile }: AIRequest
                     </div>
 
                     {/* Budget & Condition Row */}
-                    <div className={cn("grid gap-6", (extractedData?.category === "Services" || extractedData?.category === "Travel") ? "grid-cols-1" : "grid-cols-2")}>
+                    <div className={cn("grid gap-6", shouldHideCondition ? "grid-cols-1" : "grid-cols-2")}>
                       <div className="space-y-3 font-[var(--font-sans)]">
                         <label className="text-lg font-medium text-gray-400 pl-1">Budget</label>
                         <div

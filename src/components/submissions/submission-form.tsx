@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { z } from "zod";
@@ -26,12 +25,28 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/components/ui/use-toast";
+import { MAIN_CATEGORIES } from "@/lib/categories";
 
 type Values = z.infer<typeof submissionSchema>;
 
-export function SubmissionForm({ requestId, requestBudgetMax, requestDescription, hideButton = false }: { requestId: string; requestBudgetMax?: number | null; requestDescription?: string; hideButton?: boolean }) {
+export function SubmissionForm({ 
+  requestId, 
+  requestBudgetMax, 
+  requestDescription, 
+  hideButton = false,
+  requestPreferences = [],
+  requestDealbreakers = []
+}: { 
+  requestId: string; 
+  requestBudgetMax?: number | null; 
+  requestDescription?: string; 
+  hideButton?: boolean;
+  requestPreferences?: any[];
+  requestDealbreakers?: any[];
+}) {
   const router = useRouter();
-  const queryClient = useQueryClient();
+  const { toast } = useToast();
   const { user, profile } = useAuth();
   const [isExpanded, setIsExpanded] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
@@ -47,6 +62,7 @@ export function SubmissionForm({ requestId, requestBudgetMax, requestDescription
   const [savedItems, setSavedItems] = React.useState<any[]>([]);
   const [isLoadingSavedItems, setIsLoadingSavedItems] = React.useState(false);
   const [saveItem, setSaveItem] = React.useState(true); // Checked by default for personal items
+  const [metCriteria, setMetCriteria] = React.useState<string[]>([]);
   const form = useForm<Values>({
     resolver: zodResolver(submissionSchema) as any,
     defaultValues: {
@@ -54,9 +70,25 @@ export function SubmissionForm({ requestId, requestBudgetMax, requestDescription
       url: "",
       articleName: "",
       price: null,
+      priceSuffix: "total",
+      category: "TECH",
       notes: "",
     },
   });
+
+  const toggleCriterion = (item: any) => {
+    const label = typeof item === 'string' ? item : item.label;
+    if (!label) return;
+    
+    setMetCriteria(prev => 
+      prev.includes(label) 
+        ? prev.filter(c => c !== label)
+        : [...prev, label]
+    );
+  };
+
+  const totalCriteria = requestPreferences.length + requestDealbreakers.length;
+  const metCount = metCriteria.length;
 
   const submissionType = form.watch("submissionType");
   const url = form.watch("url");
@@ -87,6 +119,8 @@ export function SubmissionForm({ requestId, requestBudgetMax, requestDescription
     if (item) {
       form.setValue("articleName", item.article_name || "");
       form.setValue("price", item.price || null);
+      form.setValue("priceSuffix", item.price_suffix || "");
+      form.setValue("category", item.category || "TECH");
       form.setValue("notes", item.description || "");
       if (item.image_url) {
         setUploadedImage(item.image_url);
@@ -166,6 +200,10 @@ export function SubmissionForm({ requestId, requestBudgetMax, requestDescription
         setUrlFetchCompleted(true);
       } catch (err) {
         console.error("Error fetching link preview:", err);
+        toast({
+          title: "Couldn't auto-fill link details",
+          description: "We couldn't fetch details for this link. You can still enter them manually below.",
+        });
         // Still mark as completed even on error - user can type manually
         setUrlFetchCompleted(true);
       } finally {
@@ -201,6 +239,7 @@ export function SubmissionForm({ requestId, requestBudgetMax, requestDescription
       setUploadedImageFile(null);
       setUrlFetchAttempted(false);
       setUrlFetchCompleted(false);
+      setMetCriteria([]);
     } else {
       if (!user) {
         // Redirect to login with return URL
@@ -231,7 +270,12 @@ export function SubmissionForm({ requestId, requestBudgetMax, requestDescription
       "price",
       Number.isFinite(values.price) ? String(values.price) : ""
     );
-    formData.set("notes", values.notes || "");
+    formData.set("priceSuffix", values.priceSuffix === "total" ? "" : (values.priceSuffix || ""));
+    formData.set("category", values.category || "");
+    const criteriaText = metCriteria.length > 0 
+      ? `\n\nRequirements Met: ${metCriteria.join(", ")}` 
+      : "";
+    formData.set("notes", (values.notes || "") + criteriaText);
     
     // Upload image first if it's a personal item submission
     if (uploadedImageFile && values.submissionType === "personal") {
@@ -267,6 +311,8 @@ export function SubmissionForm({ requestId, requestBudgetMax, requestDescription
                 saveFormData.set("articleName", values.articleName);
                 saveFormData.set("description", values.notes || "");
                 saveFormData.set("price", values.price ? String(values.price) : "");
+                saveFormData.set("priceSuffix", values.priceSuffix || "");
+                saveFormData.set("category", values.category || "");
                 if (uploadData.urls && uploadData.urls.length > 0) {
                   saveFormData.set("imageUrl", uploadData.urls[0]);
                 }
@@ -284,8 +330,6 @@ export function SubmissionForm({ requestId, requestBudgetMax, requestDescription
             setUploadedImageFile(null);
             setUrlFetchAttempted(false);
             setUrlFetchCompleted(false);
-            // Invalidate React Query cache for submissions
-            queryClient.invalidateQueries({ queryKey: ["submissions", requestId] });
             // Refresh server components to get updated data
             router.refresh();
           }
@@ -307,6 +351,8 @@ export function SubmissionForm({ requestId, requestBudgetMax, requestDescription
               saveFormData.set("articleName", values.articleName);
               saveFormData.set("description", values.notes || "");
               saveFormData.set("price", values.price ? String(values.price) : "");
+              saveFormData.set("priceSuffix", values.priceSuffix || "");
+              saveFormData.set("category", values.category || "");
               // For personal items without new upload, check if we have an existing uploaded image URL
               if (uploadedImage && uploadedImage.startsWith("http")) {
                 saveFormData.set("imageUrl", uploadedImage);
@@ -325,8 +371,6 @@ export function SubmissionForm({ requestId, requestBudgetMax, requestDescription
           setUploadedImageFile(null);
           setUrlFetchAttempted(false);
           setUrlFetchCompleted(false);
-          // Invalidate React Query cache for submissions
-          queryClient.invalidateQueries({ queryKey: ["submissions", requestId] });
           // Refresh server components to get updated data
           router.refresh();
         }
@@ -338,17 +382,17 @@ export function SubmissionForm({ requestId, requestBudgetMax, requestDescription
     <>
       {!hideButton && (
         <div 
-          className="w-full hidden md:flex items-center gap-3 p-2 pl-2.5 border border-black rounded-full bg-[#f9fafb] cursor-text transition-all duration-200"
+          className="w-full hidden md:flex items-center gap-2.5 cursor-text transition-all duration-200"
           onClick={() => handleOpenChange(true)}
         >
-          <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 bg-gray-100 flex items-center justify-center text-[10px] font-bold text-gray-400">
+          <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 flex items-center justify-center text-[10px] font-bold text-gray-400 relative">
             {profile?.avatar_url ? (
               <img src={profile.avatar_url} alt={profile.username || "You"} className="w-full h-full object-cover" />
             ) : (
               (profile?.username?.charAt(0) || user?.email?.charAt(0).toUpperCase() || 'U')
             )}
           </div>
-          <span className="text-gray-400 text-[15px] font-medium flex-1 px-1 py-1.5">What are you offering..</span>
+          <span className="text-gray-400 text-[15px] font-medium flex-1">What are you offering..</span>
         </div>
       )}
       <Button
@@ -390,20 +434,28 @@ export function SubmissionForm({ requestId, requestBudgetMax, requestDescription
                 )}
                 onClick={() => form.setValue("submissionType", "personal")}
               >
-                Personal item
+                Listing
               </button>
           </div>
 
           {/* URL field - only for link submissions */}
           {submissionType === "link" && (
             <div className="space-y-4">
-              <Input 
-                id="url" 
-                type="url" 
-                placeholder="Product URL (Paste a link here...)"
-                className="h-14 bg-white border-[#e5e7eb] rounded-xl focus-visible:ring-[#222234] placeholder:text-gray-400 placeholder:font-normal text-base font-semibold"
-                {...form.register("url")} 
-              />
+              <div className="space-y-2">
+                <Input 
+                  id="url" 
+                  type="url" 
+                  placeholder="Product URL (Paste a link here...)"
+                  className={cn(
+                    "h-14 bg-white border-[#e5e7eb] rounded-xl focus-visible:ring-[#222234] placeholder:text-gray-400 placeholder:font-normal text-base font-semibold",
+                    form.formState.errors.url && "border-red-500 focus-visible:ring-red-500"
+                  )}
+                  {...form.register("url")} 
+                />
+                {form.formState.errors.url && (
+                  <p className="text-xs font-medium text-red-500 px-1">{form.formState.errors.url.message}</p>
+                )}
+              </div>
               
               {/* Preview Image */}
               {previewImage && !imageError && (
@@ -436,7 +488,7 @@ export function SubmissionForm({ requestId, requestBudgetMax, requestDescription
                 <div className="space-y-2">
                   <Select onValueChange={handleSelectSavedItem}>
                     <SelectTrigger className="h-14 bg-white border-[#e5e7eb] rounded-xl focus:ring-[#222234]">
-                      <SelectValue placeholder="Load from saved items (optional)" />
+                      <SelectValue placeholder="Load from your listings (optional)" />
                     </SelectTrigger>
                     <SelectContent>
                       {savedItems.map((item) => (
@@ -449,14 +501,39 @@ export function SubmissionForm({ requestId, requestBudgetMax, requestDescription
                 </div>
               )}
 
-              {/* Article name - first for personal items */}
-              <div className="space-y-2">
-                <Input 
-                  id="articleName" 
-                  className="h-14 bg-white border-[#e5e7eb] rounded-xl focus-visible:ring-[#222234] placeholder:text-gray-400 placeholder:font-normal text-base font-semibold"
-                  placeholder="Article name (e.g., iPhone 15 Pro, Nike Air Max...)"
-                  {...form.register("articleName")}
-                />
+              {/* Article name and Category Badge */}
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <Input 
+                    id="articleName" 
+                    className={cn(
+                      "h-14 bg-white border-[#e5e7eb] rounded-xl focus-visible:ring-[#222234] placeholder:text-gray-400 placeholder:font-normal text-base font-semibold",
+                      form.formState.errors.articleName && "border-red-500 focus-visible:ring-red-500"
+                    )}
+                    placeholder="Listing name (e.g., iPhone 15 Pro, Web Design...)"
+                    {...form.register("articleName")}
+                  />
+                  {form.formState.errors.articleName && (
+                    <p className="text-xs font-medium text-red-500 px-1 mt-1">{form.formState.errors.articleName.message}</p>
+                  )}
+                </div>
+                <div className="w-[120px]">
+                  <Select 
+                    value={form.watch("category") || "TECH"} 
+                    onValueChange={(val) => form.setValue("category", val)}
+                  >
+                    <SelectTrigger className="h-14 bg-white border-[#e5e7eb] rounded-xl focus:ring-[#222234] text-xs font-bold">
+                      <SelectValue placeholder="Cat." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {MAIN_CATEGORIES.map((cat) => (
+                        <SelectItem key={cat} value={cat.toUpperCase()}>
+                          {cat}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               {/* Image upload for personal items - second */}
@@ -474,7 +551,7 @@ export function SubmissionForm({ requestId, requestBudgetMax, requestDescription
                     className="flex items-center gap-2 px-6 py-3 rounded-xl border border-[#e5e7eb] bg-white hover:bg-gray-50 cursor-pointer transition-colors text-sm font-medium"
                   >
                     <Upload className="h-4 w-4" />
-                    <span>Upload item image (optional)</span>
+                    <span>Upload image or cover (optional)</span>
                   </label>
                 </div>
                 {uploadedImage && (
@@ -504,19 +581,87 @@ export function SubmissionForm({ requestId, requestBudgetMax, requestDescription
                 )}
               </div>
 
-              {/* Description - third for personal items */}
-              <div className="space-y-2">
+               {/* Description - third for personal items */}
+              <div className="space-y-4">
+                {/* Criteria Checklist for Personal Items */}
+                {(requestPreferences.length > 0 || requestDealbreakers.length > 0) && (
+                  <div className="space-y-4 pt-2">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-[14px] font-bold text-[#1A1A1A]">
+                        Match Score
+                      </Label>
+                      <span className="text-[12px] font-bold text-[#7755FF] bg-[#7755FF]/10 px-2.5 py-1 rounded-full">
+                        {metCount}/{totalCriteria} matched
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                    {requestPreferences.map((pref, idx) => {
+                      const label = typeof pref === 'string' ? pref : pref.label;
+                      return (
+                        <button
+                          key={`pref-${idx}`}
+                          type="button"
+                          onClick={() => toggleCriterion(pref)}
+                          className={cn(
+                            "px-3 py-1.5 rounded-full text-[12px] font-medium border transition-all flex items-center gap-1.5",
+                            metCriteria.includes(label)
+                              ? "bg-[#1A1A1A] border-[#1A1A1A] text-white"
+                              : "bg-white border-gray-100 text-gray-500 hover:border-gray-200"
+                          )}
+                        >
+                          {metCriteria.includes(label) ? (
+                            <Plus className="h-3 w-3 rotate-45" />
+                          ) : (
+                            <Plus className="h-3 w-3" />
+                          )}
+                          {label}
+                        </button>
+                      );
+                    })}
+                    {requestDealbreakers.map((db, idx) => {
+                      const label = typeof db === 'string' ? db : db.label;
+                      return (
+                        <button
+                          key={`db-${idx}`}
+                          type="button"
+                          onClick={() => toggleCriterion(db)}
+                          className={cn(
+                            "px-3 py-1.5 rounded-full text-[12px] font-medium border transition-all flex items-center gap-1.5",
+                            metCriteria.includes(label)
+                              ? "bg-[#1A1A1A] border-[#1A1A1A] text-white"
+                              : "bg-white border-gray-100 text-gray-500 hover:border-gray-200"
+                          )}
+                        >
+                          {metCriteria.includes(label) ? (
+                            <Plus className="h-3 w-3 rotate-45" />
+                          ) : (
+                            <Plus className="h-3 w-3" />
+                          )}
+                          {label} (Avoided)
+                        </button>
+                      );
+                    })}
+                    </div>
+                  </div>
+                )}
+
                 <Textarea 
                   id="personalDescription"
-                  placeholder="Item description (Describe the item you have...)"
-                  className="min-h-[120px] bg-white border-[#e5e7eb] rounded-xl focus-visible:ring-[#222234] placeholder:text-gray-400 placeholder:font-normal text-base resize-none"
+                  placeholder="Listing details (Describe what you are offering...)"
+                  className={cn(
+                    "min-h-[120px] bg-white border-[#e5e7eb] rounded-xl focus-visible:ring-[#222234] placeholder:text-gray-400 placeholder:font-normal text-base resize-none",
+                    form.formState.errors.notes && "border-red-500 focus-visible:ring-red-500"
+                  )}
                   {...form.register("notes")} 
                 />
+                {form.formState.errors.notes && (
+                  <p className="text-xs font-medium text-red-500 px-1">{form.formState.errors.notes.message}</p>
+                )}
               </div>
 
-              {/* Price - fourth for personal items */}
-              <div className="space-y-2">
-                <div className="relative group">
+              {/* Price and Suffix for personal items */}
+              <div className="flex gap-2">
+                <div className="relative flex-1 group">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-semibold text-lg">$</span>
                   <Input
                     id="price"
@@ -527,6 +672,23 @@ export function SubmissionForm({ requestId, requestBudgetMax, requestDescription
                     {...form.register("price", { valueAsNumber: true })}
                   />
                 </div>
+                <div className="w-[120px]">
+                  <Select 
+                    value={form.watch("priceSuffix") || ""} 
+                    onValueChange={(val) => form.setValue("priceSuffix", val)}
+                  >
+                    <SelectTrigger className="h-14 bg-white border-[#e5e7eb] rounded-xl focus:ring-[#222234] text-sm font-medium">
+                      <SelectValue placeholder="Total" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="total">Total</SelectItem>
+                      <SelectItem value="/hr">/hr</SelectItem>
+                      <SelectItem value="/day">/day</SelectItem>
+                      <SelectItem value="/night">/night</SelectItem>
+                      <SelectItem value="/person">/person</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
           )}
@@ -534,37 +696,149 @@ export function SubmissionForm({ requestId, requestBudgetMax, requestDescription
           {/* Show these fields only after URL fetch is attempted (for link submissions) */}
           {submissionType === "link" && urlFetchAttempted && (
             <div className="space-y-4">
-              <div className="relative">
-                <Input 
-                  id="articleName" 
-                  className="h-14 bg-white border-[#e5e7eb] rounded-xl focus-visible:ring-[#222234] placeholder:text-gray-400 placeholder:font-normal text-base font-semibold pr-10"
-                  placeholder="Article name (e.g., iPhone 15 Pro, Nike Air Max...)"
-                  {...form.register("articleName")}
-                  disabled={isLoadingPreview}
-                />
-                {isLoadingPreview && (
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+              <div className="flex gap-2">
+                <div className="flex-1 relative">
+                  <Input 
+                    id="articleName" 
+                    className={cn(
+                      "h-14 bg-white border-[#e5e7eb] rounded-xl focus-visible:ring-[#222234] placeholder:text-gray-400 placeholder:font-normal text-base font-semibold pr-10",
+                      form.formState.errors.articleName && "border-red-500 focus-visible:ring-red-500"
+                    )}
+                    placeholder="Article name (e.g., iPhone 15 Pro, Nike Air Max...)"
+                    {...form.register("articleName")}
+                    disabled={isLoadingPreview}
+                  />
+                  {form.formState.errors.articleName && (
+                    <p className="text-xs font-medium text-red-500 px-1 mt-1">{form.formState.errors.articleName.message}</p>
+                  )}
+                  {isLoadingPreview && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                      <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                    </div>
+                  )}
+                </div>
+                <div className="w-[120px]">
+                  <Select 
+                    value={form.watch("category") || "TECH"} 
+                    onValueChange={(val) => form.setValue("category", val)}
+                  >
+                    <SelectTrigger className="h-14 bg-white border-[#e5e7eb] rounded-xl focus:ring-[#222234] text-xs font-bold">
+                      <SelectValue placeholder="Cat." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {MAIN_CATEGORIES.map((cat) => (
+                        <SelectItem key={cat} value={cat.toUpperCase()}>
+                          {cat}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <div className="relative flex-1 group">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-semibold text-lg">$</span>
+                  <Input
+                    id="price"
+                    type="number"
+                    step="0.01"
+                    placeholder="Price (0.00)"
+                    className="h-14 bg-white border-[#e5e7eb] rounded-xl focus-visible:ring-[#222234] placeholder:text-gray-400 placeholder:font-normal text-base font-semibold pl-8"
+                    {...form.register("price", { valueAsNumber: true })}
+                  />
+                </div>
+                <div className="w-[120px]">
+                  <Select 
+                    value={form.watch("priceSuffix") || ""} 
+                    onValueChange={(val) => form.setValue("priceSuffix", val)}
+                  >
+                    <SelectTrigger className="h-14 bg-white border-[#e5e7eb] rounded-xl focus:ring-[#222234] text-sm font-medium">
+                      <SelectValue placeholder="Total" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="total">Total</SelectItem>
+                      <SelectItem value="/hr">/hr</SelectItem>
+                      <SelectItem value="/day">/day</SelectItem>
+                      <SelectItem value="/night">/night</SelectItem>
+                      <SelectItem value="/person">/person</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              {/* Criteria Checklist */}
+              {(requestPreferences.length > 0 || requestDealbreakers.length > 0) && (
+                <div className="space-y-4 pt-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-[14px] font-bold text-[#1A1A1A]">
+                      Match Score
+                    </Label>
+                    <span className="text-[12px] font-bold text-[#7755FF] bg-[#7755FF]/10 px-2.5 py-1 rounded-full">
+                      {metCount}/{totalCriteria} matched
+                    </span>
                   </div>
-                )}
-              </div>
-              <div className="relative group">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-semibold text-lg">$</span>
-                <Input
-                  id="price"
-                  type="number"
-                  step="0.01"
-                  placeholder="Price (0.00)"
-                  className="h-14 bg-white border-[#e5e7eb] rounded-xl focus-visible:ring-[#222234] placeholder:text-gray-400 placeholder:font-normal text-base font-semibold pl-8"
-                  {...form.register("price", { valueAsNumber: true })}
-                />
-              </div>
+                  <div className="flex flex-wrap gap-2">
+                    {requestPreferences.map((pref, idx) => {
+                      const label = typeof pref === 'string' ? pref : pref.label;
+                      return (
+                        <button
+                          key={`pref-${idx}`}
+                          type="button"
+                          onClick={() => toggleCriterion(pref)}
+                          className={cn(
+                            "px-3 py-1.5 rounded-full text-[12px] font-medium border transition-all flex items-center gap-1.5",
+                            metCriteria.includes(label)
+                              ? "bg-[#1A1A1A] border-[#1A1A1A] text-white"
+                              : "bg-white border-gray-100 text-gray-500 hover:border-gray-200"
+                          )}
+                        >
+                          {metCriteria.includes(label) ? (
+                            <Plus className="h-3 w-3 rotate-45" />
+                          ) : (
+                            <Plus className="h-3 w-3" />
+                          )}
+                          {label}
+                        </button>
+                      );
+                    })}
+                    {requestDealbreakers.map((db, idx) => {
+                      const label = typeof db === 'string' ? db : db.label;
+                      return (
+                        <button
+                          key={`db-${idx}`}
+                          type="button"
+                          onClick={() => toggleCriterion(db)}
+                          className={cn(
+                            "px-3 py-1.5 rounded-full text-[12px] font-medium border transition-all flex items-center gap-1.5",
+                            metCriteria.includes(label)
+                              ? "bg-[#1A1A1A] border-[#1A1A1A] text-white"
+                              : "bg-white border-gray-100 text-gray-500 hover:border-gray-200"
+                          )}
+                        >
+                          {metCriteria.includes(label) ? (
+                            <Plus className="h-3 w-3 rotate-45" />
+                          ) : (
+                            <Plus className="h-3 w-3" />
+                          )}
+                          {label} (Avoided)
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               <Textarea 
                 id="notes" 
-                placeholder="Why it matches (Tell the buyer why this is perfect...)"
-                className="min-h-[100px] bg-white border-[#e5e7eb] rounded-xl focus-visible:ring-[#222234] placeholder:text-gray-400 placeholder:font-normal text-base resize-none"
+                placeholder="Offer Details (Tell the buyer why this is perfect...)"
+                className={cn(
+                  "min-h-[100px] bg-white border-[#e5e7eb] rounded-xl focus-visible:ring-[#222234] placeholder:text-gray-400 placeholder:font-normal text-base resize-none",
+                  form.formState.errors.notes && "border-red-500 focus-visible:ring-red-500"
+                )}
                 {...form.register("notes")} 
               />
+              {form.formState.errors.notes && (
+                <p className="text-xs font-medium text-red-500 px-1">{form.formState.errors.notes.message}</p>
+              )}
             </div>
           )}
 
@@ -580,7 +854,7 @@ export function SubmissionForm({ requestId, requestBudgetMax, requestDescription
                 htmlFor="saveItem"
                 className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
               >
-                Save item for later / future proposals
+                Save listing to my library for future use
               </label>
             </div>
           )}
@@ -601,7 +875,7 @@ export function SubmissionForm({ requestId, requestBudgetMax, requestDescription
                 className="flex-1 rounded-full !bg-[#212733] !text-white hover:!bg-[#212733]/90"
                 disabled={isPending}
               >
-                {isPending ? "Submitting..." : submissionType === "link" ? "Submit link" : "Submit item"}
+                {isPending ? "Submitting..." : submissionType === "link" ? "Submit Proposal" : "Submit Proposal"}
               </Button>
             </div>
           </form>

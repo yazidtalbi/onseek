@@ -28,6 +28,7 @@ import { useTransition } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
 import { Check, XCircle } from "lucide-react";
+import { createRequestUrl } from "@/lib/utils/slug";
 import type { Category, RequestStatus, RequestItem } from "@/lib/types";
 
 export function RequestMenu({
@@ -82,7 +83,7 @@ export function RequestMenu({
       const res = await deleteRequestAction(requestId);
       if (!res?.error) {
         setShowDeleteConfirmDialog(false);
-        router.push("/app/requests");
+        router.push("/requests");
         router.refresh();
       } else {
         toast({ title: "Error", description: res.error });
@@ -108,7 +109,7 @@ export function RequestMenu({
   const handleShare = async () => {
     if (typeof window === "undefined") return;
     
-    const url = `${window.location.origin}/app/requests/${requestId}`;
+    const url = `${window.location.origin}${createRequestUrl(initialData || { id: requestId })}`;
     
     try {
       // Try Web Share API first (mobile)
@@ -168,7 +169,7 @@ export function RequestMenu({
         <DropdownMenuContent align="end" className="w-56">
           {is_admin && (
             <>
-              <div className="px-2 py-1.5 text-xs font-semibold text-amber-600 uppercase tracking-wider">
+              <div className="px-2 py-1.5 text-xs font-semibold text-amber-600">
                 Moderation
               </div>
               {rstatus === "pending" && (
@@ -272,13 +273,13 @@ export function RequestMenu({
           {isOwner && (status === "open" || status === "solved" || status === "pending") && (
             <>
               <DropdownMenuSeparator />
-              <div className="px-2 py-1.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+              <div className="px-2 py-1.5 text-xs font-semibold text-gray-500">
                 Manage Request
               </div>
               <DropdownMenuItem
                 onClick={(e) => {
                   e.stopPropagation();
-                  router.push(`/app/requests/${requestId}`);
+                  router.push(createRequestUrl(initialData || { id: requestId }));
                 }}
                 className="cursor-pointer"
               >

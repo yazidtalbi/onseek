@@ -15,6 +15,9 @@ export async function savePersonalItemAction(formData: FormData) {
   const description = String(formData.get("description") || "") || null;
   const price = formData.get("price") ? Number(formData.get("price")) : null;
   const imageUrl = String(formData.get("imageUrl") || "") || null;
+  const itemType = String(formData.get("itemType") || "product");
+  const priceSuffix = String(formData.get("priceSuffix") || "") || null;
+  const category = String(formData.get("category") || "") || null;
 
   if (!articleName || articleName.trim() === "") {
     return { error: "Article name is required" };
@@ -28,6 +31,9 @@ export async function savePersonalItemAction(formData: FormData) {
       description: description?.trim() || null,
       price: price,
       image_url: imageUrl,
+      item_type: itemType,
+      price_suffix: priceSuffix,
+      category: category,
     })
     .select()
     .single();
@@ -77,6 +83,9 @@ export async function updatePersonalItemAction(formData: FormData) {
   const description = String(formData.get("description") || "") || null;
   const price = formData.get("price") ? Number(formData.get("price")) : null;
   const imageUrl = String(formData.get("imageUrl") || "") || null;
+  const itemType = String(formData.get("itemType") || "product");
+  const priceSuffix = String(formData.get("priceSuffix") || "") || null;
+  const category = String(formData.get("category") || "") || null;
 
   if (!itemId) {
     return { error: "Item ID is required" };
@@ -93,6 +102,9 @@ export async function updatePersonalItemAction(formData: FormData) {
       description: description?.trim() || null,
       price: price,
       image_url: imageUrl,
+      item_type: itemType,
+      price_suffix: priceSuffix,
+      category: category,
       updated_at: new Date().toISOString(),
     })
     .eq("id", itemId)

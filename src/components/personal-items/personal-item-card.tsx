@@ -20,13 +20,23 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Edit, Trash2, Package } from "lucide-react";
+import { MoreHorizontal, Edit, Trash2, Package, ChevronDown } from "lucide-react";
 import Image from "next/image";
 import { formatTimeAgo } from "@/lib/utils/time";
 import { updatePersonalItemAction, deleteSavedPersonalItemAction } from "@/actions/saved-items.actions";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import type { PersonalItem } from "@/lib/types";
+import { cn } from "@/lib/utils";
+import { MAIN_CATEGORIES } from "@/lib/categories";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface PersonalItemCardProps {
   item: PersonalItem;
@@ -34,6 +44,7 @@ interface PersonalItemCardProps {
 
 export function PersonalItemCard({ item }: PersonalItemCardProps) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [isPending, startTransition] = useTransition();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -41,8 +52,24 @@ export function PersonalItemCard({ item }: PersonalItemCardProps) {
     articleName: item.article_name,
     description: item.description || "",
     price: item.price?.toString() || "",
+    priceSuffix: item.price_suffix || "Total",
+    category: item.category || "Tech",
+    itemType: item.item_type || "product",
     imageUrl: item.image_url || "",
   });
+
+  const CATEGORY_GROUPS = {
+    Physical: ["Fashion", "Tech", "Gaming", "Home", "Beauty", "Artisanat", "Automotive", "Grocery", "Pets", "Family", "Sports"],
+    Services: ["Services", "Learning", "Finance", "Health", "Digital"],
+    "Travel/Living": ["Travel", "Property", "Experiences", "Culture"]
+  };
+
+  const getUnitForCategory = (cat: string) => {
+    if (["Tech", "Fashion", "Gaming", "Home", "Beauty", "Artisanat", "Automotive", "Grocery", "Pets", "Family", "Sports"].includes(cat)) return "Total";
+    if (["Services", "Learning"].includes(cat)) return "/hr";
+    if (["Travel", "Property"].includes(cat)) return "/night";
+    return "Total";
+  };
 
   const handleUpdate = () => {
     startTransition(async () => {
@@ -52,10 +79,14 @@ export function PersonalItemCard({ item }: PersonalItemCardProps) {
       form.append("description", formData.description);
       form.append("price", formData.price || "");
       form.append("imageUrl", formData.imageUrl);
+      form.append("itemType", formData.itemType);
+      form.append("priceSuffix", formData.priceSuffix);
+      form.append("category", formData.category);
 
       const result = await updatePersonalItemAction(form);
       if (!("error" in result)) {
         setIsEditDialogOpen(false);
+        queryClient.invalidateQueries({ queryKey: ["personal-items"] });
         router.refresh();
       }
     });
@@ -69,6 +100,7 @@ export function PersonalItemCard({ item }: PersonalItemCardProps) {
       const result = await deleteSavedPersonalItemAction(form);
       if (!("error" in result)) {
         setIsDeleteDialogOpen(false);
+        queryClient.invalidateQueries({ queryKey: ["personal-items"] });
         router.refresh();
       }
     });
@@ -100,12 +132,23 @@ export function PersonalItemCard({ item }: PersonalItemCardProps) {
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-4 mb-2">
                 <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-foreground mb-1">
-                    {item.article_name}
-                  </h3>
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="text-lg font-semibold text-foreground">
+                      {item.article_name}
+                    </h3>
+                    <span className={cn(
+                      "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider",
+                      item.item_type === "service" 
+                        ? "bg-purple-50 text-purple-600 border border-purple-100" 
+                        : "bg-blue-50 text-blue-600 border border-blue-100"
+                    )}>
+                      {item.category || item.item_type || "product"}
+                    </span>
+                  </div>
                   {item.price && (
                     <p className="text-base text-[#7755FF] font-semibold mb-2">
                       ${item.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      {item.price_suffix && <span className="text-sm font-normal text-gray-500 ml-1">{item.price_suffix}</span>}
                     </p>
                   )}
                   {item.description && (
@@ -155,22 +198,68 @@ export function PersonalItemCard({ item }: PersonalItemCardProps) {
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>Edit Personal Item</DialogTitle>
+            <DialogTitle>Edit Listing</DialogTitle>
             <DialogDescription>
-              Update the details of your personal item.
+              Update the details of your listing.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="articleName">Article Name *</Label>
-              <Input
-                id="articleName"
-                value={formData.articleName}
-                onChange={(e) =>
-                  setFormData({ ...formData, articleName: e.target.value })
-                }
-                placeholder="e.g., Vintage Watch"
-              />
+            <div className="flex items-center gap-3">
+              <div className="flex-1">
+                <Label htmlFor="articleName" className="mb-2 block">Name *</Label>
+                <Input
+                  id="articleName"
+                  value={formData.articleName}
+                  onChange={(e) =>
+                    setFormData({ ...formData, articleName: e.target.value })
+                  }
+                  placeholder="e.g., Vintage Watch"
+                />
+              </div>
+              <div className="pt-8">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      type="button"
+                      className={cn(
+                        "h-10 px-4 rounded-lg border-2 transition-all flex items-center justify-center gap-2 font-bold text-[10px] uppercase tracking-wider whitespace-nowrap",
+                        formData.itemType === "product"
+                          ? "border-blue-100 bg-blue-50 text-blue-600"
+                          : "border-purple-100 bg-purple-50 text-purple-600"
+                      )}
+                    >
+                      {formData.category || formData.itemType}
+                    <ChevronDown className="h-3 w-3 opacity-50" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-[240px] max-h-[400px] overflow-y-auto rounded-xl shadow-xl border-none p-1 bg-white">
+                    {Object.entries(CATEGORY_GROUPS).map(([group, cats]) => (
+                      <div key={group} className="p-1">
+                        <div className="px-2 py-1.5 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                          {group}
+                        </div>
+                        {cats.map((cat) => (
+                          <DropdownMenuItem
+                            key={cat}
+                            onClick={() => {
+                              const newUnit = getUnitForCategory(cat);
+                              setFormData({ 
+                                ...formData, 
+                                category: cat,
+                                priceSuffix: newUnit,
+                                itemType: (CATEGORY_GROUPS.Services.includes(cat) || CATEGORY_GROUPS["Travel/Living"].includes(cat)) ? "service" : "product"
+                              });
+                            }}
+                            className="rounded-lg font-medium cursor-pointer"
+                          >
+                            {cat}
+                          </DropdownMenuItem>
+                        ))}
+                      </div>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="description">Description</Label>
@@ -184,18 +273,38 @@ export function PersonalItemCard({ item }: PersonalItemCardProps) {
                 rows={3}
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="price">Price</Label>
-              <Input
-                id="price"
-                type="number"
-                step="0.01"
-                value={formData.price}
-                onChange={(e) =>
-                  setFormData({ ...formData, price: e.target.value })
-                }
-                placeholder="0.00"
-              />
+            <div className="flex gap-3">
+              <div className="flex-[2]">
+                <Label htmlFor="price" className="mb-2 block">Price</Label>
+                <Input
+                  id="price"
+                  type="number"
+                  step="0.01"
+                  value={formData.price}
+                  onChange={(e) =>
+                    setFormData({ ...formData, price: e.target.value })
+                  }
+                  placeholder="0.00"
+                />
+              </div>
+              <div className="flex-1">
+                <Label htmlFor="priceSuffix" className="mb-2 block">Unit</Label>
+                <Select 
+                  onValueChange={(val) => setFormData({ ...formData, priceSuffix: val })}
+                  defaultValue={formData.priceSuffix}
+                >
+                  <SelectTrigger className="h-10 bg-white border-[#e5e7eb] rounded-lg focus:ring-[#222234] font-medium text-sm">
+                    <SelectValue placeholder="Unit" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl border-none shadow-xl">
+                    {["Total", "/hr", "/day", "/night", "/project"].map((unit) => (
+                      <SelectItem key={unit} value={unit} className="rounded-lg font-medium cursor-pointer">
+                        {unit}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="imageUrl">Image URL</Label>
@@ -232,7 +341,7 @@ export function PersonalItemCard({ item }: PersonalItemCardProps) {
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Personal Item?</DialogTitle>
+            <DialogTitle>Delete Listing?</DialogTitle>
             <DialogDescription>
               Are you sure you want to delete "{item.article_name}"? This action cannot be undone.
             </DialogDescription>

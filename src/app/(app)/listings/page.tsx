@@ -13,7 +13,7 @@ export default async function InventoryPage() {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect("/login?redirectTo=/inventory");
+    redirect("/login?redirectTo=/listings");
   }
 
   // Fetch user's personal items
@@ -32,10 +32,10 @@ export default async function InventoryPage() {
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-3xl text-foreground flex items-center gap-2" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>
-            Inventory
+            My Listings
           </h1>
           <p className="text-sm text-muted-foreground mt-2">
-            Manage your saved personal items. Use them when submitting to requests.
+            Manage your offerings. Use them when responding to requests.
           </p>
         </div>
         <AddItemModal />

@@ -61,6 +61,8 @@ export type Submission = {
   url: string;
   article_name: string | null;
   price: number | null;
+  price_suffix: string | null;
+  category: string | null;
   shipping_cost: number | null;
   notes: string | null;
   image_url: string | null;
@@ -78,6 +80,9 @@ export type PersonalItem = {
   article_name: string;
   description: string | null;
   price: number | null;
+  price_suffix: string | null;
+  item_type: string;
+  category: string | null;
   image_url: string | null;
   created_at: string;
   updated_at: string;

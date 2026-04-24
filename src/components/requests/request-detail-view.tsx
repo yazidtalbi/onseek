@@ -2,25 +2,41 @@
 
 import Link from "next/link";
 import type { Submission, RequestItem } from "@/lib/types";
-import { SubmissionList } from "@/components/submissions/submission-list";
-import { SubmissionForm } from "@/components/submissions/submission-form";
 import { RequestCard } from "@/components/requests/request-card";
 import { BackButton } from "@/components/ui/back-button";
 import { ShareButton } from "@/components/requests/share-button";
 import { FavoriteButton } from "@/components/requests/favorite-button";
 import { RequestMenu } from "@/components/requests/request-menu";
+import { getCategorySlug } from "@/lib/utils/category-routing";
 import { cn } from "@/lib/utils";
 import { Flag, CheckCircle2, X, Clock, Archive, Check, Sparkles, MapPin, Gauge } from "lucide-react";
 import { approveRequestAction, rejectRequestAction, archiveRequestAction } from "@/actions/request.actions";
 import { useToast } from "@/components/ui/use-toast";
 import * as React from "react";
+import dynamic from "next/dynamic";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ReportDialog } from "@/components/reports/report-dialog";
 import { formatBudget } from "@/lib/utils/format";
 import { formatTimeAgo } from "@/lib/utils/time";
 import { toggleFavoriteAction } from "@/actions/favorite.actions";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Image from "next/image";
+import { IconBook, IconSparkles, IconListCheck } from "@tabler/icons-react";
+import SimpleBar from "simplebar-react";
+
+const SubmissionForm = dynamic(() => import("@/components/submissions/submission-form").then(mod => mod.SubmissionForm), {
+  ssr: false,
+  loading: () => <div className="h-20 w-full animate-pulse bg-gray-50 rounded-2xl border border-dashed border-gray-200" />
+});
+
+const SubmissionList = dynamic(() => import("@/components/submissions/submission-list").then(mod => mod.SubmissionList), {
+  ssr: false,
+  loading: () => <div className="space-y-4 animate-pulse">
+    <div className="h-40 w-full bg-gray-50 rounded-2xl border border-gray-100" />
+    <div className="h-40 w-full bg-gray-50 rounded-2xl border border-gray-100" />
+  </div>
+});
 
 function cleanDescription(description: string) {
   return description.replace(/<!--REQUEST_PREFS:.*?-->/, "").trim();
@@ -73,8 +89,14 @@ export function RequestDetailView({
   similarRequestFavorites = [],
   isModal = false,
 }: RequestDetailViewProps) {
+  const [mounted, setMounted] = React.useState(false);
   const { toast } = useToast();
   const [showReportDialog, setShowReportDialog] = React.useState(false);
+  const [showRaw, setShowRaw] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const parsedPrefs = parseRequestPreferences(request.description) || {
     preferences: [],
@@ -105,59 +127,56 @@ export function RequestDetailView({
   }, []);
 
   return (
-    <div className="w-full pb-20">
+    <div className="w-full pb-20" suppressHydrationWarning>
       {/* Centered Content: Request & Proposals */}
-      <div className={cn("max-w-[1360px] w-full px-3 md:px-12 mx-auto")}>
+      <div className={cn("max-w-[960px] w-full px-3 md:px-12 mx-auto relative")}>
 
         {/* Header Navigation & Actions moved inside centered container */}
-        {!isModal && (
-          <div className="flex items-center justify-between gap-4 mb-2 md:mb-6 pt-0 md:pt-2">
-            <div className="flex items-center gap-4">
+        {mounted && !isModal && (
+          <div className="relative h-0">
+            <div className="absolute -left-4 lg:-left-16 top-0 md:top-4 z-50">
               <BackButton />
-              <nav className="flex items-center gap-2 text-sm text-gray-500">
-                <Link href="/" className="hover:text-black transition-colors font-medium">Home</Link>
-                <span>/</span>
-                <Link href="/requests" className="hover:text-black transition-colors font-medium">Requests</Link>
-                <span>/</span>
-                <Link
-                  href={`/category/${request.category.toLowerCase()}`}
-                  className="hover:text-black transition-colors font-medium"
-                >
-                  {request.category}
-                </Link>
-              </nav>
             </div>
-
           </div>
         )}
 
-        <div className="flex flex-col lg:flex-row gap-8 lg:gap-16 items-start relative pb-20">
-          
-          {/* LEFT COLUMN: REQUEST CARD SIDEBAR (480px, sticky) */}
-          <aside className="w-full lg:w-[480px] lg:sticky lg:top-24 space-y-6 shrink-0 h-fit pb-12">
-            
+        <div className="border border-gray-100 rounded-[20px] overflow-hidden flex flex-col lg:flex-row items-stretch bg-white relative h-[calc(100vh-140px)] max-h-[768px]">
+          {/* LEFT COLUMN: REQUEST CARD SIDEBAR (Fixed Width) */}
+          <aside className="w-full lg:w-[480px] border-b lg:border-b-0 lg:border-r border-gray-100 flex flex-col shrink-0 bg-transparent">
+            <SimpleBar className="h-full" autoHide={true}>
+              <div className="pb-16">
             {/* EXTERNAL HEADER: Avatar, Date, Icon, Status */}
-            <div className="flex flex-col gap-6 mb-6">
+            <div className="flex flex-col gap-4 mb-4 p-4">
               <div className="flex items-center justify-between w-full">
-                <div className="flex items-center gap-3">
-                  <div className="w-[40px] h-[40px] rounded-full overflow-hidden shrink-0 border border-gray-100 flex items-center justify-center bg-gray-50 text-[14px] font-bold text-gray-400 relative">
-                    {request.profiles?.avatar_url ? (
-                      <Image src={request.profiles.avatar_url} alt={request.profiles?.username || 'user'} fill className="object-cover" sizes="40px" />
-                    ) : (
-                      (request.profiles?.username?.charAt(0) || 'U').toUpperCase()
-                    )}
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="font-bold text-[#1A1A1A] text-[16px]">
+                <div className="flex items-center gap-2.5">
+                  <Avatar className="h-8 w-8 border border-gray-100 shadow-sm shrink-0">
+                    <AvatarImage src={request.profiles?.avatar_url} />
+                    <AvatarFallback className="text-[10px] bg-gray-50 font-bold text-gray-400">
+                      {(request.profiles?.username || 'U').charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-bold text-[#1A1A1A] text-[12px] leading-none">
                       {request.profiles?.username || "Account"}
                     </span>
-                    <span className="text-gray-400 text-[13px]">
-                      Requested {formatTimeAgo(request.created_at)}
+                    <span className="text-gray-400 text-[11px] leading-none font-medium">
+                      · {mounted ? formatTimeAgo(request.created_at) : "..."}
                     </span>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <RequestMenu 
+                  <Badge
+                    variant="outline"
+                    className={cn(
+                      "rounded-full font-bold border-none px-3 py-1 text-[11px] bg-transparent shadow-none h-auto",
+                      request.status === "solved"
+                        ? "text-emerald-600 bg-emerald-50"
+                        : "text-[#6925DC] bg-[#6925DC]/10"
+                    )}
+                  >
+                    {request.status?.charAt(0).toUpperCase() + request.status?.slice(1)}
+                  </Badge>
+                  <RequestMenu
                     requestId={request.id}
                     requestUserId={request.user_id}
                     status={request.status}
@@ -173,142 +192,119 @@ export function RequestDetailView({
               </div>
             </div>
 
-            <RequestCard
-              request={{
-                ...request,
-                submissionCount: proposalCount,
-              }}
-              variant="detail"
-              smallImages={true}
-              images={images.map(img => img.image_url)}
-              links={links.map(l => l.url)}
-              isFavorite={isFavorite}
-              noBorder={true}
-              hideAuthOverlay={true}
-              isLarge={true}
-              hideTags={true}
-              disableHover={true}
-            />
-
-            {/* Status & Location Row */}
-            <div className="flex items-start gap-12 pt-4">
-              {/* Status Section */}
-              <div className="flex flex-col gap-3">
-                <h4 className="text-[14px] font-bold text-black/30">Status</h4>
-                <div className="flex items-center gap-2">
-                  <Badge
-                    variant="outline"
-                    className={cn(
-                      "rounded-full font-bold border shadow-none px-4 py-1.5 text-[14px] bg-white",
-                      request.status === "solved" ? "border-emerald-100 text-emerald-600" : "border-[#6925DC]/20 text-[#6925DC]"
-                    )}
-                  >
-                    {request.status?.charAt(0).toUpperCase() + request.status?.slice(1)}
-                  </Badge>
-                </div>
-              </div>
-
-              {/* Location Section */}
-              {(request.profiles?.country || request.country) && (
-                <div className="flex flex-col gap-3">
-                  <h4 className="text-[14px] font-bold text-black/30">Location</h4>
-                  <div className="flex items-center gap-2">
-                    <Badge
-                      variant="outline"
-                      className="rounded-full font-bold border shadow-none px-4 py-1.5 text-[14px] bg-white border-gray-100 text-[#1A1A1A]"
-                    >
-                      {request.profiles?.country || request.country}
-                    </Badge>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* ACTION: Submit Proposal Button (Desktop) */}
-            {showSubmissionForm && !isOwner && (
-              <div className="hidden md:block pt-2">
-                <Button 
-                  className="w-full h-12 rounded-full bg-[#6925DC] text-white font-bold text-[15px] shadow-none hover:bg-[#6925DC]/90 transition-all"
-                  onClick={() => {
-                    if (typeof (window as any).openSubmissionModal === 'function') {
-                      (window as any).openSubmissionModal();
-                    } else {
-                      const trigger = document.getElementById('submission-form-trigger');
-                      if (trigger) trigger.click();
-                    }
+            <div className="flex-1 flex flex-col p-[50px] min-h-0">
+              <div className="flex-1 flex flex-col justify-center">
+                <RequestCard
+                  request={{
+                    ...request,
+                    submissionCount: proposalCount,
                   }}
-                >
-                  Submit Proposal
-                </Button>
+                  variant="detail"
+                  smallImages={true}
+                  images={images.map(img => img.image_url)}
+                  links={links.map(l => l.url)}
+                  isFavorite={isFavorite}
+                  noBorder={true}
+                  hideAuthOverlay={true}
+                  isLarge={true}
+                  hideTags={true}
+                  disableHover={true}
+                  showRaw={showRaw}
+                  onToggleRaw={() => setShowRaw(!showRaw)}
+                />
               </div>
-            )}
 
-            {/* Automated Tags moved outside card */}
-            {request.tags && request.tags.length > 0 && (
-              <div className="flex flex-col gap-4 pt-4">
-                <h4 className="text-[14px] font-bold text-black/30">Tags</h4>
-                <div className="flex flex-wrap gap-2">
-                  {request.tags.map((tag: any) => (
-                    <Link
-                      key={tag.id}
-                      href={`/tags/${tag.slug}`}
-                      className="bg-gray-100 text-gray-500 text-[13px] px-3.5 py-1.5 rounded-full font-medium transition-all"
-                    >
-                      #{tag.name.toLowerCase()}
-                    </Link>
-                  ))}
-                </div>
+              <div className="flex justify-center mt-4">
+                <button
+                  onClick={() => setShowRaw(!showRaw)}
+                  className="text-[12px] font-medium text-gray-400 hover:text-[#1A1A1A] transition-colors flex items-center gap-2 py-2 px-4 rounded-full bg-transparent border-none shadow-none"
+                >
+                  {showRaw ? (
+                    <>
+                      <IconSparkles className="w-3.5 h-3.5 text-[#7755FF]" />
+                      <span>Show Criteria</span>
+                    </>
+                  ) : (
+                    <>
+                      <IconBook className="w-3.5 h-3.5" />
+                      <span>Original Brief</span>
+                    </>
+                  )}
+                </button>
               </div>
-            )}
+            </div>
+            </div>
+            </SimpleBar>
           </aside>
 
-          {/* RIGHT COLUMN: PROPOSALS (Flexible width) */}
-          <div className="flex-1 w-full space-y-12">
-            {/* ACTION SECTION: SUBMISSION FORM (Hidden trigger on desktop, mobile sticky uses ID) */}
+          {/* RIGHT COLUMN: PROPOSALS (Flexible) */}
+          <div className="flex-1 w-full flex flex-col bg-gray-50/30 overflow-hidden">
+            <SimpleBar className="flex-1 min-h-0" autoHide={true}>
+              <div className="p-4">
+                <div className="max-w-[420px] mx-auto space-y-12">
+                  {/* BOTTOM SECTION: PROPOSALS FEED */}
+                  <section className="w-full">
+                    {mounted ? (
+                      <SubmissionList
+                        requestId={request.id}
+                        requestTitle={request.title}
+                        initialSubmissions={initialSubmissions}
+                        winnerId={request.winner_submission_id}
+                        canSelectWinner={isOwner}
+                        requestStatus={request.status}
+                        requestOwnerId={request.user_id}
+                        requestPreferences={preferences}
+                        requestDealbreakers={dealbreakers}
+                        hideTitle={false}
+                        largeText={true}
+                      />
+                    ) : (
+                      <div className="space-y-6 animate-pulse">
+                        <div className="h-40 w-full bg-white rounded-3xl border border-gray-100" />
+                        <div className="h-40 w-full bg-white rounded-3xl border border-gray-100" />
+                      </div>
+                    )}
+                  </section>
+                </div>
+              </div>
+            </SimpleBar>
+
+            {/* STICKY ACTION SECTION: SUBMISSION FORM */}
             {showSubmissionForm && !isOwner && (
-              <div className="w-full">
-                <SubmissionForm
-                  requestId={request.id}
-                  requestBudgetMax={request.budget_max}
-                  requestDescription={request.description}
-                  hideButton={false}
-                />
+              <div className="p-5 lg:p-6 border-t border-gray-100 bg-white/50 backdrop-blur-sm">
+                <div className="max-w-[420px] mx-auto">
+                  {mounted ? (
+                    <SubmissionForm
+                      requestId={request.id}
+                      requestBudgetMax={request.budget_max}
+                      requestDescription={cleanDesc}
+                      hideButton={false}
+                      requestPreferences={preferences}
+                      requestDealbreakers={dealbreakers}
+                    />
+                  ) : (
+                    <div className="h-20 w-full animate-pulse bg-white rounded-3xl border border-gray-100" />
+                  )}
+                </div>
               </div>
             )}
-
-            {/* BOTTOM SECTION: PROPOSALS FEED */}
-            <section className="space-y-6 w-full pt-2">
-              <div className="w-full">
-                <SubmissionList
-                  requestId={request.id}
-                  requestTitle={request.title}
-                  initialSubmissions={initialSubmissions}
-                  winnerId={request.winner_submission_id}
-                  canSelectWinner={isOwner}
-                  requestStatus={request.status}
-                  requestOwnerId={request.user_id}
-                  hideTitle={false}
-                  largeText={true}
-                />
-              </div>
-            </section>
           </div>
 
         </div>
       </div>
 
       {/* Mobile Sticky Bottom Bar */}
-      <div 
+      <div
         className={cn(
-          "fixed bottom-0 left-0 right-0 p-4 bg-white/80 backdrop-blur-xl border-t border-gray-100 z-50 flex sm:hidden items-center gap-3 shadow-lg transition-transform duration-300",
+          "fixed bottom-0 left-0 right-0 p-4 bg-white/90 backdrop-blur-xl border-t border-gray-100 z-50 flex sm:hidden items-center gap-3 transition-transform duration-300",
           hideBottomBar ? "translate-y-full" : "translate-y-0"
-        )} 
+        )}
         style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}
       >
         {showSubmissionForm && !isOwner ? (
           <div className="flex-1">
-            <Button 
-              className="w-full h-14 rounded-full bg-[#6925DC] text-white font-black text-lg shadow-none"
+            <Button
+              className="w-full h-14 rounded-full bg-[#1A1A1A] text-white font-bold text-[16px] shadow-none"
               onClick={() => {
                 if (typeof (window as any).openSubmissionModal === 'function') {
                   (window as any).openSubmissionModal();
@@ -322,9 +318,9 @@ export function RequestDetailView({
             </Button>
           </div>
         ) : (
-          <div className="flex-1 text-center font-bold text-gray-500">View Marketplace</div>
+          <div className="flex-1 text-center font-bold text-gray-400 text-[15px]">View Marketplace</div>
         )}
-        <div className="w-14 h-14 rounded-full flex items-center justify-center border border-gray-200 bg-white shadow-sm">
+        <div className="w-14 h-14 rounded-full flex items-center justify-center border border-gray-100 bg-white">
           <FavoriteButton requestId={request.id} isFavorite={isFavorite} />
         </div>
       </div>

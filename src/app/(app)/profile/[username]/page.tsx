@@ -72,7 +72,7 @@ export default async function ProfilePage({
         type: "request",
         points: 5,
         description: `Posted ${request.title}`,
-        link: createRequestUrl(request.slug),
+        link: createRequestUrl(request),
         timestamp: request.created_at,
       });
   });
@@ -90,9 +90,9 @@ export default async function ProfilePage({
         type: "winner",
         points: 10,
         description: `+10 Accepted answer in ${requests?.find(r => r.id === submission.request_id)?.title || "a request"}`,
-        link: submission.request_id && requests?.find(r => r.id === submission.request_id) 
-          ? createRequestUrl(requests.find(r => r.id === submission.request_id)!.slug)
-          : `/requests/${submission.request_id}`,
+        link: (submission.request_id && requests?.find(r => r.id === submission.request_id))
+          ? createRequestUrl(requests.find(r => r.id === submission.request_id)!)
+          : createRequestUrl({ id: submission.request_id }),
         timestamp: submission.created_at,
       });
     } else {
@@ -102,9 +102,9 @@ export default async function ProfilePage({
         type: "submission",
         points: 2,
         description: `Posted ${(submission as any).article_name || (submission as any).store_name || "a submission"}`,
-        link: submission.request_id && requests?.find(r => r.id === submission.request_id) 
-          ? createRequestUrl(requests.find(r => r.id === submission.request_id)!.slug)
-          : `/requests/${submission.request_id}`,
+        link: (submission.request_id && requests?.find(r => r.id === submission.request_id))
+          ? createRequestUrl(requests.find(r => r.id === submission.request_id)!)
+          : createRequestUrl({ id: submission.request_id }),
         timestamp: submission.created_at,
       });
     }
@@ -117,9 +117,9 @@ export default async function ProfilePage({
           type: "vote",
           points: 1,
           description: `Received upvote on ${(submission as any).article_name || "submission"}`,
-          link: submission.request_id && requests?.find(r => r.id === submission.request_id) 
-          ? createRequestUrl(requests.find(r => r.id === submission.request_id)!.slug)
-          : `/requests/${submission.request_id}`,
+          link: (submission.request_id && requests?.find(r => r.id === submission.request_id))
+          ? createRequestUrl(requests.find(r => r.id === submission.request_id)!)
+          : createRequestUrl({ id: submission.request_id }),
           timestamp: submission.created_at,
         });
       }

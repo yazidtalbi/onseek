@@ -20,11 +20,30 @@ import Image from "next/image";
 import { savePersonalItemAction } from "@/actions/saved-items.actions";
 import { useQueryClient } from "@tanstack/react-query";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
+import { cn } from "@/lib/utils";
+import { MAIN_CATEGORIES } from "@/lib/categories";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ChevronDown } from "lucide-react";
 
 const personalItemSchema = z.object({
-  articleName: z.string().min(1, "Article name is required"),
+  articleName: z.string().min(1, "Name is required"),
   description: z.string().optional(),
   price: z.number().nullable().optional(),
+  priceSuffix: z.string().optional(),
+  category: z.string().optional(),
+  itemType: z.enum(["product", "service"]),
 });
 
 type PersonalItemValues = z.infer<typeof personalItemSchema>;
@@ -38,14 +57,44 @@ export function AddItemModal({ onSuccess }: { onSuccess?: () => void }) {
   const [isPending, startTransition] = React.useTransition();
   const queryClient = useQueryClient();
 
+  const CATEGORY_GROUPS = {
+    Physical: ["Fashion", "Tech", "Gaming", "Home", "Beauty", "Artisanat", "Automotive", "Grocery", "Pets", "Family", "Sports"],
+    Services: ["Services", "Learning", "Finance", "Health", "Digital"],
+    "Travel/Living": ["Travel", "Property", "Experiences", "Culture"]
+  };
+
+  const getUnitForCategory = (cat: string) => {
+    if (["Tech", "Fashion", "Gaming", "Home", "Beauty", "Artisanat", "Automotive", "Grocery", "Pets", "Family", "Sports"].includes(cat)) return "Total";
+    if (["Services", "Learning"].includes(cat)) return "/hr";
+    if (["Travel", "Property"].includes(cat)) return "/night";
+    return "Total";
+  };
+
   const form = useForm<PersonalItemValues>({
     resolver: zodResolver(personalItemSchema),
     defaultValues: {
       articleName: "",
       description: "",
       price: null,
+      priceSuffix: "Total",
+      category: "Tech",
+      itemType: "product",
     },
   });
+
+  const itemType = form.watch("itemType");
+  const selectedCategory = form.watch("category");
+
+  const getPlaceholders = () => {
+    return {
+      title: "Name your listing (e.g. iPhone 15, Web Design, Paris Tour...)",
+      description: "Provide details about what you are offering...",
+      image: "Upload image",
+      price: "Price",
+    };
+  };
+
+  const placeholders = getPlaceholders();
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -102,6 +151,13 @@ export function AddItemModal({ onSuccess }: { onSuccess?: () => void }) {
         if (uploadedImage) {
           formData.set("imageUrl", uploadedImage);
         }
+        formData.set("itemType", values.itemType);
+        if (values.priceSuffix) {
+          formData.set("priceSuffix", values.priceSuffix);
+        }
+        if (values.category) {
+          formData.set("category", values.category);
+        }
 
         const result = await savePersonalItemAction(formData);
 
@@ -132,7 +188,7 @@ export function AddItemModal({ onSuccess }: { onSuccess?: () => void }) {
       <DialogTrigger asChild>
         <Button className="bg-[#7755FF] hover:bg-[#6644EE]">
           <Upload className="h-4 w-4 mr-2" />
-          Add Item
+          Create Listing
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[620px] p-0 overflow-hidden rounded-[1.5rem] border-none shadow-2xl bg-white">
@@ -149,13 +205,60 @@ export function AddItemModal({ onSuccess }: { onSuccess?: () => void }) {
             </div>
           )}
 
-          <div className="space-y-2">
-            <Input
-              id="articleName"
-              placeholder="Article name (e.g. iPhone 15 Pro, Nike Air Max...)"
-              className="h-14 bg-white border-[#e5e7eb] rounded-xl focus-visible:ring-[#222234] placeholder:text-gray-400 placeholder:font-normal text-base font-semibold"
-              {...form.register("articleName")}
-            />
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="flex-1">
+                <Input
+                  id="articleName"
+                  placeholder={placeholders.title}
+                  className="h-14 bg-white border-[#e5e7eb] rounded-xl focus-visible:ring-[#222234] placeholder:text-gray-400 placeholder:font-normal text-base font-semibold"
+                  {...form.register("articleName")}
+                />
+              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    className={cn(
+                      "h-14 px-4 rounded-xl border-2 transition-all flex items-center justify-center gap-2 font-bold text-xs uppercase tracking-wider whitespace-nowrap",
+                      itemType === "product"
+                        ? "border-blue-100 bg-blue-50 text-blue-600"
+                        : "border-purple-100 bg-purple-50 text-purple-600"
+                    )}
+                  >
+                    {selectedCategory || itemType}
+                    <ChevronDown className="h-4 w-4 opacity-50" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-[240px] max-h-[400px] overflow-y-auto rounded-xl shadow-xl border-none p-1 bg-white">
+                  {Object.entries(CATEGORY_GROUPS).map(([group, cats]) => (
+                    <div key={group} className="p-1">
+                      <div className="px-2 py-1.5 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                        {group}
+                      </div>
+                      {cats.map((cat) => (
+                        <DropdownMenuItem
+                          key={cat}
+                          onClick={() => {
+                            form.setValue("category", cat);
+                            form.setValue("priceSuffix", getUnitForCategory(cat));
+                            // Infer type
+                            if (CATEGORY_GROUPS.Services.includes(cat) || CATEGORY_GROUPS["Travel/Living"].includes(cat)) {
+                              form.setValue("itemType", "service");
+                            } else {
+                              form.setValue("itemType", "product");
+                            }
+                          }}
+                          className="rounded-lg font-medium cursor-pointer"
+                        >
+                          {cat}
+                        </DropdownMenuItem>
+                      ))}
+                    </div>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
             {form.formState.errors.articleName && (
               <p className="text-sm text-red-600">
                 {form.formState.errors.articleName.message}
@@ -183,7 +286,7 @@ export function AddItemModal({ onSuccess }: { onSuccess?: () => void }) {
                   <Upload className="h-4 w-4" />
                 )}
                 <span className="text-sm">
-                  {isUploading ? "Uploading..." : "Upload image"}
+                  {isUploading ? "Uploading..." : "Add Media"}
                 </span>
               </label>
             </div>
@@ -213,23 +316,40 @@ export function AddItemModal({ onSuccess }: { onSuccess?: () => void }) {
           <div className="space-y-2">
             <Textarea
               id="description"
-              placeholder="Description (Describe the item...)"
+              placeholder={placeholders.description}
               className="min-h-[120px] bg-white border-[#e5e7eb] rounded-xl focus-visible:ring-[#222234] placeholder:text-gray-400 placeholder:font-normal text-base resize-none"
               {...form.register("description")}
             />
           </div>
 
-          <div className="space-y-2">
-            <div className="relative group">
+          <div className="flex gap-3">
+            <div className="relative flex-[2]">
               <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-semibold text-lg">$</span>
               <Input
                 id="price"
                 type="number"
                 step="0.01"
-                placeholder="Price (0.00)"
+                placeholder={placeholders.price}
                 className="h-14 bg-white border-[#e5e7eb] rounded-xl focus-visible:ring-[#222234] placeholder:text-gray-400 placeholder:font-normal text-base font-semibold pl-8"
                 {...form.register("price", { valueAsNumber: true })}
               />
+            </div>
+            <div className="flex-1">
+              <Select 
+                onValueChange={(val) => form.setValue("priceSuffix", val)}
+                defaultValue={form.getValues("priceSuffix")}
+              >
+                <SelectTrigger className="h-14 bg-white border-[#e5e7eb] rounded-xl focus:ring-[#222234] font-semibold text-base">
+                  <SelectValue placeholder="Unit" />
+                </SelectTrigger>
+                <SelectContent className="rounded-xl border-none shadow-xl">
+                  {["Total", "/hr", "/day", "/night", "/project"].map((unit) => (
+                    <SelectItem key={unit} value={unit} className="rounded-lg font-medium cursor-pointer">
+                      {unit}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
@@ -259,7 +379,7 @@ export function AddItemModal({ onSuccess }: { onSuccess?: () => void }) {
                   Saving...
                 </>
               ) : (
-                "Save Item"
+                "Save Listing"
               )}
             </Button>
           </div>

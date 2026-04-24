@@ -153,7 +153,7 @@ function MobileSidebarContent({ onClose }: { onClose?: () => void }) {
     { href: "/", label: "Home", icon: IconHome2, activeIcon: IconHome2Filled },
     { href: "/requests", label: "Requests", icon: IconBinoculars, activeIcon: IconBinoculars },
     { href: "/submissions", label: "Proposals", icon: IconFileText, activeIcon: IconFileText },
-    { href: "/inventory", label: "Inventory", icon: IconStack2, activeIcon: IconStackFront },
+    { href: "/listings", label: "My Listings", icon: IconStack2, activeIcon: IconStackFront },
     { href: "/messages", label: "Messages", icon: IconMessageCircle, activeIcon: IconMessageCircleFilled },];
 
   const hasUnreadMessages = useUnreadMessages();
@@ -281,7 +281,7 @@ function DesktopSidebarContent() {
     { href: "/", label: "Home", icon: IconHome2, activeIcon: IconHome2Filled },
     { href: "/requests", label: "Requests", icon: IconBinoculars, activeIcon: IconBinoculars },
     { href: "/submissions", label: "Proposals", icon: IconFileText, activeIcon: IconFileText },
-    { href: "/inventory", label: "Inventory", icon: IconStack2, activeIcon: IconStackFront },
+    { href: "/listings", label: "My Listings", icon: IconStack2, activeIcon: IconStackFront },
     { href: "/messages", label: "Messages", icon: IconMessageCircle, activeIcon: IconMessageCircleFilled },];
 
   return (
