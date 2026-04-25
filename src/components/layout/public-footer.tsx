@@ -21,7 +21,7 @@ export function PublicFooter() {
                 height={32} 
                 className="brightness-0 invert opacity-90 group-hover:opacity-100 transition-opacity"
               />
-              <span className="text-xl text-white font-bold tracking-tight" style={{ fontFamily: 'var(--font-expanded)' }}>onseek</span>
+              <span className="text-xl text-white font-bold tracking-tight" style={{ fontFamily: 'var(--font-expanded)' }}>Onseek</span>
             </Link>
             <p className="text-gray-400 max-w-sm text-sm leading-relaxed font-medium">
               Onseek is a request-first marketplace for people who have better things to do than scroll. We bridge the gap between intent and expert sources, so you can post a request, close the tab, and let the deals find you.
@@ -94,7 +94,7 @@ export function PublicFooter() {
             marginBottom: '-0.1em'
           }}
         >
-          onseek
+          Onseek
         </Link>
       </div>
 

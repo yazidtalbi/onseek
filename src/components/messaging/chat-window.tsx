@@ -9,14 +9,22 @@ import { MessageInput } from "./message-input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { sendMessageAction } from "@/actions/messaging.actions";
 import { useRouter } from "next/navigation";
+import { IconMessageCircle2 } from "@tabler/icons-react";
+import Image from "next/image";
 
 interface ChatWindowProps {
   conversation: Conversation | null;
   messages: Message[];
   currentUserId?: string;
+  hasConversations?: boolean;
 }
 
-export function ChatWindow({ conversation, messages, currentUserId }: ChatWindowProps) {
+export function ChatWindow({ 
+  conversation, 
+  messages, 
+  currentUserId,
+  hasConversations = true 
+}: ChatWindowProps) {
   const scrollRef = React.useRef<HTMLDivElement>(null);
   const router = useRouter();
 
@@ -27,11 +35,42 @@ export function ChatWindow({ conversation, messages, currentUserId }: ChatWindow
   }, [messages]);
 
   if (!conversation) {
+    if (!hasConversations) {
+      return (
+        <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-white">
+          <div className="relative mb-8 group">
+            <div className="absolute -inset-4 bg-[#7755FF]/10 rounded-full blur-2xl group-hover:bg-[#7755FF]/20 transition-all duration-500" />
+            <div className="relative h-40 w-40 flex items-center justify-center bg-white rounded-3xl shadow-2xl border border-neutral-100 rotate-3 group-hover:rotate-0 transition-transform duration-500">
+               <div className="absolute -top-4 -right-4 h-12 w-12 bg-[#7755FF] rounded-xl flex items-center justify-center shadow-lg -rotate-12 group-hover:rotate-0 transition-transform duration-500">
+                 <IconMessageCircle2 size={24} className="text-white" />
+               </div>
+               <Image 
+                 src="/logonseek.svg" 
+                 alt="Onseek" 
+                 width={60} 
+                 height={60} 
+                 className="opacity-20 grayscale"
+               />
+            </div>
+          </div>
+          <h2 className="text-2xl font-bold text-neutral-900 mb-3 tracking-tight" style={{ fontFamily: 'var(--font-expanded)' }}>
+            Your conversations will appear here
+          </h2>
+          <p className="text-neutral-500 max-w-xs mx-auto text-sm leading-relaxed">
+            Once you receive a proposal or start a request, the magic happens in this space.
+          </p>
+        </div>
+      );
+    }
+
     return (
-      <div className="flex-1 flex items-center justify-center bg-neutral-50 text-neutral-400 p-8 text-center">
-        <div>
-          <p className="text-lg font-medium mb-1">Select a conversation</p>
-          <p className="text-sm">Choose a chat from the left to start messaging.</p>
+      <div className="flex-1 flex items-center justify-center bg-neutral-50/50 text-neutral-400 p-8 text-center">
+        <div className="max-w-xs">
+          <div className="mb-4 flex justify-center opacity-20">
+             <IconMessageCircle2 size={48} strokeWidth={1.5} />
+          </div>
+          <p className="text-xl font-semibold text-neutral-900 mb-2">Select a conversation</p>
+          <p className="text-sm text-neutral-500">Choose a chat from the left to start messaging about your requests and proposals.</p>
         </div>
       </div>
     );

@@ -151,10 +151,11 @@ export function SubmissionCard({
   hideTitle,
   largeText,
   noBorder = false,
-  isBest = false,
   requestPreferences = [],
   requestDealbreakers = [],
   viewMode = "expanded",
+  hideFooter = false,
+  hideIdentity = false,
 }: {
   submission: Submission;
   requestId: string;
@@ -171,10 +172,11 @@ export function SubmissionCard({
   hideTitle?: boolean;
   largeText?: boolean;
   noBorder?: boolean;
-  isBest?: boolean;
   requestPreferences?: any[];
   requestDealbreakers?: any[];
   viewMode?: "expanded" | "compact";
+  hideFooter?: boolean;
+  hideIdentity?: boolean;
 }) {
   const router = useRouter();
   const { toast } = useToast();
@@ -265,7 +267,7 @@ export function SubmissionCard({
       <div className={cn(
         "rounded-2xl border-none flex flex-col h-full overflow-hidden transition-all",
         theme.bg,
-        isBest && "ring-2 ring-[#ff4f27] ring-offset-2"
+        isWinner && "ring-2 ring-[#ff4f27] ring-offset-2"
       )}>
         {/* Main Content White Card */}
         <div
@@ -318,30 +320,36 @@ export function SubmissionCard({
         </div>
 
         {/* Identity & Interaction Section (Outside white card, inside themed bg) */}
-        <div className="px-4 pb-3.5 pt-0.5 flex items-center justify-between">
-          <div className="flex-1 flex items-center gap-2">
-            <Avatar className="h-7 w-7 border border-white shadow-sm shrink-0">
-              <AvatarImage src={profile?.avatar_url} />
-              <AvatarFallback className="text-[9px] bg-gray-50 font-bold text-gray-400">
-                {fullName.charAt(0)}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex items-center gap-1.5">
-              <span className="text-[13px] font-bold text-[#1A1A1A] leading-tight">
-                {fullName}
-              </span>
-              <span className="text-[13px] font-medium text-gray-400">
-                · {formatTimeAgo(submission.created_at)}
-              </span>
+        {!hideFooter && (
+          <div className="px-4 pb-3.5 pt-0.5 flex items-center justify-between">
+            <div className="flex-1 flex items-center gap-2">
+              {!hideIdentity && (
+                <>
+                  <Avatar className="h-7 w-7 border border-white shadow-sm shrink-0">
+                    <AvatarImage src={profile?.avatar_url} />
+                    <AvatarFallback className="text-[9px] bg-gray-50 font-bold text-gray-400">
+                      {fullName.charAt(0)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[13px] font-bold text-[#1A1A1A] leading-tight">
+                      {fullName}
+                    </span>
+                    <span className="text-[13px] font-medium text-gray-400">
+                      · {formatTimeAgo(submission.created_at)}
+                    </span>
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2">
+              {!hideVotes && (
+                <VoteButtons submission={submission} requestId={requestId} />
+              )}
             </div>
           </div>
-
-          <div className="flex items-center gap-2">
-            {!hideVotes && (
-              <VoteButtons submission={submission} requestId={requestId} />
-            )}
-          </div>
-        </div>
+        )}
 
         {/* Dialogs */}
         {isPersonalItem && hasImage && imageUrl && (
@@ -383,7 +391,7 @@ export function SubmissionCard({
       onClick={handleCardClick}
       className={cn(
         "cursor-pointer shadow-none border-none bg-transparent group",
-        isBest && "ring-2 ring-[#ff4f27] ring-offset-2 rounded-[22px]"
+        isWinner && "ring-2 ring-[#ff4f27] ring-offset-2 rounded-[22px]"
       )}
     >
       <div className={cn("p-0 rounded-[20px] flex flex-col gap-1 h-full border border-gray-100", theme.bg)}>

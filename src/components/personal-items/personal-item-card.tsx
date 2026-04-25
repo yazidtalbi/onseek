@@ -37,9 +37,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useQuery } from "@tanstack/react-query";
+import { createBrowserSupabaseClient } from "@/lib/supabase/client";
+
+import { createRequestUrl } from "@/lib/utils/slug";
+import Link from "next/link";
+import { AlertCircle, ExternalLink } from "lucide-react";
 
 interface PersonalItemCardProps {
-  item: PersonalItem;
+  item: PersonalItem & { usageCount?: number };
 }
 
 export function PersonalItemCard({ item }: PersonalItemCardProps) {
@@ -48,6 +54,7 @@ export function PersonalItemCard({ item }: PersonalItemCardProps) {
   const [isPending, startTransition] = useTransition();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [showUsageList, setShowUsageList] = useState(false);
   const [formData, setFormData] = useState({
     articleName: item.article_name,
     description: item.description || "",
@@ -56,6 +63,19 @@ export function PersonalItemCard({ item }: PersonalItemCardProps) {
     category: item.category || "Tech",
     itemType: item.item_type || "product",
     imageUrl: item.image_url || "",
+  });
+
+  const { data: proposalHistory } = useQuery({
+    queryKey: ["item-usage-history", item.article_name],
+    queryFn: async () => {
+      const supabase = createBrowserSupabaseClient();
+      const { data } = await supabase
+        .from("submissions")
+        .select("request_id, requests(id, title, slug, category)")
+        .eq("article_name", item.article_name);
+      return data || [];
+    },
+    enabled: showUsageList
   });
 
   const CATEGORY_GROUPS = {
@@ -108,12 +128,12 @@ export function PersonalItemCard({ item }: PersonalItemCardProps) {
 
   return (
     <>
-      <Card className=" transition-colors">
-        <CardContent className="p-6">
-          <div className="flex items-start gap-4">
+      <Card className=" transition-colors border-none shadow-none bg-transparent">
+        <CardContent className="p-0 flex flex-col gap-5">
+          <div className="flex items-start gap-5">
             {/* Image */}
             {item.image_url ? (
-              <div className="relative w-24 h-24 rounded-lg overflow-hidden border border-[#e5e7eb] bg-gray-100 flex-shrink-0">
+              <div className="relative w-[60px] h-[60px] rounded-xl overflow-hidden border border-[#e5e7eb] bg-gray-100 flex-shrink-0">
                 <Image
                   src={item.image_url}
                   alt={item.article_name}
@@ -123,73 +143,89 @@ export function PersonalItemCard({ item }: PersonalItemCardProps) {
                 />
               </div>
             ) : (
-              <div className="w-24 h-24 rounded-lg border border-[#e5e7eb] bg-gray-100 flex items-center justify-center flex-shrink-0">
-                <Package className="h-8 w-8 text-gray-400" />
+              <div className="w-[60px] h-[60px] rounded-xl border border-[#e5e7eb] bg-gray-100 flex items-center justify-center flex-shrink-0">
+                <Package className="h-6 w-6 text-gray-300" />
               </div>
             )}
 
-            {/* Content */}
+            {/* Content Header */}
             <div className="flex-1 min-w-0">
-              <div className="flex items-start justify-between gap-4 mb-2">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="text-lg font-semibold text-foreground">
-                      {item.article_name}
-                    </h3>
-                    <span className={cn(
-                      "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider",
-                      item.item_type === "service" 
-                        ? "bg-purple-50 text-purple-600 border border-purple-100" 
-                        : "bg-blue-50 text-blue-600 border border-blue-100"
-                    )}>
-                      {item.category || item.item_type || "product"}
-                    </span>
-                  </div>
-                  {item.price && (
-                    <p className="text-base text-[#7755FF] font-semibold mb-2">
-                      ${item.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      {item.price_suffix && <span className="text-sm font-normal text-gray-500 ml-1">{item.price_suffix}</span>}
-                    </p>
-                  )}
-                  {item.description && (
-                    <p className="text-sm text-gray-600 line-clamp-2 mb-2">
-                      {item.description}
-                    </p>
-                  )}
-                  <p className="text-xs text-gray-500">
-                    Saved {formatTimeAgo(item.created_at)}
-                  </p>
-                </div>
-
-                {/* Menu */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button
-                      type="button"
-                      className="p-1.5 rounded-full hover:bg-gray-100 transition-colors flex-shrink-0"
-                    >
-                      <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem
-                      onClick={() => setIsEditDialogOpen(true)}
-                      className="cursor-pointer"
-                    >
-                      <Edit className="h-4 w-4 mr-2" />
-                      Edit
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => setIsDeleteDialogOpen(true)}
-                      className="cursor-pointer text-red-600 focus:text-red-600"
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+              <div className="flex flex-col gap-0.5">
+                <span className={cn(
+                  "text-[10px] font-bold capitalize tracking-normal mb-1",
+                  item.item_type === "service" 
+                    ? "text-purple-600" 
+                    : "text-blue-600"
+                )}>
+                  {(item.category || item.item_type || "product").toLowerCase()}
+                </span>
+                <h3 className="text-xl font-semibold text-foreground leading-tight">
+                  {item.article_name}
+                </h3>
               </div>
             </div>
+
+            {/* Menu */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className="p-1.5 rounded-full hover:bg-gray-100 transition-colors flex-shrink-0"
+                >
+                  <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  onClick={() => setIsEditDialogOpen(true)}
+                  className="cursor-pointer"
+                >
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => setIsDeleteDialogOpen(true)}
+                  className="cursor-pointer text-red-600 focus:text-red-600"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+
+          {/* Details Section */}
+          <div className="space-y-3">
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => setShowUsageList(true)}
+                  className={cn(
+                    "text-[11px] font-bold transition-all px-2.5 py-1 rounded-full",
+                    item.usageCount && item.usageCount > 0
+                      ? "bg-[#7755FF]/10 text-[#7755FF] hover:bg-[#7755FF]/20"
+                      : "bg-gray-100 text-gray-400 opacity-60"
+                  )}
+                >
+                  Proposed for {item.usageCount || 0} requests
+                </button>
+              </div>
+              {item.price && (
+                <p className="text-lg text-[#1A1A1A] font-bold">
+                  ${item.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  {item.price_suffix && <span className="text-sm font-medium text-gray-400 ml-1.5">{item.price_suffix}</span>}
+                </p>
+              )}
+            </div>
+
+            {item.description && (
+              <p className="text-sm text-gray-600 leading-relaxed">
+                {item.description}
+              </p>
+            )}
+            <p className="text-[11px] font-bold text-gray-300 capitalize tracking-normal">
+              Saved {formatTimeAgo(item.created_at)}
+            </p>
           </div>
         </CardContent>
       </Card>
@@ -203,6 +239,14 @@ export function PersonalItemCard({ item }: PersonalItemCardProps) {
               Update the details of your listing.
             </DialogDescription>
           </DialogHeader>
+          
+          <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 flex gap-3 mt-2">
+            <AlertCircle className="h-5 w-5 text-amber-600 shrink-0" />
+            <p className="text-[13px] text-amber-800 leading-normal font-medium">
+              Updating this listing will only affect future proposals. Existing requests you've already applied to will not be updated.
+            </p>
+          </div>
+
           <div className="space-y-4 py-4">
             <div className="flex items-center gap-3">
               <div className="flex-1">
@@ -363,6 +407,49 @@ export function PersonalItemCard({ item }: PersonalItemCardProps) {
               {isPending ? "Deleting..." : "Delete"}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Usage History Dialog */}
+      <Dialog open={showUsageList} onOpenChange={setShowUsageList}>
+        <DialogContent className="sm:max-w-[450px]">
+          <DialogHeader>
+            <DialogTitle>Usage History</DialogTitle>
+            <DialogDescription>
+              Requests where "{item.article_name}" was proposed.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4 space-y-3">
+            {proposalHistory && (proposalHistory as any).length > 0 ? (
+              (proposalHistory as any).map((usage: any, idx: number) => (
+                <Link
+                  key={idx}
+                  href={createRequestUrl(usage.requests)}
+                  target="_blank"
+                  className="block p-4 rounded-2xl border border-gray-100 hover:border-[#7755FF]/20 hover:bg-[#7755FF]/5 transition-all group"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex flex-col gap-1">
+                      <span className="text-[10px] font-bold text-gray-400 capitalize tracking-[0.1em] leading-none mb-1">
+                        {usage.requests?.category || "General"}
+                      </span>
+                      <h4 className="font-semibold text-gray-900 group-hover:text-[#7755FF] transition-colors line-clamp-2">
+                        {usage.requests?.title}
+                      </h4>
+                    </div>
+                    <ExternalLink className="h-4 w-4 text-gray-300 group-hover:text-[#7755FF] transition-colors mt-1 shrink-0" />
+                  </div>
+                </Link>
+              ))
+            ) : (
+              <div className="py-12 text-center flex flex-col items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center">
+                  <Package className="h-6 w-6 text-gray-300" />
+                </div>
+                <p className="text-sm text-gray-400 font-medium italic">No history found for this item.</p>
+              </div>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </>

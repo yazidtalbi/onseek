@@ -51,7 +51,7 @@ export function PublicNavbar({ disableHide = false }: PublicNavbarProps) {
       <div className="mx-auto flex w-full max-w-[1360px] items-center justify-between px-8 py-4">
         <Link href="/" className="flex items-center gap-2 text-xl font-bold text-black" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>
           <Image src="/logonseek.svg" alt="onseek" width={28} height={28} className="h-7 w-auto" priority />
-          onseek
+          Onseek
         </Link>
         <div className="flex items-center gap-3">
           <Link href="/login" className="text-sm font-semibold text-foreground">

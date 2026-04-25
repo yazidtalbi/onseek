@@ -21,9 +21,11 @@ export function ConversationList({
   currentUserId 
 }: ConversationListProps) {
   return (
-    <div className="flex flex-col h-full bg-white border-r overflow-y-auto">
-      <div className="p-4 border-b">
-        <h2 className="font-semibold text-lg">Messages</h2>
+    <div className="flex flex-col h-full bg-white overflow-y-auto">
+      <div className="p-6 border-b">
+        <h2 className="text-2xl font-bold tracking-tight text-neutral-900" style={{ fontFamily: 'var(--font-expanded)' }}>
+          Messages <span className="text-[#7755FF] text-lg ml-1">({conversations.length})</span>
+        </h2>
       </div>
       <div className="flex-1">
         {conversations.length === 0 ? (

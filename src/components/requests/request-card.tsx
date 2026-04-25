@@ -278,8 +278,8 @@ function RequestCardComponent({
   const shortMetadata = [formattedCondition].filter(Boolean).join(" - ");
 
   // Limit display
-  const maxPreferences = (isMasonry || smallImages) ? 3 : preferences.length;
-  const maxDealbreakers = (isMasonry || smallImages) ? 2 : dealbreakers.length;
+  const maxPreferences = showAllRequirements ? 999 : 3;
+  const maxDealbreakers = showAllRequirements ? 999 : 3;
 
   const visiblePreferences = preferences.slice(0, maxPreferences);
   const visibleDealbreakers = dealbreakers.slice(0, maxDealbreakers);
@@ -287,95 +287,119 @@ function RequestCardComponent({
 
   const cardContent = isFeed ? (
     <div className={cn(
-      "flex flex-col h-full bg-white border border-gray-100/50 shadow-none relative",
-      noBorder && "bg-transparent border-none px-0"
+      "flex flex-col h-full bg-white relative overflow-hidden",
+      noBorder ? "bg-transparent border-none px-0" : "border border-[#e6e7eb] rounded-[16px]"
     )}>
-      {/* Feed View Content */}
-      <div className="px-4 pt-4 pb-2">
-        <div className="flex flex-col gap-2">
-          <div className={cn(isMasonry ? "flex flex-row items-start justify-between gap-6" : "flex flex-row items-center gap-3")}>
-            <div className="relative flex-1">
-              <h3 className="text-[17px] sm:text-[19px] font-bold text-[#1A1A1A] leading-[1.3] tracking-tight" style={{ fontFamily: "'Zalando Sans SemiExpanded', sans-serif" }}>
+      <div className="flex flex-col h-full px-2 pt-1.5 sm:pt-2">
+        <section className="flex flex-col px-4 flex-1 h-full">
+          <div className="flex-1 pt-4">
+            <div className="flex flex-col gap-3">
+              <div className={cn("shrink-0", theme.text)}>
+                {(() => {
+                  const TablerIcon = getTablerIcon(request.category);
+                  return <TablerIcon className="h-6 w-6" fill="currentColor" />;
+                })()}
+              </div>
+              <h3 className="text-[18px] sm:text-[20px] font-bold text-[#1A1A1A] leading-[1.25] tracking-tight" style={{ fontFamily: "'Zalando Sans SemiExpanded', sans-serif" }}>
                 {request.title}
               </h3>
             </div>
-            {isMasonry && (
-              <div className={cn("shrink-0 pt-1", theme.text)}>
-                {(() => {
-                  const TablerIcon = getTablerIcon(request.category);
-                  return <TablerIcon className="h-7 w-7" fill="currentColor" />;
-                })()}
-              </div>
-            )}
-          </div>
-        </div>
 
-        <div className="mt-4 flex flex-col gap-1">
-          <div className="flex items-center gap-2">
-            <span className="font-semibold text-[#1A1A1A] text-[16px]">{shortMetadata || "Any Condition"}</span>
-            <span className="text-gray-300">·</span>
-            <span className="font-semibold text-[#1A1A1A] text-[16px]">{maxBudget}</span>
-          </div>
-          <div className="flex items-center justify-between mt-2">
-            <span className="text-[12px] text-gray-400">Requested {timeAgo}</span>
-            <div className="flex items-center gap-1.5">
-              <FavoriteButton
-                requestId={request.id}
-                isFavorite={isFavorite}
-              />
-              <RequestMenu
-                requestId={request.id}
-                requestUserId={request.user_id}
-                status={request.status}
-                categories={request.categories}
-                isAdmin={isAdmin}
-                initialData={{ ...request, images, links }}
-              />
+            <div className="mt-4 flex flex-col gap-1">
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-[#1A1A1A] text-[15px]">{shortMetadata || "Any Condition"}</span>
+                <span className="text-gray-300">·</span>
+                <span className="font-semibold text-[#1A1A1A] text-[15px]">{maxBudget}</span>
+              </div>
+              <div className="flex items-center justify-between mt-2">
+                <span className="text-[12px] text-gray-400">Requested {timeAgo}</span>
+                <div className="flex items-center gap-1.5">
+                  <FavoriteButton
+                    requestId={request.id}
+                    isFavorite={isFavorite}
+                  />
+                  <RequestMenu
+                    requestId={request.id}
+                    requestUserId={request.user_id}
+                    status={request.status}
+                    categories={request.categories}
+                    isAdmin={isAdmin}
+                    initialData={{ ...request, images, links }}
+                  />
+                </div>
+              </div>
             </div>
           </div>
-        </div>
+        </section>
       </div>
     </div>
   ) : (
-    /* Workstation Detail Variant */    <div className={cn("p-0 rounded-[20px] flex flex-col gap-1 h-full", theme.bg)}>
-      <div className="border border-[#e5e7eb] text-card-foreground flex flex-col relative w-full transition-all duration-300 ease-out shadow-none bg-transparent border-none overflow-hidden rounded-[16px] !border-none !shadow-none font-medium h-full">
-        <div className="flex flex-col h-full bg-transparent px-2 pb-0 sm:px-2 sm:pb-0 pt-1 sm:pt-1.5">
-          <section className="flex flex-col px-4 flex-1 h-full">
-            <div className="flex-1">
-              <div className="relative min-h-[300px]">
-                {/* PERSISTENT CATEGORY ICON */}
-                <div className={cn("absolute top-6 right-0 shrink-0 z-10", theme.text)}>
-                  {(() => {
-                    const TablerIcon = getTablerIcon(request.category);
-                    return <TablerIcon className="h-8 w-8" fill="currentColor" />;
-                  })()}
-                </div>
+    <div className="flex-1 flex flex-col relative w-full h-full overflow-visible" style={{ perspective: "1200px" }}>
+      <motion.div
+        initial={false}
+        animate={{
+          rotateY: showRaw ? 180 : 0,
+        }}
+        transition={{
+          type: "spring",
+          stiffness: 300,
+          damping: 30,
+          mass: 0.8
+        }}
+        style={{
+          transformStyle: "preserve-3d",
+          willChange: "transform"
+        }}
+        className="flex-1 relative w-full rounded-[20px] shadow-none border-none"
+      >
+        {/* FRONT FACE: Entire Card (Criteria) */}
+        <div
+          style={{
+            backfaceVisibility: "hidden",
+            WebkitBackfaceVisibility: "hidden",
+            transform: "translateZ(1px)"
+          }}
+          className={cn("relative w-full h-full flex flex-col p-0 rounded-[20px] overflow-hidden shadow-none border-none", theme.bg)}
+        >
+          <div className="flex flex-col h-full bg-transparent px-2 pb-0 sm:px-2 sm:pb-0 pt-1 sm:pt-1.5">
+            <section className="flex flex-col px-4 flex-1 h-full">
+              <div className="flex-1">
+                <div className="relative min-h-[200px]">
+                  {/* Icon */}
+                  <div className={cn("absolute top-6 right-0 shrink-0 z-10", theme.text)}>
+                    {(() => {
+                      const TablerIcon = getTablerIcon(request.category);
+                      return <TablerIcon className="h-8 w-8" fill="currentColor" />;
+                    })()}
+                  </div>
 
-                <motion.div
-                  initial={false}
-                  animate={{ opacity: showRaw ? 0 : 1, y: showRaw ? -10 : 0 }}
-                  transition={{ duration: 0.3, ease: "easeInOut" }}
-                  className={cn(showRaw && "pointer-events-none invisible absolute inset-0")}
-                >
+                  {/* Header */}
                   <div className="mb-4 pt-6 flex flex-row items-start justify-between gap-8">
-                    <h1 className="font-semibold text-[#1A1A1A] text-[20px] sm:text-[22px] flex-1 pr-12" style={{ fontFamily: '"Zalando Sans SemiExpanded", sans-serif', fontWeight: 600, maxWidth: '100%' }}>
+                    <h1 className={cn(
+                      "font-semibold text-[#1A1A1A] flex-1 pr-12 text-[20px] sm:text-[22px]"
+                    )} style={{ fontFamily: '"Zalando Sans SemiExpanded", sans-serif', fontWeight: 600, maxWidth: '100%' }}>
                       {request.title}
                     </h1>
                   </div>
 
-                  <div className="space-y-5">
+                  {/* Content */}
+                  <div className={cn("space-y-5 flex-1", isLarge && "space-y-[clamp(4px,0.8vh,10px)]")}>
                     <div className="flex flex-col">
                       <div className="flex flex-col gap-0">
                         {visiblePreferences.map((item: any, idx: number) => {
                           const isLast = idx === visiblePreferences.length - 1 && visibleDealbreakers.length === 0 && totalRemainingCount === 0;
                           return (
                             <div key={`pref-${idx}`} className={cn(
-                              "flex items-center gap-4 py-4 group/item border-current",
-                              !isLast && "border-b border-dashed",
+                              "flex items-center gap-4 py-4 group/item border-current border-dashed",
+                              !isLast && "border-b",
+                              isLarge && "py-4 gap-4",
                               theme.text
                             )}>
                               <IconCheck className="h-4 w-4 text-emerald-500 shrink-0" strokeWidth={3} />
-                              <span className="text-[15px] sm:text-[17px] font-medium leading-snug text-[#1A1A1A]">
+                              <span className={cn(
+                                "font-medium leading-snug text-[#1A1A1A]",
+                                isLarge ? "text-[15px] sm:text-[17px]" : "text-[15px] sm:text-[17px]"
+                              )}>
                                 {item.label.charAt(0).toUpperCase() + item.label.slice(1)}
                               </span>
                             </div>
@@ -385,14 +409,16 @@ function RequestCardComponent({
                           const isLast = idx === visibleDealbreakers.length - 1 && totalRemainingCount === 0;
                           return (
                             <div key={`db-${idx}`} className={cn(
-                              "flex items-center gap-4 py-4 group/item border-current",
-                              !isLast && "border-b border-dashed",
+                              "flex items-center gap-4 py-4 group/item border-current border-dashed",
+                              !isLast && "border-b",
+                              isLarge && "py-4 gap-4",
                               theme.text
                             )}>
                               <IconX className={cn("h-4 w-4 shrink-0 opacity-30", theme.text)} strokeWidth={3} />
                               <span className={cn(
-                                "text-[15px] sm:text-[17px] font-medium leading-snug opacity-30",
-                                theme.text
+                                "font-medium leading-snug opacity-30",
+                                theme.text,
+                                "text-[15px] sm:text-[17px]"
                               )}>
                                 {item.label.charAt(0).toUpperCase() + item.label.slice(1)}
                               </span>
@@ -400,55 +426,70 @@ function RequestCardComponent({
                           );
                         })}
                         {totalRemainingCount > 0 && (
-                          <div className={cn("py-4 text-[15px] sm:text-[17px] font-medium opacity-30", theme.text)}>
+                          <div className={cn(
+                            "py-4 font-medium opacity-30",
+                            theme.text,
+                            isLarge ? "py-[clamp(3px,0.8vh,8px)] text-[clamp(12px,1.6vh,15px)]" : "text-[15px] sm:text-[17px]"
+                          )}>
                             And {totalRemainingCount} more details
                           </div>
                         )}
                       </div>
                     </div>
                   </div>
-                </motion.div>
-
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: showRaw ? 1 : 0, y: showRaw ? 0 : 10 }}
-                  transition={{ duration: 0.3, ease: "easeInOut" }}
-                  className={cn("pt-20 pb-8", !showRaw && "pointer-events-none invisible absolute inset-0")}
-                >
-                  <p className="text-[17px] sm:text-[19px] font-serif italic text-[#1A1A1A]/80 leading-relaxed tracking-tight" style={{ fontFamily: 'Georgia, serif' }}>
-                    &ldquo;{cleanDesc}&rdquo;
-                  </p>
-                </motion.div>
-              </div>
-            </div>
-
-            <div className="mt-5 pb-0">
-              <div className={cn("h-px -mx-5 sm:-mx-6 bg-current opacity-20", theme.text)}></div>
-              <div className="flex items-stretch -mx-5 sm:-mx-6">
-                <div className="flex flex-col items-start flex-1 py-4 min-w-0 px-6 group/meta">
-                  <span className="text-[16px] sm:text-[18px] font-bold text-[#1A1A1A] leading-tight text-left truncate w-full">
-                    {formattedCondition || "Any"}
-                  </span>
-                  <span className={cn("text-[13px] font-normal leading-none mt-1 opacity-30", theme.text)}>
-                    Condition
-                  </span>
-                </div>
-                <div className={cn("w-px shrink-0 bg-current opacity-20", theme.text)}></div>
-                <div className="flex flex-col items-start flex-1 py-4 min-w-0 px-6">
-                  <span className="text-[16px] sm:text-[18px] font-bold text-[#1A1A1A] leading-tight text-left truncate w-full">
-                    {maxBudget}
-                  </span>
-                  <span className={cn("text-[13px] font-normal leading-none mt-1 opacity-30", theme.text)}>
-                    Budget
-                  </span>
                 </div>
               </div>
-            </div>
 
-          </section>
-
+              {/* Footer */}
+              <div className="mt-5 pb-0">
+                <div className={cn("h-px -mx-5 sm:-mx-6 bg-current opacity-20", theme.text)}></div>
+                <div className="flex items-stretch -mx-5 sm:-mx-6">
+                  <div className={cn("flex flex-col items-start flex-1 py-4 min-w-0 px-6 group/meta")}>
+                    <span className={cn("font-bold text-[#1A1A1A] leading-tight text-left truncate w-full text-[16px] sm:text-[18px]")}>
+                      {formattedCondition || "Any"}
+                    </span>
+                    <span className={cn("text-[13px] font-normal leading-none mt-1 opacity-30", theme.text)}>Condition</span>
+                  </div>
+                  <div className={cn("w-px shrink-0 bg-current opacity-20", theme.text)}></div>
+                  <div className={cn("flex flex-col items-start flex-1 py-4 min-w-0 px-6")}>
+                    <span className={cn("font-bold text-[#1A1A1A] leading-tight text-left truncate w-full text-[16px] sm:text-[18px]")}>
+                      {maxBudget}
+                    </span>
+                    <span className={cn("text-[13px] font-normal leading-none mt-1 opacity-30", theme.text)}>Budget</span>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
         </div>
-      </div>
+
+        {/* BACK FACE: Entire Card (Brief) */}
+        <div
+          style={{
+            backfaceVisibility: "hidden",
+            WebkitBackfaceVisibility: "hidden",
+            transform: "rotateY(180deg) translateZ(1px)"
+          }}
+          className={cn(
+            "absolute inset-0 w-full h-full flex flex-col p-0 rounded-[20px] overflow-hidden shadow-none border-none", 
+            theme.bg
+          )}
+        >
+          {/* Content (The Brief) - Centered and full-width for reading */}
+          <div className="flex-1 flex flex-col justify-center px-10 py-12 overflow-hidden">
+            <div className="flex flex-col gap-4">
+              <span className="text-[40px] font-serif text-black/20 leading-none -ml-1">&ldquo;</span>
+              <p className={cn(
+                "font-serif text-black leading-relaxed tracking-tight text-left",
+                isLarge ? "text-[20px] sm:text-[22px]" : "text-[20px] sm:text-[22px]"
+              )}>
+                {cleanDesc}
+              </p>
+              <span className="text-[40px] font-serif text-black/20 leading-none self-end -mr-1">&rdquo;</span>
+            </div>
+          </div>
+        </div>
+      </motion.div>
     </div>
   );
 
@@ -473,7 +514,7 @@ function RequestCardComponent({
           href={cardLink}
           prefetch={true}
           className={cn(
-            "block focus:outline-none transition-transform duration-300 ease-out h-full flex flex-col",
+            "focus:outline-none transition-transform duration-300 ease-out h-full flex flex-col",
             !disableHover && "hover:scale-[1.02]"
           )}
         >

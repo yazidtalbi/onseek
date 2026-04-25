@@ -153,7 +153,14 @@ export function RequestDetailView({
               )}
               {request.condition && (
                 <div className="space-y-2">
-                  <span className="text-[13px] font-medium text-gray-500" style={{ fontFamily: 'var(--font-inter-display)' }}>Condition</span>
+                  <span className="text-[13px] font-medium text-gray-500" style={{ fontFamily: 'var(--font-inter-display)' }}>
+                    {(() => {
+                      const c = (request.category || "").toLowerCase();
+                      if (c.includes("service") || c.includes("learning") || c.includes("artisanat")) return "Expertise";
+                      if (c.includes("travel") || c.includes("property") || c.includes("experiences") || c.includes("digital") || c.includes("finance")) return "Type";
+                      return "Condition";
+                    })()}
+                  </span>
                   <div className="flex items-center gap-2 text-[17px] font-bold text-black capitalize">
                     <Gauge className="h-4 w-4 text-gray-400" />
                     <span>{request.condition === 'any' ? 'Any Condition' : request.condition}</span>
@@ -241,6 +248,23 @@ export function RequestDetailView({
                   ))}
                 </div>
               </div>
+            {/* Tags */}
+            {request.tags && request.tags.length > 0 && (
+              <div className="flex flex-wrap gap-2 pt-10">
+                {request.tags.map((tag: any, i: number) => {
+                  const tagLabel = typeof tag === 'object' ? tag.name : String(tag);
+                  const tagSlug = typeof tag === 'object' ? tag.slug : tagLabel.replace(/\s+/g, '-').toLowerCase();
+                  return (
+                    <Link 
+                      key={i} 
+                      href={`/tags/${tagSlug}`}
+                      className="text-[13px] font-semibold text-gray-400 bg-gray-50 px-3 py-1 rounded-full border border-gray-100 hover:text-[#6925DC] hover:border-[#6925DC]/20 transition-colors cursor-pointer"
+                    >
+                      #{tagLabel.replace(/\s+/g, '-').toLowerCase()}
+                    </Link>
+                  );
+                })}
+              </div>
             )}
           </section>
 
@@ -269,6 +293,7 @@ export function RequestDetailView({
                 requestOwnerId={request.user_id}
                 hideTitle={true}
                 largeText={true}
+                isOwner={isOwner}
               />
             </div>
           </section>

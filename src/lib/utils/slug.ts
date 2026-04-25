@@ -14,6 +14,7 @@ export function generateSlug(title: string): string {
  * Get short ID from full UUID (first 8 characters)
  */
 export function getShortId(id: string): string {
+  if (!id) return '';
   return id.replace(/-/g, '').substring(0, 8);
 }
 
@@ -23,7 +24,9 @@ export function getShortId(id: string): string {
  */
 import { getCategorySlug } from "./category-routing";
 
-export function createRequestUrl(request: { slug?: string; id: string; category?: string }, searchParams?: string | URLSearchParams): string {
+export function createRequestUrl(request: { slug?: string; id?: string; category?: string }, searchParams?: string | URLSearchParams): string {
+  if (!request?.id) return '#';
+  
   if (!request.slug) {
     const base = `/requests/${request.id}`;
     if (!searchParams) return base;

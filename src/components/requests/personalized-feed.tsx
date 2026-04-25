@@ -571,7 +571,7 @@ export function PersonalizedFeed({
               {/* Bottom Row */}
               <div className="pt-8 border-t border-white/[0.02] flex flex-col md:flex-row justify-between items-center gap-6">
                 <div className="flex items-center gap-4">
-                  <p className="text-xs text-white/40 font-medium">© 2026 onseek</p>
+                  <p className="text-xs text-white/40 font-medium">© 2026 Onseek</p>
                 </div>
                 <div className="flex items-center gap-8">
                   <div className="flex gap-4">

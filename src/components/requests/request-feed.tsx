@@ -238,7 +238,7 @@ export function RequestFeed({
             key={request.id}
             className={cn(
               "break-inside-avoid mb-6",
-              useHomeStyle && "bg-[#f5f6f9] rounded-[20px] p-[6px] transition-all duration-300 ease-out",
+              useHomeStyle && "rounded-[20px] transition-all duration-300 ease-out",
               useHomeStyle && !disableHover && "hover:scale-[1.02]"
             )}
           >

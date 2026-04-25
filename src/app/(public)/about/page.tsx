@@ -317,7 +317,7 @@ export default function AboutPage() {
 
           <div className="container relative z-10 mx-auto px-6 text-center max-w-4xl space-y-10 flex flex-col items-center">
             <div className="mb-4">
-              <img src="/logonseek.svg" alt="onseek" className="h-9 w-auto brightness-0" />
+              <img src="/logonseek.svg" alt="Onseek" className="h-9 w-auto brightness-0" />
             </div>
             <h2 className="text-5xl md:text-[84px] font-bold tracking-tight leading-[1] text-[#1A1A1A]" style={{ fontFamily: 'var(--font-expanded)' }}>
               You will find yourself <br /><span className="text-[#6925DC]">among us</span>
@@ -364,7 +364,7 @@ function AnimatedRequestStack() {
   const cards = [
     { id: 1, title: "Vintage Leica M6", price: "$3,200", status: "Finding...", user: "@marco" },
     { id: 2, title: "Herman Miller Aeron", price: "$850", status: "2 Proposals", user: "@sara" },
-    { id: 3, title: "Sony A7 IV Body", price: "$2,100", status: "Verified", user: "@onseek" },
+    { id: 3, title: "Sony A7 IV Body", price: "$2,100", status: "Verified", user: "@Onseek" },
     { id: 4, title: "RTX 4090 FE", price: "$1,600", status: "Looking", user: "@techy" },
     { id: 5, title: "Eames Lounge Chair", price: "$5,000", status: "Closed", user: "@design" },
   ];

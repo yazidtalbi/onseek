@@ -52,14 +52,16 @@ export function RequestForm({
   isModal = false,
   onCancel,
   onStepChange,
-  initialData
+  initialData,
+  initialTitle
 }: {
   onSuccess?: () => void,
   userCountry?: string | null,
   isModal?: boolean,
   onCancel?: () => void,
   onStepChange?: (step: number) => void,
-  initialData?: RequestItem & { images?: string[]; links?: string[] }
+  initialData?: RequestItem & { images?: string[]; links?: string[] },
+  initialTitle?: string
 }) {
   const { user } = useAuth();
   const router = useRouter();
@@ -155,8 +157,8 @@ export function RequestForm({
   const form = useForm<RequestValues>({
     resolver: zodResolver(requestSchema) as any,
     defaultValues: {
-      title: "",
-      description: "",
+      title: initialTitle || "",
+      description: "", // Description is auto-generated
       category: "",
       budgetMax: null,
       priceLock: "open",

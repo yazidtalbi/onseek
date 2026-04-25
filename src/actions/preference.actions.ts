@@ -1,6 +1,6 @@
 "use server";
 
-import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { createServerSupabaseClient, createAdminSupabaseClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import type { Category, UserPreference, FeedMode, PersonalizedFeedResponse } from "@/lib/types";
 
@@ -193,7 +193,7 @@ export async function getPersonalizedFeedAction(
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Get user preferences and hidden categories (handle if tables don't exist or user is not authenticated)
+  // Get user preferences and hidden categories
   let preferences: Array<{ category_id: string; weight: number }> = [];
   let hiddenCategoryIds: string[] = [];
   
@@ -213,39 +213,50 @@ export async function getPersonalizedFeedAction(
       preferences = prefsResult.data || [];
       hiddenCategoryIds = (hiddenResult.data || []).map((h) => h.category_id);
     } catch (err) {
-      // If tables don't exist yet (migrations not run), continue without preferences
-      console.warn("Could not fetch preferences (tables may not exist):", err);
+      console.warn("Could not fetch preferences:", err);
     }
   }
 
   const hasPreferences = preferences.length > 0;
-
-  // If no user, no preferences, or mode is "for_you" without preferences, fall back to "latest"
   const effectiveMode = !user || (mode === "for_you" && !hasPreferences) ? "latest" : mode;
 
-  // Simple query - just get requests
   let query = supabase
     .from("requests")
     .select("*, profiles(username, avatar_url, first_name, last_name)");
 
-  if (user) {
-    query = query.or(`status.eq.open,and(status.eq.pending,user_id.eq.${user.id})`);
-  } else {
-    query = query.eq("status", "open");
-  }
+  try {
+    if (filters.tagSlug) {
+      const adminSupabase = await createAdminSupabaseClient();
+      const { data: tag } = await adminSupabase
+        .from("tags")
+        .select("id")
+        .eq("slug", filters.tagSlug)
+        .single();
+      
+      if (!tag) {
+        return { items: [], nextCursor: null, hasMore: false };
+      }
 
-  // Tag filter
-  if (filters.tagSlug) {
-    const { data: taggedRequests } = await supabase
-      .from("request_tags")
-      .select("request_id, tags!inner(slug)")
-      .eq("tags.slug", filters.tagSlug);
-    
-    const taggedIds = taggedRequests?.map(tr => tr.request_id) || [];
-    if (taggedIds.length === 0) {
-      return { items: [], nextCursor: null, hasMore: false };
+      const { data: rt } = await adminSupabase
+        .from("request_tags")
+        .select("request_id")
+        .eq("tag_id", tag.id);
+      
+      const ids = rt?.map(r => r.request_id) || [];
+      if (ids.length === 0) {
+        return { items: [], nextCursor: null, hasMore: false };
+      }
+      query = query.in("id", ids);
     }
-    query = query.in("id", taggedIds);
+
+    if (user) {
+      query = query.or(`status.eq.open,and(status.eq.pending,user_id.eq.${user.id})`);
+    } else {
+      query = query.eq("status", "open");
+    }
+  } catch (err) {
+    console.error("[getPersonalizedFeedAction] Query setup error:", err);
+    return { items: [], nextCursor: null, hasMore: false };
   }
 
   // Apply filters
@@ -262,35 +273,14 @@ export async function getPersonalizedFeedAction(
       query = query.or(`budget_max.gte.${min},budget_max.is.null`);
     }
     if (max !== null && !isNaN(max)) {
-      query = query.or(`budget_max.lte.${max},budget_max.is.null`);
+      query = query.or(`budget_min.lte.${max},budget_min.is.null`);
     }
   }
 
-  // Note: We'll filter out hidden categories in the application layer
-  // Supabase doesn't easily support NOT IN with subqueries in this way
-
-  // Apply sort
   const sortMode = filters.sort || (effectiveMode === "latest" ? "newest" : effectiveMode === "trending" ? "active" : "newest");
-  
   if (sortMode === "active") {
     query = query.order("updated_at", { ascending: false });
   } else {
-    query = query.order("created_at", { ascending: false });
-  }
-
-  if (effectiveMode === "for_you" && hasPreferences) {
-    // Personalized ranking with 80/20 serendipity
-    const preferenceWeights = preferences.reduce(
-      (acc, p) => {
-        acc[p.category_id] = p.weight;
-        return acc;
-      },
-      {} as Record<string, number>
-    );
-
-    // This is complex - we'll use a CTE approach
-    // For now, we'll fetch and rank in the application layer
-    // In production, you'd want a database function or materialized view
     query = query.order("created_at", { ascending: false });
   }
 
@@ -303,157 +293,86 @@ export async function getPersonalizedFeedAction(
 
   if (error) {
     console.error("[getPersonalizedFeedAction] Error fetching personalized feed:", error);
-    console.error("[getPersonalizedFeedAction] Error details:", JSON.stringify(error, null, 2));
-    return { error: `Failed to fetch feed: ${error.message || "Unknown error"}` };
-  }
-
-  console.log(`[getPersonalizedFeedAction] Found ${requests?.length || 0} requests with status='open'`);
-  
-  // If no requests found, log for debugging
-  if (!requests || requests.length === 0) {
-    console.warn("[getPersonalizedFeedAction] No requests found. Checking if there are any requests in the database...");
-    const { data: allRequests, error: checkError } = await supabase
-      .from("requests")
-      .select("id, status, created_at")
-      .limit(5);
-    
-    if (checkError) {
-      console.error("[getPersonalizedFeedAction] Error checking requests:", checkError);
-    } else {
-      console.log(`[getPersonalizedFeedAction] Total requests in DB (sample):`, allRequests?.length || 0);
-      console.log(`[getPersonalizedFeedAction] Sample request statuses:`, allRequests?.map(r => ({ id: r.id, status: r.status })));
-    }
+    return { error: `Failed to fetch feed: ${error.message}` };
   }
 
   const hasMore = (requests?.length || 0) > limit;
   const items = (requests || []).slice(0, limit);
 
   if (items.length === 0) {
-    return {
-      items: [],
-      nextCursor: null,
-      hasMore: false,
-    };
+    return { items: [], nextCursor: null, hasMore: false };
   }
 
-  // Get submission counts separately
   const requestIds = items.map((r: any) => r.id);
-  let submissionCounts: Record<string, number> = {};
   
-  if (requestIds.length > 0) {
-    const { data: counts } = await supabase
+  // Fetch images, links, tags, and submission counts in parallel
+  const [imagesResult, linksResult, tagsResult, submissionsResult] = await Promise.all([
+    supabase
+      .from("request_images")
+      .select("request_id, image_url, image_order")
+      .in("request_id", requestIds)
+      .order("image_order", { ascending: true }),
+    supabase
+      .from("request_links")
+      .select("request_id, url")
+      .in("request_id", requestIds),
+    supabase
+      .from("request_tags")
+      .select("request_id, tags(*)")
+      .in("request_id", requestIds),
+    supabase
       .from("submissions")
       .select("request_id")
-      .in("request_id", requestIds);
-    
-    counts?.forEach((sub: any) => {
-      submissionCounts[sub.request_id] = (submissionCounts[sub.request_id] || 0) + 1;
-    });
-  }
+      .in("request_id", requestIds),
+  ]);
 
-  // Get categories separately (more reliable than nested select)
-  let categoriesMap: Record<string, any[]> = {};
-  try {
-    const { data: requestCategories } = await supabase
-      .from("request_categories")
-      .select("request_id, category:categories(*)")
-      .in("request_id", requestIds);
-    
-    if (requestCategories) {
-      requestCategories.forEach((rc: any) => {
-        if (rc.category && rc.request_id) {
-          if (!categoriesMap[rc.request_id]) {
-            categoriesMap[rc.request_id] = [];
-          }
-          categoriesMap[rc.request_id].push(rc.category);
-        }
-      });
+  const imageMap = new Map<string, string[]>();
+  (imagesResult.data || []).forEach((img: any) => {
+    const existing = imageMap.get(img.request_id) || [];
+    if (existing.length < 3) {
+      existing.push(img.image_url);
+      imageMap.set(img.request_id, existing);
     }
-  } catch (err) {
-    // If categories table doesn't exist or query fails, continue without categories
-    console.warn("Could not fetch categories (table may not exist):", err);
-  }
-
-  // Process items: attach categories, calculate scores, apply 80/20 mix
-  let processedItems = items.map((req: any) => {
-    const categories = categoriesMap[req.id] || [];
-    const submissionCount = submissionCounts[req.id] || 0;
-
-    // Filter out requests that only have hidden categories
-    const hasNonHiddenCategory = categories.some(
-      (cat: any) => cat && !hiddenCategoryIds.includes(cat.id)
-    );
-
-    return {
-      ...req,
-      categories,
-      submissionCount,
-      _hasNonHiddenCategory: hasNonHiddenCategory,
-    };
-  }).filter((req: any) => {
-    // Filter out requests that only have hidden categories
-    if (hiddenCategoryIds.length > 0 && req.categories.length > 0) {
-      return req._hasNonHiddenCategory;
-    }
-    return true;
   });
 
-  // Apply personalization ranking if mode is "for_you"
+  const linkMap = new Map<string, string[]>();
+  (linksResult.data || []).forEach((link: any) => {
+    const existing = linkMap.get(link.request_id) || [];
+    existing.push(link.url);
+    linkMap.set(link.request_id, existing);
+  });
+
+  const tagMap = new Map<string, any[]>();
+  (tagsResult.data || []).forEach((rt: any) => {
+    if (rt.tags) {
+      const existing = tagMap.get(rt.request_id) || [];
+      existing.push(rt.tags);
+      tagMap.set(rt.request_id, existing);
+    }
+  });
+
+  const submissionCountMap = new Map<string, number>();
+  (submissionsResult.data || []).forEach((sub: any) => {
+    const current = submissionCountMap.get(sub.request_id) || 0;
+    submissionCountMap.set(sub.request_id, current + 1);
+  });
+
+  let processedItems = items.map((req: any) => ({
+    ...req,
+    images: imageMap.get(req.id) || [],
+    links: linkMap.get(req.id) || [],
+    tags: tagMap.get(req.id) || [],
+    submissionCount: submissionCountMap.get(req.id) || 0,
+  }));
+
+  // Apply personalization ranking if needed
   if (effectiveMode === "for_you" && hasPreferences) {
-    processedItems = rankPersonalizedFeed(
-      processedItems,
-      preferences,
-      hiddenCategoryIds
-    );
+    processedItems = rankPersonalizedFeed(processedItems, preferences, hiddenCategoryIds);
   } else if (effectiveMode === "trending") {
     processedItems = rankTrendingFeed(processedItems);
   }
 
-  // Get images and links for requests
-  if (processedItems.length > 0) {
-    const processedRequestIds = processedItems.map((r: any) => r.id);
-    const [imagesResult, linksResult] = await Promise.all([
-      supabase
-        .from("request_images")
-        .select("request_id, image_url, image_order")
-        .in("request_id", processedRequestIds)
-        .order("image_order", { ascending: true }),
-      supabase
-        .from("request_links")
-        .select("request_id, url")
-        .in("request_id", processedRequestIds),
-    ]);
-
-    const imageMap = new Map<string, string[]>();
-    (imagesResult.data || []).forEach((img: any) => {
-      const existing = imageMap.get(img.request_id) || [];
-      if (existing.length < 3) {
-        existing.push(img.image_url);
-        imageMap.set(img.request_id, existing);
-      }
-    });
-
-    const linkMap = new Map<string, string[]>();
-    (linksResult.data || []).forEach((link: any) => {
-      const existing = linkMap.get(link.request_id) || [];
-      existing.push(link.url);
-      linkMap.set(link.request_id, existing);
-    });
-
-    processedItems = processedItems.map((req: any) => {
-      const { _hasNonHiddenCategory, ...rest } = req;
-      return {
-        ...rest,
-        images: imageMap.get(req.id) || [],
-        links: linkMap.get(req.id) || [],
-      };
-    });
-  }
-
-  const nextCursor =
-    processedItems.length > 0
-      ? processedItems[processedItems.length - 1].created_at
-      : null;
+  const nextCursor = processedItems.length > 0 ? processedItems[processedItems.length - 1].created_at : null;
 
   return {
     items: processedItems,
@@ -464,106 +383,40 @@ export async function getPersonalizedFeedAction(
 
 /**
  * Rank requests for personalized feed
- * Implements 80% matched + 20% serendipity
  */
 function rankPersonalizedFeed(
   items: any[],
   preferences: Array<{ category_id: string; weight: number }>,
   hiddenCategoryIds: string[]
 ): any[] {
-  const preferenceMap = new Map(
-    preferences.map((p) => [p.category_id, p.weight])
-  );
-
-  // Calculate scores for each request
+  const preferenceMap = new Map(preferences.map((p) => [p.category_id, p.weight]));
   const scored = items.map((req) => {
     const categories = req.categories || [];
     let categoryScore = 0;
-    const matchedCategories: any[] = [];
-
     categories.forEach((cat: any) => {
       if (cat && preferenceMap.has(cat.id)) {
-        const weight = preferenceMap.get(cat.id) || 1;
-        categoryScore += weight;
-        matchedCategories.push(cat);
+        categoryScore += preferenceMap.get(cat.id) || 1;
       }
     });
-
-    // Recency score (newer = higher, normalized to 0-1)
     const now = Date.now();
     const created = new Date(req.created_at).getTime();
-    const ageInHours = (now - created) / (1000 * 60 * 60);
-    const recencyScore = Math.max(0, 1 - ageInHours / (24 * 7)); // Decay over 7 days
-
-    // Activity score (submission count, normalized)
-    const activityScore = Math.min(1, (req.submissionCount || 0) / 10);
-
-    // Combined score
-    const totalScore =
-      categoryScore * 0.6 + recencyScore * 0.2 + activityScore * 0.2;
-
-    return {
-      ...req,
-      personalizationScore: totalScore,
-      matchedCategories,
-      matchReason:
-        matchedCategories.length > 0
-          ? `Because you follow: ${matchedCategories.map((c) => c.name).join(", ")}`
-          : undefined,
-    };
+    const recencyScore = Math.max(0, 1 - (now - created) / (1000 * 60 * 60 * 24 * 7));
+    const totalScore = categoryScore * 0.6 + recencyScore * 0.4;
+    return { ...req, personalizationScore: totalScore };
   });
-
-  // Sort by score
   scored.sort((a, b) => (b.personalizationScore || 0) - (a.personalizationScore || 0));
-
-  // 80/20 split: top 80% by score, 20% latest (serendipity)
-  const matchedCount = Math.floor(scored.length * 0.8);
-  const matched = scored.slice(0, matchedCount);
-  const serendipity = scored.slice(matchedCount);
-
-  // Sort serendipity by recency
-  serendipity.sort(
-    (a, b) =>
-      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-  );
-
-  // Interleave: take from matched, occasionally from serendipity
-  const result: any[] = [];
-  let matchedIdx = 0;
-  let serendipityIdx = 0;
-
-  for (let i = 0; i < scored.length; i++) {
-    // Every 5th item is serendipity (20%)
-    if (i % 5 === 4 && serendipityIdx < serendipity.length) {
-      result.push(serendipity[serendipityIdx++]);
-    } else if (matchedIdx < matched.length) {
-      result.push(matched[matchedIdx++]);
-    } else if (serendipityIdx < serendipity.length) {
-      result.push(serendipity[serendipityIdx++]);
-    }
-  }
-
-  return result;
+  return scored;
 }
 
 /**
  * Rank requests for trending feed
  */
 function rankTrendingFeed(items: any[]): any[] {
-  return items
-    .map((req) => {
-      const now = Date.now();
-      const created = new Date(req.created_at).getTime();
-      const ageInHours = (now - created) / (1000 * 60 * 60);
-      const recencyDecay = Math.max(0, 1 - ageInHours / (24 * 3)); // Decay over 3 days
-      const activityScore = Math.min(10, req.submissionCount || 0);
-      const trendingScore = activityScore * recencyDecay;
-
-      return {
-        ...req,
-        personalizationScore: trendingScore,
-      };
-    })
-    .sort((a, b) => (b.personalizationScore || 0) - (a.personalizationScore || 0));
+  return items.map((req) => {
+    const now = Date.now();
+    const created = new Date(req.created_at).getTime();
+    const recencyDecay = Math.max(0, 1 - (now - created) / (1000 * 60 * 60 * 24 * 3));
+    const trendingScore = (req.submissionCount || 0) * recencyDecay;
+    return { ...req, personalizationScore: trendingScore };
+  }).sort((a, b) => (b.personalizationScore || 0) - (a.personalizationScore || 0));
 }
-

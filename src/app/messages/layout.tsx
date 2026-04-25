@@ -1,5 +1,7 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { AuthProvider } from "@/components/layout/auth-provider";
+import { AppNavbar } from "@/components/layout/app-navbar";
+import { AppSidebar, SidebarProvider } from "@/components/layout/app-sidebar";
 
 export const dynamic = "force-dynamic";
 
@@ -49,7 +51,18 @@ export default async function MessagesLayout({
 
   return (
     <AuthProvider user={serializedUser} profile={resolvedProfile ?? null}>
-      {children}
+      <SidebarProvider>
+        <div className="flex flex-col min-h-screen bg-white">
+          <AppNavbar />
+          <div className="flex-1 flex w-full relative">
+            <AppSidebar>
+              <main className="flex-1 w-full h-full">
+                {children}
+              </main>
+            </AppSidebar>
+          </div>
+        </div>
+      </SidebarProvider>
     </AuthProvider>
   );
 }

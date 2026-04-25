@@ -271,9 +271,10 @@ export function AIRequestFlow({ initialText, onClose, user, profile }: AIRequest
 
           if (typeof extractedBudget === "number" && extractedBudget > 0) {
             setBudget(extractedBudget);
+            setStep("summary");
+          } else {
+            setStep("budget");
           }
-
-          setStep("summary");
         } catch (err: any) {
           console.error("Extraction Error:", err);
 
@@ -302,7 +303,7 @@ export function AIRequestFlow({ initialText, onClose, user, profile }: AIRequest
             preferences: [],
             dealbreakers: []
           });
-          setStep("summary");
+          setStep("budget");
         }
       }, 1500); // Artificial delay for "magic" feel
       return () => clearTimeout(timer);
@@ -381,18 +382,93 @@ export function AIRequestFlow({ initialText, onClose, user, profile }: AIRequest
 
   const currentProgress = step === "input" ? 5 : step === "extracting" ? 15 : step === "budget" ? 30 : step === "condition" ? 45 : step === "urgency" ? 65 : step === "summary" ? 90 : 100;
 
-  const NO_CONDITION_CATEGORIES = [
-    "Services",
-    "Finance",
-    "Grocery",
-    "Travel",
-    "Digital",
-    "Experiences",
-    "Learning"
-  ];
+  const getConditionOptions = (category: string) => {
+    const service = ["Services", "Learning", "Health"];
+    const property = ["Property"];
+    const digital = ["Digital", "Culture", "Finance"];
+    const experience = ["Travel", "Experiences", "Family"];
 
-  const shouldHideCondition = React.useMemo(() => {
-    return NO_CONDITION_CATEGORIES.includes(extractedData?.category || "");
+    if (service.includes(category)) {
+      return [
+        { id: "Entry", label: "Standard / Entry", desc: "Budget-friendly, junior professional" },
+        { id: "Professional", label: "Professional", desc: "Verified experience, polished result" },
+        { id: "Expert", label: "Expert / Specialist", desc: "Top-tier authority, complex work" }
+      ];
+    }
+    if (property.includes(category)) {
+      return [
+        { id: "New", label: "Brand New / Off-plan", desc: "Looking for a first-time move-in" },
+        { id: "Ready", label: "Ready to Move", desc: "Habitable, good condition" },
+        { id: "Renovation", label: "Renovation Project", desc: "Fixer-upper, lower price point" }
+      ];
+    }
+    if (digital.includes(category)) {
+      return [
+        { id: "Personal", label: "Personal Use", desc: "Standard license for one person" },
+        { id: "Commercial", label: "Commercial / Resale", desc: "Includes business/resale rights" },
+        { id: "Transfer", label: "Subscription Transfer", desc: "Existing account or seat transfer" }
+      ];
+    }
+    if (experience.includes(category)) {
+      return [
+        { id: "Economy", label: "Economy / Basic", desc: "Essential features only" },
+        { id: "Premium", label: "Premium / Comfort", desc: "Mid-range perks, flexible" },
+        { id: "Luxury", label: "Luxury / VIP", desc: "All-inclusive, high-end" }
+      ];
+    }
+    // Default: Physical
+    return [
+      { id: "New", label: "Brand New", desc: "Original, sealed packaging" },
+      { id: "Like New", label: "Open Box / Like New", desc: "Unsealed, but unused/pristine" },
+      { id: "Used", label: "Pre-owned (Good)", desc: "Used but well-maintained" },
+      { id: "Any", label: "Any Condition", desc: "Best price or vintage/retro" }
+    ];
+  };
+
+  const currentConditionOptions = React.useMemo(() => {
+    return getConditionOptions(extractedData?.category || "Other/General");
+  }, [extractedData?.category]);
+
+  const conditionStepContent = React.useMemo(() => {
+    const category = extractedData?.category || "Other/General";
+    const service = ["Services", "Learning", "Health"];
+    const property = ["Property"];
+    const digital = ["Digital", "Culture", "Finance"];
+    const experience = ["Travel", "Experiences", "Family"];
+
+    if (service.includes(category)) {
+      return {
+        title: "What level of expertise?",
+        subtext: "Choose the professional level that fits your budget and needs.",
+        label: "Expertise"
+      };
+    }
+    if (property.includes(category)) {
+      return {
+        title: "What is the occupancy?",
+        subtext: "Select the status of the property you are looking for.",
+        label: "Occupancy"
+      };
+    }
+    if (digital.includes(category)) {
+      return {
+        title: "What rights do you need?",
+        subtext: "Define how you intend to use the digital asset or license.",
+        label: "Rights"
+      };
+    }
+    if (experience.includes(category)) {
+      return {
+        title: "What level of comfort?",
+        subtext: "Select the tier that matches your travel or experience goals.",
+        label: "Tier"
+      };
+    }
+    return {
+      title: "What is the condition?",
+      subtext: "Help sellers know exactly what you are willing to accept.",
+      label: "Condition"
+    };
   }, [extractedData?.category]);
 
   return (
@@ -414,11 +490,7 @@ export function AIRequestFlow({ initialText, onClose, user, profile }: AIRequest
             } else if (step === "condition") {
               setStep("budget");
             } else if (step === "urgency") {
-              if (shouldHideCondition) {
-                setStep("budget");
-              } else {
-                setStep("condition");
-              }
+              setStep("condition");
             } else if (step === "summary") {
               setStep("urgency");
             } else {
@@ -510,18 +582,24 @@ export function AIRequestFlow({ initialText, onClose, user, profile }: AIRequest
                 <p className="text-lg md:text-xl text-gray-400 font-medium max-w-lg mx-auto">
                   Describe your perfect item and watch as our AI structures everything for you.
                 </p>
+                <div className="flex justify-center mt-10 mb-8">
+                  <div className="inline-flex items-center gap-2 px-6 py-2 bg-[#7b3ff2]/10 rounded-full text-[13px] font-semibold text-[#7b3ff2]">
+                    <span role="img" aria-label="fire">🔥</span>
+                    3x more responses with detailed descriptions
+                  </div>
+                </div>
               </div>
 
               <div className="space-y-6">
                 <div className="relative group">
                   <textarea
                     autoFocus
-                    placeholder="Example: I'm looking for a vintage Rolex Submariner from the 70s, ideally with a ghost bezel. Must be in original condition. My budget is around $15,000."
-                    className="w-full min-h-[220px] bg-white border-2 border-gray-100 focus:border-black rounded-[2.5rem] p-10 text-xl md:text-2xl font-semibold resize-none placeholder:text-gray-200 shadow-none transition-all duration-300 outline-none leading-relaxed"
+                    placeholder="Example: I'm looking for a vintage Rolex Submariner from the 80s, ideally with original papers. My budget is around $12,000. Must be in excellent condition."
+                    className="w-full min-h-[160px] p-8 bg-white border-2 border-gray-100 rounded-2xl text-lg sm:text-xl font-medium focus:border-[#6925DC] outline-none resize-none transition-all placeholder:text-gray-300 shadow-sm"
                     value={inputText}
                     onChange={(e) => setInputText(e.target.value)}
                   />
-                  <div className="absolute bottom-6 right-8 text-xs font-bold tracking-widest uppercase text-gray-300">
+                  <div className="absolute bottom-6 right-8 text-[11px] font-medium text-gray-400">
                     {inputText.trim().length} characters
                   </div>
                 </div>
@@ -532,10 +610,10 @@ export function AIRequestFlow({ initialText, onClose, user, profile }: AIRequest
                       if (inputText.trim().length >= 10) setStep("extracting");
                     }}
                     disabled={inputText.trim().length < 10}
-                    className="w-full h-20 md:h-24 rounded-full bg-black text-white hover:bg-black/90 text-xl md:text-3xl font-black shadow-[0_20px_50px_rgba(0,0,0,0.15)] transition-all hover:scale-[1.01] flex items-center justify-center gap-4 group active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
+                    className="w-full h-14 md:h-16 rounded-full bg-[#7b3ff2] text-white hover:bg-[#6a34d1] text-lg md:text-xl font-bold shadow-[0_10px_30px_rgba(123,63,242,0.15)] transition-all hover:scale-[1.01] flex items-center justify-center gap-2 group active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
                   >
                     <span>Generate Request</span>
-                    <ArrowRight className="h-6 w-6 md:h-8 md:w-8 transition-transform group-hover:translate-x-2" />
+                    <ArrowRight className="h-5 w-5 md:h-6 md:w-6 transition-transform group-hover:translate-x-2" />
                   </Button>
 
                   {inputText.trim().length > 0 && inputText.trim().length < 10 && (
@@ -624,7 +702,7 @@ export function AIRequestFlow({ initialText, onClose, user, profile }: AIRequest
                 )}>
                   <div className="flex flex-col h-full bg-white/40 backdrop-blur-sm rounded-[28px] overflow-hidden">
                     <div className="flex flex-col h-full px-2 pb-0 sm:px-2 sm:pb-0 pt-1 sm:pt-1.5">
-                      <section className="flex flex-col px-6 py-8 flex-1">
+                      <section className="flex flex-col px-6 pt-8 pb-0 flex-1">
                         <div className="mb-8">
                           <h1
                             className="font-semibold text-[#1A1A1A] text-[22px] sm:text-[26px] leading-tight tracking-tight"
@@ -691,16 +769,16 @@ export function AIRequestFlow({ initialText, onClose, user, profile }: AIRequest
                             <div className="flex items-stretch -mx-8">
                               <div className="flex flex-col items-start flex-1 py-6 px-8 min-w-0">
                                 <span className="text-[18px] sm:text-[20px] font-bold text-[#1A1A1A] leading-tight truncate w-full">
-                                  {extractedData?.condition || "Either"}
+                                  {currentConditionOptions.find(opt => opt.id === extractedData?.condition)?.label || extractedData?.condition || "Either"}
                                 </span>
-                                <span className="text-[12px] font-bold uppercase tracking-wider mt-1 text-black/20">Condition</span>
+                                <span className="text-[12px] font-medium mt-1 text-black/30">{conditionStepContent.label}</span>
                               </div>
                               <div className="w-px shrink-0 bg-black/5"></div>
                               <div className="flex flex-col items-start flex-1 py-6 px-8 min-w-0">
                                 <span className="text-[18px] sm:text-[20px] font-bold text-[#1A1A1A] leading-tight truncate w-full">
                                   {budget ? `$${budget}` : (extractedData?.budget || "Negotiable")}
                                 </span>
-                                <span className="text-[12px] font-bold uppercase tracking-wider mt-1 text-black/20">Budget</span>
+                                <span className="text-[12px] font-medium mt-1 text-black/30">Budget</span>
                               </div>
                             </div>
                           </div>
@@ -722,15 +800,14 @@ export function AIRequestFlow({ initialText, onClose, user, profile }: AIRequest
 
               {/* Launch Button Section */}
               <div className="w-full flex justify-center px-4">
-                <button
+                <Button
                   onClick={handleFinish}
-                  className="btn-sparkle w-full md:w-[22em] h-16 md:h-[6em]"
+                  size="lg"
+                  className="w-full max-w-md h-16 rounded-full bg-[#7b3ff2] text-white hover:bg-[#6a34d1] text-xl font-bold shadow-[0_10px_30px_rgba(123,63,242,0.15)] transition-all hover:scale-[1.01] flex items-center justify-center gap-3 group active:scale-95"
                 >
-                  <svg height="24" width="24" fill="#AAAAAA" viewBox="0 0 24 24" data-name="Layer 1" id="Layer_1" className="sparkle-icon">
-                    <path d="M10,21.236,6.755,14.745.264,11.5,6.755,8.255,10,1.764l3.245,6.491L19.736,11.5l-6.491,3.245ZM18,21l1.5,3L21,21l3-1.5L21,18l-1.5-3L18,18l-3,1.5ZM19.333,4.667,20.5,7l1.167-2.333L24,3.5,21.667,2.333,20.5,0,19.333,2.333,17,3.5Z"></path>
-                  </svg>
-                  <span className="btn-sparkle-text">Launch Request</span>
-                </button>
+                  <Sparkles className="h-6 w-6" />
+                  <span>Launch Request</span>
+                </Button>
               </div>
 
               {/* Edit Modal */}
@@ -781,7 +858,7 @@ export function AIRequestFlow({ initialText, onClose, user, profile }: AIRequest
                     </div>
 
                     {/* Budget & Condition Row */}
-                    <div className={cn("grid gap-6", shouldHideCondition ? "grid-cols-1" : "grid-cols-2")}>
+                    <div className="grid gap-6 grid-cols-2">
                       <div className="space-y-3 font-[var(--font-sans)]">
                         <label className="text-lg font-medium text-gray-400 pl-1">Budget</label>
                         <div
@@ -797,22 +874,21 @@ export function AIRequestFlow({ initialText, onClose, user, profile }: AIRequest
                           <Pencil className="w-4 h-4 text-gray-400 group-hover:text-[#6925DC] transition-colors" />
                         </div>
                       </div>
-                      {!(extractedData?.category === "Services" || extractedData?.category === "Travel") && (
-                        <div className="space-y-3">
-                          <label className="text-lg font-medium text-gray-400 pl-1">Condition</label>
-                          <div
-                            className="w-full h-16 flex items-center px-6 bg-gray-50 border-2 border-gray-100 rounded-2xl cursor-pointer hover:border-black/10 transition-all"
-                            onClick={() => {
-                              setStep("condition");
-                              setIsEditModalOpen(false);
-                            }}
-                          >
-                            <span className="text-[15px] sm:text-[17px] font-medium leading-snug tracking-tight text-[#1A1A1A]">
-                              {extractedData?.condition || "Either"}
-                            </span>
-                          </div>
+                      <div className="space-y-3">
+                        <label className="text-lg font-medium text-gray-400 pl-1">{conditionStepContent.label}</label>
+                        <div
+                          className="w-full h-16 flex items-center justify-between px-6 bg-gray-50 border-2 border-gray-100 rounded-2xl cursor-pointer hover:border-black/10 transition-all group"
+                          onClick={() => {
+                            setStep("condition");
+                            setIsEditModalOpen(false);
+                          }}
+                        >
+                          <span className="text-[15px] sm:text-[17px] font-medium leading-snug tracking-tight text-[#1A1A1A]">
+                            {extractedData?.condition || "Either"}
+                          </span>
+                          <Pencil className="w-4 h-4 text-gray-400 group-hover:text-[#6925DC] transition-colors" />
                         </div>
-                      )}
+                      </div>
                     </div>
 
                     {/* Requirements Section */}
@@ -968,13 +1044,7 @@ export function AIRequestFlow({ initialText, onClose, user, profile }: AIRequest
 
               <div className="flex flex-col items-center gap-6 w-full max-w-md">
                 <Button
-                  onClick={() => {
-                    if (shouldHideCondition) {
-                      setStep("urgency");
-                    } else {
-                      setStep("condition");
-                    }
-                  }}
+                  onClick={() => setStep("condition")}
                   size="lg"
                   className="h-16 px-12 rounded-2xl bg-black text-white hover:bg-black/90 text-lg font-bold shadow-2xl transition-all w-full"
                 >
@@ -985,11 +1055,7 @@ export function AIRequestFlow({ initialText, onClose, user, profile }: AIRequest
                   onClick={() => {
                     setExtractedData({ ...extractedData, budget: "Negotiable" });
                     setBudget(null);
-                    if (shouldHideCondition) {
-                      setStep("urgency");
-                    } else {
-                      setStep("condition");
-                    }
+                    setStep("condition");
                   }}
                   className="text-gray-400 hover:text-black font-bold transition-colors"
                 >
@@ -1035,18 +1101,14 @@ export function AIRequestFlow({ initialText, onClose, user, profile }: AIRequest
               className="flex flex-col items-center text-center w-full max-w-4xl"
             >
               <h2 className="text-5xl font-extrabold mb-4 tracking-tight" style={{ fontFamily: 'var(--font-expanded)' }}>
-                What is the condition?
+                {conditionStepContent.title}
               </h2>
               <p className="text-lg text-gray-400 font-medium mb-12">
-                Help sellers know exactly what you are looking for.
+                {conditionStepContent.subtext}
               </p>
 
               <div className="flex flex-wrap justify-center gap-6 mb-16">
-                {[
-                  { id: "New", label: "New", desc: "Brand new, never used" },
-                  { id: "Used", label: "Used", desc: "Pre-owned, good condition" },
-                  { id: "Either", label: "Either", desc: "Both new and used are fine" }
-                ].map((opt) => (
+                {currentConditionOptions.map((opt) => (
                   <button
                     key={opt.id}
                     onClick={() => {
@@ -1060,9 +1122,9 @@ export function AIRequestFlow({ initialText, onClose, user, profile }: AIRequest
                         : "border-gray-100 bg-gray-50 text-gray-600 hover:border-black/20 hover:scale-[1.02]"
                     )}
                   >
-                    <span className="text-2xl font-black" style={{ fontFamily: 'var(--font-expanded)' }}>{opt.id}</span>
+                    <span className="text-xl font-black leading-tight mb-1" style={{ fontFamily: 'var(--font-expanded)' }}>{opt.label}</span>
                     <span className={cn(
-                      "text-sm font-medium opacity-60",
+                      "text-xs font-medium opacity-60",
                       extractedData?.condition === opt.id ? "text-white" : "text-gray-500"
                     )}>{opt.desc}</span>
                   </button>
@@ -1282,19 +1344,22 @@ export function AIRequestFlow({ initialText, onClose, user, profile }: AIRequest
 
               {editingField === 'condition' && (
                 <div className="flex flex-col gap-3">
-                  {['New', 'Used', 'Either'].map((c) => (
+                  {currentConditionOptions.map((opt) => (
                     <button
-                      key={c}
+                      key={opt.id}
                       onClick={() => {
-                        setExtractedData({ ...extractedData, condition: c });
+                        setExtractedData({ ...extractedData, condition: opt.id });
                         setEditingField(null);
                       }}
                       className={cn(
                         "w-full py-4 px-6 rounded-xl border-2 font-bold transition-all text-left",
-                        (extractedData?.condition || 'Either') === c ? "border-black bg-black text-white" : "border-gray-100 bg-gray-50 text-gray-600 hover:border-gray-200"
+                        (extractedData?.condition || 'Either') === opt.id ? "border-black bg-black text-white" : "border-gray-100 bg-gray-50 text-gray-600 hover:border-gray-200"
                       )}
                     >
-                      {c}
+                      <div className="flex flex-col">
+                        <span>{opt.label}</span>
+                        <span className="text-xs font-normal opacity-60">{opt.desc}</span>
+                      </div>
                     </button>
                   ))}
                 </div>

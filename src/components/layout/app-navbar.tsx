@@ -40,7 +40,6 @@ import {
   IconGlobe,
   IconLifebuoy
 } from "@tabler/icons-react";
-import { FeedbackModal } from "@/components/reports/feedback-modal";
 import { useAuth } from "@/components/layout/auth-provider";
 import { useTheme } from "@/components/layout/theme-provider";
 import { useSidebar } from "@/components/layout/app-sidebar";
@@ -276,7 +275,7 @@ export function AppNavbar({
   const [exploreOpen, setExploreOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isAIModalOpen, setIsAIModalOpen] = useState(false);
-  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+  const [aiInitialText, setAIInitialText] = useState("");
   const isHomePage = pathname === "/";
   const { 
     mobileOpen, setMobileOpen,
@@ -305,7 +304,13 @@ export function AppNavbar({
   }, [searchQuery, searchParams, router]);
   useEffect(() => {
     const handleOpenCreateModal = () => setIsCreateModalOpen(true);
+    const handleOpenAIModal = (e: any) => {
+      setAIInitialText(e.detail?.text || "");
+      setIsAIModalOpen(true);
+    };
+    
     window.addEventListener('open-create-request-modal', handleOpenCreateModal);
+    window.addEventListener('open-ai-request-flow', handleOpenAIModal);
 
     // Fallback for direct URL access
     if (searchParams.get("new") === "true") {
@@ -316,7 +321,10 @@ export function AppNavbar({
       router.replace(newUrl, { scroll: false });
     }
 
-    return () => window.removeEventListener('open-create-request-modal', handleOpenCreateModal);
+    return () => {
+      window.removeEventListener('open-create-request-modal', handleOpenCreateModal);
+      window.removeEventListener('open-ai-request-flow', handleOpenAIModal);
+    };
   }, [searchParams, pathname, router]);
 
   const handleSignOut = async () => {
@@ -487,12 +495,9 @@ export function AppNavbar({
             <>
               {/* Left: Hamburger, Logo */}
               <div className="flex items-center gap-3">
-                <Button variant="ghost" size="icon" className="h-9 w-9 -ml-2" onClick={() => setMobileOpen(true)}>
-                  <IconMenu2 className="h-6 w-6" />
-                </Button>
-                <Link href="/" prefetch={true} className="shrink-0 flex items-center gap-2">
+                <Link href="/" prefetch={true} className="shrink-0 flex items-center gap-4 ml-4">
                   <Image src="/logonseek.svg" alt="onseek" width={24} height={24} className="h-6 w-auto" priority />
-                  <span className="text-lg text-black" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>onseek</span>
+                  <span className="text-lg text-black" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>Onseek</span>
                 </Link>
               </div>
 
@@ -540,9 +545,9 @@ export function AppNavbar({
             <>
               {/* Guest Layout */}
               {/* Left: Logo */}
-              <Link href="/" prefetch={true} className="shrink-0 flex items-center gap-2">
+              <Link href="/" prefetch={true} className="shrink-0 flex items-center gap-4 hover:opacity-80 transition-opacity">
                 <Image src="/logonseek.svg" alt="Onseek" width={24} height={24} className="h-6 w-auto" priority />
-                <span className="text-lg text-black" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>onseek</span>
+                <span className="text-lg text-black" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>Onseek</span>
               </Link>
 
                 {/* Right: Plus, Sign Up */}
@@ -588,27 +593,15 @@ export function AppNavbar({
       )}>
         {/* Left Side: Sidebar Toggle & Logo */}
         <div className="flex items-center shrink-0">
-          <div className="absolute left-0 top-0 bottom-0 w-[72px] flex items-center justify-center z-20">
+          <div className="absolute left-0 top-0 bottom-0 flex items-center z-20 pl-[22px]">
             {user && (
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="h-10 w-10 text-gray-900 hover:bg-gray-100 rounded-xl"
-                onClick={() => setSidebarSidebarExpanded(!isSidebarExpanded)}
-              >
-                <IconMenu2 className="h-6 w-6" />
-              </Button>
+              <Link href="/" className="flex items-center gap-4 hover:opacity-80 transition-opacity">
+                <Image src="/logonseek.svg" alt="Onseek" width={28} height={28} className="h-7 w-auto" priority />
+                <span className="text-xl text-black" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>Onseek</span>
+              </Link>
             )}
           </div>
-          {user && <div className="w-[72px] shrink-0" />} {/* Spacer */}
-          <Link href="/" className={cn("flex items-center gap-2 group", user ? "ml-6" : "ml-8")}>
-            <div className="w-9 h-9 flex items-center justify-center">
-              <Image src="/logonseek.svg" alt="onseek" width={28} height={28} className="h-7 w-auto" priority />
-            </div>
-            <span className="text-xl text-black" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>
-              onseek
-            </span>
-          </Link>
+          <div className="w-[24px] shrink-0" /> {/* Smaller Spacer */}
         </div>
 
         {/* Center Side: Search Bar */}
@@ -668,10 +661,10 @@ export function AppNavbar({
               <>
                 <Button 
                   onClick={() => setIsAIModalOpen(true)} 
-                  className="hidden sm:flex h-11 rounded-full bg-transparent text-black font-bold whitespace-nowrap px-6 items-center gap-2 border border-black hover:bg-gray-50 shadow-none transition-all"
+                  className="hidden sm:flex items-center gap-1.5 bg-transparent border-none text-black font-bold hover:bg-transparent hover:opacity-70 shadow-none transition-all p-0 h-auto"
                 >
-                  <IconPlus className="h-5 w-5 text-black" />
-                  Request
+                  <IconPlus className="h-5 w-5 text-black" strokeWidth={2.5} />
+                  <span>Request</span>
                 </Button>
                 {mounted && (
                   <>
@@ -692,11 +685,8 @@ export function AppNavbar({
                     </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <button className="flex items-center gap-3 pl-3 pr-2 h-10 hover:bg-gray-50 rounded-full transition-colors outline-none shrink-0 group/nav">
-                          <span className="text-sm font-bold text-[#1A1A1A] truncate max-w-[120px]">
-                            {profile?.username || "Account"}
-                          </span>
-                          <div className="flex items-center justify-center h-8 w-8 rounded-full bg-gray-100 text-gray-700 font-bold text-xs shrink-0 overflow-hidden relative border border-gray-200">
+                        <button className="flex items-center justify-center h-11 w-11 hover:bg-gray-50 rounded-full transition-colors outline-none shrink-0 group/nav">
+                          <div className="flex items-center justify-center h-9 w-9 rounded-full bg-gray-100 text-gray-700 font-bold text-sm shrink-0 overflow-hidden relative border border-gray-200">
                             {profile?.avatar_url && !avatarError ? (
                               <img
                                 src={profile.avatar_url}
@@ -708,7 +698,6 @@ export function AppNavbar({
                               (profile?.username?.charAt(0) || "U").toUpperCase()
                             )}
                           </div>
-                          <IconChevronDown className="h-4 w-4 text-gray-400 shrink-0 group-hover/nav:text-gray-600 transition-colors" />
                         </button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-56 p-2 bg-white shadow-lg border border-border mt-2">
@@ -736,28 +725,21 @@ export function AppNavbar({
                         </div>
                         <DropdownMenuItem asChild>
                           <Link href={profile?.username ? `/profile/${profile.username}` : "/settings"} className="flex items-center gap-2 p-2.5 rounded-lg cursor-pointer hover:bg-neutral-50">
-                            <IconUser className="h-4 w-4" />
+                            <IconUser className="h-4 w-4" stroke={1.5} />
                             <span>My Profile</span>
                           </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild>
                           <Link href="/settings" className="flex items-center gap-2 p-2.5 rounded-lg cursor-pointer hover:bg-neutral-50">
-                            <IconSettings className="h-4 w-4" />
+                            <IconSettings className="h-4 w-4" stroke={1.5} />
                             <span>Settings</span>
                           </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                          onClick={() => setIsFeedbackOpen(true)}
-                          className="flex items-center gap-2 p-2.5 rounded-lg cursor-pointer hover:bg-neutral-50"
-                        >
-                          <IconLifebuoy className="h-4 w-4" />
-                          <span>Report a Bug</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
                           onClick={() => startTransition(async () => { await signOutAction(); })}
-                          className="flex items-center gap-2 p-2.5 rounded-lg cursor-pointer hover:bg-rose-50 text-rose-600 focus:text-rose-600 focus:bg-rose-50 transition-colors"
+                          className="flex items-center gap-2 p-2.5 rounded-lg cursor-pointer hover:bg-rose-50 text-rose-500/80 focus:text-rose-600 focus:bg-rose-50 transition-colors"
                         >
-                          <IconLogout className="h-4 w-4" />
+                          <IconLogout className="h-4 w-4" stroke={1.5} />
                           <span>Sign Out</span>
                         </DropdownMenuItem>
                       </DropdownMenuContent>
@@ -830,16 +812,16 @@ export function AppNavbar({
       />
       {isAIModalOpen && (
         <AIRequestFlow
-          initialText=""
-          onClose={() => setIsAIModalOpen(false)}
+          initialText={aiInitialText}
+          onClose={() => {
+            setIsAIModalOpen(false);
+            setAIInitialText("");
+          }}
           user={user}
           profile={profile}
         />
       )}
-      <FeedbackModal 
-        open={isFeedbackOpen} 
-        onOpenChange={setIsFeedbackOpen} 
-      />
+      <div className="hidden" />
     </header>
   );
 }

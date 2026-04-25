@@ -605,7 +605,7 @@ export default async function LookingForItemPage({ params }: PageProps) {
 
             <div className="flex flex-col md:flex-row justify-between items-center pt-12 gap-8">
               <div className="flex items-center gap-8">
-                <Link href="/" className="text-2xl font-bold tracking-tight" style={{ fontFamily: 'var(--font-expanded)' }}>onseek</Link>
+                <Link href="/" className="text-2xl font-bold tracking-tight" style={{ fontFamily: 'var(--font-expanded)' }}>Onseek</Link>
                 <div className="w-1 h-1 rounded-full bg-gray-200"></div>
                 <p className="text-[10px] font-bold tracking-widest text-gray-300">Request-First Marketplace</p>
               </div>

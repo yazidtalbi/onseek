@@ -170,6 +170,69 @@ export function AIRequestModal({ open, onOpenChange }: AIRequestModalProps) {
     }
   };
 
+  const getConditionOptions = (category: string) => {
+    const service = ["Services", "Learning", "Health"];
+    const property = ["Property"];
+    const digital = ["Digital", "Culture", "Finance"];
+    const experience = ["Travel", "Experiences", "Family"];
+
+    if (service.includes(category)) {
+      return [
+        { id: "Entry", label: "Standard / Entry", desc: "Budget-friendly, junior professional" },
+        { id: "Professional", label: "Professional", desc: "Verified experience, polished result" },
+        { id: "Expert", label: "Expert / Specialist", desc: "Top-tier authority, complex work" }
+      ];
+    }
+    if (property.includes(category)) {
+      return [
+        { id: "New", label: "Brand New / Off-plan", desc: "Looking for a first-time move-in" },
+        { id: "Ready", label: "Ready to Move", desc: "Habitable, good condition" },
+        { id: "Renovation", label: "Renovation Project", desc: "Fixer-upper, lower price point" }
+      ];
+    }
+    if (digital.includes(category)) {
+      return [
+        { id: "Personal", label: "Personal Use", desc: "Standard license for one person" },
+        { id: "Commercial", label: "Commercial / Resale", desc: "Includes business/resale rights" },
+        { id: "Transfer", label: "Subscription Transfer", desc: "Existing account or seat transfer" }
+      ];
+    }
+    if (experience.includes(category)) {
+      return [
+        { id: "Economy", label: "Economy / Basic", desc: "Essential features only" },
+        { id: "Premium", label: "Premium / Comfort", desc: "Mid-range perks, flexible" },
+        { id: "Luxury", label: "Luxury / VIP", desc: "All-inclusive, high-end" }
+      ];
+    }
+    return [
+      { id: "New", label: "Brand New", desc: "Original, sealed packaging" },
+      { id: "Like New", label: "Open Box / Like New", desc: "Unsealed, but unused/pristine" },
+      { id: "Used", label: "Pre-owned (Good)", desc: "Used but well-maintained" },
+      { id: "Any", label: "Any Condition", desc: "Best price or vintage/retro" }
+    ];
+  };
+
+  const getConditionLabel = (category: string) => {
+    const service = ["Services", "Learning", "Health"];
+    const property = ["Property"];
+    const digital = ["Digital", "Culture", "Finance"];
+    const experience = ["Travel", "Experiences", "Family"];
+
+    if (service.includes(category)) return "Expertise";
+    if (property.includes(category)) return "Occupancy";
+    if (digital.includes(category)) return "Rights";
+    if (experience.includes(category)) return "Tier";
+    return "Condition";
+  };
+
+  const currentConditionOptions = React.useMemo(() => {
+    return getConditionOptions(extractedData?.category || "Other/General");
+  }, [extractedData?.category]);
+
+  const currentConditionLabel = React.useMemo(() => {
+    return getConditionLabel(extractedData?.category || "Other/General");
+  }, [extractedData?.category]);
+
   const handleClose = () => {
     if (showAuth) {
       setShowAuth(false);
@@ -236,6 +299,12 @@ export function AIRequestModal({ open, onOpenChange }: AIRequestModalProps) {
                     <DialogDescription className="text-base text-gray-400 font-medium leading-relaxed max-w-sm mx-auto md:mx-0">
                       Describe your perfect item and watch as our AI structures everything for you.
                     </DialogDescription>
+                    <div className="flex justify-center md:justify-start mt-6 mb-2">
+                      <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#7b3ff2]/10 rounded-full text-[11px] font-semibold text-[#7b3ff2] uppercase tracking-wide">
+                        <span role="img" aria-label="fire">🔥</span>
+                        3x more responses with detailed descriptions
+                      </div>
+                    </div>
                   </div>
                 </div>
               </DialogHeader>
@@ -344,22 +413,27 @@ export function AIRequestModal({ open, onOpenChange }: AIRequestModalProps) {
                       <Textarea
                         autoFocus
                         placeholder="Example: I'm looking for a used MacBook Pro M2, ideally 16GB RAM. Must have US keyboard and no scratches on the screen. Budget is around 1200 euros."
-                        className="min-h-[160px] bg-transparent border border-gray-100 focus:border-black focus-visible:ring-0 focus:ring-1 focus:ring-black rounded-3xl p-6 text-base resize-y placeholder:text-gray-400 shadow-none transition-all duration-200"
+                        className="min-h-[140px] bg-transparent border border-gray-100 focus:border-black focus-visible:ring-0 focus:ring-1 focus:ring-black rounded-2xl p-5 text-sm resize-y placeholder:text-gray-400 shadow-none transition-all duration-200"
                         value={inputText}
                         onChange={(e) => setInputText(e.target.value)}
                         disabled={isExtracting}
                       />
+                      <div className="absolute bottom-4 right-5 text-[10px] font-medium text-gray-400">
+                        {inputText.trim().length} characters
+                      </div>
                     </div>
                   </div>
 
-                  <Button
-                    onClick={handleExtract}
-                    disabled={inputText.trim().length < 10 || isExtracting}
-                    className="w-full h-16 rounded-full bg-[#171b23] hover:bg-black text-white font-bold text-[16px] transition-all group"
-                  >
-                    Generate Request
-                    <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                  </Button>
+                  <div className="flex flex-col items-center gap-3">
+                    <Button
+                      onClick={handleExtract}
+                      disabled={inputText.trim().length < 10 || isExtracting}
+                      className="w-full h-14 rounded-full bg-[#7b3ff2] hover:bg-[#6a34d1] text-white font-bold text-sm shadow-[0_10px_30px_rgba(123,63,242,0.15)] transition-all group"
+                    >
+                      Generate Request
+                      <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                    </Button>
+                  </div>
                   {inputText.trim().length > 0 && inputText.trim().length < 10 && (
                     <p className="text-center text-xs text-red-500 mt-2">Please enter at least 10 characters.</p>
                   )}
@@ -513,31 +587,27 @@ export function AIRequestModal({ open, onOpenChange }: AIRequestModalProps) {
                       <div className="mt-auto">
                         <div className="h-1 bg-[#f7f8f9]" />
                         <div className="flex items-stretch">
-                          {!["Services", "Finance & Insurance", "Grocery & Food", "Travel", "Mobile & Internet Plans"].includes(extractedData.category) && (
-                            <>
-                              <div className="flex flex-col items-center flex-1 py-4 justify-center min-w-0 px-2 group/condition relative text-[#7755FF]">
-                                <span className="text-[13px] text-gray-400 font-normal leading-none mb-1.5 text-center">Condition</span>
-                                <div className="relative group/sel">
-                                  <select
-                                    value={extractedData.condition}
-                                    onChange={(e) => setExtractedData({ ...extractedData, condition: e.target.value })}
-                                    className="bg-transparent text-[15.5px] font-[600] outline-none cursor-pointer appearance-none px-6 py-1 text-center"
-                                  >
-                                    <option value="Either">New & Used</option>
-                                    <option value="New">New</option>
-                                    <option value="Used">Used</option>
-                                  </select>
-                                  <Pencil className="absolute top-1/2 -right-1 -translate-y-1/2 h-3 w-3 text-gray-400 opacity-0 group-hover/sel:opacity-100 transition-opacity pointer-events-none" />
-                                </div>
-                              </div>
+                          <div className="flex flex-col items-center flex-1 py-4 justify-center min-w-0 px-2 group/condition relative text-[#7b3ff2]">
+                            <span className="text-[13px] text-gray-400 font-medium leading-none mb-1.5 text-center">{currentConditionLabel}</span>
+                            <div className="relative group/sel">
+                              <select
+                                value={extractedData.condition}
+                                onChange={(e) => setExtractedData({ ...extractedData, condition: e.target.value })}
+                                className="bg-transparent text-[15.5px] font-[600] outline-none cursor-pointer appearance-none px-6 py-1 text-center"
+                              >
+                                {currentConditionOptions.map(opt => (
+                                  <option key={opt.id} value={opt.id}>{opt.label}</option>
+                                ))}
+                              </select>
+                              <Pencil className="absolute top-1/2 -right-1 -translate-y-1/2 h-3 w-3 text-gray-400 opacity-0 group-hover/sel:opacity-100 transition-opacity pointer-events-none" />
+                            </div>
+                          </div>
 
-                              <div className="w-1 bg-[#f7f8f9] shrink-0" />
-                            </>
-                          )}
+                          <div className="w-1 bg-[#f7f8f9] shrink-0" />
 
                           <div className="flex flex-col items-center flex-1 py-4 justify-center min-w-0 px-2 group/budget relative">
-                            <span className="text-[13px] text-gray-400 font-normal leading-none mb-1.5 text-center">Budget</span>
-                            <div className="flex items-center justify-center w-full relative group/input text-[#7755FF]">
+                            <span className="text-[13px] text-gray-400 font-medium leading-none mb-1.5 text-center">Budget</span>
+                            <div className="flex items-center justify-center w-full relative group/input text-[#7b3ff2]">
                               <div className="flex items-center">
                                 <span className="text-[15.5px] font-[600] mr-0.5 shrink-0">$</span>
                                 <span
@@ -577,14 +647,14 @@ export function AIRequestModal({ open, onOpenChange }: AIRequestModalProps) {
                     <Button
                       onClick={handleFinalize}
                       disabled={isSubmitting}
-                      className="flex-[2] h-14 rounded-full bg-[#7755FF] hover:bg-[#6644EE] text-white font-bold text-[16px] transition-all active:scale-95"
+                      className="flex-[2] h-14 rounded-full bg-[#7b3ff2] hover:bg-[#6a34d1] text-white font-bold text-[16px] shadow-[0_10px_30px_rgba(123,63,242,0.15)] transition-all active:scale-95 flex items-center justify-center gap-2"
                     >
                       {isSubmitting ? (
                         <Loader2 className="h-5 w-5 animate-spin" />
                       ) : (
                         <>
-                          <Check className="mr-2 h-6 w-6" strokeWidth={3} />
-                          Post Request
+                          <Sparkles className="h-4 w-4" />
+                          <span>Launch Request</span>
                         </>
                       )}
                     </Button>

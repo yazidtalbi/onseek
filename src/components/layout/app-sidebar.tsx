@@ -38,9 +38,7 @@ import {
 import { createContext, useContext, useState, ReactNode, useTransition, useEffect } from "react";
 import Image from "next/image";
 import { signOutAction } from "@/actions/auth.actions";
-import { NotificationsDrawer } from "@/components/notifications/notifications-drawer";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
-import { FeedbackModal } from "@/components/reports/feedback-modal";
 
 function useUnreadMessages() {
   const { user } = useAuth();
@@ -83,49 +81,16 @@ export function useSidebar() {
 export function SidebarProvider({ children }: { children: ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
-  
+
   return (
-    <SidebarContext.Provider value={{ 
-      mobileOpen, 
-      setMobileOpen, 
-      expanded, 
-      setExpanded 
+    <SidebarContext.Provider value={{
+      mobileOpen,
+      setMobileOpen,
+      expanded,
+      setExpanded
     }}>
       {children}
     </SidebarContext.Provider>
-  );
-}
-
-// ─── Compact icon button with tooltip ───────────────────────────────────────
-function NavIcon({
-  label,
-  icon: Icon,
-  active,
-  children,
-}: {
-  label: string;
-  icon: React.ElementType;
-  active?: boolean;
-  children?: ReactNode; // allow wrapping with <Link> or <button>
-}) {
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <span
-          className={cn(
-            "flex items-center justify-center w-10 h-10 rounded-md transition-colors cursor-pointer",
-            active
-              ? "bg-gray-100 text-foreground"
-              : "text-muted-foreground hover:text-foreground hover:bg-gray-50"
-          )}
-        >
-          <Icon className="h-5 w-5" />
-        </span>
-      </TooltipTrigger>
-      <TooltipContent side="right" sideOffset={8} className="bg-[#212733] text-white border-[#212733]">
-        {label}
-      </TooltipContent>
-    </Tooltip>
   );
 }
 
@@ -135,7 +100,6 @@ function MobileSidebarContent({ onClose }: { onClose?: () => void }) {
   const { user, profile } = useAuth();
   const { setMobileOpen } = useSidebar();
   const [isPending, startTransition] = useTransition();
-  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 
   const handleClose = () => {
     setMobileOpen(false);
@@ -151,7 +115,7 @@ function MobileSidebarContent({ onClose }: { onClose?: () => void }) {
 
   const mainNavItems = [
     { href: "/", label: "Home", icon: IconHome2, activeIcon: IconHome2Filled },
-    { href: "/requests", label: "Requests", icon: IconBinoculars, activeIcon: IconBinoculars },
+    { href: "/requests", label: "My Requests", icon: IconBinoculars, activeIcon: IconBinoculars },
     { href: "/submissions", label: "Proposals", icon: IconFileText, activeIcon: IconFileText },
     { href: "/listings", label: "My Listings", icon: IconStack2, activeIcon: IconStackFront },
     { href: "/messages", label: "Messages", icon: IconMessageCircle, activeIcon: IconMessageCircleFilled },];
@@ -181,23 +145,16 @@ function MobileSidebarContent({ onClose }: { onClose?: () => void }) {
 
   return (
     <div className="flex flex-col h-full overflow-y-auto">
-      <div className="px-4 mb-6">
-        <Link href="/" onClick={handleClose} className="flex items-center gap-2 group">
-          <Image src="/logonseek.svg" alt="onseek" width={28} height={28} className="h-7 w-auto" priority />
-          <span className="text-xl text-[#000000]" style={{ fontFamily: "var(--font-expanded)", fontWeight: 600 }}>
-            onseek
-          </span>
-        </Link>
-      </div>
+      <div className="h-2" /> {/* Spacer */}
 
-      <nav className="space-y-3 px-4 flex-1">
+      <nav className="space-y-2 px-4 flex-1">
         {mainNavItems.map((item) => {
           const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
           return <NavLink key={item.href} item={item} active={isActive} />;
         })}
       </nav>
 
-      <div className="border-t border-border p-4 space-y-3">
+      <div className="border-t border-border p-4 space-y-2">
         {user ? (
           <>
             <Link
@@ -227,19 +184,9 @@ function MobileSidebarContent({ onClose }: { onClose?: () => void }) {
               <span>Leaderboard</span>
             </Link>
             <button
-              onClick={() => setIsFeedbackOpen(true)}
-              className={cn(
-                "flex items-center gap-3 px-3 py-2 rounded-md transition-colors relative w-full text-left",
-                "text-black hover:text-foreground hover:bg-gray-50"
-              )}
-            >
-              <IconLifebuoy className="h-6 w-6" stroke={1.5} />
-              <span>Feedback</span>
-            </button>
-            <button
               onClick={handleSignOut}
               className={cn(
-                "flex items-center gap-3 px-3 py-2 rounded-md transition-colors relative w-full text-left text-rose-600 hover:bg-rose-50"
+                "flex items-center gap-3 px-3 py-2 rounded-md transition-colors relative w-full text-left text-rose-500/80 hover:bg-rose-50"
               )}
             >
               <IconLogout className="h-6 w-6" stroke={1.5} />
@@ -257,7 +204,15 @@ function MobileSidebarContent({ onClose }: { onClose?: () => void }) {
           </div>
         )}
       </div>
-      <FeedbackModal open={isFeedbackOpen} onOpenChange={setIsFeedbackOpen} />
+      <button
+        onClick={() => setMobileOpen(false)}
+        className={cn(
+          "flex items-center gap-3 px-7 py-4 transition-colors relative w-full text-left text-black hover:bg-gray-50 border-t border-gray-100"
+        )}
+      >
+        <IconMenu2 className="h-6 w-6" stroke={1.5} />
+        <span className="text-sm font-medium">Collapse</span>
+      </button>
     </div>
   );
 }
@@ -266,9 +221,8 @@ function MobileSidebarContent({ onClose }: { onClose?: () => void }) {
 function DesktopSidebarContent() {
   const pathname = usePathname();
   const { user, profile } = useAuth();
-  const { expanded: isExpanded } = useSidebar();
+  const { expanded: isExpanded, setExpanded: setSidebarSidebarExpanded } = useSidebar();
   const [isPending, startTransition] = useTransition();
-  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const hasUnreadMessages = useUnreadMessages();
 
   const handleSignOut = () => {
@@ -279,7 +233,7 @@ function DesktopSidebarContent() {
 
   const mainNavItems = [
     { href: "/", label: "Home", icon: IconHome2, activeIcon: IconHome2Filled },
-    { href: "/requests", label: "Requests", icon: IconBinoculars, activeIcon: IconBinoculars },
+    { href: "/requests", label: "My Requests", icon: IconBinoculars, activeIcon: IconBinoculars },
     { href: "/submissions", label: "Proposals", icon: IconFileText, activeIcon: IconFileText },
     { href: "/listings", label: "My Listings", icon: IconStack2, activeIcon: IconStackFront },
     { href: "/messages", label: "Messages", icon: IconMessageCircle, activeIcon: IconMessageCircleFilled },];
@@ -287,12 +241,13 @@ function DesktopSidebarContent() {
   return (
     <TooltipProvider delayDuration={200}>
       <div className={cn(
-        "flex flex-col h-full pt-3 pb-4 transition-all duration-300 overflow-hidden",
-        isExpanded ? "px-4 items-stretch" : "items-center"
+        "flex flex-col h-full pt-1 pb-4 transition-all duration-300 overflow-hidden",
+        isExpanded ? "pl-0 pr-4 items-stretch" : "items-center"
       )}>
+        <div className="h-2" /> {/* Top Spacer */}
 
         {/* Main nav */}
-        <nav className="flex flex-col gap-6 flex-1 w-full">
+        <nav className="flex flex-col gap-3 flex-1 w-full">
           {mainNavItems.map((item) => {
             const isActive =
               pathname === item.href ||
@@ -303,8 +258,8 @@ function DesktopSidebarContent() {
                   <Link
                     href={item.href}
                     className={cn(
-                      "flex items-center transition-all relative group/item rounded-2xl h-12 w-12",
-                      isExpanded ? "w-full pl-6 pr-4 gap-4 h-12" : "justify-center mx-auto",
+                      "flex items-center transition-all relative group/item rounded-2xl h-12",
+                      isExpanded ? "w-full pl-[22px] pr-4 gap-4" : "w-12 justify-center mx-auto",
                       isActive
                         ? "bg-gray-100 text-[#1e2330]"
                         : "text-black hover:text-foreground hover:bg-gray-50"
@@ -317,7 +272,7 @@ function DesktopSidebarContent() {
                       )}
                     </div>
                     {isExpanded && (
-                      <span className="text-sm font-semibold whitespace-nowrap overflow-hidden text-ellipsis">
+                      <span className="text-sm font-medium whitespace-nowrap overflow-hidden text-ellipsis">
                         {item.label}
                       </span>
                     )}
@@ -334,7 +289,7 @@ function DesktopSidebarContent() {
         </nav>
 
         {/* Bottom actions */}
-        <div className="flex flex-col gap-6 w-full mt-auto">
+        <div className="flex flex-col gap-3 w-full mt-auto">
           {user && (
             <>
               <Tooltip>
@@ -342,8 +297,8 @@ function DesktopSidebarContent() {
                   <Link
                     href="/settings"
                     className={cn(
-                      "flex items-center transition-all relative group/item rounded-2xl h-12 w-12",
-                      isExpanded ? "w-full pl-6 pr-4 gap-4 h-12" : "justify-center mx-auto",
+                      "flex items-center transition-all relative group/item rounded-2xl h-12",
+                      isExpanded ? "w-full pl-[22px] pr-4 gap-4" : "w-12 justify-center mx-auto",
                       pathname === "/settings"
                         ? "bg-gray-100 text-[#1e2330]"
                         : "text-black hover:text-foreground hover:bg-gray-50"
@@ -351,7 +306,7 @@ function DesktopSidebarContent() {
                   >
                     {pathname === "/settings" ? <IconSettingsFilled className="h-7 w-7 shrink-0" stroke={1.5} /> : <IconSettings className="h-7 w-7 shrink-0" stroke={1.5} />}
                     {isExpanded && (
-                      <span className="text-sm font-semibold whitespace-nowrap overflow-hidden text-ellipsis">
+                      <span className="text-sm font-medium whitespace-nowrap overflow-hidden text-ellipsis">
                         Settings
                       </span>
                     )}
@@ -368,8 +323,8 @@ function DesktopSidebarContent() {
                   <Link
                     href="/leaderboard"
                     className={cn(
-                      "flex items-center transition-all relative group/item rounded-2xl h-12 w-12",
-                      isExpanded ? "w-full pl-6 pr-4 gap-4 h-12" : "justify-center mx-auto",
+                      "flex items-center transition-all relative group/item rounded-2xl h-12",
+                      isExpanded ? "w-full pl-[22px] pr-4 gap-4" : "w-12 justify-center mx-auto",
                       pathname === "/leaderboard"
                         ? "bg-gray-100 text-[#1e2330]"
                         : "text-black hover:text-foreground hover:bg-gray-50"
@@ -377,7 +332,7 @@ function DesktopSidebarContent() {
                   >
                     {pathname === "/leaderboard" ? <IconTrophyFilled className="h-7 w-7 shrink-0" stroke={1.5} /> : <IconTrophy className="h-7 w-7 shrink-0" stroke={1.5} />}
                     {isExpanded && (
-                      <span className="text-sm font-semibold whitespace-nowrap overflow-hidden text-ellipsis">
+                      <span className="text-sm font-medium whitespace-nowrap overflow-hidden text-ellipsis">
                         Leaderboard
                       </span>
                     )}
@@ -386,37 +341,28 @@ function DesktopSidebarContent() {
                 {!isExpanded && (
                   <TooltipContent side="right" sideOffset={8} className="bg-[#212733] text-white border-[#212733]">
                     Leaderboard
-                   </TooltipContent>
+                  </TooltipContent>
                 )}
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button
-                    onClick={() => setIsFeedbackOpen(true)}
+                    onClick={() => setSidebarSidebarExpanded(!isExpanded)}
                     className={cn(
-                      "flex items-center transition-all relative group/item rounded-2xl h-12 w-12",
-                      isExpanded ? "w-full pl-6 pr-4 gap-4 h-12" : "justify-center mx-auto",
-                      "text-black hover:text-foreground hover:bg-gray-50"
+                      "flex items-center transition-all relative group/item rounded-2xl h-12 w-12 justify-center mx-auto",
+                      "text-black hover:text-foreground hover:bg-gray-50 mt-3"
                     )}
                   >
-                    <IconLifebuoy className="h-7 w-7 shrink-0" stroke={1.5} />
-                    {isExpanded && (
-                      <span className="text-sm font-semibold whitespace-nowrap overflow-hidden text-ellipsis">
-                        Feedback
-                      </span>
-                    )}
+                    <IconMenu2 className="h-6 w-6" />
                   </button>
                 </TooltipTrigger>
-                {!isExpanded && (
-                  <TooltipContent side="right" sideOffset={8} className="bg-[#212733] text-white border-[#212733]">
-                    Feedback
-                  </TooltipContent>
-                )}
+                <TooltipContent side="right" sideOffset={8} className="bg-[#212733] text-white border-[#212733]">
+                  {isExpanded ? "Collapse" : "Expand"}
+                </TooltipContent>
               </Tooltip>
             </>
           )}
         </div>
-        <FeedbackModal open={isFeedbackOpen} onOpenChange={setIsFeedbackOpen} />
       </div>
     </TooltipProvider>
   );
@@ -433,7 +379,7 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
       {/* Mobile: Sheet Menu */}
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
         <SheetContent side="left" className="w-64 p-0">
-          <div className="flex h-full flex-col space-y-6 py-4">
+          <div className="flex h-full flex-col space-y-6 py-2">
             <MobileSidebarContent />
           </div>
         </SheetContent>
@@ -441,7 +387,7 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
 
       {/* Desktop: Compact icon-only sidebar */}
       {user && (
-        <aside 
+        <aside
           className={cn(
             "hidden md:flex md:fixed md:top-20 md:bottom-0 md:left-0 md:z-30 md:bg-white flex-col transition-all duration-300 ease-in-out border-none outline-none",
             expanded ? "md:w-[240px]" : "md:w-[72px]"
@@ -452,9 +398,9 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
       )}
 
       {/* Main Content offset */}
-      <div 
+      <div
         className={cn(
-          "flex-1 w-full min-w-0 transition-all duration-300 ease-in-out", 
+          "flex-1 w-full min-w-0 transition-all duration-300 ease-in-out",
           (!user && pathname === "/") ? "pt-0" : "pt-20",
           user && (expanded ? "md:ml-[240px]" : "md:ml-[72px]")
         )}

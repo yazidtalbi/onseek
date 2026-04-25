@@ -110,117 +110,87 @@ export default async function RequestDetailPage({
   }
 
   const id = request.id;
-  let isAdmin = false;
-  if (user) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("is_admin")
-      .eq("id", user.id)
-      .single();
-    isAdmin = !!profile?.is_admin;
-  }
 
-  const { data: links } = await supabase
-    .from("request_links")
-    .select("*")
-    .eq("request_id", id);
+  // Fetch everything else in parallel to avoid sequential waterfall
+  const [
+    linksRes,
+    imagesRes,
+    tagsRes,
+    submissionsRes,
+    similarRequestsRes,
+    favoriteRes,
+    adminRes
+  ] = await Promise.all([
+    supabase.from("request_links").select("*").eq("request_id", id),
+    supabase.from("request_images").select("*").eq("request_id", id).order("image_order", { ascending: true }),
+    supabase.from("request_tags").select("tags(*)").eq("request_id", id),
+    supabase.from("submissions").select("*, votes(vote, user_id), profiles(username, avatar_url, first_name, last_name)").eq("request_id", id).order("created_at", { ascending: false }),
+    supabase.from("requests").select("*, profiles(username, avatar_url, first_name, last_name)").eq("category", request.category).neq("id", id).order("created_at", { ascending: false }).limit(6),
+    user ? supabase.from("favorites").select("id").eq("user_id", user.id).eq("request_id", id).maybeSingle() : Promise.resolve({ data: null }),
+    user ? supabase.from("profiles").select("is_admin").eq("id", user.id).maybeSingle() : Promise.resolve({ data: null })
+  ]);
 
-  const { data: images } = await supabase
-    .from("request_images")
-    .select("*")
-    .eq("request_id", id)
-    .order("image_order", { ascending: true });
-
-  const { data: requestTags } = await supabase
-    .from("request_tags")
-    .select("tags(*)")
-    .eq("request_id", id);
-  
-  const tags = requestTags?.map(rt => rt.tags).filter(Boolean) || [];
-
-  const { data: submissions } = await supabase
-    .from("submissions")
-    .select("*, votes(vote, user_id), profiles(username, avatar_url, first_name, last_name)")
-    .eq("request_id", id)
-    .order("created_at", { ascending: false });
+  const links = linksRes.data || [];
+  const images = imagesRes.data || [];
+  const requestTags = tagsRes.data || [];
+  const tags = requestTags.map((rt: any) => rt.tags).filter(Boolean) || [];
+  const submissions = submissionsRes.data || [];
+  const similarRequests = similarRequestsRes.data || [];
+  const isFavorite = !!favoriteRes?.data;
+  const isAdmin = !!(adminRes?.data as any)?.is_admin;
 
   const initialSubmissions =
-    submissions?.map((item) => computeScore(item as Submission, user?.id)) ?? [];
+    submissions.map((item) => computeScore(item as Submission, user?.id)) ?? [];
 
-  // Fetch similar requests (same category, exclude current request)
-  const { data: similarRequests } = await supabase
-    .from("requests")
-    .select("*, profiles(username, avatar_url, first_name, last_name)")
-    .eq("category", request.category)
-    .neq("id", id)
-    .order("created_at", { ascending: false })
-    .limit(6);
-
-  // Fetch images for similar requests
+  // Fetch detail metadata for similar requests in parallel
   let similarRequestImages: Record<string, string[]> = {};
+  let similarRequestSubmissionCounts: Record<string, number> = {};
+  let similarRequestFavorites: Set<string> = new Set();
+  let similarRequestTags: Record<string, any[]> = {};
+
   if (similarRequests && similarRequests.length > 0) {
     const similarRequestIds = similarRequests.map((r) => r.id);
-    const { data: similarImages } = await supabase
-      .from("request_images")
-      .select("request_id, image_url, image_order")
-      .in("request_id", similarRequestIds)
-      .order("image_order", { ascending: true });
+    
+    const [
+      sImagesRes,
+      sSubmissionsRes,
+      sFavoritesRes,
+      sTagsRes
+    ] = await Promise.all([
+      supabase.from("request_images").select("request_id, image_url, image_order").in("request_id", similarRequestIds).order("image_order", { ascending: true }),
+      supabase.from("submissions").select("request_id").in("request_id", similarRequestIds),
+      user ? supabase.from("favorites").select("request_id").eq("user_id", user.id).in("request_id", similarRequestIds) : Promise.resolve({ data: [] }),
+      supabase.from("request_tags").select("request_id, tags(*)").in("request_id", similarRequestIds)
+    ]);
 
-    if (similarImages) {
-      similarImages.forEach((img) => {
+    // Process similar request images
+    if (sImagesRes.data) {
+      sImagesRes.data.forEach((img) => {
         if (!similarRequestImages[img.request_id]) {
           similarRequestImages[img.request_id] = [];
         }
-          similarRequestImages[img.request_id].push(img.image_url);
+        similarRequestImages[img.request_id].push(img.image_url);
       });
     }
-  }
 
-  // Fetch submission counts for similar requests
-  let similarRequestSubmissionCounts: Record<string, number> = {};
-  if (similarRequests && similarRequests.length > 0) {
-    const similarRequestIds = similarRequests.map((r) => r.id);
-    const { data: submissionCounts } = await supabase
-      .from("submissions")
-      .select("request_id")
-      .in("request_id", similarRequestIds);
-
-    if (submissionCounts) {
-      submissionCounts.forEach((sub) => {
+    // Process submission counts
+    if (sSubmissionsRes.data) {
+      sSubmissionsRes.data.forEach((sub) => {
         const current = similarRequestSubmissionCounts[sub.request_id] || 0;
         similarRequestSubmissionCounts[sub.request_id] = current + 1;
       });
     }
-  }
 
-  // Fetch favorite status for similar requests
-  let similarRequestFavorites: Set<string> = new Set();
-  if (user && similarRequests && similarRequests.length > 0) {
-    const similarRequestIds = similarRequests.map((r) => r.id);
-    const { data: favorites } = await supabase
-      .from("favorites")
-      .select("request_id")
-      .eq("user_id", user.id)
-      .in("request_id", similarRequestIds);
-
-    if (favorites) {
-      favorites.forEach((fav) => {
+    // Process favorites
+    if (sFavoritesRes.data) {
+      sFavoritesRes.data.forEach((fav: any) => {
         similarRequestFavorites.add(fav.request_id);
       });
     }
-  }
 
-  // Fetch tags for similar requests
-  let similarRequestTags: Record<string, any[]> = {};
-  if (similarRequests && similarRequests.length > 0) {
-    const similarRequestIds = similarRequests.map((r) => r.id);
-    const { data: sTags } = await supabase
-      .from("request_tags")
-      .select("request_id, tags(*)")
-      .in("request_id", similarRequestIds);
-
-    if (sTags) {
-      sTags.forEach((st: any) => {
+    // Process tags
+    if (sTagsRes.data) {
+      sTagsRes.data.forEach((st: any) => {
         if (st.tags) {
           if (!similarRequestTags[st.request_id]) {
             similarRequestTags[st.request_id] = [];
@@ -234,18 +204,6 @@ export default async function RequestDetailPage({
   const isOwner = user?.id === request.user_id;
   // Allow guests to see submission form (they'll be redirected to login on click)
   const showSubmissionForm = request.status === "open";
-
-  // Check if request is favorited
-  let isFavorite = false;
-  if (user) {
-    const { data: favorite } = await supabase
-      .from("favorites")
-      .select("id")
-      .eq("user_id", user.id)
-      .eq("request_id", id)
-      .single();
-    isFavorite = !!favorite;
-  }
 
   const proposalCount = initialSubmissions.length;
 

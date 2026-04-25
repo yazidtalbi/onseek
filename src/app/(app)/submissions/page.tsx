@@ -1,5 +1,6 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { SubmissionCard } from "@/components/submissions/submission-card";
+import { MySubmissionsView } from "@/components/submissions/my-submissions-view";
 import type { Submission } from "@/lib/types";
 import Link from "next/link";
 import { createRequestUrl } from "@/lib/utils/slug";
@@ -42,7 +43,7 @@ export default async function MySubmissionsPage() {
   // Fetch submissions with votes and profiles, and request info
   const { data: submissionsData } = await supabase
     .from("submissions")
-    .select("*, votes(vote, user_id), profiles(username), requests(id, title, user_id)")
+    .select("*, votes(vote, user_id), profiles(username), requests(*)")
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
 
@@ -60,56 +61,23 @@ export default async function MySubmissionsPage() {
   });
 
   return (
-    <div className="space-y-6">
-      <div className="max-w-3xl mx-auto w-full">
-        <div>
-          <h1 className="text-3xl text-foreground" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>Proposals</h1>
-          <p className="text-sm text-muted-foreground mt-2">
-            Track every link you have shared with the community.
-          </p>
-        </div>
-      </div>
-
-      <div className="max-w-3xl mx-auto w-full space-y-4">
-        {submissions.length > 0 ? (
-          submissions.map((submission, index) => {
-            const request = (submission as any).requests;
-            const requestId = request?.id;
-            const requestTitle = request?.title;
-            
-            return (
-              <div key={submission.id} className="space-y-2">
-                {/* Link to parent request */}
-                {requestId && requestTitle && (
-                  <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
-                    <span>For request:</span>
-                    <Link
-                      href={createRequestUrl({ id: requestId })}
-                      className="text-[#7755FF] hover:underline font-medium"
-                    >
-                      {requestTitle}
-                    </Link>
-                  </div>
-                )}
-                
-                <SubmissionCard
-                  submission={submission}
-                  requestId={requestId || ""}
-                  requestTitle={requestTitle}
-                  isFirst={false}
-                  isLast={false}
-                  isOnlyOne={true}
-                  requestOwnerId={requestId ? requestOwnerIds[requestId] : undefined}
-                  hideVotes={true}
-                />
-              </div>
-            );
-          })
-        ) : (
-          <div className="rounded-2xl border border-dashed border-[#e5e7eb]  p-6 text-center text-sm text-gray-600">
-            No proposals yet. Explore requests and help find links.
+    <div className="w-full max-w-[1100px] mx-auto px-4 py-8">
+      <div className="flex flex-col md:flex-row gap-12 lg:gap-24 items-start justify-center">
+        {/* Left Column: Header */}
+        <div className="w-full md:w-[280px] shrink-0 space-y-6 sticky top-24">
+          <div>
+            <h1 className="text-4xl text-foreground" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>Proposals</h1>
+            <p className="text-sm text-muted-foreground mt-4 leading-relaxed">
+              Track every link you have shared with the community. Manage your submissions and monitor their acceptance status.
+            </p>
           </div>
-        )}
+        </div>
+
+        {/* Right Column: Proposals View (Client Component) */}
+        <MySubmissionsView
+          initialSubmissions={submissions}
+          requestOwnerIds={requestOwnerIds}
+        />
       </div>
     </div>
   );

@@ -22,7 +22,7 @@ export const requestSchema = z.object({
   exactSpecification: z.boolean().default(false),
   exactPrice: z.boolean().default(false),
   country: z.string().max(60).nullable().optional(),
-  condition: z.string().max(20).nullable().default(null),
+  condition: z.string().max(40).nullable().default(null),
   urgency: z.string().max(30).nullable().optional(),
   referenceLinks: z.string().optional(),
 });

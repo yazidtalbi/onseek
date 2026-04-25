@@ -49,19 +49,23 @@ export function SubmissionList({
   layout,
   requestPreferences,
   requestDealbreakers,
+  isOwner = false,
+  showSubmissionForm = true,
 }: {
   requestId: string;
   requestTitle?: string;
   initialSubmissions: Submission[];
   winnerId?: string | null;
   canSelectWinner?: boolean;
-  requestStatus?: "open" | "closed" | "solved";
+  requestStatus?: "open" | "closed" | "solved" | "pending" | "rejected" | "archived";
   requestOwnerId?: string;
   hideTitle?: boolean;
   largeText?: boolean;
   layout?: "vertical" | "horizontal";
   requestPreferences?: any[];
   requestDealbreakers?: any[];
+  isOwner?: boolean;
+  showSubmissionForm?: boolean;
 }) {
   const [localWinner, setLocalWinner] = React.useState<string | null>(
     winnerId ?? null
@@ -99,12 +103,14 @@ export function SubmissionList({
 
         {/* Heading */}
         <h3 className="text-2xl font-medium text-neutral-900 mb-3" style={{ fontFamily: 'var(--font-expanded)' }}>
-          Be the first to help
+          {isOwner ? "Sellers will see your request" : "Be the first to help"}
         </h3>
 
         {/* Body Text */}
         <p className="text-sm text-gray-600 mb-6 max-w-md mx-auto">
-          Share a product or item that matches this request
+          {isOwner 
+            ? "We'll notify you as soon as someone shares a product that matches your criteria." 
+            : "Share a product or item that matches this request"}
         </p>
       </div>
     );
@@ -197,7 +203,6 @@ export function SubmissionList({
               isOnlyOne={sorted.length === 1}
               requestOwnerId={requestOwnerId}
               largeText={largeText}
-              isBest={sortBy === "best" && index === 0}
               requestPreferences={requestPreferences}
               requestDealbreakers={requestDealbreakers}
               viewMode={viewMode}

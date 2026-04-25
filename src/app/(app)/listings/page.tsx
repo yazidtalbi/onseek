@@ -1,7 +1,6 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { PersonalItemsListWrapper } from "@/components/personal-items/personal-items-list-wrapper";
+import { MyListingsView } from "@/components/personal-items/my-listings-view";
 import { AddItemModal } from "@/components/personal-items/add-item-modal";
-import { Package } from "lucide-react";
 import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
@@ -28,20 +27,25 @@ export default async function InventoryPage() {
   }
 
   return (
-    <div className="space-y-6 w-full max-w-3xl mx-auto">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="text-3xl text-foreground flex items-center gap-2" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>
-            My Listings
-          </h1>
-          <p className="text-sm text-muted-foreground mt-2">
-            Manage your offerings. Use them when responding to requests.
-          </p>
+    <div className="w-full max-w-[1100px] mx-auto px-4 py-8">
+      <div className="flex flex-col md:flex-row gap-12 lg:gap-24 items-start justify-center">
+        {/* Left Column: Header */}
+        <div className="w-full md:w-[280px] shrink-0 space-y-8 sticky top-24">
+          <div>
+            <h1 className="text-4xl text-foreground" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>My Listings</h1>
+            <p className="text-sm text-muted-foreground mt-4 leading-relaxed">
+              Manage your offerings. Save your favorite products and services to quickly reuse them when responding to marketplace requests.
+            </p>
+          </div>
+          
+          <div className="pt-2">
+            <AddItemModal />
+          </div>
         </div>
-        <AddItemModal />
-      </div>
 
-      <PersonalItemsListWrapper initialItems={items || []} />
+        {/* Right Column: Listings View (Client Component) */}
+        <MyListingsView initialItems={items || []} />
+      </div>
     </div>
   );
 }

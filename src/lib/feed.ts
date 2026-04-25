@@ -1,4 +1,4 @@
-import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { createServerSupabaseClient, createAdminSupabaseClient } from "@/lib/supabase/server";
 import { FeedMode } from "@/lib/types";
 
 export type FeedFilters = {
@@ -23,39 +23,72 @@ export async function fetchInitialFeedData(
     .from("requests")
     .select("*, profiles(username, avatar_url, first_name, last_name)");
 
-  if (user) {
-    query = query.or(`status.eq.open,and(status.eq.pending,user_id.eq.${user.id})`);
-  } else {
-    query = query.eq("status", "open");
-  }
-  
-  if (filters.tagSlug) {
-    const { data: taggedRequests } = await supabase
-      .from("request_tags")
-      .select("request_id, tags!inner(slug)")
-      .eq("tags.slug", filters.tagSlug);
-    
-    const taggedIds = taggedRequests?.map(tr => tr.request_id) || [];
-    if (taggedIds.length === 0) {
-      return { items: [], nextCursor: null };
+  try {
+    if (filters.tagSlug) {
+      const adminSupabase = await createAdminSupabaseClient();
+      
+      // Fetch tag ID case-insensitively
+      const { data: tag } = await adminSupabase
+        .from("tags")
+        .select("id")
+        .ilike("slug", filters.tagSlug)
+        .single();
+      
+      if (!tag) {
+        console.log(`[fetchInitialFeedData] Tag not found for slug: ${filters.tagSlug}`);
+        return { items: [], nextCursor: null };
+      }
+
+      // Fetch request IDs for this tag
+      const { data: rt, error: rtError } = await adminSupabase
+        .from("request_tags")
+        .select("request_id")
+        .eq("tag_id", tag.id);
+      
+      if (rtError) {
+        console.error("[fetchInitialFeedData] Error fetching request_tags:", rtError);
+        return { items: [], nextCursor: null };
+      }
+
+      const ids = rt?.map(r => r.request_id) || [];
+      if (ids.length === 0) {
+        console.log(`[fetchInitialFeedData] No requests found for tag: ${tag.id}`);
+        return { items: [], nextCursor: null };
+      }
+      
+      query = query.in("id", ids);
     }
-    query = query.in("id", taggedIds);
+
+    if (user) {
+      // Show open, solved, or own pending requests
+      query = query.or(`status.eq.open,status.eq.solved,and(status.eq.pending,user_id.eq.${user.id})`);
+    } else {
+      // Public view: show open and solved requests
+      query = query.in("status", ["open", "solved"]);
+    }
+  } catch (err) {
+    console.error("[fetchInitialFeedData] Query setup error:", err);
+    return { items: [], nextCursor: null };
   }
   
   if (filters.category && filters.category !== "All") {
     query = query.eq("category", filters.category);
   }
+  
   let defaultCountry = null;
   if (user) {
     const { data: profile } = await supabase.from("profiles").select("country").eq("id", user.id).single();
     if (profile?.country) defaultCountry = profile.country;
   }
   
-  const countryToSearch = filters.country !== undefined ? filters.country : defaultCountry;
+  const countryToSearch = filters.country !== undefined 
+    ? filters.country 
+    : (filters.tagSlug ? null : defaultCountry);
 
   if (countryToSearch && countryToSearch !== "All") {
     query = query.ilike("country", `%${countryToSearch}%`);
   }
+  
   if (filters.priceMin || filters.priceMax) {
     const min = filters.priceMin ? parseFloat(filters.priceMin) : null;
     const max = filters.priceMax ? parseFloat(filters.priceMax) : null;
@@ -74,7 +107,13 @@ export async function fetchInitialFeedData(
     query = query.order("created_at", { ascending: false });
   }
   
-  const { data: requests } = await query.limit(limit);
+  const { data: requests, error } = await query
+    .range(0, limit - 1);
+
+  if (error) {
+    console.error("[fetchInitialFeedData] Query error:", error);
+    return { items: [], nextCursor: null };
+  }
   
   if (!requests || requests.length === 0) {
     return { items: [], nextCursor: null };
@@ -83,8 +122,8 @@ export async function fetchInitialFeedData(
   const requestIds = requests.map((r: any) => r.id);
   const nextCursor = requests.length === limit ? requests[requests.length - 1].created_at : null;
   
-  // Fetch images, links, submissions (for counts), and tags in parallel
-  const [imagesResult, linksResult, submissionCountsResult, tagsResult] = await Promise.all([
+  // Fetch images, links, tags, and submission counts in parallel
+  const [imagesResult, linksResult, tagsResult, submissionsResult] = await Promise.all([
     supabase
       .from("request_images")
       .select("request_id, image_url, image_order")
@@ -95,12 +134,12 @@ export async function fetchInitialFeedData(
       .select("request_id, url")
       .in("request_id", requestIds),
     supabase
-      .from("submissions")
-      .select("request_id")
-      .in("request_id", requestIds),
-    supabase
       .from("request_tags")
       .select("request_id, tags(*)")
+      .in("request_id", requestIds),
+    supabase
+      .from("submissions")
+      .select("request_id")
       .in("request_id", requestIds),
   ]);
   
@@ -128,9 +167,9 @@ export async function fetchInitialFeedData(
       tagMap.set(rt.request_id, existing);
     }
   });
-  
+
   const submissionCountMap = new Map<string, number>();
-  submissionCountsResult.data?.forEach((sub) => {
+  submissionsResult.data?.forEach((sub) => {
     const current = submissionCountMap.get(sub.request_id) || 0;
     submissionCountMap.set(sub.request_id, current + 1);
   });
