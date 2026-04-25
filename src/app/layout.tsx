@@ -27,6 +27,7 @@ const instrumentSerif = Instrument_Serif({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'),
   title: "Onseek — The #1 Reverse Marketplace",
   description: "Where what you want finds you. End the endless search by posting your request and letting the perfect item find you.",
   icons: {

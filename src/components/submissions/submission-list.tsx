@@ -71,7 +71,7 @@ export function SubmissionList({
     winnerId ?? null
   );
   const [localStatus, setLocalStatus] = React.useState<
-    "open" | "closed" | "solved" | undefined
+    "open" | "closed" | "solved" | "pending" | "rejected" | "archived" | undefined
   >(requestStatus);
   const [sortBy, setSortBy] = React.useState<"best" | "newest" | "price">("best");
   const [viewMode, setViewMode] = React.useState<"expanded" | "compact">("compact");

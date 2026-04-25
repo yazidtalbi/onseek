@@ -248,6 +248,7 @@ export function RequestDetailView({
                   ))}
                 </div>
               </div>
+            )}
             {/* Tags */}
             {request.tags && request.tags.length > 0 && (
               <div className="flex flex-wrap gap-2 pt-10">
