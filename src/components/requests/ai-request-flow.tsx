@@ -191,11 +191,11 @@ export function AIRequestFlow({ initialText, onClose, user, profile }: AIRequest
     // 1. In 'auth' step (came from registration or was ready to post)
     // 2. We have user AND profile (onboarding finished)
     // 3. We have restored extractedData
-    if (step === "auth" && user && profile && extractedData) {
-      console.log("Auto-submitting draft due to auth success...");
+    if (step === "auth" && user && profile?.onboarding_completed === true && extractedData) {
+      console.log("Auto-submitting draft due to auth success and onboarding completion...");
       handleFinish();
     }
-  }, [step, user, profile, extractedData]);
+  }, [step, user, profile?.onboarding_completed, extractedData]);
   React.useEffect(() => {
     // ONLY extract if we don't have existing extracted data OR if initialText has changed from the draft
     const shouldExtract = step === "extracting" && (
@@ -311,10 +311,18 @@ export function AIRequestFlow({ initialText, onClose, user, profile }: AIRequest
   }, [step, extractedData, inputText, savedDraft?.initialText]);
 
   const handleFinish = async () => {
-    console.log("handleFinish triggered. Step:", step, "User:", user?.id, "Profile Country:", profile?.country);
+    if (step === "submitting") return;
+    
+    console.log("handleFinish triggered. Step:", step, "User:", user?.id, "Profile Onboarding:", profile?.onboarding_completed);
 
     if (!user) {
       console.log("No user found in handleFinish, setting step to auth");
+      setStep("auth");
+      return;
+    }
+
+    if (profile && profile.onboarding_completed !== true) {
+      console.log("User found but onboarding not completed. Waiting...");
       setStep("auth");
       return;
     }

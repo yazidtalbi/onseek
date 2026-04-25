@@ -10,6 +10,7 @@ import type { User } from "@supabase/supabase-js";
 import { Sparkles, Loader2, ArrowRight, Zap, User as UserIcon } from "lucide-react";
 import { AIRequestFlow } from "./ai-request-flow";
 import { motion, AnimatePresence } from "framer-motion";
+import { IconCrown } from "@tabler/icons-react";
 import { getRequestsCountAction } from "@/actions/request.actions";
 
 interface HeroSectionV2Props {
@@ -31,18 +32,18 @@ export function HeroSectionV2({ user, profile, tradeMode, setTradeMode }: HeroSe
     async function updateStats() {
       const result = await getRequestsCountAction();
       const dbCount = ("count" in result && typeof result.count === "number") ? result.count : 0;
-      
+
       // Daily seekers: 80-200, stable for current day
       const today = new Date().toISOString().split('T')[0];
       const seed = today.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
       const dailySeekers = 80 + (seed % 121);
-      
+
       setStats({
         requests: 663 + dbCount,
         seekers: dailySeekers
       });
     }
-    
+
     updateStats();
     const interval = setInterval(updateStats, 60000); // Update every minute
     return () => clearInterval(interval);
@@ -73,43 +74,52 @@ export function HeroSectionV2({ user, profile, tradeMode, setTradeMode }: HeroSe
       <section id="onseek-hero" className="w-full h-auto px-0 md:px-0 mt-0 lg:mt-0 overflow-visible">
         <div className="mx-auto w-full min-h-[500px] relative group">
           {/* Unified Container */}
-          <div className="w-full h-full bg-[#6925DC] relative flex flex-col justify-center items-center text-center pt-12 pb-12 lg:pt-16 lg:pb-16 px-6 lg:px-16 overflow-hidden">
+          <div className="w-full h-full relative flex flex-col justify-center items-center text-center pt-12 pb-12 lg:pt-16 lg:pb-16 px-6 lg:px-16 overflow-hidden bg-transparent">
 
-            <div className="relative z-10 w-full lg:max-w-[80%] mx-auto flex flex-col items-center">
+            <div className="relative z-10 w-full lg:max-w-[95%] mx-auto flex flex-col items-center">
               <AnimatePresence initial={false}>
-                  <motion.div
-                    initial={{ opacity: 0, y: -20, height: 0 }}
-                    animate={{ opacity: 1, y: 0, height: "auto" }}
-                    transition={{ duration: 0.4, ease: "easeInOut" }}
-                    className="w-full"
+                <motion.div
+                  initial={{ opacity: 0, y: -20, height: 0 }}
+                  animate={{ opacity: 1, y: 0, height: "auto" }}
+                  transition={{ duration: 0.4, ease: "easeInOut" }}
+                  className="w-full"
+                >
+
+                  {/* Badge */}
+                  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md text-white/90 text-xs font-bold uppercase tracking-widest mb-6">
+                    <IconCrown className="w-4 h-4 text-[#ff4f27] fill-[#ff4f27]" strokeWidth={2} />
+                    The #1 Reverse Marketplace
+                  </div>
+
+                  <h1
+                    className="text-white text-[28px] sm:text-[40px] lg:text-[48px] leading-[1.1] tracking-tight mb-6 lg:mb-10 max-w-5xl mx-auto flex flex-col items-center"
+                    style={{ fontFamily: 'var(--font-title)', fontWeight: 700 }}
                   >
-
-                    {/* Badge */}
-                    <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md text-white/90 text-xs font-bold uppercase tracking-widest mb-6">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="lucide lucide-zap w-3.5 h-3.5 text-accent fill-accent" aria-hidden="true">
-                        <path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"></path>
-                      </svg>
-                      The #1 Reverse Marketplace
+                    <span>Stop searching</span>
+                    <div className="flex items-center gap-x-2 sm:gap-x-3">
+                      <span>& start</span>
+                      <div className="relative py-1">
+                        <span 
+                        className="text-[32px] sm:text-[54px] leading-none"
+                        style={{ fontFamily: 'var(--font-emoji)' }}
+                      >
+                        🎯
+                      </span>
+                      </div>
+                      <span>seeking</span>
                     </div>
+                  </h1>
 
-                    <h1
-                      className="text-white text-[32px] sm:text-[48px] lg:text-[54px] leading-[1.1] tracking-tight mb-6 lg:mb-10 font-black max-w-3xl mx-auto"
-                      style={{ fontFamily: 'var(--font-title)', fontWeight: 600 }}
-                    >
-                      Stop searching,<br />
-                      start seeking.
-                    </h1>
-
-                    {/* Description */}
-                    <div className="flex flex-col items-center gap-3 mb-10 max-w-md mx-auto">
-                      <p className="text-white/85 text-[17px] sm:text-[19px] font-medium leading-[1.4] tracking-tight text-center">
-                        {tradeMode === "buy" 
-                          ? <>{'Shop on your terms.'}<br />{'Post what you need, get custom offers from the community, and pick the best deal.'}</>
-                          : <>{'Sell on your terms.'}<br />{'Browse open requests and send your best offer.'}</>
-                        }
-                      </p>
-                    </div>
-                  </motion.div>
+                  {/* Description */}
+                  <div className="flex flex-col items-center gap-3 mb-10 max-w-md mx-auto">
+                    <p className="text-white/85 text-[17px] sm:text-[19px] font-medium leading-[1.4] tracking-tight text-center">
+                      {tradeMode === "buy"
+                        ? <>{'Shop on your terms.'}<br />{'Post what you need, get custom offers from the community, and pick the best deal.'}</>
+                        : <>{'Sell on your terms.'}<br />{'Browse open requests and send your best offer.'}</>
+                      }
+                    </p>
+                  </div>
+                </motion.div>
               </AnimatePresence>
 
               {/* Buy/Sell Toggle */}
@@ -180,11 +190,11 @@ export function HeroSectionV2({ user, profile, tradeMode, setTradeMode }: HeroSe
                     if (user) {
                       router.push('/personal-items');
                     } else {
-                      setIsAuthModalOpen(true);
+                      router.push('/signup');
                     }
                   }}
-                  size="lg"
-                  className="h-16 px-12 rounded-full bg-white text-[#6925DC] hover:bg-white/90 text-[18px] font-bold shadow-none transition-all hover:scale-[1.02]"
+                  size="default"
+                  className="h-12 px-8 rounded-full bg-white text-[#6925DC] hover:bg-white/90 text-[15px] font-bold shadow-none transition-all hover:scale-[1.02]"
                 >
                   Sell your item
                 </Button>

@@ -282,6 +282,12 @@ export function AppNavbar({
     expanded: isSidebarExpanded, setExpanded: setSidebarSidebarExpanded 
   } = useSidebar();
   const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
+  const [avatarError, setAvatarError] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
 
   useEffect(() => {
@@ -326,6 +332,23 @@ export function AppNavbar({
       window.removeEventListener('open-ai-request-flow', handleOpenAIModal);
     };
   }, [searchParams, pathname, router]);
+
+  // Auto-reopen AI flow if draft exists after login/onboarding
+  useEffect(() => {
+    if (user && mounted) {
+      const saved = sessionStorage.getItem("onseek_ai_draft");
+      if (saved) {
+        try {
+          const draft = JSON.parse(saved);
+          if (draft && draft.step === "auth") {
+            setIsAIModalOpen(true);
+          }
+        } catch (e) {
+          console.error("Failed to parse AI draft:", e);
+        }
+      }
+    }
+  }, [user, mounted]);
 
   const handleSignOut = async () => {
     try {
@@ -434,13 +457,6 @@ export function AppNavbar({
       observer.disconnect();
     };
   }, [isHomePage]);
-
-  const [avatarError, setAvatarError] = useState(false);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
   const [isVisible, setIsVisible] = useState(true);
   const [isScrolled, setIsScrolled] = useState(false);
   const [lastScrollY, setLastScrollY] = useState(0);
@@ -594,12 +610,10 @@ export function AppNavbar({
         {/* Left Side: Sidebar Toggle & Logo */}
         <div className="flex items-center shrink-0">
           <div className="absolute left-0 top-0 bottom-0 flex items-center z-20 pl-[22px]">
-            {user && (
-              <Link href="/" className="flex items-center gap-4 hover:opacity-80 transition-opacity">
-                <Image src="/logonseek.svg" alt="Onseek" width={28} height={28} className="h-7 w-auto" priority />
-                <span className="text-xl text-black" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>Onseek</span>
-              </Link>
-            )}
+            <Link href="/" className="flex items-center gap-4 hover:opacity-80 transition-opacity">
+              <Image src="/logonseek.svg" alt="Onseek" width={28} height={28} className="h-7 w-auto" priority />
+              <span className="text-xl text-black" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>Onseek</span>
+            </Link>
           </div>
           <div className="w-[24px] shrink-0" /> {/* Smaller Spacer */}
         </div>

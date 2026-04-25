@@ -63,7 +63,7 @@ export function RequestForm({
   initialData?: RequestItem & { images?: string[]; links?: string[] },
   initialTitle?: string
 }) {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const router = useRouter();
   const queryClient = useQueryClient();
   const [error, setError] = React.useState<string | null>(null);
@@ -380,6 +380,8 @@ export function RequestForm({
   };
 
   const onSubmit = async (values: RequestValues) => {
+    if (isPending || isAutoSubmitting) return;
+
     if (currentStep < (user ? 3 : 4)) {
       proceedToNextStep();
       return;
@@ -506,11 +508,11 @@ export function RequestForm({
 
   // Auto-submit when user logs in on Step 8
   React.useEffect(() => {
-    if (user && currentStep === 8 && !isAutoSubmitting) {
+    if (user && profile?.onboarding_completed === true && currentStep === 8 && !isAutoSubmitting) {
       setIsAutoSubmitting(true);
       form.handleSubmit(onSubmit)();
     }
-  }, [user, currentStep, isAutoSubmitting, form, onSubmit]);
+  }, [user, profile?.onboarding_completed, currentStep, isAutoSubmitting, form, onSubmit]);
 
   return (
     <div className={cn(

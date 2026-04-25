@@ -126,6 +126,155 @@ export function RequestDetailView({
     return () => observer.disconnect();
   }, []);
 
+  const leftColumnContent = (
+    <div className="min-h-full flex flex-col pb-16">
+      {/* EXTERNAL HEADER: Avatar, Date, Icon, Status */}
+      <div className="flex flex-col gap-4 p-4">
+        <div className="flex items-center justify-between w-full">
+          <div className="flex items-center gap-2.5">
+            <Avatar className="h-8 w-8 border border-gray-100 shadow-sm shrink-0">
+              <AvatarImage src={request.profiles?.avatar_url} />
+              <AvatarFallback className="text-[10px] bg-gray-50 font-bold text-gray-400">
+                {(request.profiles?.username || 'U').charAt(0).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex items-center gap-1.5">
+              <span className="font-bold text-[#1A1A1A] text-[12px] leading-none">
+                {request.profiles?.username || "Account"}
+              </span>
+              <span className="text-gray-400 text-[11px] leading-none font-medium">
+                · {mounted ? formatTimeAgo(request.created_at) : "..."}
+              </span>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowRaw(!showRaw)}
+              className="flex items-center gap-1.5 px-3 py-1 rounded-full border border-gray-100 bg-transparent text-[11px] font-bold transition-all active:scale-95 hover:bg-gray-50 h-auto"
+            >
+              {showRaw ? (
+                <>
+                  <IconListCheck className="h-3.5 w-3.5 text-[#1A1A1A]" />
+                  <span className="text-[11px] font-bold text-[#1A1A1A]">Criteria</span>
+                </>
+              ) : (
+                <>
+                  <IconSparkles className="h-3.5 w-3.5 text-[#1A1A1A]" />
+                  <span className="text-[11px] font-bold text-[#1A1A1A]">Brief</span>
+                </>
+              )}
+            </button>
+
+            <Badge
+              variant="outline"
+              className={cn(
+                "rounded-full font-bold border-none px-3 py-1 text-[11px] bg-transparent shadow-none h-auto",
+                request.status === "solved"
+                  ? "text-emerald-600 bg-emerald-50"
+                  : "text-[#6925DC] bg-[#6925DC]/10"
+              )}
+            >
+              {request.status?.charAt(0).toUpperCase() + request.status?.slice(1)}
+            </Badge>
+
+            <RequestMenu
+              requestId={request.id}
+              requestUserId={request.user_id}
+              status={request.status}
+              isAdmin={isAdmin}
+              isFavorite={isFavorite}
+              onToggleFavorite={async () => {
+                const formData = new FormData();
+                formData.set("requestId", request.id);
+                await toggleFavoriteAction(formData);
+              }}
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="flex-1 flex flex-col p-4 sm:p-6 min-h-0 overflow-visible relative justify-center">
+        <div className="flex-1 flex flex-col justify-center">
+          <div className="w-full">
+            <RequestCard
+              request={{
+                ...request,
+                submissionCount: proposalCount,
+              }}
+              variant="detail"
+              smallImages={true}
+              images={images.map(img => img.image_url)}
+              links={links.map(l => l.url)}
+              isFavorite={isFavorite}
+              noBorder={true}
+              hideAuthOverlay={true}
+              isLarge={true}
+              hideTags={true}
+              disableHover={true}
+              showRaw={showRaw}
+              onToggleRaw={() => setShowRaw(!showRaw)}
+              showAllRequirements={true}
+            />
+          </div>
+        </div>
+
+        <div className="flex-1" /> {/* Spacer to push tags to bottom */}
+
+        {/* Tags Section - Stacked at Bottom */}
+        {request.tags && request.tags.length > 0 && (
+          <div className="mt-12 px-6 pb-8">
+            <div className="flex flex-wrap gap-x-4 gap-y-2 justify-start">
+              {request.tags.map((tag: any, i: number) => {
+                const tagLabel = typeof tag === 'object' ? tag.name : String(tag);
+                const tagSlug = typeof tag === 'object' ? tag.slug : tagLabel.replace(/\s+/g, '-').toLowerCase();
+                return (
+                  <Link
+                    key={i}
+                    href={`/tags/${tagSlug}`}
+                    className="text-[12px] font-bold text-gray-400 hover:text-black transition-colors whitespace-nowrap"
+                  >
+                    #{tagLabel.replace(/\s+/g, '-').toLowerCase()}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  const rightColumnContent = (
+    <div className="p-4">
+      <div className="max-w-[420px] mx-auto space-y-12">
+        {/* BOTTOM SECTION: PROPOSALS FEED */}
+        <section className="w-full">
+          {mounted ? (
+            <SubmissionList
+              requestId={request.id}
+              requestTitle={request.title}
+              initialSubmissions={initialSubmissions}
+              winnerId={request.winner_submission_id}
+              canSelectWinner={isOwner}
+              requestStatus={request.status}
+              requestOwnerId={request.user_id}
+              requestPreferences={preferences}
+              requestDealbreakers={dealbreakers}
+              hideTitle={false}
+              largeText={true}
+              isOwner={isOwner}
+            />
+          ) : (
+            <div className="space-y-6 animate-pulse">
+              <div className="h-40 w-full bg-white rounded-3xl border border-gray-100" />
+              <div className="h-40 w-full bg-white rounded-3xl border border-gray-100" />
+            </div>
+          )}
+        </section>
+      </div>
+    </div>
+  );
+
   return (
     <div className="w-full" suppressHydrationWarning>
       {/* Centered Content: Request & Proposals */}
@@ -140,163 +289,31 @@ export function RequestDetailView({
           </div>
         )}
 
-        <div className="border border-gray-100 rounded-[20px] overflow-hidden flex flex-col lg:flex-row items-stretch bg-white relative h-[calc(100vh-140px)] max-h-[768px]">
+        <div className="lg:border lg:border-gray-100 lg:rounded-[20px] lg:overflow-hidden flex flex-col lg:flex-row items-stretch lg:bg-white relative lg:h-[calc(100vh-140px)] lg:max-h-[768px] h-auto">
           {/* LEFT COLUMN: REQUEST CARD SIDEBAR (Fixed Width) */}
-          <aside className="w-full lg:w-[480px] border-b lg:border-b-0 lg:border-r border-gray-100 flex flex-col shrink-0 bg-transparent">
-            <SimpleBar className="h-full" autoHide={true}>
-              <div className="min-h-full flex flex-col pb-16">
-                {/* EXTERNAL HEADER: Avatar, Date, Icon, Status */}
-                <div className="flex flex-col gap-4 p-4">
-                  <div className="flex items-center justify-between w-full">
-                    <div className="flex items-center gap-2.5">
-                      <Avatar className="h-8 w-8 border border-gray-100 shadow-sm shrink-0">
-                        <AvatarImage src={request.profiles?.avatar_url} />
-                        <AvatarFallback className="text-[10px] bg-gray-50 font-bold text-gray-400">
-                          {(request.profiles?.username || 'U').charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-bold text-[#1A1A1A] text-[12px] leading-none">
-                          {request.profiles?.username || "Account"}
-                        </span>
-                        <span className="text-gray-400 text-[11px] leading-none font-medium">
-                          · {mounted ? formatTimeAgo(request.created_at) : "..."}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <button
-                        onClick={() => setShowRaw(!showRaw)}
-                        className="flex items-center gap-1.5 px-3 py-1 rounded-full border border-gray-100 bg-transparent text-[11px] font-bold transition-all active:scale-95 hover:bg-gray-50 h-auto"
-                      >
-                        {showRaw ? (
-                          <>
-                            <IconListCheck className="h-3.5 w-3.5 text-[#1A1A1A]" />
-                            <span className="text-[11px] font-bold text-[#1A1A1A]">Criteria</span>
-                          </>
-                        ) : (
-                          <>
-                            <IconSparkles className="h-3.5 w-3.5 text-[#1A1A1A]" />
-                            <span className="text-[11px] font-bold text-[#1A1A1A]">Brief</span>
-                          </>
-                        )}
-                      </button>
-
-                      <Badge
-                        variant="outline"
-                        className={cn(
-                          "rounded-full font-bold border-none px-3 py-1 text-[11px] bg-transparent shadow-none h-auto",
-                          request.status === "solved"
-                            ? "text-emerald-600 bg-emerald-50"
-                            : "text-[#6925DC] bg-[#6925DC]/10"
-                        )}
-                      >
-                        {request.status?.charAt(0).toUpperCase() + request.status?.slice(1)}
-                      </Badge>
-
-                      <RequestMenu
-                        requestId={request.id}
-                        requestUserId={request.user_id}
-                        status={request.status}
-                        isAdmin={isAdmin}
-                        isFavorite={isFavorite}
-                        onToggleFavorite={async () => {
-                          const formData = new FormData();
-                          formData.set("requestId", request.id);
-                          await toggleFavoriteAction(formData);
-                        }}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex-1 flex flex-col p-4 sm:p-6 min-h-0 overflow-visible relative justify-center">
-                  <div className="flex-1 flex flex-col justify-center">
-                    <div className="w-full">
-                      <RequestCard
-                        request={{
-                          ...request,
-                          submissionCount: proposalCount,
-                        }}
-                        variant="detail"
-                        smallImages={true}
-                        images={images.map(img => img.image_url)}
-                        links={links.map(l => l.url)}
-                        isFavorite={isFavorite}
-                        noBorder={true}
-                        hideAuthOverlay={true}
-                        isLarge={true}
-                        hideTags={true}
-                        disableHover={true}
-                        showRaw={showRaw}
-                        onToggleRaw={() => setShowRaw(!showRaw)}
-                        showAllRequirements={true}
-                      />
-                    </div>
-                  </div>
-
-
-
-
-                  <div className="flex-1" /> {/* Spacer to push tags to bottom */}
-
-                  {/* Tags Section - Stacked at Bottom */}
-                  {request.tags && request.tags.length > 0 && (
-                    <div className="mt-12 px-6 pb-8">
-                      <div className="flex flex-wrap gap-x-4 gap-y-2 justify-start">
-                        {request.tags.map((tag: any, i: number) => {
-                          const tagLabel = typeof tag === 'object' ? tag.name : String(tag);
-                          const tagSlug = typeof tag === 'object' ? tag.slug : tagLabel.replace(/\s+/g, '-').toLowerCase();
-                          return (
-                            <Link
-                              key={i}
-                              href={`/tags/${tagSlug}`}
-                              className="text-[12px] font-bold text-gray-400 hover:text-black transition-colors whitespace-nowrap"
-                            >
-                              #{tagLabel.replace(/\s+/g, '-').toLowerCase()}
-                            </Link>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-                </div>
+          <aside className="w-full lg:w-[480px] border-b lg:border-b-0 lg:border-r border-gray-100 flex flex-col shrink-0 bg-white lg:bg-transparent">
+            {mounted && window.innerWidth < 1024 ? (
+              <div className="h-auto">
+                {leftColumnContent}
               </div>
-            </SimpleBar>
+            ) : (
+              <SimpleBar className="h-full" autoHide={true}>
+                {leftColumnContent}
+              </SimpleBar>
+            )}
           </aside>
 
           {/* RIGHT COLUMN: PROPOSALS (Flexible) */}
-          <div className="flex-1 w-full flex flex-col bg-gray-50/30 overflow-hidden">
-            <SimpleBar className="flex-1 min-h-0" autoHide={true}>
-              <div className="p-4">
-                <div className="max-w-[420px] mx-auto space-y-12">
-                  {/* BOTTOM SECTION: PROPOSALS FEED */}
-                  <section className="w-full">
-                    {mounted ? (
-                      <SubmissionList
-                        requestId={request.id}
-                        requestTitle={request.title}
-                        initialSubmissions={initialSubmissions}
-                        winnerId={request.winner_submission_id}
-                        canSelectWinner={isOwner}
-                        requestStatus={request.status}
-                        requestOwnerId={request.user_id}
-                        requestPreferences={preferences}
-                        requestDealbreakers={dealbreakers}
-                        hideTitle={false}
-                        largeText={true}
-                        isOwner={isOwner}
-                      />
-                    ) : (
-                      <div className="space-y-6 animate-pulse">
-                        <div className="h-40 w-full bg-white rounded-3xl border border-gray-100" />
-                        <div className="h-40 w-full bg-white rounded-3xl border border-gray-100" />
-                      </div>
-                    )}
-                  </section>
-                </div>
+          <div className="flex-1 w-full flex flex-col bg-gray-50/30 lg:overflow-hidden">
+            {mounted && window.innerWidth < 1024 ? (
+              <div className="h-auto">
+                {rightColumnContent}
               </div>
-            </SimpleBar>
+            ) : (
+              <SimpleBar className="flex-1 min-h-0" autoHide={true}>
+                {rightColumnContent}
+              </SimpleBar>
+            )}
 
             {/* STICKY ACTION SECTION: SUBMISSION FORM */}
             {showSubmissionForm && !isOwner && (

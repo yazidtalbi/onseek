@@ -20,10 +20,10 @@ export function AuthCardLayout({
     <div className="min-h-screen bg-[#f5f6f9] flex flex-col items-center justify-center p-4 md:p-8 relative">
       {/* Brand Logo - Top Left */}
       <div className="absolute top-8 left-8 md:top-12 md:left-12">
-        <Link href="/" className="flex items-center gap-2 transition-opacity hover:opacity-80">
-          <Image src="/logo-final.svg" alt="onseek" width={28} height={28} className="h-7 w-auto" priority />
+        <Link href="/" className="flex items-center gap-3 transition-opacity hover:opacity-80">
+          <Image src="/logonseek.svg" alt="Onseek" width={28} height={28} className="h-7 w-auto" priority />
           <span className="text-xl text-black" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>
-            onseek
+            Onseek
           </span>
         </Link>
       </div>

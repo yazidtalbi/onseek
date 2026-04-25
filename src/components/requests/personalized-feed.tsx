@@ -117,7 +117,7 @@ export function PersonalizedFeed({
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
-      
+
       // Always show at the very top
       if (currentScrollY < 100) {
         setShowCategoryStrip(true);
@@ -366,13 +366,13 @@ export function PersonalizedFeed({
             {/* Floating Close Button */}
             <button
               onClick={() => setIsHeroDismissed(true)}
-              className="absolute top-6 right-6 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg border border-gray-100 group transition-all hover:scale-110 z-[140]"
+              className="absolute top-6 -right-[20px] w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg border border-gray-100 group transition-all hover:scale-110 z-[140]"
             >
               <IconX className="w-5 h-5 text-[#6925DC] transition-transform group-hover:rotate-90" />
             </button>
 
             {/* Modal Body with overflow hidden */}
-            <div className="relative w-full bg-[#6925dc] rounded-[32px] overflow-hidden shadow-[0_32px_64px_-16px_rgba(0,0,0,0.5)] flex flex-col">
+            <div className="relative w-full bg-[#6925dc] rounded-[20px] rounded-tr-none overflow-hidden shadow-[0_32px_64px_-16px_rgba(0,0,0,0.5)] flex flex-col">
               {/* Modal Header */}
               <div className="sticky top-0 z-[110] w-full h-24 bg-transparent flex items-center justify-between px-12">
                 <div className="flex items-center gap-10">
@@ -441,9 +441,9 @@ export function PersonalizedFeed({
                       </p>
                     </div>
 
-                    <div className="flex flex-col gap-16 max-w-2xl py-10">
+                    <div className="flex flex-col max-w-2xl py-10 divide-y divide-gray-100">
                       {/* Feature 1 */}
-                      <div className="flex items-center gap-8 group text-left">
+                      <div className="flex items-center gap-8 group text-left py-12 first:pt-0">
                         <div className="w-20 h-20 md:w-24 md:h-24 shrink-0 overflow-hidden">
                           <img src="/illustrations/onseek_magnet_purple.png" className="w-full h-full object-contain" />
                         </div>
@@ -456,7 +456,7 @@ export function PersonalizedFeed({
                       </div>
 
                       {/* Feature 2 */}
-                      <div className="flex items-center gap-8 group text-left">
+                      <div className="flex items-center gap-8 group text-left py-12">
                         <div className="w-20 h-20 md:w-24 md:h-24 shrink-0 overflow-hidden">
                           <img src="/illustrations/onseek_flower_purple.png" className="w-full h-full object-contain" />
                         </div>
@@ -469,7 +469,7 @@ export function PersonalizedFeed({
                       </div>
 
                       {/* Feature 3 */}
-                      <div className="flex items-center gap-8 group text-left">
+                      <div className="flex items-center gap-8 group text-left py-12 last:pb-0">
                         <div className="w-20 h-20 md:w-24 md:h-24 shrink-0 overflow-hidden">
                           <img src="/illustrations/onseek_city_purple.png" className="w-full h-full object-contain" />
                         </div>
@@ -524,7 +524,6 @@ export function PersonalizedFeed({
                     <nav className="flex flex-col gap-2.5">
                       <Link href="/discover" className="text-sm text-white/70 hover:text-white transition-colors">Discover</Link>
                       <Link href="/about" className="text-sm text-white/70 hover:text-white transition-colors">About Us</Link>
-                      <Link href="/feedback" className="text-sm text-white/70 hover:text-white transition-colors">Feedback</Link>
                     </nav>
                   </div>
                   <div className="flex flex-col gap-4">
@@ -595,14 +594,14 @@ export function PersonalizedFeed({
         "w-full px-3 md:px-8",
         !user && isHomePage
           ? "pt-20 sm:pt-24"
-          : (pathname === "/" ? "pt-0" : "pt-0 sm:pt-4")
+          : "pt-0"
       )}>
         {/* Category Pill Navigation */}
         {(user || category || isHomePage) && !hideFilters && (
           <div className={cn(
             "sticky z-[40] bg-white transition-all duration-300 transform w-full",
             // Desktop top-20 (h-20 navbar), Mobile top-16 (h-16 navbar)
-            "top-14 md:top-20", 
+            "top-14 md:top-20",
             showCategoryStrip ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0 pointer-events-none"
           )}>
             <div className="w-full px-0 py-2 min-h-[70px] flex flex-col justify-center bg-white">
@@ -631,17 +630,16 @@ export function PersonalizedFeed({
 
         {/* Discovery Header Block - Hidden on Home Page */}
         {(user || category) && !hideFilters && !isHomePage && (
-          <div className="flex flex-col gap-4 mb-8">
-            <div className="flex flex-row items-center justify-between">
-              <div className="flex flex-col gap-1">
-                <h3 className="text-2xl md:text-3xl font-semibold text-[#1A1A1A] tracking-tighter" style={{ fontFamily: 'var(--font-expanded)' }}>
-                  {category ? `${category.split("-").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ")} Requests` : "Discover"}
-                </h3>
-                <p className="text-sm md:text-base text-gray-400 font-medium">
-                  {user ? "Personalized selection just for you" : "Standout requests making waves around the platform"}
-                </p>
-              </div>
-            </div>
+          <div className="flex flex-col mb-12 mt-10">
+            <h1 className="text-5xl md:text-6xl font-black tracking-tighter text-gray-900 mb-6" style={{ fontFamily: 'var(--font-expanded)' }}>
+              {category ? `${category.split("-").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ")} Requests` : "Discover"}
+            </h1>
+            <p className="text-[#1A1A1A] text-xl font-medium max-w-2xl leading-snug">
+              {category
+                ? `Discover what seekers are looking for in ${category.split("-").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ")}.`
+                : (user ? "Personalized selection just for you" : "Standout requests making waves around the platform")
+              }
+            </p>
           </div>
         )}
 

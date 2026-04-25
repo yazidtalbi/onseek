@@ -78,13 +78,13 @@ export default async function TagPage({ params }: TagPageProps) {
       </nav>
 
       {/* Header Section */}
-      <div className="flex flex-col mb-12">
-        <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight text-gray-900 mb-6">
+      <div className="flex flex-col mb-12 mt-10">
+        <h1 className="text-5xl md:text-6xl font-black tracking-tighter text-gray-900 mb-6" style={{ fontFamily: 'var(--font-expanded)' }}>
           {tag.name}
         </h1>
         
-        <p className="text-[#1A1A1A] text-xl font-medium max-w-3xl leading-snug mb-4">
-          Discover exactly what seekers are looking for in <span className="font-bold">{tag.name}</span>. Browse curated requests, explore market demand, and skip the search on Onseek.
+        <p className="text-[#1A1A1A] text-xl font-medium max-w-2xl leading-snug">
+          Discover what seekers are looking for in <span className="font-bold">{tag.name}</span>.
         </p>
 
         <div className="flex items-center gap-2 text-sm font-medium text-gray-500 mb-10">

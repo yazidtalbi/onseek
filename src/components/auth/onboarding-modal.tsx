@@ -108,7 +108,6 @@ export function OnboardingModal() {
       submitOnboarding();
     } else if (step === 3) {
       setIsOpen(false);
-      window.location.reload();
     }
   };
 
@@ -172,7 +171,6 @@ export function OnboardingModal() {
   const handleOpenChange = (open: boolean) => {
     if (step === 3) {
       setIsOpen(open);
-      if (!open) window.location.reload();
     }
   };
 
