@@ -7,6 +7,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/components/layout/auth-provider";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { OnboardingModal } from "@/components/auth/onboarding-modal";
+import { Analytics } from "@vercel/analytics/react";
 
 const interDisplay = Inter({
   variable: "--font-inter-display",
@@ -52,7 +53,7 @@ export const metadata: Metadata = {
   },
 };
 
-import { Analytics } from "@vercel/analytics/react";
+
 
 export default async function RootLayout({
   children,
@@ -61,7 +62,7 @@ export default async function RootLayout({
 }>) {
   const supabase = await createServerSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();
-  
+
   let profile = null;
   if (user) {
     const { data } = await supabase
@@ -83,6 +84,17 @@ export default async function RootLayout({
 
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <link
+          href="https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&display=swap"
+          rel="stylesheet"
+        />
+        <style>{`
+          :root {
+            --font-emoji: 'Noto Color Emoji', sans-serif;
+          }
+        `}</style>
+      </head>
       <body
         className={`${interDisplay.variable} ${geistMono.variable} ${instrumentSerif.variable} min-h-screen bg-background text-foreground antialiased`}
         suppressHydrationWarning
@@ -95,9 +107,9 @@ export default async function RootLayout({
         </AuthProvider>
         <Toaster />
         <Analytics />
-        <Script 
-          src="https://t.contentsquare.net/uxa/82b383ca1f434.js" 
-          strategy="lazyOnload" 
+        <Script
+          src="https://t.contentsquare.net/uxa/82b383ca1f434.js"
+          strategy="lazyOnload"
         />
       </body>
     </html>

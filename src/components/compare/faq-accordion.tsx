@@ -34,7 +34,7 @@ export function FaqAccordion({ items }: { items: FaqItem[] }) {
               open === idx ? "max-h-96 opacity-100 pb-5" : "max-h-0 opacity-0"
             }`}
           >
-            <p className="text-[14px] text-gray-500 leading-relaxed">
+            <p className="text-lg text-gray-700 leading-[1.8]">
               {item.answer}
             </p>
           </div>

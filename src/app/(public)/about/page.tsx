@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { ArrowRight, Zap, Target, ShieldCheck, Search, ArrowUpRight, MessageSquare, Check, Vote } from "lucide-react";
+import { InterceptBanner } from "@/components/requests/intercept-banner";
+import { cn } from "@/lib/utils";
 
 export default function AboutPage() {
   const images = [
@@ -139,20 +141,24 @@ export default function AboutPage() {
               </div>
             </div>
 
-            {/* Vote Row */}
+            {/* Winner Row */}
             <div className="flex flex-col md:flex-row items-center gap-16 md:gap-32">
               <div className="flex-1 text-left order-2 md:order-1">
-                <h3 className="text-4xl md:text-5xl font-bold text-[#1A1A1A] mb-8" style={{ fontFamily: 'var(--font-expanded)' }}>Vote</h3>
-                <p className="text-lg text-gray-500 font-medium leading-relaxed max-w-md">Proposals & requests can be upvoted or downvoted by the community. The most interesting and trustworthy deals rise to the top.</p>
+                <h3 className="text-4xl md:text-5xl font-bold text-[#1A1A1A] mb-8" style={{ fontFamily: 'var(--font-expanded)' }}>Winner</h3>
+                <p className="text-lg text-gray-500 font-medium leading-relaxed max-w-md">The most rewarding moment on Onseek. When a proposal matches exactly what the seeker needs, they pick a winner. The deal is secured, the hunt is over, and both parties move forward with total clarity.</p>
               </div>
               <div className="flex-1 w-full order-1 md:order-2">
-                <div className="aspect-square w-full rounded-[48px] bg-[#FFD500] p-12 md:p-10 flex items-center justify-center overflow-hidden">
-                  <div className="w-full h-full bg-white rounded-[32px] shadow-2xl relative overflow-hidden flex flex-col">
-                    <img src="/community_voting_deals_1776793893574.png" alt="Vote" className="w-full h-full object-cover" />
-                    <div className="absolute bottom-8 left-8 flex items-center gap-3 bg-white p-3 rounded-2xl shadow-lg border border-gray-100">
-                      <Vote className="w-6 h-6 text-gray-400" />
-                      <div className="h-6 w-[1px] bg-gray-200"></div>
-                      <span className="font-bold text-gray-900">25k upvotes</span>
+                <div className="aspect-square w-full rounded-[48px] bg-[#6925DC] p-12 md:p-10 flex items-center justify-center overflow-hidden">
+                  <div className="w-full h-full bg-white rounded-[32px] shadow-2xl relative overflow-hidden flex flex-col p-8 items-center justify-center text-center gap-6">
+                    <div className="w-24 h-24 rounded-full bg-emerald-500 flex items-center justify-center animate-bounce shadow-[0_0_40px_rgba(16,185,129,0.3)]">
+                      <Check className="w-12 h-12 text-white" strokeWidth={4} />
+                    </div>
+                    <div>
+                      <h4 className="text-3xl font-bold text-[#1A1A1A] mb-2" style={{ fontFamily: 'var(--font-expanded)' }}>Proposal Picked!</h4>
+                      <p className="text-gray-500 font-medium">Successfully matched with a verified hunter</p>
+                    </div>
+                    <div className="px-6 py-3 rounded-full bg-emerald-50/50 text-emerald-600 text-sm font-bold border border-emerald-100">
+                      Winner: @vintage_guru
                     </div>
                   </div>
                 </div>
@@ -178,10 +184,10 @@ export default function AboutPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-20">
               {[
-                { number: "64K+", label: "Happy seekers" },
-                { number: "120K+", label: "Successful matches" },
-                { number: "85+", label: "Global categories" },
-                { number: "24B+", label: "Daily intent signals" },
+                { number: "1,196", label: "Active hunters" },
+                { number: "800+", label: "Requests daily" },
+                { number: "15+", label: "Main categories" },
+                { number: "98%", label: "Satisfaction rate" },
               ].map((stat, i) => (
                 <div key={i} className="bg-white rounded-[32px] p-10 flex flex-col justify-center min-h-[180px]">
                   <span className="text-[48px] font-bold text-[#6925DC] leading-none mb-2" style={{ fontFamily: 'var(--font-expanded)' }}>
@@ -211,7 +217,7 @@ export default function AboutPage() {
             <div className="columns-1 md:columns-2 lg:columns-3 gap-8 space-y-8">
               {[
                 {
-                  stat: "14+ requests",
+                  stat: "3 requests",
                   label: "Fulfilled on Onseek",
                   quote: "Onseek not only helps us find those unique items with specialized sellers—it handles the entire search for us. Truly a game-changer for our gear sourcing.",
                   user: "Max Lind",
@@ -220,8 +226,8 @@ export default function AboutPage() {
                   avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&h=200&auto=format&fit=crop"
                 },
                 {
-                  stat: "200+ payments",
-                  label: "Processed on Onseek",
+                  stat: "12 deals",
+                  label: "Secured on Onseek",
                   quote: "As our needs evolve, Onseek enables us to find sellers who are able to reach our product goals faster than any other marketplace we've tried. The reverse bidding works like magic for sourcing rare fashion pieces.",
                   user: "Carla Giordano",
                   activity: "Found limited edition sneakers",
@@ -229,8 +235,8 @@ export default function AboutPage() {
                   avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=200&h=200&auto=format&fit=crop"
                 },
                 {
-                  stat: "70+ categories",
-                  label: "Managed on Onseek",
+                  stat: "5 categories",
+                  label: "Browsed on Onseek",
                   quote: "The continual support and product evolution has been impressive. We've found everything from rare watches to specialized hardware with zero friction. It's the standard for serious buyers.",
                   user: "Peter Kang",
                   activity: "Sold a Custom PC Build",
@@ -239,7 +245,7 @@ export default function AboutPage() {
                   darkText: true
                 },
                 {
-                  stat: "20+ items",
+                  stat: "8 items",
                   label: "Secured globally",
                   quote: "Finding rare gear used to be a full-time job. Now I just post a request and let the best sellers in the world find me. It's the most efficient way to buy.",
                   user: "Cory Shoaf",
@@ -248,7 +254,7 @@ export default function AboutPage() {
                   avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=200&h=200&auto=format&fit=crop"
                 },
                 {
-                  stat: "+$20K saved",
+                  stat: "$450 saved",
                   label: "By negotiating on Onseek",
                   quote: "The technical gear we've sourced here has been flawless. The escrow system gives me total peace of mind for high-value transactions.",
                   user: "Vivek Ramakrishnan",
@@ -258,7 +264,7 @@ export default function AboutPage() {
                   darkText: true
                 },
                 {
-                  stat: "+$45K spent",
+                  stat: "$1,200 spent",
                   label: "On recent requests",
                   quote: "I tried every other platform. Marketplaces, forums, groups... nothing compares to the standards and response times of Onseek.",
                   user: "Quintin Au",
@@ -300,50 +306,9 @@ export default function AboutPage() {
           </div>
         </section>
 
-        {/* Snake Community CTA */}
-        <section className="relative py-48 bg-white overflow-hidden w-full">
-          {/* Top Wavy Row */}
-          <div className="flex justify-center gap-4 mb-24 w-[140vw] -ml-[20vw]">
-            {images.map((url, i) => (
-              <motion.div
-                key={`top-${i}`}
-                style={{ y: snakeOffsets[i % snakeOffsets.length] }}
-                className="w-[75px] h-[90px] md:w-[100px] md:h-[120px] rounded-2xl overflow-hidden shadow-lg shrink-0 group"
-              >
-                <img src={url} alt="Community" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-              </motion.div>
-            ))}
-          </div>
-
-          <div className="container relative z-10 mx-auto px-6 text-center max-w-4xl space-y-10 flex flex-col items-center">
-            <div className="mb-4">
-              <img src="/logonseek.svg" alt="Onseek" className="h-9 w-auto brightness-0" />
-            </div>
-            <h2 className="text-5xl md:text-[84px] font-bold tracking-tight leading-[1] text-[#1A1A1A]" style={{ fontFamily: 'var(--font-expanded)' }}>
-              You will find yourself <br /><span className="text-[#6925DC]">among us</span>
-            </h2>
-            <p className="text-lg md:text-xl text-gray-500 max-w-xl mx-auto font-medium">
-              Dive into a dynamic community where seekers and partners seamlessly merge.
-            </p>
-            <div className="pt-8">
-              <Button asChild size="lg" className="bg-[#1A1A1A] text-white hover:bg-black px-12 h-16 rounded-full text-lg font-bold shadow-2xl transition-all hover:scale-105 active:scale-95">
-                <Link href="/signup">Visit Onseek</Link>
-              </Button>
-            </div>
-          </div>
-
-          {/* Bottom Wavy Row (Mirrored/Shifted) */}
-          <div className="flex justify-center gap-4 mt-24 w-[140vw] -ml-[20vw]">
-            {images.slice().reverse().map((url, i) => (
-              <motion.div
-                key={`bottom-${i}`}
-                style={{ y: -snakeOffsets[i % snakeOffsets.length] }}
-                className="w-[75px] h-[90px] md:w-[100px] md:h-[120px] rounded-2xl overflow-hidden shadow-lg shrink-0 group"
-              >
-                <img src={url} alt="Products" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-              </motion.div>
-            ))}
-          </div>
+        {/* CTA Banner */}
+        <section className="py-24 bg-white">
+          <InterceptBanner />
         </section>
       </main>
 
@@ -362,11 +327,61 @@ function AnimatedRequestStack() {
   });
 
   const cards = [
-    { id: 1, title: "Vintage Leica M6", price: "$3,200", status: "Finding...", user: "@marco" },
-    { id: 2, title: "Herman Miller Aeron", price: "$850", status: "2 Proposals", user: "@sara" },
-    { id: 3, title: "Sony A7 IV Body", price: "$2,100", status: "Verified", user: "@Onseek" },
-    { id: 4, title: "RTX 4090 FE", price: "$1,600", status: "Looking", user: "@techy" },
-    { id: 5, title: "Eames Lounge Chair", price: "$5,000", status: "Closed", user: "@design" },
+    { 
+      id: 1, 
+      title: "Vintage Leica M6", 
+      price: "$3,200", 
+      condition: "Like New",
+      details: ["Box & Papers included", "Recent CLA service", "Near mint body"],
+      status: "Finding...", 
+      user: "@marco",
+      bg: "#f5f6f9",
+      ring: "ring-gray-900"
+    },
+    { 
+      id: 2, 
+      title: "Herman Miller Aeron", 
+      price: "$850", 
+      condition: "Used",
+      details: ["Size B", "PostureFit SL", "Fully adjustable"],
+      status: "2 Proposals", 
+      user: "@sara",
+      bg: "#f0fdf4",
+      ring: "ring-emerald-900"
+    },
+    { 
+      id: 3, 
+      title: "Sony A7 IV Body", 
+      price: "$2,100", 
+      condition: "New",
+      details: ["International warranty", "Body only", "In stock"],
+      status: "Verified", 
+      user: "@Onseek",
+      bg: "#fef2f2",
+      ring: "ring-rose-900"
+    },
+    { 
+      id: 4, 
+      title: "RTX 4090 FE", 
+      price: "$1,600", 
+      condition: "New",
+      details: ["Original packaging", "Founders Edition", "Immediate ship"],
+      status: "Looking", 
+      user: "@techy",
+      bg: "#eff6ff",
+      ring: "ring-blue-900"
+    },
+    { 
+      id: 5, 
+      title: "Eames Lounge Chair", 
+      price: "$5,000", 
+      condition: "Excellent",
+      details: ["Walnut & Leather", "Herman Miller auth", "Local pickup"],
+      status: "Closed", 
+      user: "@design",
+      bg: "#fffbeb",
+      ring: "ring-amber-900"
+    },
   ];
 
   const xOffsets = [-420, -210, 0, 210, 420];
@@ -377,7 +392,7 @@ function AnimatedRequestStack() {
     <section ref={containerRef} className="py-48 bg-white overflow-hidden">
       <div className="max-w-6xl mx-auto px-6 text-center mb-40">
         <h2 className="text-5xl md:text-[80px] font-bold tracking-tight mb-8 leading-[0.9]" style={{ fontFamily: 'var(--font-expanded)' }}>
-          A place to display <br /><span className="text-[#6B4EE0]">your masterpiece.</span>
+          Your intent, <br /><span className="text-[#6B4EE0]">beautifully fanned out.</span>
         </h2>
         <p className="text-lg text-gray-400 max-w-xl mx-auto font-medium leading-relaxed">
           Post your request and watch as the best deals from around the world fan out before you.
@@ -403,33 +418,64 @@ function AnimatedRequestStack() {
                 scale,
                 zIndex: 10 - Math.abs(i - 2)
               }}
-              className="absolute w-72 h-96 bg-white rounded-[40px] border border-gray-100 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] p-8 flex flex-col justify-between text-left group hover:scale-105 hover:shadow-2xl transition-all cursor-pointer"
+              className="absolute w-80 h-[480px] group cursor-pointer"
             >
-              <div className="space-y-6">
-                <div className="flex justify-between items-start">
-                  <div className="px-4 py-1.5 rounded-full bg-[#6B4EE0]/10 text-[#6B4EE0] text-[10px] font-bold uppercase tracking-widest">
-                    {card.status}
+              <div className="relative group w-full h-full flex flex-col">
+                <div className="focus:outline-none h-full flex flex-col group/card">
+                  <div className={cn(
+                    "text-card-foreground flex flex-col relative w-full transition-all duration-200 ease-out shadow-none h-full bg-transparent rounded-[20px] overflow-hidden group-hover/card:ring-2 group-hover/card:ring-inset",
+                    card.ring
+                  )}>
+                    <div className="flex-1 flex flex-col relative w-full h-full overflow-visible" style={{ perspective: "1200px" }}>
+                      <div className="flex-1 relative w-full rounded-[20px] shadow-none border-none" style={{ transformStyle: "preserve-3d", transform: "none" }}>
+                        <div className="relative w-full h-full flex flex-col p-0 rounded-[20px] overflow-hidden shadow-[0_20px_50px_-20px_rgba(0,0,0,0.15)] border-none" style={{ backfaceVisibility: "hidden", transform: "translateZ(1px)", backgroundColor: card.bg }}>
+                          <div className="flex flex-col h-full bg-transparent px-2 pb-0 sm:px-2 sm:pb-0 pt-1 sm:pt-1.5">
+                            <section className="flex flex-col px-4 flex-1 h-full">
+                              <div className="flex-1">
+                                <div className="relative min-h-[200px]">
+                                  <div className="absolute top-6 right-0 shrink-0 z-10 text-[#1A1A1A]">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none" className="tabler-icon tabler-icon-binoculars-filled h-8 w-8">
+                                      <path d="M8.887 6.748c-.163 0 -.337 .016 -.506 .057c-.172 .041 -.582 .165 -.838 .562l-.014 .02l-.607 1.05c-.307 .205 -.534 .46 -.693 .717l-.014 .02l-2.572 4.65a4.009 4.009 0 0 0 -.274 .494l-.006 .01a3.99 3.99 0 0 0 -.363 1.672a4 4 0 0 0 8 0v-1h2v1a4 4 0 1 0 7.635 -1.67l-.004 -.012a4.008 4.008 0 0 0 -.274 -.494l-2.572 -4.65l-.014 -.02a2.337 2.337 0 0 0 -.693 -.716l-.607 -1.051l-.014 -.02c-.256 -.397 -.667 -.52 -.838 -.562a2.225 2.225 0 0 0 -.664 -.051a2.06 2.06 0 0 0 -.68 .156c-.184 .081 -.638 .327 -.754 .889l-.007 .037l-.14 1.1c-.22 .283 -.374 .64 -.374 1.064v1h-2v-1c0 -.424 -.154 -.781 -.373 -1.064l-.14 -1.1l-.008 -.037c-.116 -.562 -.57 -.808 -.754 -.889a2.06 2.06 0 0 0 -.68 -.156a2.374 2.374 0 0 0 -.158 -.006zm-1.887 7.252a2 2 0 1 1 -1.838 1.209l.19 -.342c.36 -.523 .964 -.867 1.648 -.867zm10 0c.684 0 1.288 .344 1.648 .867l.19 .342a2 2 0 1 1 -1.838 -1.209z"></path>
+                                    </svg>
+                                  </div>
+                                  <div className="mb-4 pt-6 flex flex-col gap-4">
+                                    <div className="flex flex-row items-start justify-between gap-8">
+                                      <h1 className="font-semibold text-[#1A1A1A] flex-1 pr-12 text-[20px]" style={{ fontFamily: "var(--font-expanded)", fontWeight: 600, maxWidth: "100%" }}>
+                                        {card.title}
+                                      </h1>
+                                    </div>
+                                  </div>
+                                  <div className="space-y-3 flex-1">
+                                    {card.details.map((detail, idx) => (
+                                      <div key={idx} className="flex items-center gap-4 py-3 group/item border-current border-dashed border-b text-[#1A1A1A]/70">
+                                        <Check className="h-4 w-4 text-emerald-500 shrink-0" strokeWidth={3} />
+                                        <span className="font-medium text-[#1A1A1A] text-[14px]">{detail}</span>
+                                      </div>
+                                    ))}
+                                    <div className="py-3 font-medium opacity-30 text-[#1A1A1A] text-[14px]">And more details</div>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="mt-5 pb-0">
+                                <div className="h-px -mx-5 sm:-mx-6 bg-current opacity-20 text-[#1A1A1A]"></div>
+                                <div className="flex items-stretch -mx-5 sm:-mx-6">
+                                  <div className="flex flex-col items-start flex-1 py-4 min-w-0 px-6 group/meta">
+                                    <span className="font-bold text-[#1A1A1A] text-left truncate w-full text-[16px]">{card.condition}</span>
+                                    <span className="text-[11px] font-normal leading-none mt-1 opacity-30 text-[#1A1A1A]">Condition</span>
+                                  </div>
+                                  <div className="w-px shrink-0 bg-current opacity-20 text-[#1A1A1A]"></div>
+                                  <div className="flex flex-col items-start flex-1 py-4 min-w-0 px-6">
+                                    <span className="font-bold text-[#1A1A1A] text-left truncate w-full text-[16px]">{card.price}</span>
+                                    <span className="text-[11px] font-normal leading-none mt-1 opacity-30 text-[#1A1A1A]">Budget</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </section>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div className="w-10 h-10 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center text-xs font-bold uppercase text-gray-400">
-                    {card.user[1]}
-                  </div>
-                </div>
-                <div>
-                  <h4 className="text-2xl font-bold leading-none mb-3" style={{ fontFamily: 'var(--font-expanded)' }}>{card.title}</h4>
-                  <p className="text-xs text-[#6B4EE0] font-bold uppercase tracking-widest">{card.user}</p>
-                </div>
-              </div>
-
-              <div className="space-y-6">
-                <div className="space-y-1">
-                  <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest">Target Budget</span>
-                  <div className="text-3xl font-extrabold text-[#1A1A1A]">{card.price}</div>
-                </div>
-                <div className="pt-6 border-t border-gray-50 flex items-center gap-3 text-gray-300 group-hover:text-[#6B4EE0] transition-colors">
-                  <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center">
-                    <MessageSquare className="w-4 h-4" />
-                  </div>
-                  <span className="text-[10px] font-bold uppercase tracking-widest">View Details</span>
                 </div>
               </div>
             </motion.div>

@@ -130,7 +130,7 @@ export function NetworkSidebar() {
           className="h-7 w-auto"
           priority
         />
-        <span className="text-xl text-black" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>
+        <span className="text-xl text-black" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 700 }}>
           onseek
         </span>
       </Link>
@@ -266,4 +266,3 @@ export function NetworkSidebar() {
     </section>
   );
 }
-

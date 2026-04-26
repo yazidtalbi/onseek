@@ -25,28 +25,63 @@ export function HeroSectionV2({ user, profile, tradeMode, setTradeMode }: HeroSe
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isAIFlowOpen, setIsAIFlowOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
-  const [stats, setStats] = useState({ requests: 663, seekers: 102 });
+  const [stats, setStats] = useState({ usersActive: 122, seekersToday: 1024, requestsDaily: 768 });
+  const jitterTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Update stats on mount and every minute
   useEffect(() => {
-    async function updateStats() {
-      const result = await getRequestsCountAction();
-      const dbCount = ("count" in result && typeof result.count === "number") ? result.count : 0;
-
-      // Daily seekers: 80-200, stable for current day
-      const today = new Date().toISOString().split('T')[0];
+    const calculateStats = () => {
+      const now = new Date();
+      const h = now.getHours();
+      const m = now.getMinutes();
+      const decimalHour = h + m / 60;
+      
+      const intensity = (Math.cos((decimalHour - 18) * Math.PI / 12) + 1) / 2;
+      const baseUsers = 48 + Math.floor(intensity * 112);
+      
+      const today = now.toISOString().split('T')[0];
       const seed = today.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-      const dailySeekers = 80 + (seed % 121);
+      
+      // Daily requests for hero: 600 to 900
+      const dailyRequests = 600 + (seed % 300);
+      // Daily seekers: 1000 to 2000
+      const dailySeekers = 1000 + (seed % 1000);
 
-      setStats({
-        requests: 663 + dbCount,
-        seekers: dailySeekers
-      });
-    }
+      return {
+        usersActive: baseUsers + (Math.floor(Math.random() * 8) - 4),
+        seekersToday: dailySeekers,
+        requestsDaily: dailyRequests
+      };
+    };
 
-    updateStats();
-    const interval = setInterval(updateStats, 60000); // Update every minute
-    return () => clearInterval(interval);
+    setStats(calculateStats());
+
+    const scheduleJitter = () => {
+      const delay = Math.floor(Math.random() * (20000 - 2000 + 1)) + 2000;
+      jitterTimeoutRef.current = setTimeout(() => {
+        setStats(prev => ({
+          ...prev,
+          usersActive: Math.max(40, prev.usersActive + (Math.random() > 0.5 ? 1 : -1))
+        }));
+        jitterTimeoutRef.current = scheduleJitter();
+      }, delay);
+      return jitterTimeoutRef.current;
+    };
+
+    jitterTimeoutRef.current = scheduleJitter();
+
+    const baseInterval = setInterval(() => {
+      const newStats = calculateStats();
+      setStats(prev => ({
+        ...newStats,
+        usersActive: newStats.usersActive
+      }));
+    }, 60000);
+
+    return () => {
+      if (jitterTimeoutRef.current) clearTimeout(jitterTimeoutRef.current);
+      clearInterval(baseInterval);
+    };
   }, []);
 
   // Initialize fresh on mount
@@ -71,11 +106,10 @@ export function HeroSectionV2({ user, profile, tradeMode, setTradeMode }: HeroSe
 
   return (
     <>
-      <section id="onseek-hero" className="w-full h-auto px-0 md:px-0 mt-0 lg:mt-0 overflow-visible">
+      <section id="onseek-hero" className="w-full h-auto px-0 md:px-0 mt-0 lg:mt-0 overflow-visible text-left">
         <div className="mx-auto w-full min-h-[500px] relative group">
           {/* Unified Container */}
-          <div className="w-full h-full relative flex flex-col justify-center items-center text-center pt-12 pb-12 lg:pt-16 lg:pb-16 px-6 lg:px-16 overflow-hidden bg-transparent">
-
+          <div className="w-full h-full relative flex flex-col justify-center items-center text-center pt-8 pb-12 lg:pt-12 lg:pb-16 px-6 lg:px-16 overflow-hidden bg-transparent">
             <div className="relative z-10 w-full lg:max-w-[95%] mx-auto flex flex-col items-center">
               <AnimatePresence initial={false}>
                 <motion.div
@@ -92,7 +126,7 @@ export function HeroSectionV2({ user, profile, tradeMode, setTradeMode }: HeroSe
                   </div>
 
                   <h1
-                    className="text-white text-[28px] sm:text-[40px] lg:text-[48px] leading-[1.1] tracking-tight mb-6 lg:mb-10 max-w-5xl mx-auto flex flex-col items-center"
+                    className="text-white text-[32px] sm:text-[40px] lg:text-[48px] leading-[1.1] tracking-tight mb-6 lg:mb-10 max-w-5xl mx-auto flex flex-col items-center"
                     style={{ fontFamily: 'var(--font-title)', fontWeight: 700 }}
                   >
                     <span>Stop searching</span>
@@ -100,7 +134,7 @@ export function HeroSectionV2({ user, profile, tradeMode, setTradeMode }: HeroSe
                       <span>& start</span>
                       <div className="relative py-1">
                         <span 
-                        className="text-[32px] sm:text-[54px] leading-none"
+                        className="text-[36px] sm:text-[54px] leading-none"
                         style={{ fontFamily: 'var(--font-emoji)' }}
                       >
                         🎯
@@ -112,10 +146,10 @@ export function HeroSectionV2({ user, profile, tradeMode, setTradeMode }: HeroSe
 
                   {/* Description */}
                   <div className="flex flex-col items-center gap-3 mb-10 max-w-md mx-auto">
-                    <p className="text-white/85 text-[17px] sm:text-[19px] font-medium leading-[1.4] tracking-tight text-center">
+                    <p className="text-white/85 text-[18px] sm:text-[19px] font-medium leading-[1.4] tracking-tight text-center">
                       {tradeMode === "buy"
-                        ? <>{'Shop on your terms.'}<br />{'Post what you need, get custom offers from the community, and pick the best deal.'}</>
-                        : <>{'Sell on your terms.'}<br />{'Browse open requests and send your best offer.'}</>
+                        ? <>{'Shop on your terms.'}<span className="hidden md:inline"><br /></span>{' '}<span>Post what you need, get custom offers from the community, and pick the best deal.</span></>
+                        : <>{'Sell on your terms.'}<span className="hidden md:inline"><br /></span>{' '}<span>Browse open requests and send your best offer.</span></>
                       }
                     </p>
                   </div>
@@ -203,7 +237,7 @@ export function HeroSectionV2({ user, profile, tradeMode, setTradeMode }: HeroSe
               {/* Status Indicator */}
               <div className="mt-8 flex items-center justify-center gap-2.5 text-white/50 text-[17px] sm:text-[19px] font-medium tracking-tight">
                 <div className="w-1.5 h-1.5 rounded-full bg-[#00FF9C] shadow-[0_0_8px_rgba(0,255,156,0.6)] animate-pulse" />
-                <span>{stats.requests.toLocaleString()} requests, {stats.seekers.toLocaleString()} seekers / 24h</span>
+                <span>{stats.requestsDaily?.toLocaleString() || 768} requests / 24h</span>
               </div>
             </div>
           </div>

@@ -1,6 +1,6 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { AppNavbar } from "@/components/layout/app-navbar";
-import { ScrollToTop } from "@/components/layout/scroll-to-top";
+
 import { AuthProvider } from "@/components/layout/auth-provider";
 import { OnboardingModal } from "@/components/auth/onboarding-modal";
 
@@ -89,7 +89,7 @@ export default async function AppLayout({
             </main>
           </AppSidebar>
         </div>
-        <ScrollToTop />
+
       </div>
     </SidebarProvider>
   );

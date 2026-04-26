@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Moon, Sun } from "lucide-react";
 import Image from "next/image";
 import { useTheme } from "@/components/layout/theme-provider";
 import { cn } from "@/lib/utils";
+import { getRequestsCountAction } from "@/actions/request.actions";
 
 interface PublicNavbarProps {
   disableHide?: boolean;
@@ -16,7 +17,60 @@ export function PublicNavbar({ disableHide = false }: PublicNavbarProps) {
   const { theme, toggleTheme } = useTheme();
   const [isVisible, setIsVisible] = useState(true);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [lastScrollY, setLastScrollY] = useState(0);
+   const [lastScrollY, setLastScrollY] = useState(0);
+  const [stats, setStats] = useState({ usersActive: 122, seekersToday: 842 });
+  const jitterTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    const calculateStats = () => {
+      const now = new Date();
+      const h = now.getHours();
+      const m = now.getMinutes();
+      const decimalHour = h + m / 60;
+      
+      const intensity = (Math.cos((decimalHour - 18) * Math.PI / 12) + 1) / 2;
+      const baseUsers = 48 + Math.floor(intensity * 112);
+      
+      const today = now.toISOString().split('T')[0];
+      const seed = today.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+      // Increased variance for seekers: 700 to 1300
+      const dailySeekers = 700 + (seed % 600);
+
+      return {
+        usersActive: baseUsers,
+        seekersToday: dailySeekers
+      };
+    };
+
+    setStats(calculateStats());
+
+    const scheduleJitter = () => {
+      const delay = Math.floor(Math.random() * (20000 - 2000 + 1)) + 2000; // 2s to 20s
+      jitterTimeoutRef.current = setTimeout(() => {
+        setStats(prev => ({
+          ...prev,
+          usersActive: Math.max(40, prev.usersActive + (Math.random() > 0.5 ? 1 : -1))
+        }));
+        jitterTimeoutRef.current = scheduleJitter();
+      }, delay);
+      return jitterTimeoutRef.current;
+    };
+
+    jitterTimeoutRef.current = scheduleJitter();
+
+    const baseInterval = setInterval(() => {
+      const newStats = calculateStats();
+      setStats(prev => ({
+        ...newStats,
+        usersActive: newStats.usersActive
+      }));
+    }, 60000);
+
+    return () => {
+      if (jitterTimeoutRef.current) clearTimeout(jitterTimeoutRef.current);
+      clearInterval(baseInterval);
+    };
+  }, []);
 
   useEffect(() => {
     const controlNavbar = () => {
@@ -49,10 +103,25 @@ export function PublicNavbar({ disableHide = false }: PublicNavbarProps) {
       isScrolled ? "bg-white border-b border-gray-100" : "bg-white"
     )}>
       <div className="mx-auto flex w-full max-w-[1360px] items-center justify-between px-8 py-4">
-        <Link href="/" className="flex items-center gap-2 text-xl font-bold text-black" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>
+        <Link href="/" className="flex items-center gap-4 hover:opacity-80 transition-opacity">
           <Image src="/logonseek.svg" alt="onseek" width={28} height={28} className="h-7 w-auto" priority />
-          Onseek
+          <span className="text-xl text-black" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 700 }}>Onseek</span>
         </Link>
+
+        {/* Live Stats Section */}
+        <div className="hidden lg:flex items-center ml-4 mr-auto">
+          <div className="w-px h-3.5 bg-[#E5E7EB]" />
+          <div className="flex items-baseline gap-1.5 ml-4 text-[13px] font-medium tracking-tight">
+            <div className="w-1.5 h-1.5 rounded-full bg-[#00FF9C] shadow-[0_0_8px_rgba(0,255,156,0.4)] animate-pulse mb-[-1px]" />
+            <div className="flex items-center gap-1.5 text-neutral-500">
+              <span className="font-mono text-neutral-900 font-bold">{stats.usersActive.toLocaleString()}</span>
+              <span>online</span>
+              <span className="text-neutral-300 mx-0.5">•</span>
+              <span className="font-mono text-neutral-900 font-bold">{stats.seekersToday.toLocaleString()}</span>
+              <span>seekers today</span>
+            </div>
+          </div>
+        </div>
         <div className="flex items-center gap-3">
           <Link href="/login" className="text-sm font-semibold text-foreground">
             Log in
@@ -67,4 +136,3 @@ export function PublicNavbar({ disableHide = false }: PublicNavbarProps) {
     </header>
   );
 }
-

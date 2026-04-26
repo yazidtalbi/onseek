@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { MoreHorizontal, EyeOff, Flag, Share2, Ban, Archive as ArchiveIcon, Pencil, Trash2, Eye } from "lucide-react";
+import { MoreHorizontal, Flag, Share2, Bookmark, Pencil, Trash2, Eye, Archive } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,13 +22,13 @@ import { Button } from "@/components/ui/button";
 import { ReportDialog } from "@/components/reports/report-dialog";
 import { archiveRequestAction, approveRequestAction, rejectRequestAction, deleteRequestAction } from "@/actions/request.actions";
 import { EditRequestModal } from "./edit-request-modal";
-import { hideCategoryAction } from "@/actions/preference.actions";
 import { useAuth } from "@/components/layout/auth-provider";
 import { useTransition } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
 import { Check, XCircle } from "lucide-react";
 import { createRequestUrl } from "@/lib/utils/slug";
+import { MobileMenu, MobileMenuItem } from "@/components/ui/mobile-menu";
 import type { Category, RequestStatus, RequestItem } from "@/lib/types";
 
 export function RequestMenu({
@@ -54,16 +54,13 @@ export function RequestMenu({
   const { user } = useAuth();
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
-  const [isHidingCategory, setIsHidingCategory] = React.useState(false);
   const [showReportDialog, setShowReportDialog] = React.useState(false);
   const [showCloseConfirmDialog, setShowCloseConfirmDialog] = React.useState(false);
   const [showDeleteConfirmDialog, setShowDeleteConfirmDialog] = React.useState(false);
   const [showEditModal, setShowEditModal] = React.useState(false);
-  const [showHideCategoryDialog, setShowHideCategoryDialog] = React.useState(false);
-  const [categoryToHide, setCategoryToHide] = React.useState<Category | null>(null);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
 
   const isOwner = user?.id === requestUserId;
-  const isOpen = status === "open";
   const rid = requestId;
   const rstatus = status;
   const is_admin = isAdmin;
@@ -91,89 +88,179 @@ export function RequestMenu({
     });
   };
 
-  const handleHide = () => {
-    if (typeof window === "undefined") return;
-    
-    try {
-      const hidden = JSON.parse(localStorage.getItem("hiddenRequests") || "[]");
-      if (!hidden.includes(requestId)) {
-        hidden.push(requestId);
-        localStorage.setItem("hiddenRequests", JSON.stringify(hidden));
-        router.refresh();
-      }
-    } catch (error) {
-      console.error("Error hiding request:", error);
-    }
-  };
+
 
   const handleShare = async () => {
     if (typeof window === "undefined") return;
-    
     const url = `${window.location.origin}${createRequestUrl(initialData || { id: requestId })}`;
-    
     try {
-      // Try Web Share API first (mobile)
       if (navigator.share) {
-        await navigator.share({
-          title: "Check out this request",
-          url: url,
-        });
+        await navigator.share({ title: "Check out this request", url: url });
       } else {
-        // Fallback to clipboard
         await navigator.clipboard.writeText(url);
-        // You could add a toast notification here
+        toast({ title: "Copied", description: "Link copied to clipboard" });
       }
     } catch (error) {
-      // User cancelled or error occurred
       if (error instanceof Error && error.name !== "AbortError") {
         console.error("Error sharing:", error);
       }
     }
   };
 
-  const handleHideCategory = (category: Category) => {
-    setCategoryToHide(category);
-    setShowHideCategoryDialog(true);
-  };
 
-  const confirmHideCategory = async () => {
-    if (!categoryToHide) return;
-
-    setIsHidingCategory(true);
-    try {
-      const result = await hideCategoryAction(categoryToHide.id);
-      if (!("error" in result)) {
-        setShowHideCategoryDialog(false);
-        setCategoryToHide(null);
-        router.refresh();
-      }
-    } catch (error) {
-      console.error("Error hiding category:", error);
-    } finally {
-      setIsHidingCategory(false);
-    }
-  };
 
   return (
     <>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button
-            type="button"
-            className="p-1.5 rounded-full hover:bg-gray-100 transition-colors"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-56">
+      {/* Desktop Menu */}
+      <div className="hidden md:block">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              className="p-1.5 rounded-full hover:bg-gray-100 transition-colors"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            {is_admin && (
+              <>
+                <div className="px-2 py-1.5 text-xs font-semibold text-amber-600">
+                  Moderation
+                </div>
+                {rstatus === "pending" && (
+                  <DropdownMenuItem
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      const res = await approveRequestAction(rid);
+                      if (res.success) {
+                        toast({ title: "Approved", description: "Request is now public" });
+                        router.refresh();
+                      } else toast({ title: "Error", description: res.error });
+                    }}
+                    className="cursor-pointer text-green-600"
+                  >
+                    <Check className="h-4 w-4 mr-2" />
+                    Approve & Publish
+                  </DropdownMenuItem>
+                )}
+                {(rstatus === "pending" || rstatus === "open") && (
+                  <DropdownMenuItem
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      const res = await rejectRequestAction(rid);
+                      if (res.success) {
+                        toast({ title: "Rejected", description: "Request has been rejected" });
+                        router.refresh();
+                      } else toast({ title: "Error", description: res.error });
+                    }}
+                    className="cursor-pointer text-red-600"
+                  >
+                    <XCircle className="h-4 w-4 mr-2" />
+                    Reject Request
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuSeparator />
+              </>
+            )}
+
+            <DropdownMenuItem
+              onClick={(e) => {
+                e.stopPropagation();
+                handleShare();
+              }}
+              className="cursor-pointer"
+            >
+              <Share2 className="h-4 w-4 mr-2" />
+              Share
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleFavorite?.();
+              }}
+              className="cursor-pointer"
+            >
+              <Bookmark className={cn("h-4 w-4 mr-2", isFavorite ? "fill-current text-[#6925DC]" : "")} />
+              {isFavorite ? 'Saved to "My saves"' : 'Save to "My saves"'}
+            </DropdownMenuItem>
+
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowReportDialog(true);
+              }}
+              className="cursor-pointer"
+            >
+              <Flag className="h-4 w-4 mr-2" />
+              Report
+            </DropdownMenuItem>
+            {isOwner && (status === "open" || status === "solved" || status === "pending") && (
+              <>
+                <DropdownMenuSeparator />
+                <div className="px-2 py-1.5 text-xs font-semibold text-gray-500">
+                  Manage Request
+                </div>
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    router.push(createRequestUrl(initialData || { id: requestId }));
+                  }}
+                  className="cursor-pointer"
+                >
+                  <Eye className="h-4 w-4 mr-2" />
+                  View details
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowEditModal(true);
+                  }}
+                  className="cursor-pointer"
+                >
+                  <Pencil className="h-4 w-4 mr-2" />
+                  Edit request
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowCloseConfirmDialog(true);
+                  }}
+                  disabled={isPending}
+                  className="cursor-pointer text-gray-600"
+                >
+                  <Archive className="h-4 w-4 mr-2" />
+                  Archive request
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowDeleteConfirmDialog(true);
+                  }}
+                  disabled={isPending}
+                  className="cursor-pointer text-red-600 focus:text-red-700 focus:bg-red-50"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete request
+                </DropdownMenuItem>
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      {/* Mobile Menu - Drawer Style */}
+      <div className="md:hidden">
+        <MobileMenu open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
           {is_admin && (
-            <>
-              <div className="px-2 py-1.5 text-xs font-semibold text-amber-600">
+            <div className="mb-2">
+              <div className="px-3 py-1.5 text-xs font-semibold text-amber-600">
                 Moderation
               </div>
               {rstatus === "pending" && (
-                <DropdownMenuItem
+                <MobileMenuItem
                   onClick={async (e) => {
                     e.stopPropagation();
                     const res = await approveRequestAction(rid);
@@ -181,15 +268,16 @@ export function RequestMenu({
                       toast({ title: "Approved", description: "Request is now public" });
                       router.refresh();
                     } else toast({ title: "Error", description: res.error });
+                    setIsMobileMenuOpen(false);
                   }}
-                  className="cursor-pointer text-green-600"
+                  className="text-green-600"
                 >
-                  <Check className="h-4 w-4 mr-2" />
+                  <Check className="h-5 w-5 mr-3" />
                   Approve & Publish
-                </DropdownMenuItem>
+                </MobileMenuItem>
               )}
               {(rstatus === "pending" || rstatus === "open") && (
-                <DropdownMenuItem
+                <MobileMenuItem
                   onClick={async (e) => {
                     e.stopPropagation();
                     const res = await rejectRequestAction(rid);
@@ -197,131 +285,100 @@ export function RequestMenu({
                       toast({ title: "Rejected", description: "Request has been rejected" });
                       router.refresh();
                     } else toast({ title: "Error", description: res.error });
+                    setIsMobileMenuOpen(false);
                   }}
-                  className="cursor-pointer text-red-600"
+                  className="text-red-600"
                 >
-                  <XCircle className="h-4 w-4 mr-2" />
+                  <XCircle className="h-5 w-5 mr-3" />
                   Reject Request
-                </DropdownMenuItem>
+                </MobileMenuItem>
               )}
-              <DropdownMenuSeparator />
-            </>
+              <div className="h-px bg-gray-100 my-2 mx-3" />
+            </div>
           )}
-          <DropdownMenuItem
 
-            onClick={(e) => {
-              e.stopPropagation();
-              handleHide();
-            }}
-            className="cursor-pointer"
-          >
-            <EyeOff className="h-4 w-4 mr-2" />
-            Hide
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={(e) => {
-              e.stopPropagation();
+
+
+          <MobileMenuItem
+            onClick={() => {
               handleShare();
+              setIsMobileMenuOpen(false);
             }}
-            className="cursor-pointer"
           >
-            <Share2 className="h-4 w-4 mr-2" />
+            <Share2 className="h-5 w-5 mr-3" />
             Share
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={(e) => {
-              e.stopPropagation();
+          </MobileMenuItem>
+
+          <MobileMenuItem
+            onClick={() => {
               onToggleFavorite?.();
+              setIsMobileMenuOpen(false);
             }}
-            className="cursor-pointer"
           >
-            <ArchiveIcon className={cn("h-4 w-4 mr-2", isFavorite ? "fill-current text-[#6925DC]" : "")} />
-            {isFavorite ? "Saved to favorites" : "Save to favorites"}
-          </DropdownMenuItem>
-          {categories && categories.length > 0 && (
-            <>
-              <DropdownMenuSeparator />
-              <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
-                Not interested
-              </div>
-              {categories.map((category) => (
-                <DropdownMenuItem
-                  key={category.id}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleHideCategory(category);
-                  }}
-                  className="cursor-pointer text-sm"
-                >
-                  <Ban className="h-4 w-4 mr-2" />
-                  Hide {category.name}
-                </DropdownMenuItem>
-              ))}
-            </>
-          )}
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            onClick={(e) => {
-              e.stopPropagation();
+            <Bookmark className={cn("h-5 w-5 mr-3", isFavorite ? "fill-current text-[#6925DC]" : "")} />
+            {isFavorite ? 'Saved to "My saves"' : 'Save to "My saves"'}
+          </MobileMenuItem>
+
+
+
+          <div className="h-px bg-gray-100 my-2 mx-3" />
+          <MobileMenuItem
+            onClick={() => {
               setShowReportDialog(true);
+              setIsMobileMenuOpen(false);
             }}
-            className="cursor-pointer"
           >
-            <Flag className="h-4 w-4 mr-2" />
+            <Flag className="h-5 w-5 mr-3" />
             Report
-          </DropdownMenuItem>
+          </MobileMenuItem>
+
           {isOwner && (status === "open" || status === "solved" || status === "pending") && (
             <>
-              <DropdownMenuSeparator />
-              <div className="px-2 py-1.5 text-xs font-semibold text-gray-500">
+              <div className="h-px bg-gray-100 my-2 mx-3" />
+              <div className="px-3 py-1.5 text-xs font-semibold text-gray-500">
                 Manage Request
               </div>
-              <DropdownMenuItem
-                onClick={(e) => {
-                  e.stopPropagation();
+              <MobileMenuItem
+                onClick={() => {
                   router.push(createRequestUrl(initialData || { id: requestId }));
+                  setIsMobileMenuOpen(false);
                 }}
-                className="cursor-pointer"
               >
-                <Eye className="h-4 w-4 mr-2" />
+                <Eye className="h-5 w-5 mr-3" />
                 View details
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={(e) => {
-                  e.stopPropagation();
+              </MobileMenuItem>
+              <MobileMenuItem
+                onClick={() => {
                   setShowEditModal(true);
+                  setIsMobileMenuOpen(false);
                 }}
-                className="cursor-pointer"
               >
-                <Pencil className="h-4 w-4 mr-2" />
+                <Pencil className="h-5 w-5 mr-3" />
                 Edit request
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={(e) => {
-                  e.stopPropagation();
+              </MobileMenuItem>
+              <MobileMenuItem
+                onClick={() => {
                   setShowCloseConfirmDialog(true);
+                  setIsMobileMenuOpen(false);
                 }}
-                disabled={isPending}
-                className="cursor-pointer text-gray-600"
               >
-                <ArchiveIcon className="h-4 w-4 mr-2" />
+                <Archive className="h-5 w-5 mr-3" />
                 Archive request
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={(e) => {
-                  e.stopPropagation();
+              </MobileMenuItem>
+              <MobileMenuItem
+                variant="danger"
+                onClick={() => {
                   setShowDeleteConfirmDialog(true);
+                  setIsMobileMenuOpen(false);
                 }}
-                disabled={isPending}
-                className="cursor-pointer text-red-600 focus:text-red-700 focus:bg-red-50"
               >
-                <Trash2 className="h-4 w-4 mr-2" />
+                <Trash2 className="h-5 w-5 mr-3" />
                 Delete request
-              </DropdownMenuItem>
+              </MobileMenuItem>
             </>
           )}
-        </DropdownMenuContent>
-      </DropdownMenu>
+        </MobileMenu>
+      </div>
 
       {isOwner && initialData && (
         <EditRequestModal
@@ -337,7 +394,7 @@ export function RequestMenu({
         onOpenChange={setShowReportDialog}
       />
       
-      {/* Close Request Confirmation Dialog */}
+      {/* Confirmation Dialogs - Kept as standard Dialogs */}
       <Dialog open={showCloseConfirmDialog} onOpenChange={setShowCloseConfirmDialog}>
         <DialogContent>
           <DialogHeader>
@@ -366,7 +423,6 @@ export function RequestMenu({
         </DialogContent>
       </Dialog>
 
-      {/* Delete Request Confirmation Dialog */}
       <Dialog open={showDeleteConfirmDialog} onOpenChange={setShowDeleteConfirmDialog}>
         <DialogContent>
           <DialogHeader>
@@ -395,39 +451,7 @@ export function RequestMenu({
         </DialogContent>
       </Dialog>
 
-      {/* Hide Category Confirmation Dialog */}
-      <Dialog open={showHideCategoryDialog} onOpenChange={setShowHideCategoryDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Hide category?</DialogTitle>
-            <DialogDescription>
-              We'll show you fewer requests from the "{categoryToHide?.name}" category. You can change this in your settings anytime.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setShowHideCategoryDialog(false);
-                setCategoryToHide(null);
-              }}
-              disabled={isHidingCategory}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="default"
-              onClick={confirmHideCategory}
-              disabled={isHidingCategory}
-              className="bg-[#7755FF] hover:bg-[#6644EE] text-white"
-            >
-              {isHidingCategory ? "Hiding..." : "Hide category"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+
     </>
   );
 }
-
-

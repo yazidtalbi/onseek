@@ -51,6 +51,7 @@ export function SubmissionList({
   requestDealbreakers,
   isOwner = false,
   showSubmissionForm = true,
+  hideEmptyState = false,
 }: {
   requestId: string;
   requestTitle?: string;
@@ -66,6 +67,7 @@ export function SubmissionList({
   requestDealbreakers?: any[];
   isOwner?: boolean;
   showSubmissionForm?: boolean;
+  hideEmptyState?: boolean;
 }) {
   const [localWinner, setLocalWinner] = React.useState<string | null>(
     winnerId ?? null
@@ -78,18 +80,19 @@ export function SubmissionList({
   const submissions = initialSubmissions;
 
   if (!submissions?.length) {
+    if (hideEmptyState) return null;
     return (
-      <div className="rounded-2xl p-12 text-center bg-transparent">
+      <div className="rounded-2xl p-6 sm:p-12 text-center bg-transparent">
         {/* Illustration with Stars */}
-        <div className="relative flex items-center justify-center mb-8">
+        <div className="relative flex items-center justify-center mb-6 sm:mb-8">
           <div className="relative z-10">
             {/* Stars - positioned around the illustration */}
-            <Sparkles className="absolute -top-1 -left-1 h-4 w-4 text-yellow-400 rotate-12" />
-            <Sparkles className="absolute -top-1 right-1 h-4 w-4 text-yellow-400 -rotate-12" />
-            <Sparkles className="absolute top-2 -right-1 h-5 w-5 text-yellow-400 rotate-45" />
-            <Sparkles className="absolute -bottom-1 left-1 h-4 w-4 text-yellow-400 -rotate-45" />
+            <Sparkles className="absolute -top-1 -left-1 h-3 w-3 sm:h-4 sm:w-4 text-yellow-400 rotate-12" />
+            <Sparkles className="absolute -top-1 right-1 h-3 w-3 sm:h-4 sm:w-4 text-yellow-400 -rotate-12" />
+            <Sparkles className="absolute top-2 -right-1 h-4 w-4 sm:h-5 sm:w-5 text-yellow-400 rotate-45" />
+            <Sparkles className="absolute -bottom-1 left-1 h-3 w-3 sm:h-4 sm:w-4 text-yellow-400 -rotate-45" />
 
-            <div className="relative w-32 h-32">
+            <div className="relative w-24 h-24 sm:w-32 sm:h-32">
               <Image
                 src="/illustrations/2.png"
                 alt="Achievement"
@@ -102,14 +105,14 @@ export function SubmissionList({
         </div>
 
         {/* Heading */}
-        <h3 className="text-2xl font-medium text-neutral-900 mb-3" style={{ fontFamily: 'var(--font-expanded)' }}>
+        <h3 className="text-xl sm:text-2xl font-medium text-neutral-900 mb-3" style={{ fontFamily: 'var(--font-expanded)' }}>
           {isOwner ? "Sellers will see your request" : "Be the first to help"}
         </h3>
 
         {/* Body Text */}
-        <p className="text-sm text-gray-600 mb-6 max-w-md mx-auto">
-          {isOwner 
-            ? "We'll notify you as soon as someone shares a product that matches your criteria." 
+        <p className="text-xs sm:text-sm text-gray-600 mb-6 max-w-md mx-auto">
+          {isOwner
+            ? "We'll notify you as soon as someone shares a product that matches your criteria."
             : "Share a product or item that matches this request"}
         </p>
       </div>
@@ -139,7 +142,7 @@ export function SubmissionList({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4 px-2 sm:px-0">
         <div className="text-[12px] font-medium text-gray-500" style={{ fontFamily: 'var(--font-inter-display)' }}>
           {submissions.length} {submissions.length === 1 ? 'Proposal' : 'Proposals'}
         </div>
@@ -184,7 +187,7 @@ export function SubmissionList({
           </div>
         </div>
       </div>
-      <div className="grid grid-cols-1 gap-6">
+      <div className="grid grid-cols-1 gap-4">
         {sorted.map((submission, index) => (
           <div key={submission.id} className="w-full">
             <SubmissionCard

@@ -20,6 +20,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { MobileMenu, MobileMenuItem } from "@/components/ui/mobile-menu";
+
 
 interface NotificationsDrawerProps {
   children: React.ReactNode;
@@ -126,21 +128,34 @@ export function NotificationsDrawer({ children }: NotificationsDrawerProps) {
                   className="data-[state=checked]:bg-[#7755FF] scale-90"
                 />
               </div>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-neutral-500 hover:text-neutral-900 -mr-2 outline-none border-0 ring-0 focus-visible:ring-0">
-                    <MoreHorizontal className="h-5 w-5" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48 bg-white border border-neutral-200">
-                  <DropdownMenuItem 
-                    onClick={handleMarkAllRead}
-                    className="cursor-pointer text-sm font-medium text-neutral-700 hover:text-neutral-900 hover:bg-neutral-50 px-3 py-2 outline-none"
-                  >
+              {/* Desktop Menu */}
+              <div className="hidden md:block">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-neutral-500 hover:text-neutral-900 -mr-2 outline-none border-0 ring-0 focus-visible:ring-0">
+                      <MoreHorizontal className="h-5 w-5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48 bg-white border border-neutral-200">
+                    <DropdownMenuItem 
+                      onClick={handleMarkAllRead}
+                      className="cursor-pointer text-sm font-medium text-neutral-700 hover:text-neutral-900 hover:bg-neutral-50 px-3 py-2 outline-none"
+                    >
+                      Mark all as read
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+
+              {/* Mobile Menu */}
+              <div className="md:hidden">
+                <MobileMenu>
+                  <MobileMenuItem onClick={handleMarkAllRead}>
+                    <Check className="h-5 w-5 mr-3" />
                     Mark all as read
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                  </MobileMenuItem>
+                </MobileMenu>
+              </div>
             </div>
           </div>
           
@@ -187,34 +202,53 @@ export function NotificationsDrawer({ children }: NotificationsDrawerProps) {
             filteredNotifications.map((item) => (
               <div key={item.id} className="relative group">
                 <NotificationItem notification={item} />
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}
-                      className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 text-neutral-400 hover:text-neutral-900 bg-white outline-none border-0 ring-0 focus-visible:ring-0"
-                    >
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48 bg-white border border-neutral-200">
-                    <DropdownMenuItem 
-                      onClick={(e) => handleMarkRead(item.id, e as any)}
-                      className="cursor-pointer text-sm font-medium text-neutral-700 hover:text-neutral-900 hover:bg-neutral-50 px-3 py-2 outline-none"
-                    >
-                      <Check className="mr-2 h-4 w-4" />
-                      Mark as read
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      onClick={(e) => handleRemove(item.id, e as any)}
-                      className="cursor-pointer text-sm font-medium text-rose-600 hover:text-rose-700 hover:bg-rose-50 px-3 py-2 outline-none focus:text-rose-700 focus:bg-rose-50"
-                    >
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Remove notification
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                {/* Desktop Menu */}
+                <div className="hidden md:block">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}
+                        className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 text-neutral-400 hover:text-neutral-900 bg-white outline-none border-0 ring-0 focus-visible:ring-0"
+                      >
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48 bg-white border border-neutral-200">
+                      <DropdownMenuItem 
+                        onClick={(e) => handleMarkRead(item.id, e as any)}
+                        className="cursor-pointer text-sm font-medium text-neutral-700 hover:text-neutral-900 hover:bg-neutral-50 px-3 py-2 outline-none"
+                      >
+                        <Check className="mr-2 h-4 w-4" />
+                        Mark as read
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={(e) => handleRemove(item.id, e as any)}
+                        className="cursor-pointer text-sm font-medium text-rose-600 hover:text-rose-700 hover:bg-rose-50 px-3 py-2 outline-none focus:text-rose-700 focus:bg-rose-50"
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Remove notification
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+
+                {/* Mobile Menu */}
+                <div className="md:hidden">
+                  <div className="absolute top-4 right-4 group-hover:opacity-100 transition-opacity">
+                    <MobileMenu>
+                      <MobileMenuItem onClick={(e) => handleMarkRead(item.id, e as any)}>
+                        <Check className="h-5 w-5 mr-3" />
+                        Mark as read
+                      </MobileMenuItem>
+                      <MobileMenuItem variant="danger" onClick={(e) => handleRemove(item.id, e as any)}>
+                        <Trash2 className="h-5 w-5 mr-3" />
+                        Remove notification
+                      </MobileMenuItem>
+                    </MobileMenu>
+                  </div>
+                </div>
               </div>
             ))
           )}

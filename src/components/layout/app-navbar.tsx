@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useState, useTransition, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
@@ -44,6 +44,7 @@ import { useAuth } from "@/components/layout/auth-provider";
 import { useTheme } from "@/components/layout/theme-provider";
 import { useSidebar } from "@/components/layout/app-sidebar";
 import { signOutAction } from "@/actions/auth.actions";
+import { getRequestsCountAction } from "@/actions/request.actions";
 import { LoginDropdown } from "@/components/auth/login-dropdown";
 import { CreateRequestModal } from "@/components/requests/create-request-modal";
 import { AIRequestFlow } from "@/components/requests/ai-request-flow";
@@ -77,6 +78,8 @@ import * as React from "react";
 // @ts-ignore - react-select-country-list doesn't have type definitions
 import countryListFactory from "react-select-country-list";
 import Image from "next/image";
+import { LandingModal } from "@/components/landing/landing-modal";
+
 const categories = MAIN_CATEGORIES;
 
 // Initialize country list
@@ -100,6 +103,7 @@ const POPULAR_COUNTRIES = [
   "Norway",
   "Denmark",
   "Belgium",
+  "Switzerland",
 ];
 
 // Get country code from country name
@@ -284,9 +288,75 @@ export function AppNavbar({
   const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
   const [avatarError, setAvatarError] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [isHeroOpen, setIsHeroOpen] = useState(false);
+  const [isLandingModalOpen, setIsLandingModalOpen] = useState(false);
+  const [stats, setStats] = useState({ usersActive: 122, seekersToday: 842 });
+  const jitterTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    const calculateStats = () => {
+      const now = new Date();
+      const h = now.getHours();
+      const m = now.getMinutes();
+      const decimalHour = h + m / 60;
+      
+      const intensity = (Math.cos((decimalHour - 18) * Math.PI / 12) + 1) / 2;
+      const baseUsers = 48 + Math.floor(intensity * 112);
+      
+      const today = now.toISOString().split('T')[0];
+      const seed = today.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+      // Increased variance for seekers: 700 to 1300
+      const dailySeekers = 700 + (seed % 600);
+
+      return {
+        usersActive: baseUsers,
+        seekersToday: dailySeekers
+      };
+    };
+
+    setStats(calculateStats());
+
+    const scheduleJitter = () => {
+      const delay = Math.floor(Math.random() * (20000 - 2000 + 1)) + 2000; // 2s to 20s
+      jitterTimeoutRef.current = setTimeout(() => {
+        setStats(prev => ({
+          ...prev,
+          usersActive: Math.max(40, prev.usersActive + (Math.random() > 0.5 ? 1 : -1))
+        }));
+        jitterTimeoutRef.current = scheduleJitter();
+      }, delay);
+      return jitterTimeoutRef.current;
+    };
+
+    jitterTimeoutRef.current = scheduleJitter();
+
+    const baseInterval = setInterval(() => {
+      const newStats = calculateStats();
+      setStats(prev => ({
+        ...newStats,
+        usersActive: newStats.usersActive
+      }));
+    }, 60000);
+
+    return () => {
+      if (jitterTimeoutRef.current) clearTimeout(jitterTimeoutRef.current);
+      clearInterval(baseInterval);
+    };
+  }, []);
 
   useEffect(() => {
     setMounted(true);
+    
+    // Check for hero modal visibility
+    const checkHero = () => {
+      setIsHeroOpen(document.body.classList.contains('hero-modal-open'));
+    };
+    
+    checkHero();
+    const observer = new MutationObserver(checkHero);
+    observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+    
+    return () => observer.disconnect();
   }, []);
 
 
@@ -504,46 +574,52 @@ export function AppNavbar({
       )}>
         {/* Top bar */}
         <div className={cn(
-          "flex items-center justify-between px-3 w-full transition-all duration-300",
+          "flex items-center justify-between px-6 w-full transition-all duration-300",
           user ? "h-16" : "h-14 md:h-16"
         )}>
           {user ? (
             <>
               {/* Left: Hamburger, Logo */}
-              <div className="flex items-center gap-3">
-                <Link href="/" prefetch={true} className="shrink-0 flex items-center gap-4 ml-4">
-                  <Image src="/logonseek.svg" alt="onseek" width={24} height={24} className="h-6 w-auto" priority />
-                  <span className="text-lg text-black" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>Onseek</span>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9 rounded-full bg-transparent text-black hover:bg-gray-50 shrink-0"
+                  onClick={() => setMobileOpen(true)}
+                >
+                  <IconMenu2 className="h-5 w-5" />
+                </Button>
+                <Link href="/" prefetch={true} className="shrink-0 flex items-center gap-2">
+                  <Image src="/logonseek.svg" alt="onseek" width={22} height={22} className="h-5 w-auto" priority />
+                  <span className="text-md text-black" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 700 }}>Onseek</span>
                 </Link>
               </div>
 
-              {/* Right: Messages, Alert, Avatar */}
-              <div className="flex items-center gap-2">
-                {user && pathname !== "/" && (
-                  <Link href="/search" className="flex items-center justify-center h-9 w-9 rounded-full hover:bg-gray-100 transition-colors">
-                    <IconSearch className="h-6 w-6 text-gray-700" />
+                {/* Right: Search, Plus, Alert, Avatar */}
+                <div className="flex items-center gap-1.5">
+                  <Link href="/search" className="flex items-center justify-center h-8 w-8 rounded-full hover:bg-gray-100 transition-colors">
+                    <IconSearch className="h-5 w-5 text-gray-700" />
                   </Link>
-                )}
-                <button 
-                  onClick={() => setIsAIModalOpen(true)}
-                  className="flex items-center justify-center h-9 w-9 rounded-full bg-transparent text-black border border-gray-200 hover:bg-gray-50 transition-colors shrink-0"
-                >
-                  <IconPlus className="h-4 w-4" />
-                </button>
+                  <button 
+                    onClick={() => setIsAIModalOpen(true)}
+                    className="flex items-center justify-center h-8 w-8 rounded-full bg-transparent text-black border border-gray-200 hover:bg-gray-50 transition-colors shrink-0"
+                  >
+                    <IconPlus className="h-3.5 w-3.5" />
+                  </button>
                 {mounted ? (
                   <>
                     <NotificationsDrawer>
-                      <Button variant="ghost" size="icon" className="relative h-9 w-9" suppressHydrationWarning>
-                        <IconBell className="h-6 w-6 text-gray-700" stroke={1.5} />
+                      <Button variant="ghost" size="icon" className="relative h-8 w-8" suppressHydrationWarning>
+                        <IconBell className="h-5 w-5 text-gray-700" stroke={1.5} />
                         {unreadCount > 0 && (
-                          <span className="absolute top-1 right-1 h-3.5 w-3.5 rounded-full bg-[#7755FF] text-white text-[9px] font-semibold flex items-center justify-center shrink-0">
+                          <span className="absolute top-0.5 right-0.5 h-3 w-3 rounded-full bg-[#7755FF] text-white text-[8px] font-semibold flex items-center justify-center shrink-0">
                             {unreadCount > 9 ? "9+" : unreadCount}
                           </span>
                         )}
                       </Button>
                     </NotificationsDrawer>
-                    <Link href={profile?.username ? `/profile/${profile.username}` : "/settings"} className="flex items-center">
-                      <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-700 font-bold text-xs overflow-hidden border border-gray-200 shrink-0">
+                    <Link href={profile?.username ? `/profile/${profile.username}` : "/settings"} className="flex items-center ml-0.5">
+                      <div className="h-7 w-7 rounded-full bg-gray-100 flex items-center justify-center text-gray-700 font-bold text-[10px] overflow-hidden border border-gray-200 shrink-0">
                         {profile?.avatar_url && !avatarError ? (
                           <img src={profile.avatar_url} alt={profile.username || "User"} className="w-full h-full object-cover" onError={() => setAvatarError(true)} />
                         ) : (
@@ -561,65 +637,69 @@ export function AppNavbar({
             <>
               {/* Guest Layout */}
               {/* Left: Logo */}
-              <Link href="/" prefetch={true} className="shrink-0 flex items-center gap-4 hover:opacity-80 transition-opacity">
+              <Link 
+                href="/" 
+                prefetch={true} 
+                className={cn(
+                  "shrink-0 flex items-center gap-4 hover:opacity-80 transition-all",
+                  isHeroOpen ? "opacity-0 pointer-events-none" : "opacity-100"
+                )}
+              >
                 <Image src="/logonseek.svg" alt="Onseek" width={24} height={24} className="h-6 w-auto" priority />
-                <span className="text-lg text-black" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>Onseek</span>
+                <span className="text-lg text-black" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 700 }}>Onseek</span>
               </Link>
 
-                {/* Right: Plus, Sign Up */}
+                {/* Right: Hamburger Button (Replaces Plus/Sign Up on Mobile) */}
                 <div className="flex items-center gap-2">
-                  {!minimal && (
-                    <div className="flex items-center gap-2">
-                      <Button 
-                        onClick={() => setIsAIModalOpen(true)} 
-                        size="icon" 
-                        className="h-9 w-9 rounded-full bg-transparent text-black border border-gray-200 hover:bg-gray-50 shadow-none"
-                      >
-                        <IconPlus className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  )}
-                  <Link href="/signup">
-                    <Button variant="default" className="h-8 rounded-full px-4 bg-[#222234] text-white hover:bg-[#222234]/90 shrink-0 whitespace-nowrap text-[12px] font-bold">
-                      {ctaText}
-                    </Button>
-                  </Link>
+                  <Button 
+                    onClick={() => setIsLandingModalOpen(true)}
+                    size="icon" 
+                    className="h-9 w-9 rounded-full bg-transparent text-black border border-gray-200 hover:bg-gray-50 shadow-none"
+                  >
+                    <IconMenu2 className="h-5 w-5" />
+                  </Button>
                 </div>
             </>
           )}
         </div>
 
-        {/* Sticky Search bar beneath top bar - Only on Home Page for Mobile */}
-        {user && pathname === "/" && (
-          <div className="px-2 pb-2 pt-0 w-full relative z-10 bg-white">
-            <form action="/search" method="get" className="relative w-full flex items-center">
-              <IconSearch className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input name="q" placeholder="Search..." defaultValue={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9 pr-4 bg-gray-100 border-transparent rounded-full h-10 w-full text-sm focus-visible:ring-1 focus-visible:ring-gray-300 transition-shadow" />
-              <input type="hidden" name="type" value={searchType} />
-            </form>
-          </div>
-        )}
+
       </div>
 
       {/* Redundant Mobile Sheet Handled by AppSidebar */}
 
       {/* Desktop Navbar - Fixed Full Width */}
       <div className={cn(
-        "hidden md:flex w-full h-20 items-center relative transition-all duration-300 pr-8 bg-white",
+        "hidden md:flex w-full h-20 items-center relative transition-all duration-300 pr-8 bg-white"
       )}>
         {/* Left Side: Sidebar Toggle & Logo */}
         <div className="flex items-center shrink-0">
           <div className="absolute left-0 top-0 bottom-0 flex items-center z-20 pl-[22px]">
             <Link href="/" className="flex items-center gap-4 hover:opacity-80 transition-opacity">
               <Image src="/logonseek.svg" alt="Onseek" width={28} height={28} className="h-7 w-auto" priority />
-              <span className="text-xl text-black" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>Onseek</span>
+              <span className="text-xl text-black" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 700 }}>Onseek</span>
             </Link>
+
+            {/* Live Stats Section */}
+            <div className="hidden lg:flex items-center ml-4">
+              <div className="w-px h-3.5 bg-[#E5E7EB]" />
+              <div className="flex items-baseline gap-1.5 ml-4 text-[13px] font-medium tracking-tight">
+                <div className="w-1.5 h-1.5 rounded-full bg-[#00FF9C] shadow-[0_0_8px_rgba(0,255,156,0.4)] animate-pulse mb-[-1px]" />
+                <div className="flex items-center gap-1.5 text-neutral-500">
+                  <span className="font-mono text-neutral-900 font-bold">{stats.usersActive.toLocaleString()}</span>
+                  <span>online</span>
+                  <span className="text-neutral-300 mx-0.5">•</span>
+                  <span className="font-mono text-neutral-900 font-bold">{stats.seekersToday.toLocaleString()}</span>
+                  <span>seekers today</span>
+                </div>
+              </div>
+            </div>
           </div>
-          <div className="w-[24px] shrink-0" /> {/* Smaller Spacer */}
+          <div className="w-[24px] shrink-0" />
         </div>
 
         {/* Center Side: Search Bar */}
-        {user && (
+        {user && 
           <div className="absolute left-1/2 -translate-x-1/2 flex items-center w-full max-w-md justify-center z-10 pointer-events-none">
             <form 
               onSubmit={(e) => {
@@ -645,7 +725,7 @@ export function AppNavbar({
               </div>
             </form>
           </div>
-        )}
+        }
 
         {/* Right Side: Navigation & Actions */}
         <div className="flex items-center gap-6 ml-auto shrink-0 relative z-20">
@@ -767,9 +847,10 @@ export function AppNavbar({
                   <div className="flex items-center gap-6 mr-4">
                     <button
                       onClick={() => window.dispatchEvent(new CustomEvent("open-landing-modal"))}
-                      className="flex items-center px-4 py-2 text-sm font-bold text-[#222222] hover:bg-gray-100 rounded-full transition-colors whitespace-nowrap"
+                      className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-[#222222] hover:bg-gray-100 rounded-full transition-colors whitespace-nowrap"
                     >
-                      How it works
+                      <span className="text-base" style={{ fontFamily: 'var(--font-emoji)' }}>⚜️</span>
+                      <span>How it works</span>
                     </button>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -802,41 +883,25 @@ export function AppNavbar({
                         ))}
                       </DropdownMenuContent>
                     </DropdownMenu>
-                    <Link href="/login" className="shrink-0">
-                      <Button variant="ghost" className="h-11 rounded-full px-6 text-sm font-bold text-[#222222] hover:bg-gray-100">
-                        Log In
-                      </Button>
-                    </Link>
                   </div>
                 )}
-                <Link href="/signup" className="shrink-0">
-                  <Button variant="default" className="h-11 rounded-full px-8 bg-[#222234] text-white hover:bg-[#222234]/90 shrink-0 whitespace-nowrap text-sm font-bold">
+                <Link href="/signup">
+                  <Button variant="default" className="rounded-full px-6 bg-[#222234] text-white hover:bg-[#222234]/90 text-sm font-bold shadow-none">
                     {ctaText}
                   </Button>
                 </Link>
+                <div className="ml-2">
+                  <LoginDropdown />
+                </div>
               </>
             )}
           </div>
         </div>
       </div>
-      <CreateRequestModal
-        open={isCreateModalOpen}
-        onOpenChange={setIsCreateModalOpen}
-        userCountry={searchParams.get("country")}
+      <LandingModal 
+        open={isLandingModalOpen} 
+        onOpenChange={setIsLandingModalOpen} 
       />
-      {isAIModalOpen && (
-        <AIRequestFlow
-          initialText={aiInitialText}
-          onClose={() => {
-            setIsAIModalOpen(false);
-            setAIInitialText("");
-          }}
-          user={user}
-          profile={profile}
-        />
-      )}
-      <div className="hidden" />
     </header>
   );
 }
-

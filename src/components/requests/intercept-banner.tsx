@@ -14,20 +14,24 @@ const LEFT_IMAGES = [
 ];
 
 const RIGHT_IMAGES = [
-  { url: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=300&h=360", isFace: false },
   { url: "/community_avatar_2.jpg", isFace: true },
+  { url: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=300&h=360", isFace: false },
   { url: "https://images.unsplash.com/photo-1572635196237-14b3f281503f?auto=format&fit=crop&w=300&h=300", isFace: false },
   { url: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=300&h=300", isFace: true },
 ];
 
-function VerticalImageList({ items, className, reverseAnimation = false }: { items: { url: string, isFace: boolean }[], className?: string, reverseAnimation?: boolean }) {
+const ALL_IMAGES = [...LEFT_IMAGES, ...RIGHT_IMAGES];
+const MOBILE_IMAGES = [...LEFT_IMAGES.slice(0, 3), ...RIGHT_IMAGES.slice(0, 2)];
+
+function ImageList({ items, className, reverseAnimation = false, horizontal = false, small = false }: { items: { url: string, isFace: boolean }[], className?: string, reverseAnimation?: boolean, horizontal?: boolean, small?: boolean }) {
   return (
-    <div className={cn("flex flex-col gap-4", className)}>
+    <div className={cn("flex gap-3", horizontal ? "flex-row" : "flex-col", className)}>
       {items.map((item, i) => (
         <motion.div 
           key={i} 
           animate={{
-            y: [0, -8, 0],
+            y: horizontal ? 0 : [0, -8, 0],
+            x: horizontal ? [0, -8, 0] : 0,
           }}
           transition={{
             duration: 4 + (i * 0.5),
@@ -36,8 +40,9 @@ function VerticalImageList({ items, className, reverseAnimation = false }: { ite
             delay: i * 0.4 * (reverseAnimation ? -1 : 1)
           }}
           className={cn(
-            "w-[70px] h-[70px] md:w-[100px] md:h-[100px] overflow-hidden shrink-0",
-            item.isFace ? "rounded-full" : "rounded-[24px]"
+            "overflow-hidden shrink-0",
+            small ? "w-[44px] h-[44px]" : "w-[60px] h-[60px] md:w-[100px] md:h-[100px]",
+            item.isFace ? "rounded-full" : "rounded-[12px] md:rounded-[24px]"
           )}
         >
           <img src={item.url} alt="Community Item" className="w-full h-full object-cover" />
@@ -59,26 +64,27 @@ export function InterceptBanner() {
   };
 
   return (
-    <div className="w-full py-10 px-3 md:px-6">
+    <div className="w-full pt-2 pb-10 sm:py-10 px-3 md:px-6">
       <div className="max-w-[960px] mx-auto w-full">
-        <div className="relative overflow-hidden rounded-[24px] bg-[#f6f6f6] min-h-[340px] flex items-center justify-center border-none">
+        <div className="relative overflow-hidden rounded-[24px] bg-[#f6f6f6] min-h-[340px] flex flex-col items-center justify-center border-none">
           
-          {/* Left Vertical List */}
+          {/* Desktop Left Vertical List */}
           <div className="absolute left-8 md:left-12 top-1/2 -translate-y-1/2 hidden lg:block">
-            <VerticalImageList items={LEFT_IMAGES} />
-          </div>
-
-          {/* Right Vertical List */}
-          <div className="absolute right-8 md:right-12 top-1/2 -translate-y-1/2 hidden lg:block">
-            <VerticalImageList items={RIGHT_IMAGES} reverseAnimation />
+            <ImageList items={LEFT_IMAGES} />
           </div>
 
           {/* Center Content Area */}
-          <div className="relative z-10 flex flex-col items-center text-center px-6 py-10 mx-auto max-w-[480px]">
+          <div className="relative z-10 flex flex-col items-center text-center px-6 py-10 sm:py-10 mx-auto max-w-[480px]">
              {/* Rating/Trust Badge */}
-             <div className="flex items-center gap-1.5 mb-6">
-                <span className="text-[#FF8A00] text-base">★</span>
-                <span className="text-[13px] font-bold text-gray-600 tracking-tight">Joined by 1,000+ seekers & solvers worldwide</span>
+             <div className="flex flex-col items-center mb-6">
+                <div className="flex items-center gap-1.5 mb-4">
+                  <span className="text-[#FF8A00] text-base">★</span>
+                  <span className="text-[13px] font-bold text-gray-600 tracking-tight">Joined by 1,000+ seekers & solvers worldwide</span>
+                </div>
+                {/* Mobile Fused Single Strip positioned beneath the badge */}
+                <div className="lg:hidden w-full flex justify-center pb-4">
+                   <ImageList items={MOBILE_IMAGES} horizontal small className="flex-nowrap justify-center" />
+                </div>
              </div>
 
             <h2 className="text-[32px] md:text-[44px] font-black text-[#1A1A1A] leading-[1.1] tracking-tight mb-4" style={{ fontFamily: 'var(--font-expanded)', letterSpacing: '-0.04em' }}>
@@ -89,10 +95,10 @@ export function InterceptBanner() {
               Join us and let the community find<br />exactly what you&apos;re looking for.
             </p>
 
-            <div className="flex flex-col sm:flex-row items-center gap-3 w-full justify-center">
+            <div className="flex flex-row items-center gap-3 w-full justify-center px-2">
               <Button
                 onClick={handlePostRequest}
-                className="w-full sm:w-[160px] h-[52px] rounded-full bg-[#7b3ff2] text-white hover:bg-[#6a34d1] font-bold text-[16px] transition-all active:scale-95 shadow-none"
+                className="flex-1 sm:flex-none sm:w-[160px] h-[52px] rounded-full bg-[#7b3ff2] text-white hover:bg-[#6a34d1] font-bold text-[15px] sm:text-[16px] transition-all active:scale-95 shadow-none"
               >
                 I want
               </Button>
@@ -100,13 +106,18 @@ export function InterceptBanner() {
               <Button
                 variant="outline"
                 onClick={handleStartSelling}
-                className="w-full sm:w-[160px] h-[52px] rounded-full border bg-transparent text-[#7b3ff2] hover:bg-[#7b3ff2]/5 font-bold text-[16px] transition-all active:scale-95 shadow-none"
+                className="flex-1 sm:flex-none sm:w-[160px] h-[52px] rounded-full border bg-transparent text-[#7b3ff2] hover:bg-[#7b3ff2]/5 font-bold text-[15px] sm:text-[16px] transition-all active:scale-95 shadow-none"
                 style={{ borderColor: '#7b3ff2' }}
               >
                 I have
               </Button>
             </div>
           </div>
+
+          <div className="absolute right-8 md:right-12 top-1/2 -translate-y-1/2 hidden lg:block">
+            <ImageList items={RIGHT_IMAGES} reverseAnimation />
+          </div>
+
         </div>
       </div>
     </div>

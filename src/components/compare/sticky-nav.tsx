@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 
 const SECTIONS = [
-  { id: "conflict", label: "01. The Conflict" },
+  { id: "conflict", label: "The Breakdown" },
   { id: "comparison", label: "Feature Comparison" },
   { id: "how-it-works", label: "The Onseek Advantage" },
   { id: "use-cases", label: "Use Cases" },
@@ -42,9 +42,7 @@ export function StickyNav({ accentColor }: StickyNavProps) {
 
   return (
     <aside className="sticky top-24 hidden lg:block h-fit w-64 border-l border-gray-100 pl-6">
-      <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-4 font-semibold">
-        Contents
-      </p>
+
       <nav className="space-y-4">
         {SECTIONS.map((section) => {
           const isActive = activeId === section.id;

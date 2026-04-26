@@ -401,7 +401,7 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
       <div
         className={cn(
           "flex-1 w-full min-w-0 transition-all duration-300 ease-in-out",
-          (!user && pathname === "/") ? "pt-0" : "pt-20",
+          (!user && pathname === "/") ? "pt-0" : "pt-0 md:pt-20",
           user && (expanded ? "md:ml-[240px]" : "md:ml-[72px]")
         )}
       >

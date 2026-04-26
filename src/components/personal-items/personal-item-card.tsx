@@ -43,6 +43,8 @@ import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { createRequestUrl } from "@/lib/utils/slug";
 import Link from "next/link";
 import { AlertCircle, ExternalLink } from "lucide-react";
+import { MobileMenu, MobileMenuItem } from "@/components/ui/mobile-menu";
+
 
 interface PersonalItemCardProps {
   item: PersonalItem & { usageCount?: number };
@@ -165,33 +167,49 @@ export function PersonalItemCard({ item }: PersonalItemCardProps) {
               </div>
             </div>
 
-            {/* Menu */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  type="button"
-                  className="p-1.5 rounded-full hover:bg-gray-100 transition-colors flex-shrink-0"
-                >
-                  <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem
-                  onClick={() => setIsEditDialogOpen(true)}
-                  className="cursor-pointer"
-                >
-                  <Edit className="h-4 w-4 mr-2" />
-                  Edit
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => setIsDeleteDialogOpen(true)}
-                  className="cursor-pointer text-red-600 focus:text-red-600"
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {/* Desktop Menu */}
+            <div className="hidden md:block">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    className="p-1.5 rounded-full hover:bg-gray-100 transition-colors flex-shrink-0"
+                  >
+                    <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    onClick={() => setIsEditDialogOpen(true)}
+                    className="cursor-pointer"
+                  >
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => setIsDeleteDialogOpen(true)}
+                    className="cursor-pointer text-red-600 focus:text-red-600"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+
+            {/* Mobile Menu - Drawer */}
+            <div className="md:hidden">
+              <MobileMenu>
+                <MobileMenuItem onClick={() => setIsEditDialogOpen(true)}>
+                  <Edit className="h-5 w-5 mr-3" />
+                  Edit listing
+                </MobileMenuItem>
+                <MobileMenuItem variant="danger" onClick={() => setIsDeleteDialogOpen(true)}>
+                  <Trash2 className="h-5 w-5 mr-3" />
+                  Delete listing
+                </MobileMenuItem>
+              </MobileMenu>
+            </div>
           </div>
 
           {/* Details Section */}

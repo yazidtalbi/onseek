@@ -171,6 +171,39 @@ export async function getCategoriesAction(): Promise<Category[] | { error: strin
 }
 
 /**
+ * Get categories that have at least one request, ordered by request count
+ */
+export async function getActiveCategoriesAction(limit: number = 20): Promise<string[]> {
+  const supabase = await createServerSupabaseClient();
+
+  // We fetch unique categories from the requests table
+  // Since we want to support both the legacy string category and the new category system,
+  // we'll start with the string categories as they are currently more populated.
+  const { data, error } = await supabase
+    .from("requests")
+    .select("category")
+    .not("category", "is", null);
+
+  if (error) {
+    console.error("Error fetching active categories:", error);
+    return [];
+  }
+
+  const counts: Record<string, number> = {};
+  data.forEach((r: any) => {
+    if (r.category) {
+      counts[r.category] = (counts[r.category] || 0) + 1;
+    }
+  });
+
+  // Sort by count descending
+  return Object.entries(counts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, limit)
+    .map(([cat]) => cat);
+}
+
+/**
  * Get personalized feed with ranking
  */
 type FeedFilters = {

@@ -4,8 +4,25 @@ import Link from "next/link";
 import { IconBrandInstagram } from "@tabler/icons-react";
 import { MAIN_CATEGORIES } from "@/lib/categories";
 import { getCategorySlug } from "@/lib/utils/category-routing";
+import { useState, useEffect } from "react";
+import { getActiveCategoriesAction } from "@/actions/preference.actions";
 
 export function AppFooter() {
+  const [categories, setCategories] = useState<string[]>([]);
+
+  useEffect(() => {
+    async function loadCategories() {
+      const activeCategories = await getActiveCategoriesAction(8);
+      if (activeCategories.length > 0) {
+        setCategories(activeCategories);
+      } else {
+        // Fallback to static categories if none found in DB
+        setCategories([...MAIN_CATEGORIES].slice(0, 8));
+      }
+    }
+    loadCategories();
+  }, []);
+
   return (
     <footer className="bg-[#222234] text-white mt-12 border-t border-white/10">
       <div className="w-full px-6 pt-16 pb-8 md:px-12">
@@ -30,7 +47,7 @@ export function AppFooter() {
           <div className="space-y-6">
             <h4 className="text-sm font-bold uppercase tracking-widest text-white/50" style={{ fontFamily: 'var(--font-expanded)' }}>Categories</h4>
             <nav className="flex flex-col gap-3">
-              {MAIN_CATEGORIES.slice(0, 8).map((category) => (
+              {(categories.length > 0 ? categories : [...MAIN_CATEGORIES].slice(0, 8)).map((category) => (
                 <Link
                   key={category}
                   href={`/category/${getCategorySlug(category)}`}

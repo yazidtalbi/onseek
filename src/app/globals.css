@@ -24,6 +24,10 @@ body {
   --card: transparent;
   --card-foreground: #1a1a1a;
   --ring: rgba(119, 85, 255, 0.2);
+  --font-sans: var(--font-inter-display), system-ui, -apple-system, sans-serif;
+  --font-expanded: 'Zalando Sans SemiExpanded', sans-serif;
+  --font-title: 'Zalando Sans Expanded', sans-serif;
+  --font-emoji: 'Noto Color Emoji', sans-serif;
 }
 
 .dark {
@@ -263,6 +267,10 @@ h6 {
 .simplebar-content-wrapper {
   scrollbar-width: none !important;
   -ms-overflow-style: none !important;
+}
+
+.simplebar-content-wrapper::-webkit-scrollbar {
+  display: none !important;
 }
 
 .simplebar-content-wrapper::-webkit-scrollbar {

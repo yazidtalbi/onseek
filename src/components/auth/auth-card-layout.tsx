@@ -22,7 +22,7 @@ export function AuthCardLayout({
       <div className="absolute top-8 left-8 md:top-12 md:left-12">
         <Link href="/" className="flex items-center gap-3 transition-opacity hover:opacity-80">
           <Image src="/logonseek.svg" alt="Onseek" width={28} height={28} className="h-7 w-auto" priority />
-          <span className="text-xl text-black" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 600 }}>
+          <span className="text-xl text-black" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 700 }}>
             Onseek
           </span>
         </Link>
