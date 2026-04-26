@@ -26,23 +26,15 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const url = request.nextUrl.clone();
-  const hostname = request.headers.get("host");
 
-  // 1. Force non-www domain for SEO consistency
-  if (hostname?.startsWith("www.")) {
-    const newHostname = hostname.replace(/^www\./, "");
-    url.host = newHostname;
-    return NextResponse.redirect(url, 301);
-  }
-
-  // 2. Redirect legacy /category routes to new /[category] format
+  // 1. Redirect legacy /category routes to new /[category] format
   if (url.pathname.startsWith("/category/")) {
     const categorySlug = url.pathname.replace("/category/", "");
     url.pathname = `/${categorySlug}`;
     return NextResponse.redirect(url, 301);
   }
 
-  // 3. Resolve /legal 404 by redirecting to /terms
+  // 2. Resolve /legal 404 by redirecting to /terms
   if (url.pathname === "/legal") {
     url.pathname = "/terms";
     return NextResponse.redirect(url, 301);
@@ -74,6 +66,15 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/", "/app/:path*", "/login", "/signup", "/tags/:path*", "/requests/:path*"],
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - public files (images, etc)
+     */
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+  ],
 };
 
