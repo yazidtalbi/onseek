@@ -48,7 +48,7 @@ export function PublicFooter() {
               <ul className="grid grid-cols-1 gap-4">
                 {MAIN_CATEGORIES.slice(0, 12).map((category) => (
                   <li key={category}>
-                    <Link href={`/category/${getCategorySlug(category)}`} className="text-white hover:text-white/80 transition-colors text-sm font-semibold">
+                    <Link href={`/${getCategorySlug(category)}`} className="text-white hover:text-white/80 transition-colors text-sm font-semibold">
                       {category}
                     </Link>
                   </li>

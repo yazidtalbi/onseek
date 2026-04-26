@@ -40,13 +40,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     title,
     description: competitor.metaDescription,
     alternates: {
-      canonical: `https://onseek.co/compare/onseek-vs-${slug}`,
+      canonical: `https://onseek.co/compare/${slug}`,
     },
     openGraph: {
       title,
       description: competitor.metaDescription,
       type: "website",
-      url: `https://onseek.co/compare/onseek-vs-${slug}`,
+      url: `https://onseek.co/compare/${slug}`,
     },
     twitter: {
       card: "summary_large_image",

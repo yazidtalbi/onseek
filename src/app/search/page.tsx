@@ -6,6 +6,15 @@ import { AppFooter } from "@/components/layout/app-footer";
 import { AuthProvider } from "@/components/layout/auth-provider";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Search Requests — Onseek",
+  robots: {
+    index: false,
+    follow: true,
+  },
+};
 
 export const dynamic = "force-dynamic";
 

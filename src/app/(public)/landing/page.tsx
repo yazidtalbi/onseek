@@ -9,6 +9,13 @@ import { PromotionalSidebar } from "@/components/requests/promotional-sidebar";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
 import { Suspense } from "react";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  alternates: {
+    canonical: "https://onseek.co/landing",
+  },
+};
 
 // Default fallback content
 const defaultContent = {

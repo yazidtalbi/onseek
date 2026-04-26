@@ -4,6 +4,13 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { PersonalizedFeed } from "@/components/requests/personalized-feed";
 import { fetchInitialFeedData } from "@/lib/feed";
 import type { FeedMode } from "@/lib/types";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  alternates: {
+    canonical: "https://onseek.co",
+  },
+};
 
 export const dynamic = "force-dynamic";
 

@@ -17,6 +17,9 @@ export async function generateMetadata(props: {
   return {
     title: `${categoryName} — Onseek`,
     description: `Explore the latest requests and submissions in the ${categoryName} category on Onseek.`,
+    alternates: {
+      canonical: `https://onseek.co/${slug}`,
+    },
   };
 }
 

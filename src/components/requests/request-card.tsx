@@ -92,7 +92,7 @@ function getTheme(category: string) {
   if (c.includes("family") || c.includes("kids") || c.includes("baby"))
     return { bg: "bg-pink-50/60", text: "text-pink-900", border: "border-pink-900", ring: "ring-pink-900", borderLight: "border-pink-300", icon: Baby };
 
-  if (c.includes("home") || c.living || c.includes("garden"))
+  if (c.includes("home") || c.includes("living") || c.includes("garden"))
     return { bg: "bg-orange-50/60", text: "text-orange-900", border: "border-orange-900", ring: "ring-orange-900", borderLight: "border-orange-300", icon: IconHome };
 
   if (c.includes("gaming") || c.includes("console") || c.includes("entertainment"))
@@ -119,6 +119,14 @@ interface RequestCardProps {
   currentUserId?: string | null;
   proposalCount?: number;
   smallImages?: boolean;
+  isMasonry?: boolean;
+  isFirst?: boolean;
+  isLast?: boolean;
+  priority?: boolean;
+  hideAuthOverlay?: boolean;
+  isLarge?: boolean;
+  hideTags?: boolean;
+  showAllRequirements?: boolean;
   isPreview?: boolean;
   noBorder?: boolean;
   disableHover?: boolean;
@@ -136,6 +144,14 @@ function RequestCardComponent({
   currentUserId,
   proposalCount,
   smallImages = false,
+  isMasonry = false,
+  isFirst = false,
+  isLast = false,
+  priority = false,
+  hideAuthOverlay = false,
+  isLarge = false,
+  hideTags = false,
+  showAllRequirements = false,
   isPreview = false,
   noBorder = false,
   disableHover = false,

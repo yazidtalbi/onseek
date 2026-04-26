@@ -25,6 +25,29 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  const url = request.nextUrl.clone();
+  const hostname = request.headers.get("host");
+
+  // 1. Force non-www domain for SEO consistency
+  if (hostname?.startsWith("www.")) {
+    const newHostname = hostname.replace(/^www\./, "");
+    url.host = newHostname;
+    return NextResponse.redirect(url, 301);
+  }
+
+  // 2. Redirect legacy /category routes to new /[category] format
+  if (url.pathname.startsWith("/category/")) {
+    const categorySlug = url.pathname.replace("/category/", "");
+    url.pathname = `/${categorySlug}`;
+    return NextResponse.redirect(url, 301);
+  }
+
+  // 3. Resolve /legal 404 by redirecting to /terms
+  if (url.pathname === "/legal") {
+    url.pathname = "/terms";
+    return NextResponse.redirect(url, 301);
+  }
+
   // Allow guests to access /app routes, but protect specific actions
   // Only redirect to login for protected routes like /app/settings, /app/submissions, etc.
   const protectedPaths = ["/app/settings", "/app/submissions", "/app/new", "/app/profile"];

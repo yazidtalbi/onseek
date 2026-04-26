@@ -32,6 +32,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     '/foundation',
     '/desktop',
     '/landing',
+    '/feedback',
+    '/privacy/choices',
+    '/privacy/california',
+    '/leaderboard',
+    '/requests',
+    '/listings',
   ].map((route) => ({
     url: `${SITE_URL}${route}`,
     lastModified: new Date(),
@@ -43,6 +49,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const categoryRoutes: MetadataRoute.Sitemap = [];
   CATEGORIES.forEach((category) => {
     const slug = getCategorySlug(category);
+    if (!slug) return;
     
     // Core category page
     categoryRoutes.push({
@@ -74,13 +81,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     .from('requests')
     .select('id, slug, category, updated_at')
     .eq('status', 'open')
+    .not('slug', 'is', null) // Only include items with slugs for SEO
     .limit(1000); 
 
   const requestRoutes: MetadataRoute.Sitemap = (requests || []).map((req) => {
     const categorySlug = req.category ? getCategorySlug(req.category) : 'all';
     const shortId = getShortId(req.id);
+    // Use the canonical format from slug.ts
+    const url = req.slug 
+      ? `${SITE_URL}/${categorySlug}/${req.slug}-${shortId}`
+      : `${SITE_URL}/requests/${req.id}`;
+
     return {
-      url: `${SITE_URL}/${categorySlug}/${req.slug}-${shortId}`,
+      url,
       lastModified: new Date(req.updated_at),
       changeFrequency: 'daily',
       priority: 0.9,
@@ -117,6 +130,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }));
 
+  // 7. Dynamic Tag Routes
+  const { data: tags } = await supabase
+    .from('tags')
+    .select('slug, updated_at');
+
+  const tagRoutes: MetadataRoute.Sitemap = (tags || []).map((tag) => ({
+    url: `${SITE_URL}/tags/${tag.slug}`,
+    lastModified: new Date(tag.updated_at || new Date()),
+    changeFrequency: 'weekly',
+    priority: 0.6,
+  }));
+
   return [
     ...staticRoutes,
     ...categoryRoutes,
@@ -124,5 +149,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...comparisonRoutes,
     ...profileRoutes,
     ...lookingForRoutes,
+    ...tagRoutes,
   ];
 }

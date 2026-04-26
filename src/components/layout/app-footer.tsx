@@ -50,7 +50,7 @@ export function AppFooter() {
               {(categories.length > 0 ? categories : [...MAIN_CATEGORIES].slice(0, 8)).map((category) => (
                 <Link
                   key={category}
-                  href={`/category/${getCategorySlug(category)}`}
+                  href={`/${getCategorySlug(category)}`}
                   className="text-sm text-gray-400 hover:text-white transition-colors"
                 >
                   {category}
