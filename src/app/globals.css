@@ -207,6 +207,21 @@ h6 {
   background: #e5e7eb;
 }
 
+/* Light Scrollbar - Faint but always visible */
+.scrollbar-light::-webkit-scrollbar {
+  width: 4px;
+}
+.scrollbar-light::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar-light::-webkit-scrollbar-thumb {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+.scrollbar-light::-webkit-scrollbar-thumb:hover {
+  background: #e5e7eb;
+}
+
 /* Hide scrollbar but keep functionality */
 .scrollbar-hide {
   -ms-overflow-style: none;

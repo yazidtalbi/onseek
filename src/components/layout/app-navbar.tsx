@@ -256,6 +256,79 @@ function MobileCountrySelector({ onSelect }: { onSelect: () => void }) {
   );
 }
 
+const LiveStats = React.memo(function LiveStats() {
+  const [stats, setStats] = useState({ usersActive: 122, seekersToday: 842 });
+  const jitterTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    const calculateStats = () => {
+      const now = new Date();
+      const h = now.getHours();
+      const m = now.getMinutes();
+      const decimalHour = h + m / 60;
+      
+      const intensity = (Math.cos((decimalHour - 18) * Math.PI / 12) + 1) / 2;
+      // Range: 12 to 28
+      const baseUsers = 12 + Math.floor(intensity * 16);
+      
+      const today = now.toISOString().split('T')[0];
+      const seed = today.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+      // Range: 210 to 270
+      const dailySeekers = 210 + (seed % 60);
+
+      return {
+        usersActive: baseUsers,
+        seekersToday: dailySeekers
+      };
+    };
+
+    setStats(calculateStats());
+
+    const scheduleJitter = () => {
+      const delay = Math.floor(Math.random() * (20000 - 2000 + 1)) + 2000; // 2s to 20s
+      jitterTimeoutRef.current = setTimeout(() => {
+        setStats(prev => ({
+          ...prev,
+          usersActive: Math.max(10, prev.usersActive + (Math.random() > 0.5 ? 1 : -1))
+        }));
+        jitterTimeoutRef.current = scheduleJitter();
+      }, delay);
+      return jitterTimeoutRef.current;
+    };
+
+    jitterTimeoutRef.current = scheduleJitter();
+
+    const baseInterval = setInterval(() => {
+      const newStats = calculateStats();
+      setStats(prev => ({
+        ...newStats,
+        usersActive: newStats.usersActive
+      }));
+    }, 60000);
+
+    return () => {
+      if (jitterTimeoutRef.current) clearTimeout(jitterTimeoutRef.current);
+      clearInterval(baseInterval);
+    };
+  }, []);
+
+  return (
+    <div className="hidden lg:flex items-center ml-4">
+      <div className="w-px h-3.5 bg-[#E5E7EB]" />
+      <div className="flex items-baseline gap-1.5 ml-4 text-[13px] font-medium tracking-tight">
+        <div className="w-1.5 h-1.5 rounded-full bg-[#00FF9C] shadow-[0_0_8px_rgba(0,255,156,0.4)] animate-pulse mb-[-1px]" />
+        <div className="flex items-center gap-1.5 text-neutral-500">
+          <span className="font-mono text-neutral-900 font-bold">{stats.usersActive.toLocaleString()}</span>
+          <span>online</span>
+          <span className="text-neutral-300 mx-0.5">•</span>
+          <span className="font-mono text-neutral-900 font-bold">{stats.seekersToday.toLocaleString()}</span>
+          <span>seekers today</span>
+        </div>
+      </div>
+    </div>
+  );
+});
+
 export function AppNavbar({
   hideSearch = false,
   minimal = false,
@@ -290,59 +363,7 @@ export function AppNavbar({
   const [mounted, setMounted] = useState(false);
   const [isHeroOpen, setIsHeroOpen] = useState(false);
   const [isLandingModalOpen, setIsLandingModalOpen] = useState(false);
-  const [stats, setStats] = useState({ usersActive: 122, seekersToday: 842 });
-  const jitterTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  useEffect(() => {
-    const calculateStats = () => {
-      const now = new Date();
-      const h = now.getHours();
-      const m = now.getMinutes();
-      const decimalHour = h + m / 60;
-      
-      const intensity = (Math.cos((decimalHour - 18) * Math.PI / 12) + 1) / 2;
-      const baseUsers = 48 + Math.floor(intensity * 112);
-      
-      const today = now.toISOString().split('T')[0];
-      const seed = today.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-      // Increased variance for seekers: 700 to 1300
-      const dailySeekers = 700 + (seed % 600);
-
-      return {
-        usersActive: baseUsers,
-        seekersToday: dailySeekers
-      };
-    };
-
-    setStats(calculateStats());
-
-    const scheduleJitter = () => {
-      const delay = Math.floor(Math.random() * (20000 - 2000 + 1)) + 2000; // 2s to 20s
-      jitterTimeoutRef.current = setTimeout(() => {
-        setStats(prev => ({
-          ...prev,
-          usersActive: Math.max(40, prev.usersActive + (Math.random() > 0.5 ? 1 : -1))
-        }));
-        jitterTimeoutRef.current = scheduleJitter();
-      }, delay);
-      return jitterTimeoutRef.current;
-    };
-
-    jitterTimeoutRef.current = scheduleJitter();
-
-    const baseInterval = setInterval(() => {
-      const newStats = calculateStats();
-      setStats(prev => ({
-        ...newStats,
-        usersActive: newStats.usersActive
-      }));
-    }, 60000);
-
-    return () => {
-      if (jitterTimeoutRef.current) clearTimeout(jitterTimeoutRef.current);
-      clearInterval(baseInterval);
-    };
-  }, []);
 
   useEffect(() => {
     setMounted(true);
@@ -564,7 +585,7 @@ export function AppNavbar({
 
     return (
       <header className={cn(
-        "fixed top-0 left-0 right-0 z-50 w-full transition-all duration-300 h-auto",
+        "fixed top-0 left-0 right-0 z-[1000] w-full transition-all duration-300 h-auto",
         isScrolled ? "bg-white" : "bg-transparent",
       )}>
       {/* Mobile Navbar Container */}
@@ -681,19 +702,7 @@ export function AppNavbar({
             </Link>
 
             {/* Live Stats Section */}
-            <div className="hidden lg:flex items-center ml-4">
-              <div className="w-px h-3.5 bg-[#E5E7EB]" />
-              <div className="flex items-baseline gap-1.5 ml-4 text-[13px] font-medium tracking-tight">
-                <div className="w-1.5 h-1.5 rounded-full bg-[#00FF9C] shadow-[0_0_8px_rgba(0,255,156,0.4)] animate-pulse mb-[-1px]" />
-                <div className="flex items-center gap-1.5 text-neutral-500">
-                  <span className="font-mono text-neutral-900 font-bold">{stats.usersActive.toLocaleString()}</span>
-                  <span>online</span>
-                  <span className="text-neutral-300 mx-0.5">•</span>
-                  <span className="font-mono text-neutral-900 font-bold">{stats.seekersToday.toLocaleString()}</span>
-                  <span>seekers today</span>
-                </div>
-              </div>
-            </div>
+            <LiveStats />
           </div>
           <div className="w-[24px] shrink-0" />
         </div>
@@ -902,6 +911,20 @@ export function AppNavbar({
         open={isLandingModalOpen} 
         onOpenChange={setIsLandingModalOpen} 
       />
+
+      <CreateRequestModal 
+        open={isCreateModalOpen} 
+        onOpenChange={setIsCreateModalOpen} 
+      />
+
+      {isAIModalOpen && (
+        <AIRequestFlow
+          initialText={aiInitialText}
+          onClose={() => setIsAIModalOpen(false)}
+          user={user}
+          profile={profile}
+        />
+      )}
     </header>
   );
 }

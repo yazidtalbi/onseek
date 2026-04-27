@@ -7,7 +7,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 interface SendEmailOptions {
   to: string;
   subject: string;
-  templateName: 'request_published.html' | 'proposal_received.html' | 'partner_welcome.html';
+  templateName: 'request_published.html' | 'proposal_received.html' | 'partner_welcome.html' | 'user_welcome.html';
   placeholders: Record<string, string>;
 }
 
@@ -45,15 +45,30 @@ export async function sendEmail({ to, subject, templateName, placeholders }: Sen
 /**
  * Convenience function for 'Request Published' email
  */
-export async function sendRequestPublishedEmail(to: string, data: { category: string; budget: string; timeline: string }) {
+export async function sendRequestPublishedEmail(to: string, data: { title: string; category: string; budget: string; condition: string }) {
+  const getConditionLabel = (category: string) => {
+    const service = ["Services", "Learning", "Health"];
+    const property = ["Property"];
+    const digital = ["Digital", "Culture", "Finance"];
+    const experience = ["Travel", "Experiences", "Family"];
+
+    if (service.includes(category)) return "Expertise";
+    if (property.includes(category)) return "Occupancy";
+    if (digital.includes(category)) return "Rights";
+    if (experience.includes(category)) return "Tier";
+    return "Condition";
+  };
+
   return sendEmail({
     to,
     subject: 'Your request is live on Onseek',
     templateName: 'request_published.html',
     placeholders: {
+      title: data.title,
       category: data.category,
       budget: data.budget,
-      timeline: data.timeline,
+      condition: data.condition,
+      conditionLabel: getConditionLabel(data.category),
     },
   });
 }
@@ -61,12 +76,13 @@ export async function sendRequestPublishedEmail(to: string, data: { category: st
 /**
  * Convenience function for 'Proposal Received' email
  */
-export async function sendProposalReceivedEmail(to: string, data: { price: string; url: string }) {
+export async function sendProposalReceivedEmail(to: string, data: { title: string; price: string; url: string }) {
   return sendEmail({
     to,
     subject: 'New proposal for your request',
     templateName: 'proposal_received.html',
     placeholders: {
+      title: data.title,
       price: data.price,
       url: data.url,
     },
@@ -81,6 +97,17 @@ export async function sendPartnerWelcomeEmail(to: string) {
     to,
     subject: 'Welcome to the Onseek network',
     templateName: 'partner_welcome.html',
+    placeholders: {},
+  });
+}
+/**
+ * Convenience function for 'User Welcome' email
+ */
+export async function sendWelcomeEmail(to: string) {
+  return sendEmail({
+    to,
+    subject: 'Welcome to Onseek: The hunt is on.',
+    templateName: 'user_welcome.html',
     placeholders: {},
   });
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -13,11 +14,7 @@ interface PublicNavbarProps {
   disableHide?: boolean;
 }
 
-export function PublicNavbar({ disableHide = false }: PublicNavbarProps) {
-  const { theme, toggleTheme } = useTheme();
-  const [isVisible, setIsVisible] = useState(true);
-  const [isScrolled, setIsScrolled] = useState(false);
-   const [lastScrollY, setLastScrollY] = useState(0);
+const LiveStats = React.memo(function LiveStats() {
   const [stats, setStats] = useState({ usersActive: 122, seekersToday: 842 });
   const jitterTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -29,12 +26,13 @@ export function PublicNavbar({ disableHide = false }: PublicNavbarProps) {
       const decimalHour = h + m / 60;
       
       const intensity = (Math.cos((decimalHour - 18) * Math.PI / 12) + 1) / 2;
-      const baseUsers = 48 + Math.floor(intensity * 112);
+      // Range: 12 to 28
+      const baseUsers = 12 + Math.floor(intensity * 16);
       
       const today = now.toISOString().split('T')[0];
       const seed = today.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-      // Increased variance for seekers: 700 to 1300
-      const dailySeekers = 700 + (seed % 600);
+      // Range: 210 to 270
+      const dailySeekers = 210 + (seed % 60);
 
       return {
         usersActive: baseUsers,
@@ -72,6 +70,29 @@ export function PublicNavbar({ disableHide = false }: PublicNavbarProps) {
     };
   }, []);
 
+  return (
+    <div className="hidden lg:flex items-center ml-4 mr-auto">
+      <div className="w-px h-3.5 bg-[#E5E7EB]" />
+      <div className="flex items-baseline gap-1.5 ml-4 text-[13px] font-medium tracking-tight">
+        <div className="w-1.5 h-1.5 rounded-full bg-[#00FF9C] shadow-[0_0_8px_rgba(0,255,156,0.4)] animate-pulse mb-[-1px]" />
+        <div className="flex items-center gap-1.5 text-neutral-500">
+          <span className="font-mono text-neutral-900 font-bold">{stats.usersActive.toLocaleString()}</span>
+          <span>online</span>
+          <span className="text-neutral-300 mx-0.5">•</span>
+          <span className="font-mono text-neutral-900 font-bold">{stats.seekersToday.toLocaleString()}</span>
+          <span>seekers today</span>
+        </div>
+      </div>
+    </div>
+  );
+});
+
+export function PublicNavbar({ disableHide = false }: PublicNavbarProps) {
+  const { theme, toggleTheme } = useTheme();
+  const [isVisible, setIsVisible] = useState(true);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [lastScrollY, setLastScrollY] = useState(0);
+
   useEffect(() => {
     const controlNavbar = () => {
       if (typeof window !== 'undefined') {
@@ -108,20 +129,7 @@ export function PublicNavbar({ disableHide = false }: PublicNavbarProps) {
           <span className="text-xl text-black" style={{ fontFamily: 'var(--font-expanded)', fontWeight: 700 }}>Onseek</span>
         </Link>
 
-        {/* Live Stats Section */}
-        <div className="hidden lg:flex items-center ml-4 mr-auto">
-          <div className="w-px h-3.5 bg-[#E5E7EB]" />
-          <div className="flex items-baseline gap-1.5 ml-4 text-[13px] font-medium tracking-tight">
-            <div className="w-1.5 h-1.5 rounded-full bg-[#00FF9C] shadow-[0_0_8px_rgba(0,255,156,0.4)] animate-pulse mb-[-1px]" />
-            <div className="flex items-center gap-1.5 text-neutral-500">
-              <span className="font-mono text-neutral-900 font-bold">{stats.usersActive.toLocaleString()}</span>
-              <span>online</span>
-              <span className="text-neutral-300 mx-0.5">•</span>
-              <span className="font-mono text-neutral-900 font-bold">{stats.seekersToday.toLocaleString()}</span>
-              <span>seekers today</span>
-            </div>
-          </div>
-        </div>
+        <LiveStats />
         <div className="flex items-center gap-3">
           <Link href="/login" className="text-sm font-semibold text-foreground">
             Log in

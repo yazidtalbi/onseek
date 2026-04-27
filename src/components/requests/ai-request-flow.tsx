@@ -86,6 +86,42 @@ function DraggableRequirementItem({ item, onBlur, onDelete, isPreference }: Drag
   );
 }
 
+function InputArea({ initialValue, onChange }: { initialValue: string, onChange: (val: string) => void }) {
+  const [localValue, setLocalValue] = React.useState(initialValue);
+  const timeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const val = e.target.value;
+    setLocalValue(val);
+    
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => {
+      onChange(val);
+    }, 100);
+  };
+
+  React.useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, []);
+
+  return (
+    <div className="relative group">
+      <textarea
+        autoFocus
+        placeholder="Example: I'm looking for a vintage Rolex Submariner from the 80s, ideally with original papers. My budget is around $12,000. Must be in excellent condition."
+        className="w-full min-h-[160px] p-8 bg-white border-2 border-gray-100 rounded-2xl text-lg sm:text-xl font-medium focus:border-[#6925DC] outline-none resize-none transition-all placeholder:text-gray-300 shadow-sm"
+        value={localValue}
+        onChange={handleChange}
+      />
+      <div className="absolute bottom-6 right-8 text-[11px] font-medium text-gray-400">
+        {localValue.trim().length} characters
+      </div>
+    </div>
+  );
+}
+
 export function AIRequestFlow({ initialText, onClose, user, profile }: AIRequestFlowProps) {
   const STORAGE_KEY = "onseek_ai_draft";
 
@@ -599,18 +635,10 @@ export function AIRequestFlow({ initialText, onClose, user, profile }: AIRequest
               </div>
 
               <div className="space-y-6">
-                <div className="relative group">
-                  <textarea
-                    autoFocus
-                    placeholder="Example: I'm looking for a vintage Rolex Submariner from the 80s, ideally with original papers. My budget is around $12,000. Must be in excellent condition."
-                    className="w-full min-h-[160px] p-8 bg-white border-2 border-gray-100 rounded-2xl text-lg sm:text-xl font-medium focus:border-[#6925DC] outline-none resize-none transition-all placeholder:text-gray-300 shadow-sm"
-                    value={inputText}
-                    onChange={(e) => setInputText(e.target.value)}
-                  />
-                  <div className="absolute bottom-6 right-8 text-[11px] font-medium text-gray-400">
-                    {inputText.trim().length} characters
-                  </div>
-                </div>
+                <InputArea
+                  initialValue={inputText}
+                  onChange={setInputText}
+                />
 
                 <div className="flex flex-col items-center gap-6">
                   <Button
@@ -1420,10 +1448,10 @@ function DictionaryHighlight({ text }: { text: string }) {
               initial={{ width: 0 }}
               animate={{ width: i === activeIndex ? '100%' : i < activeIndex ? '100%' : '0%' }}
               transition={{ duration: 0.2 }}
-              className={cn(
-                "absolute bottom-0.5 left-0 h-4 -z-10 rounded-sm",
-                i % 3 === 0 ? "bg-orange-200/60" : "bg-indigo-200/60"
-              )}
+              className="absolute bottom-0.5 left-0 h-4 -z-10 rounded-sm"
+              style={{
+                backgroundColor: i % 2 === 0 ? 'rgba(104, 37, 218, 0.25)' : 'rgba(255, 79, 39, 0.25)'
+              }}
             />
             <span className={cn(
               "transition-colors duration-200",
@@ -1435,8 +1463,8 @@ function DictionaryHighlight({ text }: { text: string }) {
         ))}
       </motion.div>
 
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2.5 text-[15px] font-bold text-black z-20 whitespace-nowrap bg-white px-6 py-3 rounded-full border border-gray-100 shadow-sm">
-        <Loader2 className="w-4 h-4 animate-spin text-[#6925DC]" />
+      <div className="absolute top-6 left-1/2 -translate-x-1/2 flex items-center gap-2.5 text-[15px] font-bold text-black z-20 whitespace-nowrap bg-white px-6 py-3 rounded-full border border-gray-100 shadow-sm">
+        <Loader2 className="w-4 h-4 animate-spin text-[#6825da]" />
         <span>Analyzing request...</span>
       </div>
     </div>

@@ -36,7 +36,9 @@ export function SubmissionForm({
   requestDescription,
   hideButton = false,
   requestPreferences = [],
-  requestDealbreakers = []
+  requestDealbreakers = [],
+  open,
+  onOpenChange,
 }: {
   requestId: string;
   requestBudgetMax?: number | null;
@@ -44,11 +46,16 @@ export function SubmissionForm({
   hideButton?: boolean;
   requestPreferences?: any[];
   requestDealbreakers?: any[];
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) {
   const router = useRouter();
   const { toast } = useToast();
   const { user, profile } = useAuth();
-  const [isExpanded, setIsExpanded] = React.useState(false);
+  const [internalOpen, setInternalOpen] = React.useState(false);
+  const isExpanded = open !== undefined ? open : internalOpen;
+  const setIsExpanded = onOpenChange !== undefined ? onOpenChange : setInternalOpen;
+
   const [error, setError] = React.useState<string | null>(null);
   const [isPending, startTransition] = React.useTransition();
   const [isLoadingPreview, setIsLoadingPreview] = React.useState(false);
@@ -65,6 +72,7 @@ export function SubmissionForm({
   const [metCriteria, setMetCriteria] = React.useState<string[]>([]);
   const form = useForm<Values>({
     resolver: zodResolver(submissionSchema) as any,
+    mode: "onBlur",
     defaultValues: {
       submissionType: "link",
       url: "",

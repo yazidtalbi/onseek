@@ -4,67 +4,124 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Your request is live on Onseek</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+        
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #ffffff;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            color: #1A1A1A;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .h1 {
+            font-size: 48px;
+            font-weight: 900;
+            line-height: 0.95;
+            letter-spacing: -0.04em;
+            color: #1A1A1A;
+            margin: 0 0 24px 0;
+        }
+
+        @media only screen and (max-width: 600px) {
+            .h1 {
+                font-size: 36px !important;
+            }
+            .content-padding {
+                padding: 24px 20px !important;
+            }
+        }
+    </style>
 </head>
-<body style="margin: 0; padding: 0; background-color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #000000; -webkit-font-smoothing: antialiased;">
+<body style="margin: 0; padding: 0; background-color: #ffffff; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1A1A1A;">
     <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #ffffff;">
         <tr>
-            <td align="center" style="padding: 40px 20px;">
-                <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; border-collapse: separate;">
+            <td align="center" class="content-padding" style="padding: 60px 40px;">
+                <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px;">
                     <tr>
-                        <td style="padding: 40px 0;">
-                            <!-- Header/Logo Area -->
+                        <td align="left" style="padding-bottom: 60px;">
+                            <table border="0" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td style="vertical-align: middle;">
+                                        <img src="https://onseek.co/logonseek.svg" alt="Onseek" width="32" style="display: block; border: 0;">
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Hero Title -->
+                    <tr>
+                        <td align="left">
+                            <h1 class="h1">
+                                Your request <br>is live. 📦
+                            </h1>
+                            <p style="font-size: 19px; line-height: 1.5; color: #6B7280; margin: 0 0 40px 0; font-weight: 500; letter-spacing: -0.01em;">
+                                Our system is now searching for the best matches among our dealership network. You'll get a notification the moment someone makes a proposal.
+                            </p>
+                        </td>
+                    </tr>
+
+                    <!-- Request Details Card -->
+                    <tr>
+                        <td align="left">
+                            <div style="background-color: #F5F3FF; border-radius: 24px; padding: 32px; margin-bottom: 48px;">
+                                <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                                    <tr>
+                                        <td>
+                                            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                                                <tr>
+                                                    <td style="padding-bottom: 8px;">
+                                                        <span style="font-size: 11px; font-weight: 800; color: #7755FF; text-transform: uppercase; letter-spacing: 0.08em; background-color: rgba(119, 85, 255, 0.1); padding: 4px 8px; border-radius: 4px;">
+                                                            [category]
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td style="font-size: 12px; font-weight: 800; color: #7755FF; text-transform: uppercase; letter-spacing: 0.1em; padding-bottom: 16px; padding-top: 16px;">
+                                                        Request Summary
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td style="font-size: 24px; font-weight: 700; color: #1A1A1A; line-height: 1.2; padding-bottom: 24px; letter-spacing: -0.02em;">
+                                                        [title]
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                            
+                                            <!-- Stats Grid -->
+                                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-top: 12px;">
+                                                <tr>
+                                                    <td width="50%" style="padding-top: 16px; border-top: 1px solid rgba(119, 85, 255, 0.1); border-right: 1px solid rgba(119, 85, 255, 0.1);">
+                                                        <div style="font-weight: 800; color: #1A1A1A; font-size: 18px; letter-spacing: -0.01em;">[condition]</div>
+                                                        <div style="font-size: 11px; color: #7755FF; opacity: 0.6; font-weight: 800; text-transform: uppercase; margin-top: 4px; letter-spacing: 0.05em;">[conditionLabel]</div>
+                                                    </td>
+                                                    <td width="50%" style="padding-top: 16px; border-top: 1px solid rgba(119, 85, 255, 0.1); padding-left: 24px;">
+                                                        <div style="font-weight: 800; color: #1A1A1A; font-size: 18px; letter-spacing: -0.01em;">[budget]</div>
+                                                        <div style="font-size: 11px; color: #7755FF; opacity: 0.6; font-weight: 800; text-transform: uppercase; margin-top: 4px; letter-spacing: 0.05em;">Budget</div>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- CTA -->
+                    <tr>
+                        <td align="left" style="padding-bottom: 80px;">
                             <table border="0" cellpadding="0" cellspacing="0" width="100%">
                                 <tr>
-                                    <td style="font-size: 24px; font-weight: bold; padding-bottom: 24px; letter-spacing: -0.5px; color: #6925dc;">
-                                        onseek
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td style="font-size: 32px; line-height: 1.2; font-weight: bold; padding-bottom: 24px; letter-spacing: -1px;">
-                                        Your request is live on Onseek. 📦
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td style="font-size: 16px; line-height: 1.6; padding-bottom: 32px; color: #000000;">
-                                        We've processed your request using our AI extraction. Our system is now searching for the best matches among our dealership network and private sellers. You'll get a notification the moment someone makes a proposal.
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td style="padding-bottom: 32px;">
-                                        <!-- Data Block -->
-                                        <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f9f9f9; border-radius: 16px; border-collapse: separate;">
-                                            <tr>
-                                                <td style="padding: 24px;">
-                                                    <table border="0" cellpadding="0" cellspacing="0" width="100%">
-                                                        <tr>
-                                                            <td style="font-size: 14px; padding-bottom: 12px; color: #000000; font-weight: 500;">
-                                                                🏷️ Category: [category]
-                                                            </td>
-                                                        </tr>
-                                                        <tr>
-                                                            <td style="font-size: 14px; padding-bottom: 12px; color: #000000; font-weight: 500;">
-                                                                💰 Budget: [budget]
-                                                            </td>
-                                                        </tr>
-                                                        <tr>
-                                                            <td style="font-size: 14px; color: #000000; font-weight: 500;">
-                                                                📍 Timeline: [timeline]
-                                                            </td>
-                                                        </tr>
-                                                    </table>
-                                                </td>
-                                            </tr>
-                                        </table>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td style="padding-bottom: 40px;">
-                                        <!-- CTA Button -->
+                                    <td align="left">
                                         <table border="0" cellpadding="0" cellspacing="0">
                                             <tr>
-                                                <td align="center" bgcolor="#6925dc" style="border-radius: 9999px;">
-                                                    <a href="#" target="_blank" style="display: inline-block; padding: 14px 32px; font-size: 16px; font-weight: bold; color: #ffffff; text-decoration: none; border-radius: 9999px;">
-                                                        View your live request
+                                                <td align="center" bgcolor="#7755FF" style="border-radius: 9999px;">
+                                                    <a href="https://onseek.co/dashboard" target="_blank" style="display: inline-block; padding: 20px 40px; font-size: 16px; font-weight: 800; color: #ffffff; text-decoration: none; border-radius: 9999px; letter-spacing: -0.01em;">
+                                                        View live request
                                                     </a>
                                                 </td>
                                             </tr>
@@ -74,15 +131,16 @@
                             </table>
                         </td>
                     </tr>
-                </table>
-                <!-- Footer Area -->
-                <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px;">
+
+                    <!-- Footer -->
                     <tr>
-                        <td style="padding-top: 24px; font-size: 12px; color: #999999; text-align: center; line-height: 1.5;">
-                            &copy; 2026 Onseek. All rights reserved.<br>
-                            <span style="font-size: 11px; color: #cccccc;">
-                                stop receiving these emails. <a href="#" style="color: #cccccc; text-decoration: underline;">unsubscribe</a>.
-                            </span>
+                        <td align="center" style="padding-top: 48px; border-top: 1px solid #F3F4F6;">
+                            <p style="font-size: 12px; color: #9CA3AF; margin: 0 0 12px 0; font-weight: 500;">
+                                &copy; 2026 Onseek. All rights reserved.
+                            </p>
+                            <p style="font-size: 11px; color: #D1D5DB; margin: 0;">
+                                stop receiving these emails. <a href="#" style="color: #D1D5DB; text-decoration: underline;">unsubscribe</a>.
+                            </p>
                         </td>
                     </tr>
                 </table>

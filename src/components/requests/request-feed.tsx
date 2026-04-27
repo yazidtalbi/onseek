@@ -9,6 +9,7 @@ import { RequestCard } from "@/components/requests/request-card";
 import { Button } from "@/components/ui/button";
 import { LayoutList, Grid3x3, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/use-auth";
 
 type Filters = {
   category?: string | null;
@@ -48,6 +49,7 @@ export function RequestFeed({
   const router = useRouter();
   const searchParams = useSearchParams();
   const currentPage = page;
+  const { user } = useAuth();
 
   // Use external viewMode if provided, otherwise manage internally
   const [internalViewMode, setInternalViewMode] = useState<"list" | "grid">(() => {
@@ -61,6 +63,22 @@ export function RequestFeed({
 
   const viewMode = externalViewMode ?? internalViewMode;
   const setViewMode = onViewModeChange ?? setInternalViewMode;
+
+  const [columnCount, setColumnCount] = useState(3);
+
+  useEffect(() => {
+    const updateColumnCount = () => {
+      const width = window.innerWidth;
+      if (width >= 2000) setColumnCount(5);
+      else if (width >= 1600) setColumnCount(4);
+      else if (width >= 768) setColumnCount(3);
+      else setColumnCount(1);
+    };
+
+    updateColumnCount();
+    window.addEventListener('resize', updateColumnCount);
+    return () => window.removeEventListener('resize', updateColumnCount);
+  }, []);
 
   useEffect(() => {
     if (!externalViewMode) {
@@ -232,32 +250,69 @@ export function RequestFeed({
 
   return (
     <div className="space-y-4">
-      <div className={viewMode === "grid" ? "columns-[360px] gap-6 line-masonry" : "flex flex-col gap-4 w-full"}>
-        {data.map((request: any, index: number) => (
-          <div
-            key={request.id}
-            className={cn(
-              "break-inside-avoid mb-6",
-              useHomeStyle && "rounded-[20px] transition-all duration-300 ease-out",
-              useHomeStyle && !disableHover && "hover:scale-[1.02]"
-            )}
-          >
-            <RequestCard
-              request={request}
-              variant={useHomeStyle ? "detail" : "feed"}
-              images={request.images || []}
-              links={request.links || []}
-              isFavorite={allFavorited}
-              isFirst={viewMode === "grid" ? true : index === 0}
-              isLast={viewMode === "grid" ? true : index === data.length - 1}
-              smallImages={useHomeStyle ? true : false}
-              noBorder={useHomeStyle ? true : false}
-              disableHover={disableHover}
-              isMasonry={viewMode === "grid"}
-            />
-          </div>
-        ))}
-      </div>
+      {viewMode === "grid" ? (
+        <div className="flex gap-6">
+          {Array.from({ length: columnCount }).map((_, colIndex) => (
+            <div key={colIndex} className="flex-1 flex flex-col gap-6">
+              {data
+                .filter((_, i) => i % columnCount === colIndex)
+                .map((request: any) => (
+                  <div
+                    key={request.id}
+                    className={cn(
+                      "w-full",
+                      useHomeStyle && "rounded-[20px] transition-[transform] duration-300 ease-out",
+                      useHomeStyle && !disableHover && "hover:scale-[1.02]"
+                    )}
+                  >
+                    <RequestCard
+                      request={request}
+                      variant={useHomeStyle ? "detail" : "feed"}
+                      images={request.images || []}
+                      links={request.links || []}
+                      isFavorite={allFavorited}
+                      currentUserId={user?.id}
+                      isFirst={true}
+                      isLast={true}
+                      smallImages={useHomeStyle ? true : false}
+                      noBorder={useHomeStyle ? true : false}
+                      disableHover={disableHover}
+                      isMasonry={true}
+                    />
+                  </div>
+                ))}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="flex flex-col gap-4 w-full">
+          {data.map((request: any, index: number) => (
+            <div
+              key={request.id}
+              className={cn(
+                "w-full",
+                useHomeStyle && "rounded-[20px] transition-[transform] duration-300 ease-out",
+                useHomeStyle && !disableHover && "hover:scale-[1.02]"
+              )}
+            >
+              <RequestCard
+                request={request}
+                variant={useHomeStyle ? "detail" : "feed"}
+                images={request.images || []}
+                links={request.links || []}
+                isFavorite={allFavorited}
+                currentUserId={user?.id}
+                isFirst={index === 0}
+                isLast={index === data.length - 1}
+                smallImages={useHomeStyle ? true : false}
+                noBorder={useHomeStyle ? true : false}
+                disableHover={disableHover}
+                isMasonry={false}
+              />
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Pagination */}
       {totalPages > 1 && (

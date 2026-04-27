@@ -116,7 +116,7 @@ function getTheme(category: string) {
   if (c.includes("travel") || c.includes("service"))
     return { bg: "bg-teal-50/60", text: "text-teal-900", border: "border-teal-900", borderLight: "border-teal-300" };
 
-  return { bg: "bg-[#f5f6f9]", text: "text-[#1A1A1A]", border: "border-[#1A1A1A]", borderLight: "border-gray-200" };
+  return { bg: "bg-white", text: "text-[#1A1A1A]", border: "border-[#1A1A1A]", borderLight: "border-gray-100" };
 }
 
 function getHost(url: string) {
@@ -264,93 +264,96 @@ export function SubmissionCard({
 
   if (viewMode === "compact") {
     return (
-      <div className={cn(
-        "rounded-2xl border-none flex flex-col h-full overflow-hidden transition-all",
-        theme.bg,
-        isWinner && "ring-2 ring-[#ff4f27] ring-offset-2"
-      )}>
-        {/* Main Content White Card */}
-        <div
-          onClick={handleCardClick}
-          className="bg-white m-1 p-2.5 rounded-xl border-none shadow-none cursor-pointer group transition-all"
-        >
-          <div className="flex items-start justify-between mb-3">
-            {/* Image 60x60 */}
-            <div className="w-[60px] h-[60px] relative rounded-xl overflow-hidden bg-gray-50 border border-gray-100 flex items-center justify-center shrink-0">
-              {hasImage ? (
-                <Image
-                  src={imageUrl!}
-                  alt={storeName}
-                  fill
-                  className="object-cover"
-                  unoptimized
-                  onError={() => setImageError(true)}
-                />
-              ) : (
-                <TablerIcon className="h-6 w-6 text-[#7755FF]" strokeWidth={1.5} />
-              )}
-            </div>
+      <div className="w-full">
+        <div className={cn(
+          "rounded-2xl border-none flex flex-col h-full overflow-hidden transition-all bg-[#f5f6f9]",
+          isWinner && "ring-2 ring-[#ff4f27] ring-offset-2"
+        )}>
+          {/* Main Content White Card */}
+          <div
+            onClick={handleCardClick}
+            className="bg-white m-1 p-2.5 rounded-xl border-none shadow-none cursor-pointer group transition-all"
+          >
+            <div className="flex items-start justify-between mb-3">
+              {/* Image 60x60 */}
+              <div className="w-[60px] h-[60px] relative rounded-xl overflow-hidden bg-gray-50 border border-gray-100 flex items-center justify-center shrink-0">
+                {hasImage ? (
+                  <Image
+                    src={imageUrl!}
+                    alt={storeName}
+                    fill
+                    className="object-cover"
+                    unoptimized
+                    onError={() => setImageError(true)}
+                  />
+                ) : (
+                  <TablerIcon className="h-6 w-6 text-[#7755FF]" strokeWidth={1.5} />
+                )}
+              </div>
 
-            {/* Top Right: Price and Matches */}
-            <div className="flex flex-col items-end gap-1.5">
-              <span className="text-[15px] font-black text-[#1A1A1A]">
-                {submission.price ? `$${submission.price}` : "Contact"}
-              </span>
+              {/* Top Right: Price and Matches */}
+              <div className="flex flex-col items-end gap-1.5">
+                <span className="text-[15px] font-black text-[#1A1A1A]">
+                  {submission.price ? `$${submission.price}` : "Contact"}
+                </span>
 
-              {/* Matches with SVG */}
-              {totalCriteria > 0 && (
-                <div className="flex items-center gap-1 text-[11px] font-bold text-[#7755FF]">
-                  <span>{matchedRequirements.length}/{totalCriteria}</span>
-                  <LogoSVG className="w-3.5 h-3.5" />
-                </div>
-              )}
-            </div>
-          </div>
-
-          <span className="text-[10px] font-bold uppercase text-gray-400 mb-0.5 block">
-            {domain}
-          </span>
-          <h3 className="text-[16px] font-semibold text-[#1A1A1A] leading-tight mb-1" style={{ fontFamily: "'Zalando Sans SemiExpanded', sans-serif" }}>
-            {storeName}
-          </h3>
-
-          <p className="text-[13px] text-gray-500 font-medium line-clamp-2 mb-1 leading-relaxed">
-            {description}
-          </p>
-        </div>
-
-        {/* Identity & Interaction Section (Outside white card, inside themed bg) */}
-        {!hideFooter && (
-          <div className="px-3 pb-3 pt-0.5 flex items-center justify-between">
-            <div className="flex-1 flex items-center gap-2">
-              {!hideIdentity && (
-                <>
-                  <Avatar className="h-7 w-7 border border-white shadow-sm shrink-0">
-                    <AvatarImage src={profile?.avatar_url} />
-                    <AvatarFallback className="text-[9px] bg-gray-50 font-bold text-gray-400">
-                      {fullName.charAt(0)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[13px] font-bold text-[#1A1A1A] leading-tight">
-                      {fullName}
-                    </span>
-                    <span className="text-[13px] font-medium text-gray-400">
-                      · {formatTimeAgo(submission.created_at)}
-                    </span>
+                {/* Matches with SVG */}
+                {totalCriteria > 0 && (
+                  <div className="flex items-center gap-1 text-[11px] font-bold text-[#7755FF]">
+                    <span>{matchedRequirements.length}/{totalCriteria}</span>
+                    <LogoSVG className="w-3.5 h-3.5" />
                   </div>
-                </>
-              )}
+                )}
+              </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              {!hideVotes && (
-                <VoteButtons submission={submission} requestId={requestId} />
-              )}
-            </div>
+            <span className="text-[10px] font-bold uppercase text-gray-400 mb-0.5 block">
+              {domain}
+            </span>
+            <h3 className="text-[16px] font-semibold text-[#1A1A1A] leading-tight mb-1" style={{ fontFamily: "'Zalando Sans SemiExpanded', sans-serif" }}>
+              {storeName}
+            </h3>
+
+            <p className="text-[13px] text-gray-500 font-medium line-clamp-2 mb-1 leading-relaxed">
+              {description}
+            </p>
           </div>
-        )}
 
+          {/* Identity & Interaction Section (Outside white card, inside themed bg) */}
+          {!hideFooter && (
+            <div className="px-3 pb-3 pt-0.5 flex items-center justify-between">
+              <div className="flex-1 flex items-center gap-2">
+                {!hideIdentity && (
+                  <>
+                    <div className="relative flex overflow-hidden rounded-full h-7 w-7 border border-white shadow-sm shrink-0">
+                      {profile?.avatar_url ? (
+                        <img className="aspect-square h-full w-full object-cover" src={profile.avatar_url} alt={fullName} />
+                      ) : (
+                        <div className="w-full h-full bg-gray-50 flex items-center justify-center text-[9px] font-bold text-gray-400">
+                          {fullName.charAt(0)}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[13px] font-bold text-[#1A1A1A] leading-tight">
+                        {fullName}
+                      </span>
+                      <span className="text-[13px] font-medium text-gray-400">
+                        · {formatTimeAgo(submission.created_at)}
+                      </span>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2">
+                {!hideVotes && (
+                  <VoteButtons submission={submission} requestId={requestId} />
+                )}
+              </div>
+            </div>
+          )}
+        </div>
         {/* Dialogs */}
         {isPersonalItem && hasImage && imageUrl && (
           <ImagePreviewDialog
@@ -385,13 +388,14 @@ export function SubmissionCard({
     );
   }
 
+
   return (
     <>
       <Card
         onClick={handleCardClick}
         className={cn(
-          "cursor-pointer shadow-none border-none bg-transparent group",
-          isWinner && "ring-2 ring-[#ff4f27] ring-offset-2 rounded-[22px]"
+          "cursor-pointer shadow-none border-none bg-white group",
+          isWinner && "ring-2 ring-[#ff4f27] ring-offset-2 rounded-2xl"
         )}
       >
         <div className={cn("p-0 rounded-[20px] flex flex-col gap-1 h-full border border-gray-100", theme.bg)}>
@@ -482,7 +486,7 @@ export function SubmissionCard({
 
           <div className="flex items-center justify-between p-3.5 sm:p-4 px-4 sm:px-5">
             <div className="flex items-center gap-2">
-              <Avatar className="h-8 w-8 border border-white shadow-sm shrink-0">
+              <Avatar className="h-8 w-8 border border-white shrink-0">
                 <AvatarImage src={profile?.avatar_url} />
                 <AvatarFallback className="text-[10px] bg-gray-50 font-bold text-gray-400">
                   {fullName.charAt(0)}

@@ -18,7 +18,7 @@ export async function generateMetadata({
 }: TagPageProps): Promise<Metadata> {
   const { slug } = await params;
   const adminSupabase = await createAdminSupabaseClient();
-  
+
   const { data: tag } = await adminSupabase
     .from("tags")
     .select("name")
@@ -82,7 +82,7 @@ export default async function TagPage({ params }: TagPageProps) {
         <h1 className="text-5xl md:text-6xl font-black tracking-tighter text-gray-900 mb-6" style={{ fontFamily: 'var(--font-expanded)' }}>
           {tag.name}
         </h1>
-        
+
         <p className="text-[#1A1A1A] text-xl font-medium max-w-2xl leading-snug">
           Discover what seekers are looking for in <span className="font-bold">{tag.name}</span>.
         </p>
@@ -98,9 +98,9 @@ export default async function TagPage({ params }: TagPageProps) {
         {relatedTags && relatedTags.length > 0 && (
           <div className="flex flex-wrap gap-3">
             {relatedTags.map((rt) => (
-              <Link 
+              <Link
                 key={rt.slug}
-                href={`/tags/${rt.slug}`} 
+                href={`/tags/${rt.slug}`}
                 className="px-5 py-2.5 bg-[#E9E9E9] hover:bg-[#DEDEE0] rounded-full text-[15px] font-bold text-gray-900 transition-all active:scale-95 flex items-center gap-1.5"
               >
                 <span className="text-gray-500 text-lg">#</span> {rt.name}
@@ -115,9 +115,9 @@ export default async function TagPage({ params }: TagPageProps) {
         {requests.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
             {requests.map((request: any) => (
-              <RequestCard 
-                key={request.id} 
-                request={request} 
+              <RequestCard
+                key={request.id}
+                request={request}
                 images={request.images}
                 links={request.links}
                 variant="detail"

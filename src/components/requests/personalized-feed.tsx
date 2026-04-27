@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo, useRef, Fragment } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef, Fragment, memo } from "react";
 import AppLoading from "@/app/(app)/loading";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useInfiniteQuery } from "@tanstack/react-query";
@@ -69,6 +69,49 @@ const FiltersModal = dynamic(() => import("@/components/requests/filters-modal")
   ssr: false,
 });
 
+const PostBox = memo(function PostBox({ profile, onOpenAI }: { profile: any, onOpenAI: (text: string) => void }) {
+  const [searchValue, setSearchValue] = useState("");
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  }, [searchValue]);
+
+  return (
+    <div className="break-inside-avoid mb-6">
+      <div className="w-full rounded-[24px] bg-white border border-[#e6e7eb] p-5 shadow-none">
+        <div className="flex gap-4">
+          <div className="flex items-center justify-center h-10 w-10 mt-1 rounded-full bg-gray-50 shrink-0 overflow-hidden border border-gray-100">
+            {profile?.avatar_url ? (
+              <img src={profile.avatar_url} className="w-full h-full object-cover" />
+            ) : (
+              <IconUser className="w-5 h-5 text-gray-300" />
+            )}
+          </div>
+          <textarea
+            ref={textareaRef}
+            placeholder="Describe what you are looking for..."
+            value={searchValue}
+            onChange={(e) => setSearchValue(e.target.value)}
+            onClick={() => onOpenAI(searchValue)}
+            className="bg-transparent border-none outline-none w-full text-[#1A1A1A] placeholder:text-[#a5abb7] text-[18px] font-medium resize-none leading-relaxed cursor-text"
+            rows={2}
+          />
+        </div>
+        <div className="flex justify-end mt-4">
+          <Button onClick={() => onOpenAI(searchValue)} className="h-10 px-6 gap-2 bg-[#1A1A1A] hover:bg-black text-white rounded-full font-bold shadow-none">
+            <span>Post</span>
+            <IconArrowRight className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+});
+
 interface PersonalizedFeedProps {
   initialMode?: FeedMode;
   initialCategory?: string | null;
@@ -118,11 +161,27 @@ export function PersonalizedFeed({
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isAIFlowOpen, setIsAIFlowOpen] = useState(false);
-  const [searchValue, setSearchValue] = useState("");
+  const [aiFlowInitialText, setAiFlowInitialText] = useState("");
+
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [modalScrolled, setModalScrolled] = useState(false);
   const [showCategoryStrip, setShowCategoryStrip] = useState(true);
   const lastScrollY = useRef(0);
+  const [columnCount, setColumnCount] = useState(3);
+
+  useEffect(() => {
+    const updateColumnCount = () => {
+      const width = window.innerWidth;
+      if (width >= 2000) setColumnCount(5);
+      else if (width >= 1600) setColumnCount(4);
+      else if (width >= 768) setColumnCount(3);
+      else setColumnCount(1);
+    };
+
+    updateColumnCount();
+    window.addEventListener('resize', updateColumnCount);
+    return () => window.removeEventListener('resize', updateColumnCount);
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -149,6 +208,24 @@ export function PersonalizedFeed({
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  useEffect(() => {
+    const handleOpenLanding = () => {
+      setIsHeroDismissed(false);
+    };
+    window.addEventListener("open-landing-modal", handleOpenLanding);
+    return () => window.removeEventListener("open-landing-modal", handleOpenLanding);
+  }, []);
+
+  useEffect(() => {
+    if (showHero) {
+      const handleEsc = (e: KeyboardEvent) => {
+        if (e.key === "Escape") setIsHeroDismissed(true);
+      };
+      window.addEventListener("keydown", handleEsc);
+      return () => window.removeEventListener("keydown", handleEsc);
+    }
+  }, [showHero]);
   const modalScrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -209,32 +286,7 @@ export function PersonalizedFeed({
     }
   };
 
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  useEffect(() => {
-    const handleOpenLanding = () => {
-      setIsHeroDismissed(false);
-    };
-    window.addEventListener("open-landing-modal", handleOpenLanding);
-    return () => window.removeEventListener("open-landing-modal", handleOpenLanding);
-  }, []);
-
-  useEffect(() => {
-    if (showHero) {
-      const handleEsc = (e: KeyboardEvent) => {
-        if (e.key === "Escape") setIsHeroDismissed(true);
-      };
-      window.addEventListener("keydown", handleEsc);
-      return () => window.removeEventListener("keydown", handleEsc);
-    }
-  }, [showHero]);
-
-  useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
-    }
-  }, [searchValue]);
 
   useEffect(() => {
     async function loadPreferences() {
@@ -415,67 +467,76 @@ export function PersonalizedFeed({
           <div className="py-12 text-center text-gray-500">Failed to load feed. <Button onClick={() => refetch()} variant="ghost">Retry</Button></div>
         ) : (
           <div className="relative w-full">
-            <div className={cn(
-              "pb-12 w-full relative transition-all duration-300",
-              isFetching && !isLoading ? "opacity-40 blur-[1px]" : "opacity-100",
-              viewMode === "grid" ? "columns-[360px] gap-6" : "flex flex-col gap-4 max-w-2xl mx-auto"
-            )}>
-              {/* AI Request Box - Now visible for everyone on Home Page */}
-              {isHomePage && (
-                <div className="break-inside-avoid mb-6">
-                  <div className="w-full rounded-[24px] bg-white border border-[#e6e7eb] p-5 shadow-none">
-                    <div className="flex gap-4">
-                      <div className="flex items-center justify-center h-10 w-10 mt-1 rounded-full bg-gray-50 shrink-0 overflow-hidden border border-gray-100">
-                        {profile?.avatar_url ? (
-                          <img src={profile.avatar_url} className="w-full h-full object-cover" />
-                        ) : (
-                          user ? (
-                            <IconSparkles className="w-5 h-5 text-gray-300" />
-                          ) : (
-                            <IconUser className="w-5 h-5 text-gray-300" />
-                          )
-                        )}
+            <div className="pb-12 w-full relative">
+              {viewMode === "grid" ? (
+                <div className="flex gap-6">
+                  {/* Stable Masonry implementation using dynamic columns */}
+                  {Array.from({ length: columnCount }).map((_, colIndex) => (
+                    <div key={colIndex} className="flex-1 flex flex-col gap-6">
+                      {/* AI Request Box - Top left of masonry */}
+                      {isHomePage && colIndex === 0 && (
+                        <PostBox 
+                          profile={profile} 
+                          onOpenAI={(text) => {
+                            setAiFlowInitialText(text);
+                            setIsAIFlowOpen(true);
+                          }} 
+                        />
+                      )}
+
+                      {allItems
+                        .filter((_, i) => i % columnCount === colIndex)
+                        .map((request) => {
+                          const requestWithExtras = request as RequestItem & { images?: string[]; links?: string[] };
+                          return (
+                            <div key={request.id}>
+                              <RequestCard
+                                request={request}
+                                variant="detail"
+                                images={requestWithExtras.images || []}
+                                links={requestWithExtras.links || []}
+                                currentUserId={user?.id}
+                                smallImages={true}
+                                noBorder={true}
+                                isMasonry={true}
+                              />
+                            </div>
+                          );
+                        })}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-col gap-4 max-w-2xl mx-auto">
+                  {allItems.map((request) => {
+                    const requestWithExtras = request as RequestItem & { images?: string[]; links?: string[] };
+                    return (
+                      <div key={request.id}>
+                        <RequestCard
+                          request={request}
+                          variant="detail"
+                          images={requestWithExtras.images || []}
+                          links={requestWithExtras.links || []}
+                          currentUserId={user?.id}
+                          smallImages={true}
+                          noBorder={true}
+                          isMasonry={false}
+                        />
                       </div>
-                      <textarea
-                        ref={textareaRef}
-                        placeholder="Describe what you are looking for..."
-                        value={searchValue}
-                        onChange={(e) => setSearchValue(e.target.value)}
-                        className="bg-transparent border-none outline-none w-full text-[#1A1A1A] placeholder:text-[#a5abb7] text-[18px] font-medium resize-none leading-relaxed"
-                        rows={2}
-                      />
-                    </div>
-                    <div className="flex justify-end mt-4">
-                      <Button onClick={() => setIsAIFlowOpen(true)} className="h-10 px-6 gap-2 bg-[#1A1A1A] hover:bg-black text-white rounded-full font-bold shadow-none">
-                        <span>Post</span>
-                        <IconArrowRight className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
+                    );
+                  })}
                 </div>
               )}
-
-              {allItems.map((request, index) => {
-                const requestWithExtras = request as RequestItem & { images?: string[]; links?: string[] };
-                return (
-                  <div key={request.id} className="break-inside-avoid mb-6">
-                    <RequestCard
-                      request={request}
-                      variant="detail"
-                      images={requestWithExtras.images || []}
-                      links={requestWithExtras.links || []}
-                      smallImages={true}
-                      noBorder={true}
-                      isMasonry={true}
-                    />
-                  </div>
-                );
-              })}
             </div>
 
-            {(isFetchingNextPage) && (
-              <div className="w-full flex justify-center py-12">
-                <IconLoader2 className="h-6 w-6 animate-spin text-gray-400" />
+            {isFetchingNextPage && (
+              <div className="flex gap-6 mt-6">
+                {Array.from({ length: columnCount }).map((_, colIndex) => (
+                  <div key={colIndex} className="flex-1 flex flex-col gap-6">
+                    <div className="w-full h-[400px] rounded-[24px] bg-gray-50/80 animate-pulse" />
+                    <div className="w-full h-[300px] rounded-[24px] bg-gray-50/80 animate-pulse" />
+                  </div>
+                ))}
               </div>
             )}
           </div>
@@ -492,7 +553,7 @@ export function PersonalizedFeed({
       )}
       {isAIFlowOpen && (
         <AIRequestFlow
-          initialText={searchValue}
+          initialText={aiFlowInitialText}
           onClose={() => setIsAIFlowOpen(false)}
           user={user}
           profile={profile}

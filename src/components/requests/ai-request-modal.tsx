@@ -35,6 +35,43 @@ interface ExtractedData {
   original_text: string;
 }
 
+function InputArea({ initialValue, onChange, disabled }: { initialValue: string, onChange: (val: string) => void, disabled?: boolean }) {
+  const [localValue, setLocalValue] = React.useState(initialValue);
+  const timeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const val = e.target.value;
+    setLocalValue(val);
+    
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => {
+      onChange(val);
+    }, 50);
+  };
+
+  React.useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, []);
+
+  return (
+    <div className="relative">
+      <Textarea
+        autoFocus
+        placeholder="Example: I'm looking for a used MacBook Pro M2, ideally 16GB RAM. Must have US keyboard and no scratches on the screen. Budget is around 1200 euros."
+        className="min-h-[140px] bg-transparent border border-gray-100 focus:border-black focus-visible:ring-0 focus:ring-1 focus:ring-black rounded-2xl p-5 text-sm resize-y placeholder:text-gray-400 shadow-none transition-all duration-200"
+        value={localValue}
+        onChange={handleChange}
+        disabled={disabled}
+      />
+      <div className="absolute bottom-4 right-5 text-[10px] font-medium text-gray-400">
+        {localValue.trim().length} characters
+      </div>
+    </div>
+  );
+}
+
 export function AIRequestModal({ open, onOpenChange }: AIRequestModalProps) {
   const [inputText, setInputText] = React.useState("");
   const [isExtracting, setIsExtracting] = React.useState(false);
@@ -409,19 +446,11 @@ export function AIRequestModal({ open, onOpenChange }: AIRequestModalProps) {
                     <h2 className="text-xl font-bold tracking-tight text-[#222234] text-left" style={{ fontFamily: 'var(--font-expanded)' }}>
                       What are you looking for?
                     </h2>
-                    <div className="relative">
-                      <Textarea
-                        autoFocus
-                        placeholder="Example: I'm looking for a used MacBook Pro M2, ideally 16GB RAM. Must have US keyboard and no scratches on the screen. Budget is around 1200 euros."
-                        className="min-h-[140px] bg-transparent border border-gray-100 focus:border-black focus-visible:ring-0 focus:ring-1 focus:ring-black rounded-2xl p-5 text-sm resize-y placeholder:text-gray-400 shadow-none transition-all duration-200"
-                        value={inputText}
-                        onChange={(e) => setInputText(e.target.value)}
-                        disabled={isExtracting}
-                      />
-                      <div className="absolute bottom-4 right-5 text-[10px] font-medium text-gray-400">
-                        {inputText.trim().length} characters
-                      </div>
-                    </div>
+                    <InputArea
+                      initialValue={inputText}
+                      onChange={setInputText}
+                      disabled={isExtracting}
+                    />
                   </div>
 
                   <div className="flex flex-col items-center gap-3">
