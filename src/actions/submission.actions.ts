@@ -151,7 +151,7 @@ export async function createSubmissionAction(formData: FormData) {
   try {
     const { data: requestOwner } = await supabase
       .from("requests")
-      .select("id, slug, user_id, profiles(contact_email, email, username)")
+      .select("id, title, slug, user_id, profiles(contact_email, email, username)")
       .eq("id", requestId)
       .single();
 
@@ -162,6 +162,7 @@ export async function createSubmissionAction(formData: FormData) {
       const requestUrl = `${baseUrl}${createRequestUrl(requestOwner)}`;
       
       await sendProposalReceivedEmail(ownerEmail, {
+        title: requestOwner.title,
         price: parsed.data.price ? `$${parsed.data.price}` : "Contact for price",
         url: requestUrl,
       });

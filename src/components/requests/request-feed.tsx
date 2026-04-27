@@ -9,7 +9,7 @@ import { RequestCard } from "@/components/requests/request-card";
 import { Button } from "@/components/ui/button";
 import { LayoutList, Grid3x3, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/components/layout/auth-provider";
 
 type Filters = {
   category?: string | null;

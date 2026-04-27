@@ -303,9 +303,10 @@ export async function createRequestAction(formData: FormData) {
   // Send "Request Published" email confirmation to the buyer
   if (user.email) {
     await sendRequestPublishedEmail(user.email, {
+      title: request.title,
       category: request.category || "General",
       budget: request.budget_max ? `${request.budget_max}` : "Open",
-      timeline: request.urgency || "Standard",
+      condition: request.condition || "Any",
     });
   }
 
